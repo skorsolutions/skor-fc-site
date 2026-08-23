@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SKOR FC | Roswell Over 30 Soccer | v27 Dynamic Schedule</title>
+<title>SKOR FC | Roswell Over 30 Soccer | v28 Kits Added</title>
 <meta name="description" content="SKOR FC — Over 30 competitive soccer in Roswell, Georgia. Play Fast. Play SKOR.">
 <style>
 :root{
@@ -166,11 +166,38 @@ img{max-width:100%}
 .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .kits-card{padding:28px;overflow:hidden}
 .kits-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:19px}
-.kit{height:220px;border-radius:14px;border:1px solid #31353a;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
-.kit.home{background:linear-gradient(145deg,#76142f,#280914)}
-.kit.away{background:linear-gradient(145deg,#202328,#101215)}
-.shirt-icon{font-size:82px;filter:grayscale(1);opacity:.9}
-.kit strong{position:absolute;bottom:16px;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.kit{
+  min-height:320px;
+  border-radius:14px;
+  border:1px solid #31353a;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  position:relative;
+  overflow:hidden;
+  padding:18px 16px 60px;
+}
+.kit.maroon{background:linear-gradient(145deg,#521021,#14070c)}
+.kit.white{background:linear-gradient(145deg,#202328,#101215)}
+.kit img{
+  display:block;
+  width:100%;
+  max-width:240px;
+  height:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 18px 28px rgba(0,0,0,.35));
+}
+.kit strong{
+  position:absolute;
+  bottom:16px;
+  left:16px;
+  right:16px;
+  text-align:center;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em
+}
 .join-card{padding:34px;background:
   radial-gradient(circle at 85% 10%,rgba(184,27,67,.32),transparent 34%),
   linear-gradient(145deg,#1a0a10,#0d0f12)}
@@ -424,8 +451,14 @@ img{max-width:100%}
         <div class="eyebrow">Club Identity</div>
         <div class="section-title" style="margin-bottom:0"><div><h2>Kits</h2></div></div>
         <div class="kits-row">
-          <div class="kit home"><div class="shirt-icon">♜</div><strong>Home Kit · Details Pending</strong></div>
-          <div class="kit away"><div class="shirt-icon">♜</div><strong>Away Kit · Details Pending</strong></div>
+          <div class="kit maroon">
+            <img src="assets/maroon-kit.png" alt="SKOR FC Maroon Kit">
+            <strong>Maroon Kit</strong>
+          </div>
+          <div class="kit white">
+            <img src="assets/white-kit.png" alt="SKOR FC White Kit">
+            <strong>White Kit</strong>
+          </div>
         </div>
       </div>
       <div class="card join-card" id="about">
