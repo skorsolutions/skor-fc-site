@@ -187,6 +187,7 @@
       <button data-view="join">＋ <span>Join Requests</span></button>
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
+      <button data-view="admins">♛ <span>Admins</span></button>
     </div>
     <div class="aside-bottom">SKOR FC Captain Portal • Supabase secured</div>
   </aside>
@@ -357,6 +358,17 @@
         </table>
       </div>
     </section>
+
+    <section class="view" id="admins">
+      <div class="panel">
+        <h2>Admins</h2>
+        <div class="sub">Google accounts approved for SKOR FC captain access.</div>
+        <div class="notice">This list is read directly from the Supabase captain allowlist.</div>
+        <div id="adminsList">
+          <div style="color:var(--muted);font-size:.9rem">Loading approved admins…</div>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -467,7 +479,8 @@ const meta = {
   fields:["Fields","Store field locations, maps and parking notes."],
   join:["Join Requests","Review prospective players."],
   payments:["Payments","Post team fee links and payment details."],
-  sponsors:["Sponsors","Manage sponsor information and website links."]
+  sponsors:["Sponsors","Manage sponsor information and website links."],
+  admins:["Admins","View the Google accounts approved for captain access."]
 };
 function openView(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
@@ -477,9 +490,50 @@ function openView(id){
   if(btn) btn.classList.add("active");
   document.getElementById("pageTitle").textContent=meta[id][0];
   document.getElementById("pageSub").textContent=meta[id][1];
+  if(id==="admins") loadAdmins();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>openView(btn.dataset.view)));
+
+
+async function loadAdmins(){
+  const target=document.getElementById("adminsList");
+  if(!target) return;
+
+  target.innerHTML='<div style="color:var(--muted);font-size:.9rem">Loading approved admins…</div>';
+
+  const { data, error } = await sb
+    .from("captain_allowlist")
+    .select("email,display_name,active,created_at")
+    .order("display_name",{ascending:true});
+
+  if(error){
+    console.error("Could not load admin list:",error);
+    target.innerHTML='<div style="color:#8b1e3f;font-size:.9rem">Could not load the admin list. Run the admin-list RLS SQL update in Supabase first.</div>';
+    return;
+  }
+
+  const rows=(data||[]).filter(a=>a.active);
+  if(!rows.length){
+    target.innerHTML='<div style="color:var(--muted);font-size:.9rem">No active admins found.</div>';
+    return;
+  }
+
+  target.innerHTML=`
+    <table class="table">
+      <thead>
+        <tr><th>Name</th><th>Google Account</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        ${rows.map(a=>`
+          <tr>
+            <td>${escapeHtml(a.display_name || "Captain")}</td>
+            <td>${escapeHtml(a.email)}</td>
+            <td><span class="status">Active</span></td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
+}
 
 const form=document.getElementById("announcementForm");
 const list=document.getElementById("announcementList");
