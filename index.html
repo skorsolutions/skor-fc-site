@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SKOR FC | Roswell Over 30 Soccer | v26 Opponent Logos</title>
+<title>SKOR FC | Roswell Over 30 Soccer | v27 Dynamic Schedule</title>
 <meta name="description" content="SKOR FC — Over 30 competitive soccer in Roswell, Georgia. Play Fast. Play SKOR.">
 <style>
 :root{
@@ -140,6 +140,11 @@ img{max-width:100%}
 .game-info p{margin:0;color:#9da1a7;font-size:11px}
 .side-badge{align-self:center;margin-right:14px;padding:7px 9px;border-radius:7px;background:#25282d;color:#a9adb2;font-size:9px;font-weight:950;text-transform:uppercase}
 .side-badge.home{background:#951535;color:#fff}
+
+
+.schedule-empty{padding:26px;text-align:center;color:#9da1a7;font-size:13px}
+.match-complete{padding:26px 30px;color:#b3b6bb}
+.match-complete h2{margin:6px 0 0;color:#fff;text-transform:uppercase}
 
 /* Squad */
 .squad-section{background:linear-gradient(180deg,#08090b,#0d0f12)}
@@ -339,23 +344,14 @@ img{max-width:100%}
 
   <section class="match-strip">
     <div class="wrap">
-      <div class="match-card">
+      <div class="match-card" id="nextMatchCard" aria-live="polite">
         <div class="match-main">
           <div>
             <div class="match-label">Next Match</div>
-            <h2>Lone Wolves United vs SKOR FC</h2>
-            <div class="match-meta">
-              <span><strong>Sunday</strong> · Aug 30, 2026</span>
-              <span><strong>5:00 PM</strong></span>
-              <span><strong>Groveway Community Park</strong> · Upper Field</span>
-            </div>
+            <h2 id="nextMatchTitle">Loading next match…</h2>
+            <div class="match-meta" id="nextMatchMeta"></div>
           </div>
-          <div class="match-logos" aria-label="Lone Wolves United versus SKOR FC logos">
-            <div class="match-team-badge opponent" title="Lone Wolves United"><img src="assets/lone-wolves-logo.jpg" alt="Lone Wolves United logo"></div>
-            <div class="match-team-badge skor" title="SKOR FC">
-              <img src="assets/skor fc logo transparent.png" alt="SKOR FC crest">
-            </div>
-          </div>
+          <div class="match-logos" id="nextMatchLogos"></div>
         </div>
         <a class="match-cta" href="#schedule">Match<br>Center ›</a>
       </div>
@@ -382,58 +378,7 @@ img{max-width:100%}
         <div class="section-title">
           <div><div class="eyebrow">2026 Season</div><h2>Upcoming Games</h2></div>
         </div>
-        <div class="card schedule-card">
-          <div class="game-row">
-            <div class="date-box">AUG<strong>30</strong></div>
-            <div class="game-info"><h3>Lone Wolves United vs SKOR FC</h3><p>5:00 PM · Groveway Community Park Upper Field</p></div>
-            <div class="row-logos" aria-label="Opponent and SKOR FC logos"><div class="row-logo-badge opponent" title="Lone Wolves United"><img src="assets/lone-wolves-logo.jpg" alt="Lone Wolves United logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">SEP<strong>13</strong></div>
-            <div class="game-info"><h3>SKOR FC vs Hamilton</h3><p>7:00 PM · East Roswell Park SC#1</p></div>
-            <div class="row-logos" aria-label="Hamilton and SKOR FC logos"><div class="row-logo-badge opponent" title="Hamilton"><img src="assets/hamilton-logo.png" alt="Hamilton logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">SEP<strong>20</strong></div>
-            <div class="game-info"><h3>SKOR FC vs CTM</h3><p>3:00 PM · Groveway Community Park Upper Field</p></div>
-            <div class="row-logos" aria-label="CTM and SKOR FC logos"><div class="row-logo-badge opponent" title="CTM"><img src="assets/ctm-logo.png" alt="CTM logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">SEP<strong>25</strong></div>
-            <div class="game-info"><h3>Press &amp; Pray FC vs SKOR FC</h3><p>7:00 PM · East Roswell Park SC#2</p></div>
-            <div class="row-logos" aria-label="Press &amp; Pray FC and SKOR FC logos"><div class="row-logo-badge opponent" title="Press & Pray FC"><img src="assets/press-pray-logo.png" alt="Press and Pray FC logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">SEP<strong>27</strong></div>
-            <div class="game-info"><h3>SKOR FC vs Milliken</h3><p>11:00 AM · East Roswell Park SC#2</p></div>
-            <div class="row-logos" aria-label="Milliken and SKOR FC logos"><div class="row-logo-badge opponent" title="Milliken"><img src="assets/milliken-logo.png" alt="Milliken logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">OCT<strong>04</strong></div>
-            <div class="game-info"><h3>Majestic SC vs SKOR FC</h3><p>11:00 AM · East Roswell Park SC#1</p></div>
-            <div class="row-logos" aria-label="Majestic SC and SKOR FC logos"><div class="row-logo-badge opponent" title="Majestic SC"><img src="assets/majestic-logo.png" alt="Majestic SC logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">OCT<strong>11</strong></div>
-            <div class="game-info"><h3>SKOR FC vs Rovers Ruckus</h3><p>7:00 PM · East Roswell Park SC#2</p></div>
-            <div class="row-logos" aria-label="Rovers Ruckus and SKOR FC logos"><div class="row-logo-badge opponent" title="Rovers Ruckus"><img src="assets/rovers-ruckus-logo.png" alt="Rovers Ruckus logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">OCT<strong>18</strong></div>
-            <div class="game-info"><h3>Concord FC vs SKOR FC</h3><p>5:00 PM · East Roswell Park SC#1</p></div>
-            <div class="row-logos" aria-label="Concord FC and SKOR FC logos"><div class="row-logo-badge opponent" title="Concord FC"><img src="assets/concord-logo.png" alt="Concord FC logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">OCT<strong>25</strong></div>
-            <div class="game-info"><h3>SKOR FC vs Latinos FC</h3><p>7:00 PM · East Roswell Park SC#1</p></div>
-            <div class="row-logos" aria-label="Latinos FC and SKOR FC logos"><div class="row-logo-badge opponent" title="Latinos FC"><img src="assets/latinos-logo.png" alt="Latinos FC logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-          <div class="game-row">
-            <div class="date-box">NOV<strong>01</strong></div>
-            <div class="game-info"><h3>Lone Wolves United vs SKOR FC</h3><p>11:00 AM · East Roswell Park SC#1</p></div>
-            <div class="row-logos" aria-label="Opponent and SKOR FC logos"><div class="row-logo-badge opponent" title="Lone Wolves United"><img src="assets/lone-wolves-logo.jpg" alt="Lone Wolves United logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
-          </div>
-        </div>
+        <div class="card schedule-card" id="upcomingGames" aria-live="polite"></div>
       </div>
     </div>
   </section>
@@ -556,6 +501,190 @@ img{max-width:100%}
 </footer>
 
 <script>
+/*
+  SKOR FC 2026 schedule
+  Times are stored with Roswell, Georgia's UTC offset so the site works
+  correctly even when a visitor opens it from another time zone.
+  A match remains "upcoming" until 2 hours after kickoff.
+*/
+const SKOR_GAMES = [
+  {
+    kickoff:"2026-08-30T17:00:00-04:00",
+    home:"Lone Wolves United", away:"SKOR FC",
+    location:"Groveway Community Park · Upper Field",
+    homeLogo:"assets/lone-wolves-logo.jpg", awayLogo:"assets/skor fc logo transparent.png"
+  },
+  {
+    kickoff:"2026-09-13T19:00:00-04:00",
+    home:"SKOR FC", away:"Hamilton",
+    location:"East Roswell Park SC#1",
+    homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/hamilton-logo.png"
+  },
+  {
+    kickoff:"2026-09-20T15:00:00-04:00",
+    home:"SKOR FC", away:"CTM",
+    location:"Groveway Community Park · Upper Field",
+    homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/ctm-logo.png"
+  },
+  {
+    kickoff:"2026-09-25T19:00:00-04:00",
+    home:"Press & Pray FC", away:"SKOR FC",
+    location:"East Roswell Park SC#2",
+    homeLogo:"assets/press-pray-logo.png", awayLogo:"assets/skor fc logo transparent.png"
+  },
+  {
+    kickoff:"2026-09-27T11:00:00-04:00",
+    home:"SKOR FC", away:"Milliken",
+    location:"East Roswell Park SC#2",
+    homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/milliken-logo.png"
+  },
+  {
+    kickoff:"2026-10-04T11:00:00-04:00",
+    home:"Majestic SC", away:"SKOR FC",
+    location:"East Roswell Park SC#1",
+    homeLogo:"assets/majestic-logo.png", awayLogo:"assets/skor fc logo transparent.png"
+  },
+  {
+    kickoff:"2026-10-11T19:00:00-04:00",
+    home:"SKOR FC", away:"Rovers Ruckus",
+    location:"East Roswell Park SC#2",
+    homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/rovers-ruckus-logo.png"
+  },
+  {
+    kickoff:"2026-10-18T17:00:00-04:00",
+    home:"Concord FC", away:"SKOR FC",
+    location:"East Roswell Park SC#1",
+    homeLogo:"assets/concord-logo.png", awayLogo:"assets/skor fc logo transparent.png"
+  },
+  {
+    kickoff:"2026-10-25T19:00:00-04:00",
+    home:"SKOR FC", away:"Latinos FC",
+    location:"East Roswell Park SC#1",
+    homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/latinos-logo.png"
+  },
+  {
+    kickoff:"2026-11-01T11:00:00-05:00",
+    home:"Lone Wolves United", away:"SKOR FC",
+    location:"East Roswell Park SC#1",
+    homeLogo:"assets/lone-wolves-logo.jpg", awayLogo:"assets/skor fc logo transparent.png"
+  }
+];
+
+const GAME_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+function gameDate(game){
+  return new Date(game.kickoff);
+}
+
+function isStillUpcoming(game, now){
+  return now.getTime() < gameDate(game).getTime() + GAME_WINDOW_MS;
+}
+
+function formatFullDate(date){
+  return new Intl.DateTimeFormat("en-US",{
+    timeZone:"America/New_York",
+    weekday:"long",
+    month:"short",
+    day:"numeric",
+    year:"numeric"
+  }).format(date);
+}
+
+function formatTime(date){
+  return new Intl.DateTimeFormat("en-US",{
+    timeZone:"America/New_York",
+    hour:"numeric",
+    minute:"2-digit"
+  }).format(date);
+}
+
+function monthLabel(date){
+  return new Intl.DateTimeFormat("en-US",{
+    timeZone:"America/New_York",
+    month:"short"
+  }).format(date).toUpperCase();
+}
+
+function dayLabel(date){
+  return new Intl.DateTimeFormat("en-US",{
+    timeZone:"America/New_York",
+    day:"2-digit"
+  }).format(date);
+}
+
+function logoBadge(team, src, large=false){
+  const cls = large ? "match-team-badge" : "row-logo-badge";
+  const teamClass = team === "SKOR FC" ? "skor" : "opponent";
+  return `<div class="${cls} ${teamClass}" title="${team}">
+    <img src="${src}" alt="${team} logo">
+  </div>`;
+}
+
+function renderNextMatch(game){
+  const card = document.getElementById("nextMatchCard");
+  const title = document.getElementById("nextMatchTitle");
+  const meta = document.getElementById("nextMatchMeta");
+  const logos = document.getElementById("nextMatchLogos");
+
+  if(!game){
+    card.innerHTML = `<div class="match-complete">
+      <div class="match-label">2026 Season</div>
+      <h2>No upcoming matches scheduled</h2>
+    </div>`;
+    return;
+  }
+
+  const date = gameDate(game);
+  title.textContent = `${game.home} vs ${game.away}`;
+  meta.innerHTML = `
+    <span><strong>${formatFullDate(date)}</strong></span>
+    <span><strong>${formatTime(date)}</strong></span>
+    <span><strong>${game.location}</strong></span>`;
+  logos.innerHTML =
+    logoBadge(game.home, game.homeLogo, true) +
+    logoBadge(game.away, game.awayLogo, true);
+}
+
+function renderUpcomingGames(games){
+  const container = document.getElementById("upcomingGames");
+
+  if(!games.length){
+    container.innerHTML = `<div class="schedule-empty">No additional matches are currently scheduled.</div>`;
+    return;
+  }
+
+  container.innerHTML = games.map(game => {
+    const date = gameDate(game);
+    const isHome = game.home === "SKOR FC";
+    return `<div class="game-row">
+      <div class="date-box">${monthLabel(date)}<strong>${dayLabel(date)}</strong></div>
+      <div class="game-info">
+        <h3>${game.home} vs ${game.away}</h3>
+        <p>${formatTime(date)} · ${game.location}</p>
+      </div>
+      <div class="row-logos" aria-label="${game.home} and ${game.away} logos">
+        ${logoBadge(game.home, game.homeLogo)}
+        ${logoBadge(game.away, game.awayLogo)}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function updateSchedule(){
+  const now = new Date();
+  const upcoming = SKOR_GAMES
+    .filter(game => isStillUpcoming(game, now))
+    .sort((a,b) => gameDate(a) - gameDate(b));
+
+  renderNextMatch(upcoming[0] || null);
+  renderUpcomingGames(upcoming);
+}
+
+updateSchedule();
+
+/* Refresh periodically so a page left open can roll forward automatically. */
+setInterval(updateSchedule, 5 * 60 * 1000);
+
 document.querySelectorAll('#navLinks a').forEach(a=>{
   a.addEventListener('click',()=>{
     document.getElementById('navLinks').classList.remove('open');
