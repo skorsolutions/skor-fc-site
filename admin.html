@@ -579,26 +579,6 @@ function escapeHtml(value){
 
 document.getElementById("aDate").valueAsDate=new Date();
 loadAnnouncements();
-}
-form.addEventListener("submit",e=>{
-  e.preventDefault();
-  const title=document.getElementById("aTitle").value.trim();
-  const body=document.getElementById("aBody").value.trim();
-  if(!title||!body){alert("Add a title and message.");return;}
-  const items=JSON.parse(localStorage.getItem("skorfc_announcements")||"[]");
-  items.unshift({
-    type:document.getElementById("aType").value,
-    date:document.getElementById("aDate").value,
-    title,body
-  });
-  localStorage.setItem("skorfc_announcements",JSON.stringify(items));
-  form.reset();
-  loadAnnouncements();
-});
-function escapeHtml(value){
-  return String(value || "").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
-}
-loadAnnouncements();
 </script>
 </body>
 </html>
