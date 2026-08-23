@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SKOR FC | Squad</title>
+<meta name="description" content="Meet the SKOR FC squad — Over 30 soccer in Roswell, Georgia.">
+<style>
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#07080a;color:#fff;font-family:Arial,Helvetica,sans-serif}
+a{color:inherit}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(5,6,8,.94);backdrop-filter:blur(12px);border-bottom:1px solid #25272b}
+.nav{width:min(1180px,calc(100% - 36px));height:70px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:950;letter-spacing:.07em}
+.brand img{width:42px;height:42px;object-fit:contain}
+.brand span{color:#a81839;font-size:20px}
+.links{display:flex;align-items:center;gap:22px}
+.links a{text-decoration:none;color:#d5d6d8;font-size:13px;font-weight:800}
+.links a:hover{color:#fff}
+.login{border:1px solid #44484d;padding:10px 14px;border-radius:9px}
+
+.hero{position:relative;overflow:hidden;padding:72px 0 54px;border-bottom:1px solid #23262a;
+background:
+ radial-gradient(ellipse at 50% 0%,rgba(139,18,47,.42),transparent 52%),
+ linear-gradient(180deg,#16060b 0%,#0a0b0e 68%,#07080a 100%)}
+.hero:after{content:"";position:absolute;left:-10%;right:-10%;bottom:-110px;height:210px;border-radius:50% 50% 0 0 / 34% 34% 0 0;
+background:
+ linear-gradient(90deg,transparent 49.7%,rgba(255,255,255,.10) 49.7% 50.3%,transparent 50.3%),
+ radial-gradient(ellipse at 50% 35%,transparent 0 26%,rgba(255,255,255,.09) 26.4% 27%,transparent 27.4%),
+ linear-gradient(180deg,#122a20,#091710)}
+.hero-inner{position:relative;z-index:2;width:min(1180px,calc(100% - 36px));margin:auto}
+.eyebrow{color:#bd1d43;font-size:12px;font-weight:950;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}
+.hero h1{font-size:clamp(46px,7vw,88px);line-height:.92;margin:0;letter-spacing:-.045em;font-weight:950}
+.hero h1 span{color:#a81839}
+.hero p{max-width:650px;color:#b8bbc0;font-size:17px;line-height:1.6;margin:18px 0 0}
+.count{margin-top:22px;display:inline-block;border:1px solid #3b3e43;background:#101216;border-radius:999px;padding:9px 14px;color:#ddd;font-size:12px;font-weight:850}
+
+.content{width:min(1180px,calc(100% - 36px));margin:0 auto;padding:42px 0 70px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:22px}
+.section-head h2{margin:0;font-size:30px}
+.section-head p{margin:5px 0 0;color:#898d94;font-size:13px}
+.legend{font-size:11px;color:#a5a8ad;text-transform:uppercase;letter-spacing:.08em}
+
+.squad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.player-card{overflow:hidden;border:1px solid #303338;border-radius:15px;background:linear-gradient(155deg,#121519,#090b0d);box-shadow:0 16px 32px rgba(0,0,0,.23)}
+.player-photo{height:235px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+background:
+ radial-gradient(circle at 50% 34%,rgba(143,21,49,.30),transparent 34%),
+ linear-gradient(145deg,#171a1f,#0b0d10 70%)}
+.player-photo:after{content:"";position:absolute;left:0;right:0;bottom:0;height:65%;background:linear-gradient(transparent,rgba(0,0,0,.78))}
+.player-number-bg{position:absolute;right:12px;top:-18px;font-size:118px;font-weight:950;color:rgba(255,255,255,.035);letter-spacing:-.08em}
+.player-avatar{width:104px;height:104px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid rgba(255,255,255,.14);
+background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:950;box-shadow:0 14px 28px rgba(0,0,0,.38);position:relative;z-index:2}
+.photo-pending{position:absolute;bottom:15px;left:15px;z-index:3;font-size:9px;letter-spacing:.13em;font-weight:900;color:#999da3}
+.new-badge{position:absolute;top:14px;left:14px;z-index:4;background:#a81839;color:#fff;border-radius:999px;padding:6px 9px;font-size:9px;font-weight:950;letter-spacing:.08em}
+.player-details{padding:17px 17px 19px}
+.shirt{color:#b51b40;font-weight:950;font-size:12px;letter-spacing:.08em}
+.player-details h2{font-size:26px;margin:4px 0 5px;line-height:1}
+.position{color:#d2d4d7;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.player-details p{color:#7f8389;font-size:12px;margin:13px 0 0}
+
+.footer{border-top:1px solid #24272b;background:#050607;padding:30px 18px;text-align:center;color:#72767c;font-size:11px}
+.footer strong{display:block;color:#a81839;font-size:15px;margin-bottom:5px}
+
+@media(max-width:950px){.squad-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){
+ .nav{height:60px;width:calc(100% - 24px)}
+ .brand img{width:34px;height:34px}
+ .brand span{font-size:18px}
+ .links a:not(.login){display:none}
+ .login{font-size:10px;padding:9px 11px}
+ .hero{padding:48px 0 38px}
+ .hero-inner,.content{width:calc(100% - 24px)}
+ .hero h1{font-size:50px}
+ .hero p{font-size:14px}
+ .content{padding-top:28px}
+ .squad-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+ .player-photo{height:180px}
+ .player-avatar{width:82px;height:82px;font-size:34px}
+ .player-number-bg{font-size:88px}
+ .player-details{padding:13px}
+ .player-details h2{font-size:22px}
+ .position{font-size:10px}
+ .section-head{align-items:start;flex-direction:column}
+}
+@media(max-width:380px){
+ .squad-grid{grid-template-columns:1fr}
+ .player-photo{height:210px}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <nav class="nav">
+    <a class="brand" href="index.html">
+      <img src="assets/skor fc logo transparent.png" alt="SKOR FC crest">
+      <span>SKOR FC</span>
+    </a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="index.html#m-schedule">Schedule</a>
+      <a href="mailto:team@skorfc.net">Join</a>
+      <a class="login" href="admin.html">Captain Login</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">Roswell, Georgia · Established 2026</div>
+      <h1>THE <span>SQUAD.</span></h1>
+      <p>Meet the players representing SKOR FC. Player profiles intentionally display first names only.</p>
+      <div class="count">19 PLAYERS · 2026 ROSTER</div>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="section-head">
+      <div>
+        <h2>First Team</h2>
+        <p>Numbers and positions from the current SKOR FC squad list.</p>
+      </div>
+      <div class="legend">New players marked in maroon</div>
+    </div>
+
+    <div class="squad-grid">
+
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Ivan">
+          <div class="player-number-bg">2</div>
+          <div class="player-avatar">I</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          <span class="new-badge">NEW PLAYER</span>
+        </div>
+        <div class="player-details">
+          <div class="shirt">#2</div>
+          <h2>Ivan</h2>
+          <div class="position">Defence</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Andres">
+          <div class="player-number-bg">9</div>
+          <div class="player-avatar">A</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          <span class="new-badge">NEW PLAYER</span>
+        </div>
+        <div class="player-details">
+          <div class="shirt">#9</div>
+          <h2>Andres</h2>
+          <div class="position">Midfield / Forward</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for David">
+          <div class="player-number-bg">17</div>
+          <div class="player-avatar">D</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          <span class="new-badge">NEW PLAYER</span>
+        </div>
+        <div class="player-details">
+          <div class="shirt">#17</div>
+          <h2>David</h2>
+          <div class="position">Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Jason">
+          <div class="player-number-bg">18</div>
+          <div class="player-avatar">J</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#18</div>
+          <h2>Jason</h2>
+          <div class="position">Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Ayman">
+          <div class="player-number-bg">20</div>
+          <div class="player-avatar">A</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#20</div>
+          <h2>Ayman</h2>
+          <div class="position">Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Julio">
+          <div class="player-number-bg">6</div>
+          <div class="player-avatar">J</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#6</div>
+          <h2>Julio</h2>
+          <div class="position">Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Tom">
+          <div class="player-number-bg">7</div>
+          <div class="player-avatar">T</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#7</div>
+          <h2>Tom</h2>
+          <div class="position">Midfield / Defence</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Pedro">
+          <div class="player-number-bg">14</div>
+          <div class="player-avatar">P</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#14</div>
+          <h2>Pedro</h2>
+          <div class="position">Forward / Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for CJ">
+          <div class="player-number-bg">16</div>
+          <div class="player-avatar">C</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#16</div>
+          <h2>CJ</h2>
+          <div class="position">Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Dez">
+          <div class="player-number-bg">19</div>
+          <div class="player-avatar">D</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#19</div>
+          <h2>Dez</h2>
+          <div class="position">Forward / Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Adolpho">
+          <div class="player-number-bg">8</div>
+          <div class="player-avatar">A</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#8</div>
+          <h2>Adolpho</h2>
+          <div class="position">Forward</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Vignesh">
+          <div class="player-number-bg">22</div>
+          <div class="player-avatar">V</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#22</div>
+          <h2>Vignesh</h2>
+          <div class="position">Forward</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Edward">
+          <div class="player-number-bg">11</div>
+          <div class="player-avatar">E</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#11</div>
+          <h2>Edward</h2>
+          <div class="position">Defence / Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Todd">
+          <div class="player-number-bg">1</div>
+          <div class="player-avatar">T</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#1</div>
+          <h2>Todd</h2>
+          <div class="position">Keeper</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Brad">
+          <div class="player-number-bg">3</div>
+          <div class="player-avatar">B</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#3</div>
+          <h2>Brad</h2>
+          <div class="position">Defence / Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Andres">
+          <div class="player-number-bg">21</div>
+          <div class="player-avatar">A</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#21</div>
+          <h2>Andres</h2>
+          <div class="position">Midfield / Defence</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Koushyar">
+          <div class="player-number-bg">12</div>
+          <div class="player-avatar">K</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#12</div>
+          <h2>Koushyar</h2>
+          <div class="position">Midfield / Defence</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Andrew">
+          <div class="player-number-bg">15</div>
+          <div class="player-avatar">A</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#15</div>
+          <h2>Andrew</h2>
+          <div class="position">Defence / Midfield</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+      <article class="player-card">
+        <div class="player-photo" aria-label="Photo pending for Nick">
+          <div class="player-number-bg">4</div>
+          <div class="player-avatar">N</div>
+          <span class="photo-pending">PHOTO PENDING</span>
+          
+        </div>
+        <div class="player-details">
+          <div class="shirt">#4</div>
+          <h2>Nick</h2>
+          <div class="position">Defence</div>
+          <p>Bio pending.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <strong>#PLAYSKOR</strong>
+  SKOR FC · Roswell, Georgia
+</footer>
+</body>
+</html>
