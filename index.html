@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SKOR FC | Roswell Over 30 Soccer | v30 Join Form</title>
+<title>SKOR FC | Roswell Over 30 Soccer | Live Supabase Announcements</title>
 <meta name="description" content="SKOR FC — Over 30 competitive soccer in Roswell, Georgia. Play Fast. Play SKOR.">
 <style>
 :root{
@@ -391,22 +391,23 @@ img{max-width:100%}
         <div class="section-title">
           <div><div class="eyebrow">Team Update</div><h2>Announcements</h2></div>
         </div>
-        <div class="card announcement-card">
-          <div class="megaphone">◀</div>
-          <div>
-            <h3>Second Practice</h3>
-            <p>Sunday, August 23 at 9:00 AM at Sweet Apple Park in Roswell.</p>
-            <small>SKOR FC team announcement</small>
+        <div id="publicAnnouncements" aria-live="polite">
+          <div class="card announcement-card">
+            <div class="megaphone">◀</div>
+            <div>
+              <h3>Second Practice</h3>
+              <p>Sunday, August 23 at 9:00 AM at Sweet Apple Park in Roswell.</p>
+              <small>SKOR FC team announcement</small>
+            </div>
           </div>
-        </div>
 
-        <div class="card announcement-card" style="margin-top:12px">
-          <div class="megaphone">⚽</div>
-          <div>
-            <h3>Upcoming Game — Lone Wolves United</h3>
-            <p><strong>Arrive by 4:15 PM</strong> at Groveway Community Park. RSVP on WhatsApp before <strong>August 26 at 12:00 PM</strong>.</p>
-            <p style="margin-top:8px"><strong>Kit:</strong> White Kit · Black shorts · Black socks</p>
-            <small>Match day reminder · August 30, 2026</small>
+          <div class="card announcement-card" style="margin-top:12px">
+            <div class="megaphone">⚽</div>
+            <div>
+              <h3>Upcoming Game — Lone Wolves United</h3>
+              <p>Arrive by 4:15 PM at Groveway Community Park. RSVP on WhatsApp before August 26 at 12:00 PM. Kit: White Kit · Black shorts · Black socks.</p>
+              <small>Match day reminder · August 30, 2026</small>
+            </div>
           </div>
         </div>
       </div>
@@ -543,6 +544,7 @@ img{max-width:100%}
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /*
   SKOR FC 2026 schedule
@@ -550,6 +552,73 @@ img{max-width:100%}
   correctly even when a visitor opens it from another time zone.
   A match remains "upcoming" until 2 hours after kickoff.
 */
+const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
+const publicDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+function announcementIcon(type){
+  const icons={Match:"⚽",Practice:"●",Fees:"$", "Field Change":"⌖", Team:"◀"};
+  return icons[type] || "◀";
+}
+
+function formatAnnouncementDate(value){
+  if(!value) return "";
+  const parts=value.split("-").map(Number);
+  if(parts.length!==3) return value;
+  const date=new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
+  return new Intl.DateTimeFormat("en-US",{month:"long",day:"numeric",year:"numeric",timeZone:"UTC"}).format(date);
+}
+
+async function loadPublicAnnouncements(){
+  const target=document.getElementById("publicAnnouncements");
+  if(!target) return;
+
+  const today=new Intl.DateTimeFormat("en-CA",{
+    timeZone:"America/New_York",
+    year:"numeric",month:"2-digit",day:"2-digit"
+  }).format(new Date());
+
+  const {data,error}=await publicDb
+    .from("announcements")
+    .select("id,type,publish_date,title,body")
+    .eq("active",true)
+    .lte("publish_date",today)
+    .order("publish_date",{ascending:false})
+    .order("created_at",{ascending:false})
+    .limit(3);
+
+  if(error){
+    console.warn("Using built-in announcement fallback:",error.message);
+    return;
+  }
+  if(!data?.length) return;
+
+  target.replaceChildren();
+  data.forEach((a,i)=>{
+    const card=document.createElement("div");
+    card.className="card announcement-card";
+    if(i>0) card.style.marginTop="12px";
+
+    const icon=document.createElement("div");
+    icon.className="megaphone";
+    icon.textContent=announcementIcon(a.type);
+
+    const content=document.createElement("div");
+    const title=document.createElement("h3");
+    title.textContent=a.title;
+    const body=document.createElement("p");
+    body.textContent=a.body;
+    const small=document.createElement("small");
+    small.textContent=`${a.type || "Team"} announcement · ${formatAnnouncementDate(a.publish_date)}`;
+
+    content.append(title,body,small);
+    card.append(icon,content);
+    target.append(card);
+  });
+}
+
+loadPublicAnnouncements();
+
 const SKOR_GAMES = [
   {
     kickoff:"2026-08-30T17:00:00-04:00",
