@@ -251,12 +251,12 @@
     <section class="view" id="announcements">
       <div class="panel">
         <h2>Create announcement</h2>
-        <div class="sub">This prototype saves announcements in your browser so the homepage can display them.</div>
-        <div class="notice">Demo mode: this is localStorage only. In production, this form will write to Supabase and require authenticated captain access.</div>
+        <div class="sub">Publish team updates directly to the SKOR FC homepage.</div>
+        <div class="notice">Live mode: announcements are stored in Supabase and published to skorfc.net.</div>
         <form class="form" id="announcementForm">
           <div class="fieldrow">
             <div><label>Type</label><select id="aType"><option>Team</option><option>Practice</option><option>Match</option><option>Fees</option><option>Field Change</option></select></div>
-            <div><label>Publish date</label><input id="aDate" type="date"></div>
+            <div><label>Publish date</label><input id="aDate" type="date" required></div>
           </div>
           <div><label>Title</label><input id="aTitle" placeholder="Practice moved to East Roswell"></div>
           <div><label>Message</label><textarea id="aBody" placeholder="Add the details players need to know..."></textarea></div>
@@ -484,25 +484,101 @@ document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("clic
 const form=document.getElementById("announcementForm");
 const list=document.getElementById("announcementList");
 
-function loadAnnouncements(){
-  const items=JSON.parse(localStorage.getItem("skorfc_announcements")||"[]");
-  if(!items.length){
-    list.innerHTML='<div style="color:var(--muted);font-size:.9rem">No locally saved announcements yet.</div>';
+async function loadAnnouncements(){
+  list.innerHTML='<div style="color:var(--muted);font-size:.9rem">Loading announcements…</div>';
+
+  const { data:items, error } = await sb
+    .from("announcements")
+    .select("id,type,publish_date,title,body,active,created_at")
+    .order("publish_date",{ascending:false})
+    .order("created_at",{ascending:false});
+
+  if(error){
+    console.error(error);
+    list.innerHTML='<div style="color:#8b1e3f;font-size:.9rem">Could not load announcements. Make sure the announcements table and RLS policies have been created in Supabase.</div>';
     return;
   }
-  list.innerHTML=items.map((a,i)=>`
+
+  if(!items?.length){
+    list.innerHTML='<div style="color:var(--muted);font-size:.9rem">No announcements published yet.</div>';
+    return;
+  }
+
+  list.innerHTML=items.map(a=>`
     <div class="announcement-item">
       <strong>${escapeHtml(a.title)}</strong>
-      <small>${escapeHtml(a.type)} • ${escapeHtml(a.date || "No date")}</small>
+      <small>${escapeHtml(a.type)} • ${escapeHtml(a.publish_date || "No date")} • ${a.active ? "Published" : "Hidden"}</small>
       <div style="margin-top:6px;color:#555">${escapeHtml(a.body)}</div>
-      <button class="btn btn-light" style="margin-top:10px" onclick="deleteAnnouncement(${i})">Delete</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn btn-light" type="button" onclick="toggleAnnouncement('${a.id}',${!a.active})">${a.active ? "Hide" : "Publish"}</button>
+        <button class="btn btn-light" type="button" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+      </div>
     </div>`).join("");
 }
-function deleteAnnouncement(i){
-  const items=JSON.parse(localStorage.getItem("skorfc_announcements")||"[]");
-  items.splice(i,1);
-  localStorage.setItem("skorfc_announcements",JSON.stringify(items));
-  loadAnnouncements();
+
+async function deleteAnnouncement(id){
+  if(!confirm("Delete this announcement?")) return;
+  const { error } = await sb.from("announcements").delete().eq("id",id);
+  if(error){
+    alert("Could not delete announcement: "+error.message);
+    return;
+  }
+  await loadAnnouncements();
+}
+
+async function toggleAnnouncement(id,active){
+  const { error } = await sb.from("announcements").update({active}).eq("id",id);
+  if(error){
+    alert("Could not update announcement: "+error.message);
+    return;
+  }
+  await loadAnnouncements();
+}
+
+form.addEventListener("submit",async e=>{
+  e.preventDefault();
+
+  const title=document.getElementById("aTitle").value.trim();
+  const body=document.getElementById("aBody").value.trim();
+  const publishDate=document.getElementById("aDate").value;
+  if(!title||!body||!publishDate){
+    alert("Add a publish date, title and message.");
+    return;
+  }
+
+  const submit=form.querySelector('button[type="submit"]');
+  submit.disabled=true;
+  submit.textContent="Publishing…";
+
+  const { data:{user} } = await sb.auth.getUser();
+  const { error } = await sb.from("announcements").insert({
+    type:document.getElementById("aType").value,
+    publish_date:publishDate,
+    title,
+    body,
+    active:true,
+    created_by:user?.id || null
+  });
+
+  submit.disabled=false;
+  submit.textContent="Publish Announcement";
+
+  if(error){
+    alert("Could not publish announcement: "+error.message);
+    return;
+  }
+
+  form.reset();
+  document.getElementById("aDate").valueAsDate=new Date();
+  await loadAnnouncements();
+});
+
+function escapeHtml(value){
+  return String(value || "").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
+}
+
+document.getElementById("aDate").valueAsDate=new Date();
+loadAnnouncements();
 }
 form.addEventListener("submit",e=>{
   e.preventDefault();
