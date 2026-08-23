@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SKOR FC | Roswell Over 30 Soccer | v16 Mobile Match Center</title>
+<title>SKOR FC | Roswell Over 30 Soccer | v17 Mobile Stadium Hero</title>
 <meta name="description" content="SKOR FC — Over 30 soccer team in Roswell, Georgia.">
 <style>
 *{box-sizing:border-box}
@@ -62,14 +62,54 @@ html,body{margin:0;background:#090a0c;color:#fff;font-family:Arial,Helvetica,san
   .m-menu a:first-child{border-top:0}
 
   .m-hero{
-    position:relative;text-align:center;padding:18px 0 14px;
+    position:relative;
+    text-align:center;
+    padding:22px 0 18px;
+    min-height:390px;
+    overflow:hidden;
     background:
-      linear-gradient(180deg,rgba(54,0,18,.18),rgba(2,3,4,.26) 55%,#050607 100%),
-      url("assets/approved-homepage.png") center top/cover no-repeat;
+      radial-gradient(ellipse at 50% 8%,rgba(139,19,48,.38) 0%,rgba(75,7,24,.22) 26%,transparent 58%),
+      linear-gradient(180deg,#16060b 0%,#090a0d 45%,#07100d 73%,#050607 100%);
   }
-  .m-hero:before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.54);z-index:0}
-  .m-hero .m-wrap{position:relative;z-index:1}
-  .m-crest{display:block;width:min(48vw,205px);height:auto;margin:4px auto 12px;filter:drop-shadow(0 10px 16px rgba(0,0,0,.45))}
+
+  /* Stadium-light glow — pure CSS, no desktop mockup image */
+  .m-hero:before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    background:
+      radial-gradient(circle at 6% 18%,rgba(255,255,255,.95) 0 2px,rgba(255,236,240,.36) 3px 7px,transparent 22px),
+      radial-gradient(circle at 18% 13%,rgba(255,255,255,.9) 0 2px,rgba(255,236,240,.30) 3px 7px,transparent 22px),
+      radial-gradient(circle at 31% 10%,rgba(255,255,255,.82) 0 2px,rgba(255,236,240,.26) 3px 6px,transparent 20px),
+      radial-gradient(circle at 69% 10%,rgba(255,255,255,.82) 0 2px,rgba(255,236,240,.26) 3px 6px,transparent 20px),
+      radial-gradient(circle at 82% 13%,rgba(255,255,255,.9) 0 2px,rgba(255,236,240,.30) 3px 7px,transparent 22px),
+      radial-gradient(circle at 94% 18%,rgba(255,255,255,.95) 0 2px,rgba(255,236,240,.36) 3px 7px,transparent 22px),
+      linear-gradient(180deg,transparent 0 56%,rgba(0,0,0,.25) 56% 100%);
+    opacity:.88;
+  }
+
+  /* Field at the bottom of the hero */
+  .m-hero:after{
+    content:"";
+    position:absolute;
+    left:-12%;
+    right:-12%;
+    bottom:-84px;
+    height:190px;
+    z-index:0;
+    border-radius:50% 50% 0 0 / 34% 34% 0 0;
+    background:
+      linear-gradient(90deg,transparent 49.6%,rgba(255,255,255,.16) 49.6% 50.4%,transparent 50.4%),
+      radial-gradient(ellipse at 50% 38%,transparent 0 26%,rgba(255,255,255,.13) 26.5% 27.2%,transparent 27.7%),
+      repeating-linear-gradient(90deg,rgba(255,255,255,.015) 0 12%,rgba(0,0,0,.04) 12% 24%),
+      linear-gradient(180deg,#153025 0%,#0d2119 60%,#08130f 100%);
+    border-top:1px solid rgba(255,255,255,.12);
+    box-shadow:0 -20px 60px rgba(87,9,28,.18);
+  }
+
+  .m-hero .m-wrap{position:relative;z-index:2}
+  .m-crest{display:block;width:min(48vw,205px);height:auto;margin:2px auto 13px;filter:drop-shadow(0 14px 20px rgba(0,0,0,.55))}
   .m-hero h1{margin:0;font-size:clamp(38px,10.8vw,62px);line-height:.95;font-weight:950;font-style:italic;letter-spacing:-.04em;text-shadow:0 4px 10px rgba(0,0,0,.75)}
   .m-location{margin:10px 0 0;font-size:15px;font-weight:800;letter-spacing:.28em;color:#f0f0f0}
 
