@@ -22,15 +22,15 @@
     a{color:inherit;text-decoration:none}
     button,input,select,textarea{font:inherit}
     .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
-    aside{background:#0f1013;color:white;padding:24px 18px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+    aside{background:#0f1013;color:white;padding:24px 18px;position:sticky;top:0;height:100vh}
     .brand{display:flex;align-items:center;gap:10px;padding:0 8px 24px;border-bottom:1px solid #2a2b30}
     .brand img{width:42px;height:42px;object-fit:contain;filter:grayscale(1) brightness(5)}
     .brand strong{font-size:1.2rem}
-    .nav{display:grid;gap:6px;margin-top:22px;overflow-y:auto;min-height:0;padding-bottom:8px}
+    .nav{display:grid;gap:6px;margin-top:22px}
     .nav button{border:0;background:transparent;color:#c8c9cd;text-align:left;padding:11px 12px;border-radius:10px;cursor:pointer;font-weight:700}
     .nav button:hover,.nav button.active{background:#24252a;color:#fff}
     .nav button.active{box-shadow:inset 3px 0 0 var(--maroon)}
-    .aside-bottom{margin-top:auto;padding-top:14px;color:#9b9da3;font-size:.84rem;flex:0 0 auto}
+    .aside-bottom{position:absolute;bottom:22px;left:18px;right:18px;color:#9b9da3;font-size:.84rem}
     main{padding:28px}
     .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
     .top h1{margin:0;font-size:2rem;letter-spacing:-.04em}
@@ -85,10 +85,10 @@
     @media(max-width:650px){
       main{padding:18px 14px}
       .app{grid-template-columns:1fr}
-      aside{position:static;height:auto;overflow:visible}
+      aside{position:static;height:auto}
       .brand{justify-content:flex-start;padding-bottom:12px}
       .brand strong{display:block}
-      .nav{display:flex;overflow:auto;margin-top:12px;padding-bottom:0}
+      .nav{display:flex;overflow:auto;margin-top:12px}
       .nav button span{display:block;white-space:nowrap}
       .grid{grid-template-columns:1fr 1fr}
       .fieldrow{grid-template-columns:1fr}
@@ -187,7 +187,6 @@
       <button data-view="join">＋ <span>Join Requests</span></button>
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
-      <button data-view="admins">♛ <span>Admins</span></button>
     </div>
     <div class="aside-bottom">SKOR FC Captain Portal • Supabase secured</div>
   </aside>
@@ -358,17 +357,6 @@
         </table>
       </div>
     </section>
-
-    <section class="view" id="admins">
-      <div class="panel">
-        <h2>Admins</h2>
-        <div class="sub">Google accounts approved for SKOR FC captain access.</div>
-        <div class="notice">This list is read directly from the Supabase captain allowlist.</div>
-        <div id="adminsList">
-          <div style="color:var(--muted);font-size:.9rem">Loading approved admins…</div>
-        </div>
-      </div>
-    </section>
   </main>
 </div>
 
@@ -479,8 +467,7 @@ const meta = {
   fields:["Fields","Store field locations, maps and parking notes."],
   join:["Join Requests","Review prospective players."],
   payments:["Payments","Post team fee links and payment details."],
-  sponsors:["Sponsors","Manage sponsor information and website links."],
-  admins:["Admins","View the Google accounts approved for captain access."]
+  sponsors:["Sponsors","Manage sponsor information and website links."]
 };
 function openView(id){
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
@@ -490,50 +477,9 @@ function openView(id){
   if(btn) btn.classList.add("active");
   document.getElementById("pageTitle").textContent=meta[id][0];
   document.getElementById("pageSub").textContent=meta[id][1];
-  if(id==="admins") loadAdmins();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>openView(btn.dataset.view)));
-
-
-async function loadAdmins(){
-  const target=document.getElementById("adminsList");
-  if(!target) return;
-
-  target.innerHTML='<div style="color:var(--muted);font-size:.9rem">Loading approved admins…</div>';
-
-  const { data, error } = await sb
-    .from("captain_allowlist")
-    .select("email,display_name,active,created_at")
-    .order("display_name",{ascending:true});
-
-  if(error){
-    console.error("Could not load admin list:",error);
-    target.innerHTML='<div style="color:#8b1e3f;font-size:.9rem">Could not load the admin list. Run the admin-list RLS SQL update in Supabase first.</div>';
-    return;
-  }
-
-  const rows=(data||[]).filter(a=>a.active);
-  if(!rows.length){
-    target.innerHTML='<div style="color:var(--muted);font-size:.9rem">No active admins found.</div>';
-    return;
-  }
-
-  target.innerHTML=`
-    <table class="table">
-      <thead>
-        <tr><th>Name</th><th>Google Account</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        ${rows.map(a=>`
-          <tr>
-            <td>${escapeHtml(a.display_name || "Captain")}</td>
-            <td>${escapeHtml(a.email)}</td>
-            <td><span class="status">Active</span></td>
-          </tr>`).join("")}
-      </tbody>
-    </table>`;
-}
 
 const form=document.getElementById("announcementForm");
 const list=document.getElementById("announcementList");
