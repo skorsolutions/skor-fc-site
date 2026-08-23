@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SKOR FC | Roswell Over 30 Soccer | v21 Real Responsive</title>
+<title>SKOR FC | Roswell Over 30 Soccer | v22 Sponsor Logos</title>
 <meta name="description" content="SKOR FC — Over 30 competitive soccer in Roswell, Georgia. Play Fast. Play SKOR.">
 <style>
 :root{
@@ -163,7 +163,34 @@ img{max-width:100%}
 
 /* Sponsors */
 .sponsors-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.sponsor{min-height:120px;border:1px solid #2e3237;border-radius:13px;background:#0f1114;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;padding:20px;color:#e1e2e4;font-weight:900}
+.sponsor{
+  min-height:140px;
+  border:1px solid #2e3237;
+  border-radius:13px;
+  background:#0f1114;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  text-decoration:none;
+  padding:20px;
+  color:#e1e2e4;
+  font-weight:900;
+  overflow:hidden;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease
+}
+.sponsor:hover{transform:translateY(-3px);border-color:#5b2636;background:#14171a}
+.sponsor img{
+  display:block;
+  max-width:100%;
+  max-height:95px;
+  width:auto;
+  height:auto;
+  object-fit:contain
+}
+.sponsor.ts img{max-height:105px}
+.sponsor.terminus img{max-height:100px}
+.sponsor.westhollow img{max-height:108px;border-radius:6px}
 
 /* Footer */
 .footer{background:#040506;border-top:1px solid #24272b;padding:34px 0}
@@ -471,10 +498,18 @@ img{max-width:100%}
         <div><div class="eyebrow">Community Partners</div><h2>Sponsors</h2></div>
       </div>
       <div class="sponsors-grid">
-        <a class="sponsor" href="https://skorsolutions.com" target="_blank" rel="noopener">SKOR Solutions</a>
-        <a class="sponsor" href="https://terminus-badminton.com" target="_blank" rel="noopener">Terminus Badminton</a>
-        <a class="sponsor" href="https://tsbadminton.com" target="_blank" rel="noopener">TS Badminton</a>
-        <a class="sponsor" href="http://westhollowwealth.com" target="_blank" rel="noopener">West Hollow Wealth</a>
+        <a class="sponsor skor" href="https://skorsolutions.com" target="_blank" rel="noopener" aria-label="SKOR Solutions">
+          <img src="assets/skor-solutions-logo.png" alt="SKOR Solutions">
+        </a>
+        <a class="sponsor terminus" href="https://terminus-badminton.com" target="_blank" rel="noopener" aria-label="Terminus Badminton">
+          <img src="assets/terminus-badminton-logo.jpg" alt="Terminus Badminton">
+        </a>
+        <a class="sponsor ts" href="https://tsbadminton.com" target="_blank" rel="noopener" aria-label="TS Badminton">
+          <img src="assets/ts-badminton-logo.png" alt="TS Badminton">
+        </a>
+        <a class="sponsor westhollow" href="http://westhollowwealth.com" target="_blank" rel="noopener" aria-label="West Hollow Wealth Management">
+          <img src="assets/west-hollow-wealth-logo.jpg" alt="West Hollow Wealth Management">
+        </a>
       </div>
     </div>
   </section>
