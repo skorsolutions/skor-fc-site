@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SKOR FC | Roswell Over 30 Soccer | v12 Mobile</title>
+<title>SKOR FC | Roswell Over 30 Soccer | v16 Mobile Match Center</title>
 <meta name="description" content="SKOR FC — Over 30 soccer team in Roswell, Georgia.">
 <style>
 *{box-sizing:border-box}
@@ -33,98 +33,95 @@ html,body{margin:0;background:#090a0c;color:#fff;font-family:Arial,Helvetica,san
 .sponsor4{left:77%;top:88.5%;width:20%;height:5.2%}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
+
 .mobile-site{display:none}
 
 @media(max-width:700px){
-  html,body{background:#090a0c}
+  html,body{background:#050607}
   .page{display:none}
   .mobile-site{
-    display:block;
-    min-height:100vh;
+    display:block;min-height:100vh;color:#fff;line-height:1.3;
     background:
-      radial-gradient(circle at 50% -10%,rgba(128,22,43,.48),transparent 34%),
-      linear-gradient(180deg,#121419 0%,#090a0c 45%,#111216 100%);
-    color:#fff;
-    line-height:1.35;
+      radial-gradient(circle at 18% 70%,rgba(126,0,32,.22),transparent 22%),
+      radial-gradient(circle at 84% 73%,rgba(126,0,32,.18),transparent 20%),
+      #050607;
+    overflow:hidden;
   }
-  .m-wrap{width:min(100% - 32px,560px);margin:0 auto}
+  .m-wrap{width:calc(100% - 28px);max-width:600px;margin:0 auto}
   .m-header{
-    position:sticky;top:0;z-index:50;
-    background:rgba(9,10,12,.94);
-    backdrop-filter:blur(12px);
-    border-bottom:1px solid rgba(255,255,255,.09);
+    position:sticky;top:0;z-index:50;height:60px;
+    background:#030404;border-bottom:1px solid #24262a
   }
-  .m-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0}
-  .m-brand{font-weight:900;letter-spacing:.08em;font-size:18px;text-decoration:none;color:#fff}
-  .m-admin{
-    color:#fff;text-decoration:none;font-weight:800;font-size:12px;letter-spacing:.06em;
-    border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:9px 12px
+  .m-nav{height:60px;display:flex;align-items:center;justify-content:space-between}
+  .m-brand{font-size:22px;font-weight:950;letter-spacing:.06em;color:#a51637;text-decoration:none}
+  .m-menu-btn{width:42px;height:42px;border:0;background:transparent;padding:7px;display:grid;align-content:center;gap:5px}
+  .m-menu-btn span{display:block;height:3px;background:#fff;border-radius:4px}
+  .m-menu{display:none;position:absolute;right:14px;top:54px;background:#0d0f11;border:1px solid #303337;border-radius:10px;overflow:hidden;box-shadow:0 16px 38px rgba(0,0,0,.5)}
+  .m-menu.open{display:block}
+  .m-menu a{display:block;color:#fff;text-decoration:none;padding:12px 18px;border-top:1px solid #25282c;font-size:13px;font-weight:800}
+  .m-menu a:first-child{border-top:0}
+
+  .m-hero{
+    position:relative;text-align:center;padding:18px 0 14px;
+    background:
+      linear-gradient(180deg,rgba(54,0,18,.18),rgba(2,3,4,.26) 55%,#050607 100%),
+      url("assets/approved-homepage.png") center top/cover no-repeat;
   }
-  .m-hero{padding:32px 0 26px;text-align:center}
-  .m-crest{
-    display:block;
-    width:min(46vw,190px);
-    height:auto;
-    margin:0 auto 20px;
-    filter:drop-shadow(0 14px 22px rgba(0,0,0,.45));
+  .m-hero:before{content:"";position:absolute;inset:0;background:rgba(0,0,0,.54);z-index:0}
+  .m-hero .m-wrap{position:relative;z-index:1}
+  .m-crest{display:block;width:min(48vw,205px);height:auto;margin:4px auto 12px;filter:drop-shadow(0 10px 16px rgba(0,0,0,.45))}
+  .m-hero h1{margin:0;font-size:clamp(38px,10.8vw,62px);line-height:.95;font-weight:950;font-style:italic;letter-spacing:-.04em;text-shadow:0 4px 10px rgba(0,0,0,.75)}
+  .m-location{margin:10px 0 0;font-size:15px;font-weight:800;letter-spacing:.28em;color:#f0f0f0}
+
+  .m-section{padding:8px 0}
+  .m-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 6px}
+  .m-title-row h2{margin:0;color:#b11238;font-size:16px;letter-spacing:.02em;text-transform:uppercase}
+  .m-title-row a{color:#b11238;text-decoration:none;font-size:12px;font-weight:800;text-transform:uppercase}
+  .m-panel{border:1px solid #373b40;background:linear-gradient(110deg,#111416,#0a0c0d);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.35)}
+
+  .m-next{padding:14px}
+  .m-next-label{color:#b11238;font-size:16px;font-weight:950;text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px}
+  .m-next-grid{display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px}
+  .m-next h2{margin:0 0 9px;font-size:21px;line-height:1.05;text-transform:uppercase}
+  .m-meta{display:grid;gap:5px;color:#f1f1f1;font-size:13px}
+  .m-meta span{color:#aeb2b7;margin-right:7px}
+  .m-match-btn{display:flex;align-items:center;justify-content:center;text-align:center;width:96px;min-height:90px;padding:10px;border-radius:11px;background:linear-gradient(135deg,#771126,#b10d36);color:white;text-decoration:none;font-size:15px;font-weight:950;text-transform:uppercase}
+
+  .m-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
+  .m-quick a{min-width:0;height:88px;border:1px solid #363a3e;border-radius:11px;background:linear-gradient(145deg,#101315,#080a0b);color:#fff;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center}
+  .m-quick svg{width:28px;height:28px;stroke:#b11238;fill:none;stroke-width:2}
+  .m-quick strong{font-size:10px;line-height:1.05;text-transform:uppercase}
+
+  .m-ann{display:grid;grid-template-columns:36px 1fr;gap:10px;align-items:center;padding:13px 14px}
+  .m-ann-icon{font-size:24px;color:#b11238}
+  .m-ann p{margin:0;font-size:13px;line-height:1.35}
+  .m-ann small{display:block;color:#999ea4;margin-top:2px;font-size:10px}
+
+  .m-schedule{overflow:hidden}
+  .m-game{display:grid;grid-template-columns:62px 1fr auto;min-height:76px;border-top:1px solid #292c30;align-items:stretch}
+  .m-game:first-child{border-top:0}
+  .m-date{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#36373b;color:#fff;font-size:10px;font-weight:800}
+  .m-game:first-child .m-date{background:linear-gradient(135deg,#7a1228,#b11238)}
+  .m-date strong{font-size:24px;line-height:1}
+  .m-game-info{padding:12px 10px}
+  .m-game-info h3{font-size:13px;text-transform:uppercase;margin:0 0 5px;line-height:1.15}
+  .m-game-info p{margin:0;color:#aeb1b6;font-size:10.5px;line-height:1.25}
+  .m-side{align-self:center;margin-right:10px;padding:7px 9px;border-radius:8px;background:#26282c;color:#bbb;font-size:9px;font-weight:900;text-transform:uppercase}
+  .m-side.home{background:#a90f34;color:#fff}
+
+  .m-footer{margin-top:12px;padding:24px 16px 30px;background:linear-gradient(90deg,#22020c,#4c0718,#22020c);text-align:center}
+  .m-footer strong{color:#b9143c;font-size:20px;letter-spacing:.04em}
+  .m-social{display:flex;justify-content:center;gap:24px;margin-bottom:14px}
+  .m-social a{color:#fff;text-decoration:none;font-size:20px}
+
+  @media(max-width:390px){
+    .m-wrap{width:calc(100% - 20px)}
+    .m-quick{gap:5px}
+    .m-quick a{height:80px}
+    .m-next h2{font-size:18px}
+    .m-match-btn{width:82px;min-height:82px;font-size:13px}
+    .m-game{grid-template-columns:56px 1fr auto}
   }
-  .m-kicker{color:#d3a7b0;font-size:11px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px}
-  .m-hero h1{font-size:clamp(44px,13vw,70px);line-height:.88;margin:0;font-weight:950;letter-spacing:-.045em}
-  .m-hero h1 span{color:#9b243d}
-  .m-hero p{margin:18px auto 0;max-width:420px;color:#c6c7ca;font-size:15px;line-height:1.55}
-  .m-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
-  .m-btn{
-    display:flex;align-items:center;justify-content:center;min-height:48px;
-    padding:12px 14px;border-radius:10px;text-decoration:none;font-weight:900;font-size:13px
-  }
-  .m-btn-primary{background:#8c1d36;color:#fff}
-  .m-btn-secondary{border:1px solid rgba(255,255,255,.22);color:#fff;background:rgba(255,255,255,.03)}
-  .m-section{padding:18px 0}
-  .m-section-title{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
-  .m-section-title h2{margin:0;font-size:22px;letter-spacing:-.02em}
-  .m-label{font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#b86a7a}
-  .m-card{
-    border:1px solid rgba(255,255,255,.1);
-    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.025));
-    border-radius:16px;padding:18px;
-    box-shadow:0 16px 40px rgba(0,0,0,.2);
-  }
-  .m-match{position:relative;overflow:hidden}
-  .m-match:before{
-    content:"";position:absolute;inset:0 auto 0 0;width:4px;background:#8c1d36
-  }
-  .m-match h2{font-size:25px;line-height:1.05;margin:7px 0 8px;letter-spacing:-.025em}
-  .m-match .vs{color:#8b8d92;font-weight:700}
-  .m-meta{color:#c8c9cb;font-size:13px;line-height:1.5}
-  .m-announcement{font-size:15px;line-height:1.55;margin:0;color:#ececef}
-  .m-game{
-    display:grid;grid-template-columns:60px 1fr;gap:13px;align-items:start;
-    padding:14px 0;border-top:1px solid rgba(255,255,255,.08)
-  }
-  .m-game:first-child{border-top:0;padding-top:0}
-  .m-game:last-child{padding-bottom:0}
-  .m-date{
-    background:#181a1f;border:1px solid rgba(255,255,255,.09);
-    border-radius:10px;padding:8px 5px;text-align:center;font-weight:900;
-    font-size:12px;line-height:1.1
-  }
-  .m-date strong{display:block;font-size:20px;margin-bottom:2px}
-  .m-game h3{font-size:15px;line-height:1.25;margin:1px 0 4px}
-  .m-game p{font-size:12px;color:#aaaeb4;margin:0;line-height:1.4}
-  .m-links{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .m-link-card{
-    display:block;text-decoration:none;color:#fff;border:1px solid rgba(255,255,255,.1);
-    background:#13151a;border-radius:14px;padding:16px
-  }
-  .m-link-card strong{display:block;margin-bottom:4px}
-  .m-link-card span{font-size:12px;color:#aeb0b5}
-  .m-sponsors{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .m-sponsors a{
-    display:flex;min-height:72px;align-items:center;justify-content:center;text-align:center;
-    border:1px solid rgba(255,255,255,.1);border-radius:12px;color:#e8e8ea;
-    text-decoration:none;font-size:12px;font-weight:800;padding:10px;background:#111318
-  }
-  .m-footer{padding:28px 0 42px;text-align:center;color:#777b82;font-size:11px}
 }
 
 </style>
@@ -181,114 +178,133 @@ html,body{margin:0;background:#090a0c;color:#fff;font-family:Arial,Helvetica,san
   <section class="sr-only" id="about-data"><h2>About SKOR FC</h2><p>Over 30 soccer team in Roswell, Georgia. Play Fast. Play SKOR.</p></section>
 </main>
 
+
 <section class="mobile-site" aria-label="SKOR FC mobile homepage">
   <header class="m-header">
     <div class="m-wrap m-nav">
       <a class="m-brand" href="#m-top">SKOR FC</a>
-      <a class="m-admin" href="admin.html">CAPTAIN LOGIN</a>
+      <button class="m-menu-btn" type="button" aria-label="Open menu" aria-expanded="false" onclick="document.querySelector('.m-menu').classList.toggle('open');this.setAttribute('aria-expanded',document.querySelector('.m-menu').classList.contains('open'))">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="m-menu">
+        <a href="#m-schedule">Schedule</a>
+        <a href="#m-team">Team</a>
+        <a href="#m-fields">Fields</a>
+        <a href="mailto:team@skorfc.net">Join SKOR FC</a>
+        <a href="admin.html">Captain Login</a>
+      </nav>
     </div>
   </header>
 
   <div id="m-top">
     <section class="m-hero">
       <div class="m-wrap">
-        <img class="m-crest" src="assets/skor-fc-logo.png" alt="SKOR FC crest">
-        <div class="m-kicker">Roswell, Georgia · Over 30 Soccer</div>
-        <h1>PLAY FAST.<br><span>PLAY SKOR.</span></h1>
-        <p>Competitive soccer built around good football, good people, and the unreasonable belief that our legs still work like they did ten years ago.</p>
-        <div class="m-actions">
-          <a class="m-btn m-btn-primary" href="#m-schedule">View Schedule</a>
-          <a class="m-btn m-btn-secondary" href="mailto:team@skorfc.net">Request to Join</a>
+        <img class="m-crest" src="assets/skor fc logo transparent.png" alt="SKOR FC crest">
+        <h1>PLAY FAST. PLAY SKOR.</h1>
+        <div class="m-location">ROSWELL, GA</div>
+      </div>
+    </section>
+
+    <section class="m-section">
+      <div class="m-wrap">
+        <div class="m-panel m-next">
+          <div class="m-next-label">Next Match</div>
+          <div class="m-next-grid">
+            <div>
+              <h2>Lone Wolves United vs SKOR FC</h2>
+              <div class="m-meta">
+                <div><span>▣</span>Sunday, Aug 30, 2026</div>
+                <div><span>◷</span>5:00 PM</div>
+                <div><span>⌖</span>Groveway Community Park · Upper Field</div>
+              </div>
+            </div>
+            <a class="m-match-btn" href="#m-schedule">Match<br>Center ›</a>
+          </div>
+        </div>
+
+        <div class="m-quick" id="m-team">
+          <a href="#m-schedule" aria-label="Schedule">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>
+            <strong>Schedule</strong>
+          </a>
+          <a href="#roster-data" aria-label="Team">
+            <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-4 2.5-6 6-6s6 2 6 6M14 15c3-.5 6 1 7 5"/></svg>
+            <strong>Team</strong>
+          </a>
+          <a href="#m-fields" aria-label="Fields">
+            <svg viewBox="0 0 24 24"><path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11z"/><circle cx="12" cy="10" r="2"/></svg>
+            <strong>Fields</strong>
+          </a>
+          <a href="admin.html" aria-label="Captain login">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.8-5 3.7-7 8-7s7.2 2 8 7"/></svg>
+            <strong>Captain Login</strong>
+          </a>
         </div>
       </div>
     </section>
 
     <section class="m-section">
       <div class="m-wrap">
-        <div class="m-card m-match">
-          <div class="m-label">Next Match</div>
-          <h2>LONE WOLVES UNITED <span class="vs">vs</span> SKOR FC</h2>
-          <div class="m-meta">
-            Sunday, August 30 · 5:00 PM<br>
-            Groveway Community Park · Upper Field
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="m-section">
-      <div class="m-wrap">
-        <div class="m-section-title">
-          <div>
-            <div class="m-label">Team Update</div>
-            <h2>Announcements</h2>
-          </div>
-        </div>
-        <div class="m-card">
-          <p class="m-announcement">First practice: Sunday, August 23 at 9:00 AM at Sweet Apple Park in Roswell.</p>
+        <div class="m-title-row"><h2>Announcements</h2></div>
+        <div class="m-panel m-ann">
+          <div class="m-ann-icon">◀</div>
+          <p>First practice: Sunday, August 23 at 9:00 AM at Sweet Apple Park in Roswell.<small>Team announcement</small></p>
         </div>
       </div>
     </section>
 
     <section class="m-section" id="m-schedule">
       <div class="m-wrap">
-        <div class="m-section-title">
-          <div>
-            <div class="m-label">2026 Season</div>
-            <h2>Upcoming Games</h2>
-          </div>
-        </div>
-        <div class="m-card">
+        <div class="m-title-row"><h2>Upcoming Games</h2><a href="#schedule-data">View Full Schedule</a></div>
+        <div class="m-panel m-schedule">
           <div class="m-game">
-            <div class="m-date"><strong>30</strong>AUG</div>
-            <div><h3>Lone Wolves United vs SKOR FC</h3><p>5:00 PM · Groveway Community Park Upper Field</p></div>
+            <div class="m-date">AUG<strong>30</strong></div>
+            <div class="m-game-info"><h3>Lone Wolves United vs SKOR FC</h3><p>5:00 PM · Groveway Community Park Upper Field</p></div>
+            <div class="m-side">Away</div>
           </div>
           <div class="m-game">
-            <div class="m-date"><strong>13</strong>SEP</div>
-            <div><h3>SKOR FC vs Hamilton</h3><p>7:00 PM · East Roswell Park SC#1</p></div>
+            <div class="m-date">SEP<strong>13</strong></div>
+            <div class="m-game-info"><h3>SKOR FC vs Hamilton</h3><p>7:00 PM · East Roswell Park SC#1</p></div>
+            <div class="m-side home">Home</div>
           </div>
           <div class="m-game">
-            <div class="m-date"><strong>20</strong>SEP</div>
-            <div><h3>SKOR FC vs CTM</h3><p>3:00 PM · Groveway Community Park Upper Field</p></div>
+            <div class="m-date">SEP<strong>20</strong></div>
+            <div class="m-game-info"><h3>SKOR FC vs CTM</h3><p>3:00 PM · Groveway Community Park Upper Field</p></div>
+            <div class="m-side home">Home</div>
           </div>
           <div class="m-game">
-            <div class="m-date"><strong>25</strong>SEP</div>
-            <div><h3>Press &amp; Pray FC vs SKOR FC</h3><p>7:00 PM · East Roswell Park SC#2</p></div>
+            <div class="m-date">SEP<strong>25</strong></div>
+            <div class="m-game-info"><h3>Press &amp; Pray FC vs SKOR FC</h3><p>7:00 PM · East Roswell Park SC#2</p></div>
+            <div class="m-side">Away</div>
           </div>
           <div class="m-game">
-            <div class="m-date"><strong>27</strong>SEP</div>
-            <div><h3>SKOR FC vs Milliken</h3><p>11:00 AM · East Roswell Park SC#2</p></div>
+            <div class="m-date">SEP<strong>27</strong></div>
+            <div class="m-game-info"><h3>SKOR FC vs Milliken</h3><p>11:00 AM · East Roswell Park SC#2</p></div>
+            <div class="m-side home">Home</div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="m-section">
-      <div class="m-wrap">
-        <div class="m-section-title"><h2>Team</h2></div>
-        <div class="m-links">
-          <a class="m-link-card" href="#m-schedule"><strong>Schedule</strong><span>Upcoming matches</span></a>
-          <a class="m-link-card" href="mailto:team@skorfc.net"><strong>Join SKOR FC</strong><span>Request a roster spot</span></a>
-          <a class="m-link-card" href="admin.html"><strong>Captain Login</strong><span>Team administration</span></a>
-          <a class="m-link-card" href="mailto:team@skorfc.net"><strong>Contact</strong><span>team@skorfc.net</span></a>
         </div>
       </div>
     </section>
 
-    <section class="m-section">
+    <section class="m-section" id="m-fields">
       <div class="m-wrap">
-        <div class="m-section-title"><h2>Sponsors</h2></div>
-        <div class="m-sponsors">
-          <a href="https://skorsolutions.com" target="_blank" rel="noopener">SKOR Solutions</a>
-          <a href="https://terminus-badminton.com" target="_blank" rel="noopener">Terminus Badminton</a>
-          <a href="https://tsbadminton.com" target="_blank" rel="noopener">TS Badminton</a>
-          <a href="http://westhollowwealth.com" target="_blank" rel="noopener">West Hollow Wealth</a>
+        <div class="m-title-row"><h2>Team Links</h2></div>
+        <div class="m-quick">
+          <a href="mailto:team@skorfc.net"><strong>Join</strong></a>
+          <a href="#roster-data"><strong>Roster</strong></a>
+          <a href="#fields-data"><strong>Directions</strong></a>
+          <a href="admin.html"><strong>Admin</strong></a>
         </div>
       </div>
     </section>
 
     <footer class="m-footer">
-      <div class="m-wrap">SKOR FC · Roswell, Georgia · Established 2026</div>
+      <div class="m-social">
+        <a href="#" aria-label="Instagram">◎</a>
+        <a href="#" aria-label="Facebook">f</a>
+        <a href="#" aria-label="YouTube">▶</a>
+      </div>
+      <strong>#PLAYSKOR</strong>
     </footer>
   </div>
 </section>
