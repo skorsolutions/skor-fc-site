@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SKOR FC | Roswell Over 30 Soccer | v24 Training Field Order</title>
+<title>SKOR FC | Roswell Over 30 Soccer | v26 Opponent Logos</title>
 <meta name="description" content="SKOR FC — Over 30 competitive soccer in Roswell, Georgia. Play Fast. Play SKOR.">
 <style>
 :root{
@@ -102,13 +102,25 @@ img{max-width:100%}
   background:linear-gradient(110deg,#15181c 0%,#0b0d10 72%);
   box-shadow:0 24px 55px rgba(0,0,0,.42);
 }
-.match-main{padding:26px 30px;display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center}
-.match-mark{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#22262b;border:1px solid #444a50;font-size:29px;font-weight:950;color:#d7dadd}
+.match-main{padding:26px 30px;display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center}
+.match-logos{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+.match-team-badge{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#22262b;border:1px solid #444a50;font-size:24px;font-weight:950;color:#d7dadd;overflow:hidden;flex:0 0 72px}
+.match-team-badge.opponent{background:linear-gradient(145deg,#202329,#0d0f12);padding:5px}
+.match-team-badge.opponent img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.match-team-badge.skor{background:linear-gradient(145deg,#14161a,#0a0b0d);padding:8px}
+.match-team-badge.skor img{width:100%;height:100%;object-fit:contain}
 .match-label{color:#c2244d;font-size:11px;font-weight:950;letter-spacing:.14em;text-transform:uppercase}
 .match-main h2{font-size:clamp(24px,2.4vw,38px);line-height:1;margin:6px 0 11px;text-transform:uppercase}
 .match-meta{display:flex;gap:18px;flex-wrap:wrap;color:#b3b6bb;font-size:12px}
 .match-meta strong{color:#eee}
 .match-cta{min-width:190px;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;background:linear-gradient(135deg,#711029,#ad123b);font-size:16px;line-height:1.05;font-weight:950;text-transform:uppercase;letter-spacing:.04em}
+
+.row-logos{display:flex;align-items:center;gap:6px;align-self:center;margin-right:12px}
+.row-logo-badge{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#26282d;border:1px solid #40444a;color:#fff;font-size:10px;font-weight:950;letter-spacing:.02em;overflow:hidden;flex:0 0 38px}
+.row-logo-badge.opponent{background:linear-gradient(145deg,#202329,#0d0f12);padding:2px}
+.row-logo-badge.opponent img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.row-logo-badge.skor{background:linear-gradient(145deg,#14161a,#0a0b0d);padding:5px}
+.row-logo-badge.skor img{width:100%;height:100%;object-fit:contain}
 
 /* Announcement + Schedule */
 .info-grid{display:grid;grid-template-columns:.88fr 1.42fr;gap:20px}
@@ -236,7 +248,9 @@ img{max-width:100%}
   .match-strip{margin-top:-42px}
   .match-card{grid-template-columns:1fr auto;border-radius:12px}
   .match-main{padding:14px;grid-template-columns:1fr}
-  .match-mark{display:none}
+  .match-logos{justify-content:flex-start;margin-top:10px}
+  .match-team-badge{width:56px;height:56px;flex-basis:56px;font-size:18px}
+  
   .match-main h2{font-size:19px}
   .match-meta{display:grid;gap:4px;font-size:11px}
   .match-cta{min-width:92px;font-size:12px;padding:8px}
@@ -256,6 +270,9 @@ img{max-width:100%}
   .game-info{padding:11px 9px}
   .game-info h3{font-size:11px}
   .game-info p{font-size:9.5px}
+  .row-logos{margin-right:8px;gap:4px}
+  .row-logo-badge{width:30px;height:30px;flex-basis:30px;font-size:8px}
+  
   .side-badge{font-size:8px;margin-right:8px;padding:6px}
 
   .squad-grid{grid-template-columns:repeat(2,1fr);gap:9px}
@@ -324,7 +341,6 @@ img{max-width:100%}
     <div class="wrap">
       <div class="match-card">
         <div class="match-main">
-          <div class="match-mark">LW</div>
           <div>
             <div class="match-label">Next Match</div>
             <h2>Lone Wolves United vs SKOR FC</h2>
@@ -332,6 +348,12 @@ img{max-width:100%}
               <span><strong>Sunday</strong> · Aug 30, 2026</span>
               <span><strong>5:00 PM</strong></span>
               <span><strong>Groveway Community Park</strong> · Upper Field</span>
+            </div>
+          </div>
+          <div class="match-logos" aria-label="Lone Wolves United versus SKOR FC logos">
+            <div class="match-team-badge opponent" title="Lone Wolves United"><img src="assets/lone-wolves-logo.jpg" alt="Lone Wolves United logo"></div>
+            <div class="match-team-badge skor" title="SKOR FC">
+              <img src="assets/skor fc logo transparent.png" alt="SKOR FC crest">
             </div>
           </div>
         </div>
@@ -364,52 +386,52 @@ img{max-width:100%}
           <div class="game-row">
             <div class="date-box">AUG<strong>30</strong></div>
             <div class="game-info"><h3>Lone Wolves United vs SKOR FC</h3><p>5:00 PM · Groveway Community Park Upper Field</p></div>
-            <div class="side-badge">Away</div>
+            <div class="row-logos" aria-label="Opponent and SKOR FC logos"><div class="row-logo-badge opponent" title="Lone Wolves United"><img src="assets/lone-wolves-logo.jpg" alt="Lone Wolves United logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">SEP<strong>13</strong></div>
             <div class="game-info"><h3>SKOR FC vs Hamilton</h3><p>7:00 PM · East Roswell Park SC#1</p></div>
-            <div class="side-badge home">Home</div>
+            <div class="row-logos" aria-label="Hamilton and SKOR FC logos"><div class="row-logo-badge opponent" title="Hamilton"><img src="assets/hamilton-logo.png" alt="Hamilton logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">SEP<strong>20</strong></div>
             <div class="game-info"><h3>SKOR FC vs CTM</h3><p>3:00 PM · Groveway Community Park Upper Field</p></div>
-            <div class="side-badge home">Home</div>
+            <div class="row-logos" aria-label="CTM and SKOR FC logos"><div class="row-logo-badge opponent" title="CTM"><img src="assets/ctm-logo.png" alt="CTM logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">SEP<strong>25</strong></div>
             <div class="game-info"><h3>Press &amp; Pray FC vs SKOR FC</h3><p>7:00 PM · East Roswell Park SC#2</p></div>
-            <div class="side-badge">Away</div>
+            <div class="row-logos" aria-label="Press &amp; Pray FC and SKOR FC logos"><div class="row-logo-badge opponent" title="Press & Pray FC"><img src="assets/press-pray-logo.png" alt="Press and Pray FC logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">SEP<strong>27</strong></div>
             <div class="game-info"><h3>SKOR FC vs Milliken</h3><p>11:00 AM · East Roswell Park SC#2</p></div>
-            <div class="side-badge home">Home</div>
+            <div class="row-logos" aria-label="Milliken and SKOR FC logos"><div class="row-logo-badge opponent" title="Milliken"><img src="assets/milliken-logo.png" alt="Milliken logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">OCT<strong>04</strong></div>
             <div class="game-info"><h3>Majestic SC vs SKOR FC</h3><p>11:00 AM · East Roswell Park SC#1</p></div>
-            <div class="side-badge">Away</div>
+            <div class="row-logos" aria-label="Majestic SC and SKOR FC logos"><div class="row-logo-badge opponent" title="Majestic SC"><img src="assets/majestic-logo.png" alt="Majestic SC logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">OCT<strong>11</strong></div>
             <div class="game-info"><h3>SKOR FC vs Rovers Ruckus</h3><p>7:00 PM · East Roswell Park SC#2</p></div>
-            <div class="side-badge home">Home</div>
+            <div class="row-logos" aria-label="Rovers Ruckus and SKOR FC logos"><div class="row-logo-badge opponent" title="Rovers Ruckus"><img src="assets/rovers-ruckus-logo.png" alt="Rovers Ruckus logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">OCT<strong>18</strong></div>
             <div class="game-info"><h3>Concord FC vs SKOR FC</h3><p>5:00 PM · East Roswell Park SC#1</p></div>
-            <div class="side-badge">Away</div>
+            <div class="row-logos" aria-label="Concord FC and SKOR FC logos"><div class="row-logo-badge opponent" title="Concord FC"><img src="assets/concord-logo.png" alt="Concord FC logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">OCT<strong>25</strong></div>
             <div class="game-info"><h3>SKOR FC vs Latinos FC</h3><p>7:00 PM · East Roswell Park SC#1</p></div>
-            <div class="side-badge home">Home</div>
+            <div class="row-logos" aria-label="Latinos FC and SKOR FC logos"><div class="row-logo-badge opponent" title="Latinos FC"><img src="assets/latinos-logo.png" alt="Latinos FC logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
           <div class="game-row">
             <div class="date-box">NOV<strong>01</strong></div>
             <div class="game-info"><h3>Lone Wolves United vs SKOR FC</h3><p>11:00 AM · East Roswell Park SC#1</p></div>
-            <div class="side-badge">Away</div>
+            <div class="row-logos" aria-label="Opponent and SKOR FC logos"><div class="row-logo-badge opponent" title="Lone Wolves United"><img src="assets/lone-wolves-logo.jpg" alt="Lone Wolves United logo"></div><div class="row-logo-badge skor" title="SKOR FC"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"></div></div>
           </div>
         </div>
       </div>
