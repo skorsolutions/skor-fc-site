@@ -360,10 +360,25 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+if (!window.supabase) {
+  document.write('<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"><\\/script>');
+}
+</script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
+
+if (!window.supabase) {
+  const authErrorBox = document.getElementById("authError");
+  if (authErrorBox) {
+    authErrorBox.textContent = "Supabase login library could not load. Refresh the page or check your network/content blocker.";
+    authErrorBox.style.display = "block";
+  }
+  throw new Error("Supabase JavaScript library failed to load from both CDNs.");
+}
+
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 const authGate = document.getElementById("authGate");
