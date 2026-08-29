@@ -12,6 +12,11 @@
 .hero{padding:64px 0 36px;background:radial-gradient(circle at 20% 0%,rgba(143,24,54,.32),transparent 40%),linear-gradient(180deg,#14070c,#07080a)}.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#d06079;font-weight:900}.hero h1{font-size:clamp(48px,7vw,88px);line-height:.9;margin:8px 0 14px;text-transform:uppercase;letter-spacing:-.055em;font-style:italic}.hero p{color:#b9bdc3;max-width:680px;line-height:1.55}.hero-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border-radius:9px;text-decoration:none;text-transform:uppercase;letter-spacing:.045em;font-size:10px;font-weight:900}.btn-primary{background:linear-gradient(135deg,var(--maroon3),var(--maroon2))}.btn-secondary{background:#111317;border:1px solid #393d43}
 .section{padding:42px 0}.section-title{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:16px}.section-title h2{font-size:clamp(28px,4vw,48px);margin:4px 0 0;text-transform:uppercase;letter-spacing:-.04em}.selected{padding:28px;overflow:hidden}.status-pill{display:inline-flex;padding:6px 9px;border-radius:999px;background:#2b2e33;color:#d6d8dc;font-size:9px;font-weight:950;letter-spacing:.1em;text-transform:uppercase}.status-pill.live{background:#a4163c;color:#fff}.status-pill.final{background:#30343a;color:#fff}.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:26px;margin:28px 0}.team{text-align:center}.team img{width:108px;height:108px;object-fit:contain;margin-bottom:10px}.team h2{font-size:clamp(20px,3vw,34px);margin:0;text-transform:uppercase}.score{font-size:clamp(46px,7vw,86px);font-weight:950;letter-spacing:-.06em;white-space:nowrap}.vs{font-size:24px;color:#777c83}.match-meta{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;color:#aeb2b8;font-size:12px;border-top:1px solid #282c31;padding-top:18px}.match-meta strong{color:#fff}.summary-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:18px}.panel{padding:22px}.panel h3{margin:0 0 14px;text-transform:uppercase;font-size:17px}.half{margin-top:18px}.half:first-child{margin-top:0}.half-title{font-size:10px;color:#d06079;font-weight:950;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}.event{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-top:1px solid #292d31}.event:first-of-type{border-top:0}.event-icon{width:28px;text-align:center}.event-main{font-size:14px;line-height:1.45}.event-main small{display:block;color:#858a91;margin-top:2px}.empty{color:#8e939a;font-size:13px;line-height:1.5;padding:8px 0}.matches-list{overflow:hidden}.match-row{display:grid;grid-template-columns:86px 1fr auto;align-items:center;min-height:84px;border-top:1px solid #292d31;text-decoration:none}.match-row:first-child{border-top:0}.match-row:hover{background:#14171b}.datebox{align-self:stretch;background:#292c31;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:10px;font-weight:900;letter-spacing:.06em}.datebox strong{font-size:25px}.match-info{padding:14px 16px}.match-info h3{font-size:14px;text-transform:uppercase;margin:0 0 5px}.match-info p{font-size:11px;color:#999ea5;margin:0}.row-result{padding:0 18px;font-size:19px;font-weight:950}.row-badges{display:flex;gap:6px;padding-right:14px}.row-badges img{width:38px;height:38px;object-fit:contain;border-radius:50%;background:#181b1f;border:1px solid #353a40;padding:4px}.footer{background:#040506;border-top:1px solid #24272b;padding:34px 0;margin-top:30px}.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}.footer-brand{display:flex;align-items:center;gap:11px}.footer-brand img{width:42px;height:42px;object-fit:contain}.footer small{color:#71767c}.play-skor{color:#a9183c;font-size:17px;font-weight:950}
 @media(max-width:760px){.wrap{width:calc(100% - 24px)}.nav{height:60px}.brand img{width:34px;height:34px}.brand span{color:var(--maroon2)}.nav-links a:not(.login-btn){display:none}.hero{padding:40px 0 24px}.hero h1{font-size:48px}.section{padding:28px 0}.selected{padding:18px}.scoreboard{gap:8px;margin:22px 0}.team img{width:70px;height:70px}.team h2{font-size:15px}.score{font-size:42px}.summary-grid{grid-template-columns:1fr}.match-row{grid-template-columns:62px 1fr auto;min-height:72px}.datebox strong{font-size:21px}.row-badges img{width:30px;height:30px}.row-result{font-size:15px;padding:0 10px}.footer-inner{flex-direction:column;text-align:center}}
+
+.motm-card{margin-top:22px;padding:22px;border:1px solid #3a2a30;border-radius:16px;background:linear-gradient(145deg,#1a0d12,#101216)}
+.motm-card .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#d06079;font-weight:900}
+.motm-card h3{margin:8px 0 6px;font-size:28px}
+.motm-card p{margin:0;color:#c7c9cc;line-height:1.55}
 </style>
 </head>
 <body>
@@ -23,7 +28,21 @@
 <section class="section" id="past"><div class="wrap"><div class="section-title"><div><div class="eyebrow">Results</div><h2>Past Matches</h2></div></div><div class="card matches-list" id="pastList"></div></div></section>
 </main>
 <footer class="footer"><div class="wrap footer-inner"><div class="footer-brand"><img src="assets/skor fc logo transparent.png" alt=""><div><strong>SKOR FC</strong><br><small>Roswell, Georgia · Established 2026</small></div></div><div class="play-skor">#PLAYSKOR</div></div></footer>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js">
+// Public Man of the Match card stays hidden until a match record contains MOTM data.
+function renderManOfMatch(match){
+  const card=document.getElementById('motmCard');
+  if(!card) return;
+  const name=match?.man_of_match_name || '';
+  const reason=match?.man_of_match_reason || '';
+  const number=match?.man_of_match_number || '';
+  if(!name || !reason){ card.style.display='none'; return; }
+  document.getElementById('motmName').textContent=`${number ? '#'+number+' ' : ''}${name}`;
+  document.getElementById('motmReasonPublic').textContent=reason;
+  card.style.display='block';
+}
+
+</script>
 <script>
 const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -64,5 +83,19 @@ function row(m,past=false){const d=new Date(m.kickoff),sc=score(m),show=past||m.
 function renderLists(){const up=matches.filter(m=>!isPast(m)).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));const past=matches.filter(isPast).sort((a,b)=>new Date(b.kickoff)-new Date(a.kickoff));document.getElementById("upcomingList").innerHTML=up.length?up.map(m=>row(m)).join(""):'<div class="empty" style="padding:22px">No upcoming matches scheduled.</div>';document.getElementById("pastList").innerHTML=past.length?past.map(m=>row(m,true)).join(""):'<div class="empty" style="padding:22px">No completed SKOR FC matches yet. Results will appear here after games are marked Final.</div>';const wanted=new URLSearchParams(location.search).get("game");const selected=matches.find(m=>m.slug===wanted)||up[0]||past[0];renderSelected(selected);}
 async function load(){if(!db){renderLists();return;}try{const {data,error}=await db.from("matches").select("id,slug,kickoff,arrival_time,kit,status,home_team,away_team,location,home_logo,away_logo,published").eq("published",true).order("kickoff",{ascending:true});if(!error&&data?.length){matches=data.map(normalize);const ids=matches.map(m=>m.id);const r=await db.from("match_events").select("id,match_id,event_type,player_name,player_number,assist_player_name,assist_player_number,half,event_order,created_at").in("match_id",ids).order("event_order",{ascending:true});if(!r.error)events=r.data||[];}}catch(e){console.info("Using built-in match schedule fallback",e)}renderLists();}
 load();setInterval(load,60000);
+
+// Public Man of the Match card stays hidden until a match record contains MOTM data.
+function renderManOfMatch(match){
+  const card=document.getElementById('motmCard');
+  if(!card) return;
+  const name=match?.man_of_match_name || '';
+  const reason=match?.man_of_match_reason || '';
+  const number=match?.man_of_match_number || '';
+  if(!name || !reason){ card.style.display='none'; return; }
+  document.getElementById('motmName').textContent=`${number ? '#'+number+' ' : ''}${name}`;
+  document.getElementById('motmReasonPublic').textContent=reason;
+  card.style.display='block';
+}
+
 </script>
 </body></html>
