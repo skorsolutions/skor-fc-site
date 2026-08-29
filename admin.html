@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SKOR FC Admin</title>
+  <meta name="skor-build" content="game-day-v8" />
+  <title>SKOR FC Admin | Game Day v8</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -720,7 +721,7 @@ function renderGameDay(){
 async function loadGameDayMatches(preferredId=null){
   const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
-  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected.";
+  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v8";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
   gameDayMatch.value=pick.id;gameDaySelected=pick;await loadGameDayEvents();
