@@ -60,6 +60,45 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
 .position{color:#d2d4d7;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
 .player-details p{color:#7f8389;font-size:12px;margin:13px 0 0}
 
+/* Season stats */
+.stats-section{width:min(1180px,calc(100% - 36px));margin:0 auto;padding:42px 0 6px}
+.stats-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:18px}
+.stats-head h2{margin:0;font-size:30px}
+.stats-head p{margin:5px 0 0;color:#898d94;font-size:13px}
+.stats-live{font-size:10px;font-weight:900;letter-spacing:.10em;text-transform:uppercase;color:#b51b40}
+.season-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.stat-tile{border:1px solid #303338;border-radius:14px;background:linear-gradient(155deg,#121519,#090b0d);padding:17px}
+.stat-tile span{display:block;color:#878b91;font-size:10px;font-weight:900;letter-spacing:.10em;text-transform:uppercase}
+.stat-tile strong{display:block;margin-top:5px;font-size:30px;line-height:1}
+.leaders{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:26px}
+.leader-card{border:1px solid #303338;border-radius:14px;background:linear-gradient(145deg,#18090e,#0b0d10);padding:17px}
+.leader-card span{display:block;color:#b51b40;font-size:10px;font-weight:950;letter-spacing:.10em;text-transform:uppercase}
+.leader-card strong{display:block;margin-top:6px;font-size:21px}
+.leader-card small{display:block;margin-top:4px;color:#898d94}
+.player-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:15px;padding-top:13px;border-top:1px solid #26292d}
+.player-stat{text-align:center;min-width:0}
+.player-stat strong{display:block;font-size:17px;color:#fff}
+.player-stat span{display:block;margin-top:3px;color:#7f8389;font-size:8px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.extra-stats{margin-top:28px;border:1px solid #303338;border-radius:15px;background:#0d0f12;overflow:hidden;display:none}
+.extra-stats.show{display:block}
+.extra-stats h3{margin:0;padding:17px;border-bottom:1px solid #282b2f;font-size:18px}
+.stats-table{width:100%;border-collapse:collapse}
+.stats-table th,.stats-table td{padding:11px 14px;border-top:1px solid #24272b;text-align:left;font-size:12px}
+.stats-table th{color:#85898f;font-size:9px;letter-spacing:.09em;text-transform:uppercase}
+.stats-table td.num,.stats-table th.num{text-align:center}
+.stats-note{color:#72767c;font-size:10px;margin-top:12px;line-height:1.5}
+@media(max-width:700px){
+ .stats-section{width:calc(100% - 24px);padding-top:28px}
+ .stats-head{align-items:start;flex-direction:column}
+ .season-overview{grid-template-columns:repeat(2,1fr)}
+ .stat-tile:last-child{grid-column:1/-1}
+ .leaders{grid-template-columns:1fr}
+ .player-stats{grid-template-columns:repeat(5,1fr);gap:3px}
+ .player-stat strong{font-size:15px}
+ .player-stat span{font-size:7px}
+ .stats-table th,.stats-table td{padding:9px 7px;font-size:10px}
+}
+
 .footer{border-top:1px solid #24272b;background:#050607;padding:30px 18px;text-align:center;color:#72767c;font-size:11px}
 .footer strong{display:block;color:#a81839;font-size:15px;margin-bottom:5px}
 
@@ -116,6 +155,33 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
     </div>
   </section>
 
+
+
+  <section class="stats-section" id="season-stats">
+    <div class="stats-head">
+      <div>
+        <div class="eyebrow">2026 Season</div>
+        <h2>Season Stats</h2>
+        <p>Automatically calculated from Captain Game Day match events. Temporary match jersey numbers stay attached to the correct roster player.</p>
+      </div>
+      <div class="stats-live" id="statsStatus">Loading live stats…</div>
+    </div>
+
+    <div class="season-overview">
+      <div class="stat-tile"><span>Team Goals</span><strong id="teamGoals">0</strong></div>
+      <div class="stat-tile"><span>Assists</span><strong id="teamAssists">0</strong></div>
+      <div class="stat-tile"><span>Yellow Cards</span><strong id="teamYellow">0</strong></div>
+      <div class="stat-tile"><span>Red Cards</span><strong id="teamRed">0</strong></div>
+      <div class="stat-tile"><span>MOTM Awards</span><strong id="teamMotm">0</strong></div>
+    </div>
+
+    <div class="leaders">
+      <div class="leader-card"><span>Leading Scorer</span><strong id="goalLeader">—</strong><small id="goalLeaderSub">No goals recorded yet</small></div>
+      <div class="leader-card"><span>Assist Leader</span><strong id="assistLeader">—</strong><small id="assistLeaderSub">No assists recorded yet</small></div>
+      <div class="leader-card"><span>Most MOTM Awards</span><strong id="motmLeader">—</strong><small id="motmLeaderSub">No awards recorded yet</small></div>
+    </div>
+  </section>
+
   <section class="content">
     <div class="section-head">
       <div>
@@ -139,6 +205,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Ivan</h2>
           <div class="position">Defence</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="2" data-player-name="Ivan">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -153,6 +226,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Andres</h2>
           <div class="position">Midfield / Forward</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="9" data-player-name="Andres">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -167,6 +247,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>David</h2>
           <div class="position">Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="17" data-player-name="David">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -181,6 +268,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Jason</h2>
           <div class="position">Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="18" data-player-name="Jason">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -195,6 +289,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Ayman</h2>
           <div class="position">Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="20" data-player-name="Ayman">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -209,6 +310,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Julio</h2>
           <div class="position">Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="6" data-player-name="Julio">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -223,6 +331,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Tom</h2>
           <div class="position">Midfield / Defence</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="7" data-player-name="Tom">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -237,6 +352,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Pedro</h2>
           <div class="position">Forward / Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="14" data-player-name="Pedro">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -251,6 +373,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>CJ</h2>
           <div class="position">Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="16" data-player-name="CJ">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -265,6 +394,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Dez</h2>
           <div class="position">Forward / Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="19" data-player-name="Dez">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -279,6 +415,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Adolpho</h2>
           <div class="position">Forward</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="8" data-player-name="Adolpho">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -293,6 +436,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Vignesh</h2>
           <div class="position">Forward</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="22" data-player-name="Vignesh">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -307,6 +457,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Edward</h2>
           <div class="position">Defence / Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="11" data-player-name="Edward">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -321,6 +478,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Todd</h2>
           <div class="position">Keeper</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="1" data-player-name="Todd">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -335,6 +499,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Brad</h2>
           <div class="position">Defence / Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="3" data-player-name="Brad">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -349,6 +520,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Andres</h2>
           <div class="position">Midfield / Defence</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="21" data-player-name="Andres">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -363,6 +541,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Koushyar</h2>
           <div class="position">Midfield / Defence</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="12" data-player-name="Koushyar">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -377,6 +562,13 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Andrew</h2>
           <div class="position">Defence / Midfield</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="15" data-player-name="Andrew">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
       <article class="player-card">
@@ -391,9 +583,26 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
           <h2>Nick</h2>
           <div class="position">Defence</div>
           <p>Bio pending.</p>
+          <div class="player-stats" data-player-number="4" data-player-name="Nick">
+            <div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div>
+            <div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div>
+            <div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div>
+            <div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div>
+            <div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div>
+          </div>
         </div>
       </article>
     </div>
+
+    <div class="extra-stats" id="extraPlayerStats">
+      <h3>Additional / Guest Players</h3>
+      <table class="stats-table">
+        <thead><tr><th>Player</th><th class="num">Goals</th><th class="num">Assists</th><th class="num">YC</th><th class="num">RC</th><th class="num">MOTM</th></tr></thead>
+        <tbody id="extraPlayerStatsBody"></tbody>
+      </table>
+    </div>
+    <div class="stats-note">Player totals count SKOR FC goals, assists and SKOR FC disciplinary events recorded in Game Day. Opponent own goals increase the team goal total but are not credited to a SKOR player.</div>
+
   </section>
 </main>
 
@@ -401,5 +610,128 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
   <strong>#PLAYSKOR</strong>
   SKOR FC · Roswell, Georgia
 </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
+const statsDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const roster = [
+  {number:"2",name:"Ivan"},{number:"9",name:"Andres"},{number:"17",name:"David"},{number:"18",name:"Jason"},
+  {number:"20",name:"Ayman"},{number:"6",name:"Julio"},{number:"7",name:"Tom"},{number:"14",name:"Pedro"},
+  {number:"16",name:"CJ"},{number:"19",name:"Dez"},{number:"8",name:"Adolpho"},{number:"22",name:"Vignesh"},
+  {number:"11",name:"Edward"},{number:"1",name:"Todd"},{number:"3",name:"Brad"},{number:"21",name:"Andres"},
+  {number:"12",name:"Koushyar"},{number:"15",name:"Andrew"},{number:"4",name:"Nick"}
+];
+
+function norm(v){ return String(v || "").trim().toLowerCase(); }
+function playerKey(number,name){ return `${String(number||"").trim()}|${norm(name)}`; }
+function statIdentity(number,name,rosterNumber){
+  const stable=String(rosterNumber||"").trim();
+  if(stable){const p=roster.find(r=>String(r.number)===stable);if(p)return playerKey(p.number,p.name);}
+  const byName=roster.filter(r=>norm(r.name)===norm(name));
+  if(byName.length===1)return playerKey(byName[0].number,byName[0].name);
+  const exact=byName.find(r=>String(r.number)===String(number||""));
+  return exact?playerKey(exact.number,exact.name):playerKey(number,name);
+}
+function displayPlayer(number,name){ return `${number ? "#"+number+" " : ""}${name || "Unknown"}`.trim(); }
+
+function newStat(number,name){return {number:String(number||""),name:name||"Unknown",goals:0,assists:0,yellow:0,red:0,motm:0};}
+
+function addToMap(map,number,name,field,rosterNumber=null){
+  if(!name && !number && !rosterNumber) return;
+  const key=statIdentity(number,name,rosterNumber);
+  if(!map.has(key)){
+    const rosterMatch=roster.find(p=>playerKey(p.number,p.name)===key);
+    map.set(key,rosterMatch?newStat(rosterMatch.number,rosterMatch.name):newStat(number,name));
+  }
+  map.get(key)[field]++;
+}
+
+function bestPlayer(stats,field){
+  return [...stats.values()].filter(s=>s[field]>0).sort((a,b)=>b[field]-a[field] || Number(a.number||999)-Number(b.number||999))[0] || null;
+}
+
+async function loadSeasonStats(){
+  const status=document.getElementById("statsStatus");
+  try{
+    const [{data:matches,error:matchError},{data:events,error:eventError}] = await Promise.all([
+      statsDb.from("matches").select("id,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number").eq("published",true),
+      statsDb.from("match_events").select("match_id,event_type,player_name,player_number,roster_player_number,assist_player_name,assist_player_number,assist_roster_player_number")
+    ]);
+    if(matchError) throw matchError;
+    if(eventError) throw eventError;
+
+    const validMatchIds=new Set((matches||[]).filter(m=>m.status!=="scheduled").map(m=>m.id));
+    const seasonEvents=(events||[]).filter(e=>validMatchIds.has(e.match_id));
+    const stats=new Map();
+    roster.forEach(p=>stats.set(playerKey(p.number,p.name),newStat(p.number,p.name)));
+
+    let teamGoals=0,teamAssists=0,teamYellow=0,teamRed=0;
+    for(const e of seasonEvents){
+      if(e.event_type==="skor_goal"){
+        teamGoals++;
+        addToMap(stats,e.player_number,e.player_name,"goals",e.roster_player_number);
+        if(e.assist_player_name || e.assist_player_number){
+          teamAssists++;
+          addToMap(stats,e.assist_player_number,e.assist_player_name,"assists",e.assist_roster_player_number);
+        }
+      }else if(e.event_type==="opponent_own_goal"){
+        teamGoals++;
+      }else if(e.event_type==="skor_yellow_card"){
+        teamYellow++; addToMap(stats,e.player_number,e.player_name,"yellow",e.roster_player_number);
+      }else if(e.event_type==="skor_red_card"){
+        teamRed++; addToMap(stats,e.player_number,e.player_name,"red",e.roster_player_number);
+      }
+    }
+
+    let motmCount=0;
+    for(const m of (matches||[])){
+      if(!m.man_of_match_player_name && !m.man_of_match_player_number) continue;
+      motmCount++;
+      addToMap(stats,m.man_of_match_player_number,m.man_of_match_player_name,"motm",m.man_of_match_roster_player_number);
+    }
+
+    document.getElementById("teamGoals").textContent=teamGoals;
+    document.getElementById("teamAssists").textContent=teamAssists;
+    document.getElementById("teamYellow").textContent=teamYellow;
+    document.getElementById("teamRed").textContent=teamRed;
+    document.getElementById("teamMotm").textContent=motmCount;
+
+    document.querySelectorAll(".player-stats").forEach(el=>{
+      const number=el.dataset.playerNumber,name=el.dataset.playerName;
+      const st=stats.get(playerKey(number,name)) || newStat(number,name);
+      for(const field of ["goals","assists","yellow","red","motm"]){
+        const out=el.querySelector(`[data-stat="${field}"]`); if(out) out.textContent=st[field];
+      }
+    });
+
+    const goal=bestPlayer(stats,"goals"), assist=bestPlayer(stats,"assists"), motm=bestPlayer(stats,"motm");
+    document.getElementById("goalLeader").textContent=goal?displayPlayer(goal.number,goal.name):"—";
+    document.getElementById("goalLeaderSub").textContent=goal?`${goal.goals} goal${goal.goals===1?"":"s"}`:"No goals recorded yet";
+    document.getElementById("assistLeader").textContent=assist?displayPlayer(assist.number,assist.name):"—";
+    document.getElementById("assistLeaderSub").textContent=assist?`${assist.assists} assist${assist.assists===1?"":"s"}`:"No assists recorded yet";
+    document.getElementById("motmLeader").textContent=motm?displayPlayer(motm.number,motm.name):"—";
+    document.getElementById("motmLeaderSub").textContent=motm?`${motm.motm} award${motm.motm===1?"":"s"}`:"No awards recorded yet";
+
+    const rosterKeys=new Set(roster.map(p=>playerKey(p.number,p.name)));
+    const extras=[...stats.entries()].filter(([k,s])=>!rosterKeys.has(k) && (s.goals||s.assists||s.yellow||s.red||s.motm)).map(([,s])=>s)
+      .sort((a,b)=>(b.goals+b.assists+b.motm)-(a.goals+a.assists+a.motm));
+    const extraWrap=document.getElementById("extraPlayerStats"),body=document.getElementById("extraPlayerStatsBody");
+    if(extras.length){
+      body.innerHTML=extras.map(s=>`<tr><td>${displayPlayer(s.number,s.name)}</td><td class="num">${s.goals}</td><td class="num">${s.assists}</td><td class="num">${s.yellow}</td><td class="num">${s.red}</td><td class="num">${s.motm}</td></tr>`).join("");
+      extraWrap.classList.add("show");
+    }else extraWrap.classList.remove("show");
+
+    status.textContent="Live from Game Day";
+  }catch(err){
+    console.error(err);
+    status.textContent="Stats temporarily unavailable";
+  }
+}
+loadSeasonStats();
+</script>
+
 </body>
 </html>
