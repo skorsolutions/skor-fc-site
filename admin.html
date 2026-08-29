@@ -181,7 +181,7 @@
     .event-btn.goal{border-left:5px solid #4e8778}.event-btn.own{border-left:5px solid #866a3e}.event-btn.card-yellow{border-left:5px solid #d6b800}.event-btn.card-red{border-left:5px solid #b91f37}
     .event-editor{display:none;border:1px solid #d9d6d1;background:#faf9f7;border-radius:14px;padding:16px;margin-top:14px}.event-editor.open{display:block}
     .manual-player-fields{display:none;margin-top:9px;padding:12px;border:1px dashed #cfc9c4;border-radius:10px;background:#fff}.manual-player-fields.open{display:block}
-    .manual-hint{display:block;margin-top:7px;color:var(--muted);font-size:.76rem;line-height:1.4}
+    .manual-hint{display:block;margin-top:7px;color:var(--muted);font-size:.76rem;line-height:1.4}.match-number-fields{display:none;margin-top:9px;padding:10px 12px;border:1px solid #ded9d4;border-radius:10px;background:#fbfaf9}.match-number-fields.open{display:block}.match-number-fields input{max-width:180px}
     .event-group-label{grid-column:1/-1;margin:4px 0 -2px;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;font-weight:950;color:var(--muted)}
     .event-log{display:grid;gap:8px}.event-log-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
     .event-log-item small{color:var(--muted)}.event-actions{display:flex;gap:6px}.mini-btn{border:1px solid #d9d6d1;background:#fff;border-radius:8px;padding:6px 8px;font-size:.72rem;font-weight:800;cursor:pointer}
@@ -339,6 +339,11 @@
                   </div>
                   <small class="manual-hint">Use this for an unassigned/guest jersey or any player not yet in the roster.</small>
                 </div>
+                <div class="match-number-fields" id="eventPlayerMatchNumberWrap">
+                  <label>Jersey worn this match <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
+                  <input id="eventPlayerMatchNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="Leave blank for roster number">
+                  <small class="manual-hint">Use this when a roster player is temporarily wearing #23, #44, etc. Season stats still stay with the player.</small>
+                </div>
               </div>
               <div id="eventAssistWrap">
                 <label>Assist</label><select id="eventAssist"></select>
@@ -347,6 +352,10 @@
                     <div><label>Assist player name</label><input id="eventAssistManualName" placeholder="Enter player name"></div>
                     <div><label>Jersey number</label><input id="eventAssistManualNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="e.g. 44"></div>
                   </div>
+                </div>
+                <div class="match-number-fields" id="eventAssistMatchNumberWrap">
+                  <label>Jersey worn this match <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
+                  <input id="eventAssistMatchNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="Leave blank for roster number">
                 </div>
               </div>
               <div id="opponentPlayerWrap" style="display:none">
@@ -378,7 +387,11 @@
                   <div><label>Player name</label><input id="motmManualName" placeholder="Enter player name"></div>
                   <div><label>Jersey number</label><input id="motmManualNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="e.g. 23"></div>
                 </div>
-                <small class="manual-hint">For an extra jersey, guest player, or anyone not yet on the roster.</small>
+                <small class="manual-hint">For a guest player or anyone not yet on the roster.</small>
+              </div>
+              <div class="match-number-fields" id="motmMatchNumberWrap">
+                <label>Jersey worn this match <span style="font-weight:500;color:var(--muted)">(optional)</span></label>
+                <input id="motmMatchNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="Leave blank for roster number">
               </div>
             </div>
             <div>
@@ -636,7 +649,7 @@ const ROSTER=[
 ];
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
-const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
+const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
 function gdEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
 function playerValue(p){return `roster|${p.number}|${p.name}`;}
 function rosterOptions(includeNone=false){
@@ -652,33 +665,38 @@ function parsePlayerChoice(value){
   const [kind,number,name]=value.split("|");
   return {kind,number:number||"",name:name||"",manual:kind!=="roster"};
 }
-function syncManualFields(selectEl,wrap,nameInput,numberInput,keepValues=false){
+function syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap=null,matchInput=null,keepValues=false){
   const choice=parsePlayerChoice(selectEl.value);
   const manual=!!choice?.manual;
   wrap.classList.toggle("open",manual);
+  if(matchWrap)matchWrap.classList.toggle("open",!!choice && choice.kind==="roster");
   if(!keepValues){
-    nameInput.value=manual?(choice.name||""):"";
-    numberInput.value=manual?(choice.number||""):"";
+    nameInput.value=manual?(choice?.name||""):"";
+    numberInput.value=manual?(choice?.number||""):"";
+    if(matchInput)matchInput.value="";
   }
 }
-eventPlayer.addEventListener("change",()=>syncManualFields(eventPlayer,eventPlayerManual,eventPlayerManualName,eventPlayerManualNumber));
-eventAssist.addEventListener("change",()=>syncManualFields(eventAssist,eventAssistManual,eventAssistManualName,eventAssistManualNumber));
-function selectedPlayerData(selectEl,nameInput,numberInput){
+eventPlayer.addEventListener("change",()=>syncManualFields(eventPlayer,eventPlayerManual,eventPlayerManualName,eventPlayerManualNumber,eventPlayerMatchNumberWrap,eventPlayerMatchNumber));
+eventAssist.addEventListener("change",()=>syncManualFields(eventAssist,eventAssistManual,eventAssistManualName,eventAssistManualNumber,eventAssistMatchNumberWrap,eventAssistMatchNumber));
+function selectedPlayerData(selectEl,nameInput,numberInput,matchNumberInput=null){
   const choice=parsePlayerChoice(selectEl.value);
   if(!choice)return null;
-  if(choice.kind==="roster")return{name:choice.name,number:choice.number||null,manual:false};
+  if(choice.kind==="roster"){
+    const worn=String(matchNumberInput?.value||"").trim();
+    return{name:choice.name,number:worn||choice.number||null,rosterNumber:choice.number||null,manual:false};
+  }
   const name=nameInput.value.trim();
   const number=numberInput.value.trim()||choice.number;
-  return{name:name||null,number:number||null,manual:true};
+  return{name:name||null,number:number||null,rosterNumber:null,manual:true};
 }
-function setPlayerEditorValue(selectEl,wrap,nameInput,numberInput,name,number){
-  if(!name&&!number){selectEl.value="";syncManualFields(selectEl,wrap,nameInput,numberInput,true);nameInput.value="";numberInput.value="";return;}
-  const roster=ROSTER.find(p=>String(p.number)===String(number??"")&&p.name===name);
-  if(roster){selectEl.value=playerValue(roster);syncManualFields(selectEl,wrap,nameInput,numberInput,true);nameInput.value="";numberInput.value="";return;}
+function setPlayerEditorValue(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,name,number,rosterNumber){
+  if(!name&&!number&&!rosterNumber){selectEl.value="";syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value="";return;}
+  const roster=ROSTER.find(p=>String(p.number)===String(rosterNumber??number??"")&&p.name===name);
+  if(roster){selectEl.value=playerValue(roster);syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value=String(number??"")!==String(roster.number)?String(number??""):"";return;}
   const num=String(number??"");
   selectEl.value=EXTRA_JERSEY_NUMBERS.map(String).includes(num)?`extra|${num}|`:'manual||';
-  syncManualFields(selectEl,wrap,nameInput,numberInput,true);
-  nameInput.value=name||"";numberInput.value=num;
+  syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);
+  nameInput.value=name||"";numberInput.value=num;if(matchInput)matchInput.value="";
 }
 function gdFormat(d){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(d));}
 function gdScore(){
@@ -700,10 +718,10 @@ function gdEventLabel(e){
   return gdEsc(e.event_type);
 }
 function renderMotm(){
-  const sel=document.getElementById("motmPlayer"),wrap=document.getElementById("motmManualWrap"),name=document.getElementById("motmManualName"),num=document.getElementById("motmManualNumber"),reason=document.getElementById("motmReason"),preview=document.getElementById("motmPreview");
+  const sel=document.getElementById("motmPlayer"),wrap=document.getElementById("motmManualWrap"),name=document.getElementById("motmManualName"),num=document.getElementById("motmManualNumber"),matchWrap=document.getElementById("motmMatchNumberWrap"),matchNum=document.getElementById("motmMatchNumber"),reason=document.getElementById("motmReason"),preview=document.getElementById("motmPreview");
   if(!sel||!gameDaySelected)return;
-  const motmName=gameDaySelected.man_of_match_player_name||"",motmNumber=gameDaySelected.man_of_match_player_number||"";
-  if(motmName||motmNumber){setPlayerEditorValue(sel,wrap,name,num,motmName,motmNumber);}else{sel.value="";wrap.classList.remove("open");name.value="";num.value="";}
+  const motmName=gameDaySelected.man_of_match_player_name||"",motmNumber=gameDaySelected.man_of_match_player_number||"",motmRosterNumber=gameDaySelected.man_of_match_roster_player_number||"";
+  if(motmName||motmNumber||motmRosterNumber){setPlayerEditorValue(sel,wrap,name,num,matchWrap,matchNum,motmName,motmNumber,motmRosterNumber);}else{sel.value="";wrap.classList.remove("open");matchWrap.classList.remove("open");name.value="";num.value="";matchNum.value="";}
   reason.value=gameDaySelected.man_of_match_reason||"";
   if(motmName||motmNumber||reason.value){preview.style.display="block";preview.innerHTML=`<strong>${motmNumber?`#${gdEsc(motmNumber)} `:""}${gdEsc(motmName||"Unnamed player")}</strong><small>Man of the Match</small><div style="margin-top:7px">${gdEsc(reason.value)}</div>`;}else{preview.style.display="none";preview.innerHTML="";}
 }
@@ -719,16 +737,16 @@ function renderGameDay(){
   renderMotm();
 }
 async function loadGameDayMatches(preferredId=null){
-  const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
+  const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
-  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v8";
+  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v12";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
   gameDayMatch.value=pick.id;gameDaySelected=pick;await loadGameDayEvents();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
-  const {data,error}=await sb.from("match_events").select("id,match_id,event_type,player_name,player_number,assist_player_name,assist_player_number,half,sequence,created_at").eq("match_id",gameDaySelected.id).order("sequence",{ascending:true});
+  const {data,error}=await sb.from("match_events").select("id,match_id,event_type,player_name,player_number,roster_player_number,assist_player_name,assist_player_number,assist_roster_player_number,half,sequence,created_at").eq("match_id",gameDaySelected.id).order("sequence",{ascending:true});
   if(error){backendBox.className="backend-warning";backendBox.textContent="Could not load match events: "+error.message;gameDayEvents=[];}else{backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected.";gameDayEvents=data||[];}
   renderGameDay();
 }
@@ -746,8 +764,8 @@ function openEventEditor(type,event=null){
   eventEditorTitle.textContent=(editingEventId?"Edit ":"Record ")+(titles[type]||"Event");
   const needsSkorPlayer=["skor_goal","skor_yellow_card","skor_red_card"].includes(type),needsOpponentPlayer=["opponent_yellow_card","opponent_red_card"].includes(type);
   eventPlayerWrap.style.display=needsSkorPlayer?"block":"none";eventAssistWrap.style.display=type==="skor_goal"?"block":"none";opponentPlayerWrap.style.display=needsOpponentPlayer?"block":"none";
-  setPlayerEditorValue(eventPlayer,eventPlayerManual,eventPlayerManualName,eventPlayerManualNumber,event?.player_name,event?.player_number);
-  setPlayerEditorValue(eventAssist,eventAssistManual,eventAssistManualName,eventAssistManualNumber,event?.assist_player_name,event?.assist_player_number);
+  setPlayerEditorValue(eventPlayer,eventPlayerManual,eventPlayerManualName,eventPlayerManualNumber,eventPlayerMatchNumberWrap,eventPlayerMatchNumber,event?.player_name,event?.player_number,event?.roster_player_number);
+  setPlayerEditorValue(eventAssist,eventAssistManual,eventAssistManualName,eventAssistManualNumber,eventAssistMatchNumberWrap,eventAssistMatchNumber,event?.assist_player_name,event?.assist_player_number,event?.assist_roster_player_number);
   opponentPlayerName.value=needsOpponentPlayer?(event?.player_name||""):"";opponentPlayerNumber.value=needsOpponentPlayer?(event?.player_number??""):"";
   eventHalf.value=event?.half||eventHalf.value;document.getElementById("saveMatchEvent").textContent=editingEventId?"Save Changes":"Save Event";eventEditor.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
@@ -756,15 +774,15 @@ document.getElementById("cancelMatchEvent").addEventListener("click",()=>{eventE
 document.getElementById("saveMatchEvent").addEventListener("click",async()=>{
   if(!gameDayReady||!gameDaySelected?.id){alert("No live match is selected.");return;}
   const needsSkorPlayer=["skor_goal","skor_yellow_card","skor_red_card"].includes(currentEventType),needsOpponentPlayer=["opponent_yellow_card","opponent_red_card"].includes(currentEventType);
-  const player=needsSkorPlayer?selectedPlayerData(eventPlayer,eventPlayerManualName,eventPlayerManualNumber):null;
-  const assist=currentEventType==="skor_goal"?selectedPlayerData(eventAssist,eventAssistManualName,eventAssistManualNumber):null;
+  const player=needsSkorPlayer?selectedPlayerData(eventPlayer,eventPlayerManualName,eventPlayerManualNumber,eventPlayerMatchNumber):null;
+  const assist=currentEventType==="skor_goal"?selectedPlayerData(eventAssist,eventAssistManualName,eventAssistManualNumber,eventAssistMatchNumber):null;
   if(needsSkorPlayer&&!player){alert("Select a player, an unassigned jersey number, or Other player / number.");return;}
   if(needsSkorPlayer&&player.manual&&!player.name){alert("Enter the player's name for the unassigned/manual jersey.");return;}
   if(currentEventType==="skor_goal"&&assist?.manual&&!assist.name){alert("Enter the assist player's name, or choose Unassisted / No assist.");return;}
   let eventPlayerData=player;
   if(needsOpponentPlayer){const name=opponentPlayerName.value.trim(),number=opponentPlayerNumber.value.trim();eventPlayerData={name:name||null,number:number||null};}
   const {data:{user}}=await sb.auth.getUser();
-  const payload={event_type:currentEventType,half:eventHalf.value,player_name:eventPlayerData?.name||null,player_number:eventPlayerData?.number||null,assist_player_name:currentEventType==="skor_goal"?(assist?.name||null):null,assist_player_number:currentEventType==="skor_goal"?(assist?.number||null):null};
+  const payload={event_type:currentEventType,half:eventHalf.value,player_name:eventPlayerData?.name||null,player_number:eventPlayerData?.number||null,roster_player_number:needsSkorPlayer?(eventPlayerData?.rosterNumber||null):null,assist_player_name:currentEventType==="skor_goal"?(assist?.name||null):null,assist_player_number:currentEventType==="skor_goal"?(assist?.number||null):null,assist_roster_player_number:currentEventType==="skor_goal"?(assist?.rosterNumber||null):null};
   let result;
   if(editingEventId){result=await sb.from("match_events").update(payload).eq("id",editingEventId);}else{result=await sb.from("match_events").insert({...payload,match_id:gameDaySelected.id,created_by:user?.id||null});}
   if(result.error){alert("Could not save event: "+result.error.message);return;}
@@ -879,25 +897,26 @@ loadAnnouncements();
   if(!sel) return;
   const manualWrap=document.getElementById('motmManualWrap'),manualName=document.getElementById('motmManualName'),manualNumber=document.getElementById('motmManualNumber'),reason=document.getElementById('motmReason'),saveBtn=document.getElementById('saveMotmBtn'),clearBtn=document.getElementById('clearMotmBtn');
   sel.innerHTML=rosterOptions(false);
-  sel.addEventListener('change',()=>syncManualFields(sel,manualWrap,manualName,manualNumber));
+  const matchWrap=document.getElementById('motmMatchNumberWrap'),matchNum=document.getElementById('motmMatchNumber');
+  sel.addEventListener('change',()=>syncManualFields(sel,manualWrap,manualName,manualNumber,matchWrap,matchNum));
   saveBtn.addEventListener('click',async()=>{
     if(!gameDayReady||!gameDaySelected?.id){alert('Select a live Supabase match first.');return;}
-    const player=selectedPlayerData(sel,manualName,manualNumber);
+    const player=selectedPlayerData(sel,manualName,manualNumber,matchNum);
     if(!player){alert('Select the Man of the Match.');return;}
     if(player.manual&&!player.name){alert('Enter the player name.');return;}
     const why=reason.value.trim();if(!why){alert('Add a reason for Man of the Match.');return;}
     saveBtn.disabled=true;saveBtn.textContent='Saving…';
-    const {error}=await sb.from('matches').update({man_of_match_player_name:player.name,man_of_match_player_number:player.number,man_of_match_reason:why}).eq('id',gameDaySelected.id);
+    const {error}=await sb.from('matches').update({man_of_match_player_name:player.name,man_of_match_player_number:player.number,man_of_match_roster_player_number:player.rosterNumber||null,man_of_match_reason:why}).eq('id',gameDaySelected.id);
     saveBtn.disabled=false;saveBtn.textContent='Save / Update Man of the Match';
     if(error){alert('Could not save Man of the Match: '+error.message);return;}
-    gameDaySelected.man_of_match_player_name=player.name;gameDaySelected.man_of_match_player_number=player.number;gameDaySelected.man_of_match_reason=why;renderMotm();
+    gameDaySelected.man_of_match_player_name=player.name;gameDaySelected.man_of_match_player_number=player.number;gameDaySelected.man_of_match_roster_player_number=player.rosterNumber||null;gameDaySelected.man_of_match_reason=why;renderMotm();
   });
   clearBtn.addEventListener('click',async()=>{
     if(!gameDayReady||!gameDaySelected?.id)return;
     if(!confirm('Clear Man of the Match for this game?'))return;
-    const {error}=await sb.from('matches').update({man_of_match_player_name:null,man_of_match_player_number:null,man_of_match_reason:null}).eq('id',gameDaySelected.id);
+    const {error}=await sb.from('matches').update({man_of_match_player_name:null,man_of_match_player_number:null,man_of_match_roster_player_number:null,man_of_match_reason:null}).eq('id',gameDaySelected.id);
     if(error){alert('Could not clear Man of the Match: '+error.message);return;}
-    gameDaySelected.man_of_match_player_name=null;gameDaySelected.man_of_match_player_number=null;gameDaySelected.man_of_match_reason=null;renderMotm();
+    gameDaySelected.man_of_match_player_name=null;gameDaySelected.man_of_match_player_number=null;gameDaySelected.man_of_match_roster_player_number=null;gameDaySelected.man_of_match_reason=null;renderMotm();
   });
 })();
 
