@@ -756,7 +756,7 @@ function normalizeMatch(row){
     id:row.id,
     slug:row.slug,
     kickoff:row.kickoff,
-    arrival:row.arrival_time || row.arrival || "",
+    arrival:row.arrival_at || row.arrival || "",
     kit:row.kit || "",
     status:row.status || "scheduled",
     home:row.home_team || row.home,
@@ -839,12 +839,12 @@ function updateSchedule(){
 }
 async function loadMatchCenterData(){
   try{
-    const {data,error}=await publicDb.from("matches").select("id,slug,kickoff,arrival_time,kit,status,home_team,away_team,location,home_logo,away_logo,published").eq("published",true).order("kickoff",{ascending:true});
+    const {data,error}=await publicDb.from("matches").select("id,slug,kickoff,arrival_at,status,home_team,away_team,location,home_logo,away_logo,published").eq("published",true).order("kickoff",{ascending:true});
     if(error || !data?.length){ if(error) console.info("Match Center using schedule fallback:",error.message); updateSchedule(); return; }
     MATCHES=data.map(normalizeMatch);
     const ids=MATCHES.map(m=>m.id).filter(Boolean);
     if(ids.length){
-      const {data:events,error:eventError}=await publicDb.from("match_events").select("id,match_id,event_type,player_name,player_number,assist_player_name,assist_player_number,half,event_order,created_at").in("match_id",ids).order("event_order",{ascending:true});
+      const {data:events,error:eventError}=await publicDb.from("match_events").select("id,match_id,event_type,player_name,player_number,assist_player_name,assist_player_number,half,sequence,created_at").in("match_id",ids).order("sequence",{ascending:true});
       if(!eventError && events) MATCH_EVENTS=events;
     }
     updateSchedule();
