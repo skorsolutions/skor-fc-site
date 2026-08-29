@@ -189,7 +189,22 @@
     .backend-ok{padding:10px 12px;background:#e9f2ef;border:1px solid #c9ddd7;color:#2d6759;border-radius:10px;font-size:.82rem}
     @media(max-width:760px){.event-buttons{grid-template-columns:1fr 1fr}.scoreboard-admin{padding:16px}.scoreboard-top{grid-template-columns:1fr auto 1fr;gap:6px}.score-team{font-size:.82rem}.score-numbers{font-size:2.2rem}.status-controls{justify-content:flex-start}.event-btn{min-height:72px;padding:12px}.event-log-item{grid-template-columns:1fr}.event-actions{justify-content:flex-start}}
 
-  </style>
+  
+
+    /* Schedule manager v14 */
+    .schedule-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+    .schedule-list{display:grid;gap:10px;margin-top:16px}
+    .schedule-item{border:1px solid var(--line);background:#fff;border-radius:14px;padding:14px}
+    .schedule-item-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .schedule-item h3{margin:0 0 4px;font-size:1rem}.schedule-item p{margin:3px 0;color:var(--muted);font-size:.88rem}
+    .schedule-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+    .schedule-badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:.72rem;font-weight:900;background:#f2f3f5;color:#444}
+    .schedule-badge.live{background:#f8e9ee;color:#8b1e3f}
+    .form-status{display:none;margin:10px 0 0;padding:10px 12px;border-radius:10px;font-size:.86rem}
+    .form-status.ok{display:block;background:#edf7ef;color:#256b34}.form-status.err{display:block;background:#fdecef;color:#8b1e3f}
+    @media(max-width:900px){.schedule-grid{grid-template-columns:1fr}}
+
+</style>
 </head>
 <body>
 
@@ -427,26 +442,54 @@
     </section>
 
     <section class="view" id="schedule">
-      <div class="panel">
-        <h2>Add game, practice or event</h2>
-        <div class="sub">One calendar for the entire team.</div>
-        <form class="form">
-          <div class="fieldrow">
-            <div><label>Event type</label><select><option>Practice</option><option>Match</option><option>Tournament</option><option>Team Event</option></select></div>
-            <div><label>Date</label><input type="date"></div>
-          </div>
-          <div class="fieldrow">
-            <div><label>Start time</label><input type="time"></div>
-            <div><label>Arrival time</label><input type="time"></div>
-          </div>
-          <div><label>Title / Opponent</label><input placeholder="SKOR FC vs. Opponent"></div>
-          <div class="fieldrow">
-            <div><label>Field</label><select><option>Select saved field...</option></select></div>
-            <div><label>Kit</label><select><option>Maroon</option><option>White</option><option>Both</option></select></div>
-          </div>
-          <div><label>Notes</label><textarea placeholder="Parking, warmup notes, practice focus, etc."></textarea></div>
-          <button class="btn btn-primary" type="button">Save Event</button>
-        </form>
+      <div class="schedule-grid">
+        <div class="panel">
+          <h2>Upcoming Practices</h2>
+          <div class="sub">Create practices here. Published practices automatically appear on the public homepage.</div>
+          <form class="form" id="practiceForm">
+            <input type="hidden" id="practiceId">
+            <div><label>Practice title</label><input id="practiceTitle" value="SKOR FC Practice" placeholder="SKOR FC Practice"></div>
+            <div class="fieldrow">
+              <div><label>Date</label><input id="practiceDate" type="date" required></div>
+              <div><label>Start time</label><input id="practiceTime" type="time" required></div>
+            </div>
+            <div><label>Location / Field</label><input id="practiceLocation" placeholder="Sweet Apple Park · Field 1" required></div>
+            <div><label>Notes</label><textarea id="practiceNotes" placeholder="Practice focus, parking, what to bring, etc."></textarea></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="practiceSave" type="submit">Publish Practice</button>
+              <button class="btn btn-light" id="practiceCancelEdit" type="button" style="display:none">Cancel Edit</button>
+            </div>
+            <div class="form-status" id="practiceStatus"></div>
+          </form>
+          <div class="schedule-list" id="practiceList"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Match Schedule</h2>
+          <div class="sub">Any approved captain can add a match or edit organizer changes. Updates publish to the homepage and Match Center.</div>
+          <form class="form" id="matchScheduleForm">
+            <input type="hidden" id="scheduleMatchId">
+            <div class="fieldrow">
+              <div><label>SKOR FC is</label><select id="scheduleSide"><option value="home">Home</option><option value="away">Away</option></select></div>
+              <div><label>Opponent</label><input id="scheduleOpponent" placeholder="Opponent name" required></div>
+            </div>
+            <div class="fieldrow">
+              <div><label>Date</label><input id="scheduleDate" type="date" required></div>
+              <div><label>Kickoff</label><input id="scheduleTime" type="time" required></div>
+            </div>
+            <div class="fieldrow">
+              <div><label>Arrival time (optional)</label><input id="scheduleArrival" type="time"></div>
+              <div><label>Status</label><select id="scheduleStatus"><option value="scheduled">Scheduled</option><option value="first_half">1st Half</option><option value="halftime">Halftime</option><option value="second_half">2nd Half</option><option value="final">Final</option></select></div>
+            </div>
+            <div><label>Location / Field</label><input id="scheduleLocation" placeholder="East Roswell Park SC#2" required></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="scheduleMatchSave" type="submit">Add Match</button>
+              <button class="btn btn-light" id="scheduleMatchCancel" type="button" style="display:none">Cancel Edit</button>
+            </div>
+            <div class="form-status" id="scheduleMatchStatus"></div>
+          </form>
+          <div class="schedule-list" id="matchScheduleList"></div>
+        </div>
       </div>
     </section>
 
@@ -553,6 +596,7 @@ function showDashboard(user){
   document.getElementById("userEmail").textContent = email;
   document.getElementById("userAvatar").textContent = (fullName.trim()[0] || "C").toUpperCase();
   loadGameDayMatches();
+  loadScheduleManager();
 }
 async function captainIsApproved(user){
   if(!user?.email) return false;
@@ -739,7 +783,7 @@ function renderGameDay(){
 async function loadGameDayMatches(preferredId=null){
   const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
-  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v12";
+  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v14";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
   gameDayMatch.value=pick.id;gameDaySelected=pick;await loadGameDayEvents();
@@ -790,6 +834,85 @@ document.getElementById("saveMatchEvent").addEventListener("click",async()=>{
 });
 window.editGameEvent=function(id){const e=gameDayEvents.find(x=>x.id===id);if(e)openEventEditor(e.event_type,e);};
 window.deleteGameEvent=async function(id){if(!gameDayReady)return;if(!confirm("Delete this match event? The score will update automatically."))return;const {error}=await sb.from("match_events").delete().eq("id",id);if(error){alert("Could not delete event: "+error.message);return;}await loadGameDayEvents();};
+
+
+
+
+// Schedule Manager v14 -------------------------------------------------------
+const practiceForm=document.getElementById("practiceForm");
+const practiceList=document.getElementById("practiceList");
+const matchScheduleForm=document.getElementById("matchScheduleForm");
+const matchScheduleList=document.getElementById("matchScheduleList");
+let schedulePractices=[],scheduleMatches=[];
+
+function scheduleEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
+function localParts(iso){
+  if(!iso)return {date:"",time:""};
+  const d=new Date(iso);
+  const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"America/New_York",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).formatToParts(d);
+  const o=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  return {date:`${o.year}-${o.month}-${o.day}`,time:`${o.hour}:${o.minute}`};
+}
+function localIso(date,time){
+  if(!date||!time)return null;
+  // 2026 season is Eastern Time. Resolve DST using browser Intl offset.
+  const probe=new Date(`${date}T${time}:00Z`);
+  const tzParts=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",timeZoneName:"shortOffset",year:"numeric"}).formatToParts(probe);
+  const tz=tzParts.find(p=>p.type==="timeZoneName")?.value||"GMT-4";
+  const m=tz.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+  const sign=m?.[1]==="-"?"-":"+",hh=String(m?.[2]||4).padStart(2,"0"),mm=String(m?.[3]||0).padStart(2,"0");
+  return `${date}T${time}:00${sign}${hh}:${mm}`;
+}
+function displayScheduleDate(iso){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(iso));}
+function setScheduleMessage(id,msg,ok=true){const el=document.getElementById(id);if(!el)return;el.textContent=msg;el.className=`form-status ${ok?"ok":"err"}`;setTimeout(()=>{el.className="form-status";el.textContent="";},4500);}
+function slugBase(value){return String(value||"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"match";}
+function logoForTeam(team){
+  const t=(team||"").toLowerCase();
+  if(t.includes("skor fc"))return "assets/skor fc logo transparent.png";
+  if(t.includes("lone wolves"))return "assets/lone-wolves-logo.jpg";
+  if(t.includes("ac me rollin")||t.includes("hamilton"))return "assets/ac-me-rollin-logo.png";
+  if(t==="ctm")return "assets/ctm-logo.png";
+  if(t.includes("press & pray"))return "assets/press-pray-logo.png";
+  if(t.includes("milliken"))return "assets/milliken-logo.png";
+  if(t.includes("majestic"))return "assets/majestic-logo.png";
+  if(t.includes("rovers ruckus"))return "assets/rovers-ruckus-logo.png";
+  if(t.includes("concord"))return "assets/concord-logo.png";
+  if(t.includes("latinos"))return "assets/latinos-logo.png";
+  return null;
+}
+async function loadScheduleManager(){
+  if(!practiceList||!matchScheduleList)return;
+  practiceList.innerHTML='<div class="sub">Loading practices…</div>';matchScheduleList.innerHTML='<div class="sub">Loading matches…</div>';
+  const [p,m]=await Promise.all([
+    sb.from("practices").select("id,title,starts_at,location,notes,published,created_at").order("starts_at",{ascending:true}),
+    sb.from("matches").select("id,slug,kickoff,arrival_at,home_team,away_team,location,status,published,home_logo,away_logo").order("kickoff",{ascending:true})
+  ]);
+  if(p.error){practiceList.innerHTML=`<div class="form-status err">Could not load practices: ${scheduleEsc(p.error.message)}</div>`;}else{schedulePractices=p.data||[];renderPracticeManager();}
+  if(m.error){matchScheduleList.innerHTML=`<div class="form-status err">Could not load matches: ${scheduleEsc(m.error.message)}</div>`;}else{scheduleMatches=m.data||[];renderMatchManager();}
+}
+function renderPracticeManager(){
+  const now=Date.now()-12*60*60*1000;
+  const rows=schedulePractices.filter(p=>new Date(p.starts_at).getTime()>=now);
+  practiceList.innerHTML=rows.length?rows.map(p=>`<div class="schedule-item"><div class="schedule-item-head"><div><h3>${scheduleEsc(p.title||"SKOR FC Practice")}</h3><p><strong>${scheduleEsc(displayScheduleDate(p.starts_at))}</strong></p><p>${scheduleEsc(p.location||"")}</p>${p.notes?`<p>${scheduleEsc(p.notes)}</p>`:""}</div><span class="schedule-badge ${p.published?"live":""}">${p.published?"PUBLISHED":"HIDDEN"}</span></div><div class="schedule-actions"><button class="btn btn-light" type="button" onclick="editPractice('${p.id}')">Edit</button><button class="btn btn-light" type="button" onclick="togglePractice('${p.id}',${!p.published})">${p.published?"Hide":"Publish"}</button><button class="btn btn-light" type="button" onclick="deletePractice('${p.id}')">Delete</button></div></div>`).join(""):'<div class="sub">No upcoming practices yet.</div>';
+}
+function resetPracticeForm(){practiceForm.reset();document.getElementById("practiceId").value="";document.getElementById("practiceTitle").value="SKOR FC Practice";document.getElementById("practiceSave").textContent="Publish Practice";document.getElementById("practiceCancelEdit").style.display="none";}
+window.editPractice=function(id){const p=schedulePractices.find(x=>x.id===id);if(!p)return;const t=localParts(p.starts_at);document.getElementById("practiceId").value=p.id;document.getElementById("practiceTitle").value=p.title||"SKOR FC Practice";document.getElementById("practiceDate").value=t.date;document.getElementById("practiceTime").value=t.time;document.getElementById("practiceLocation").value=p.location||"";document.getElementById("practiceNotes").value=p.notes||"";document.getElementById("practiceSave").textContent="Save Practice Changes";document.getElementById("practiceCancelEdit").style.display="inline-flex";practiceForm.scrollIntoView({behavior:"smooth",block:"start"});};
+window.togglePractice=async function(id,published){const {error}=await sb.from("practices").update({published}).eq("id",id);if(error)return alert("Could not update practice: "+error.message);await loadScheduleManager();};
+window.deletePractice=async function(id){if(!confirm("Delete this practice?"))return;const {error}=await sb.from("practices").delete().eq("id",id);if(error)return alert("Could not delete practice: "+error.message);await loadScheduleManager();};
+document.getElementById("practiceCancelEdit").addEventListener("click",resetPracticeForm);
+practiceForm.addEventListener("submit",async e=>{e.preventDefault();const id=document.getElementById("practiceId").value;const title=document.getElementById("practiceTitle").value.trim()||"SKOR FC Practice",date=document.getElementById("practiceDate").value,time=document.getElementById("practiceTime").value,location=document.getElementById("practiceLocation").value.trim(),notes=document.getElementById("practiceNotes").value.trim();if(!date||!time||!location)return alert("Add the practice date, start time and location.");const starts_at=localIso(date,time);const {data:{user}}=await sb.auth.getUser();const payload={title,starts_at,location,notes:notes||null,published:true};const result=id?await sb.from("practices").update(payload).eq("id",id):await sb.from("practices").insert({...payload,created_by:user?.id||null});if(result.error){setScheduleMessage("practiceStatus","Could not save practice: "+result.error.message,false);return;}setScheduleMessage("practiceStatus",id?"Practice updated and published.":"Practice published to the homepage.",true);resetPracticeForm();await loadScheduleManager();});
+
+function renderMatchManager(){
+  const now=Date.now()-6*60*60*1000;
+  const rows=scheduleMatches.filter(m=>new Date(m.kickoff).getTime()>=now || m.status!=="final");
+  matchScheduleList.innerHTML=rows.length?rows.map(m=>`<div class="schedule-item"><div class="schedule-item-head"><div><h3>${scheduleEsc(m.home_team)} vs ${scheduleEsc(m.away_team)}</h3><p><strong>${scheduleEsc(displayScheduleDate(m.kickoff))}</strong></p><p>${scheduleEsc(m.location||"")}</p></div><span class="schedule-badge ${m.published?"live":""}">${m.published?"PUBLISHED":"HIDDEN"}</span></div><div class="schedule-actions"><button class="btn btn-light" type="button" onclick="editScheduledMatch('${m.id}')">Edit</button><button class="btn btn-light" type="button" onclick="toggleScheduledMatch('${m.id}',${!m.published})">${m.published?"Hide":"Publish"}</button><button class="btn btn-light" type="button" onclick="deleteScheduledMatch('${m.id}')">Delete</button></div></div>`).join(""):'<div class="sub">No matches scheduled.</div>';
+}
+function resetMatchScheduleForm(){matchScheduleForm.reset();document.getElementById("scheduleMatchId").value="";document.getElementById("scheduleStatus").value="scheduled";document.getElementById("scheduleMatchSave").textContent="Add Match";document.getElementById("scheduleMatchCancel").style.display="none";}
+window.editScheduledMatch=function(id){const m=scheduleMatches.find(x=>x.id===id);if(!m)return;const t=localParts(m.kickoff),a=localParts(m.arrival_at);const home=m.home_team==="SKOR FC";document.getElementById("scheduleMatchId").value=m.id;document.getElementById("scheduleSide").value=home?"home":"away";document.getElementById("scheduleOpponent").value=home?m.away_team:m.home_team;document.getElementById("scheduleDate").value=t.date;document.getElementById("scheduleTime").value=t.time;document.getElementById("scheduleArrival").value=a.time||"";document.getElementById("scheduleLocation").value=m.location||"";document.getElementById("scheduleStatus").value=m.status||"scheduled";document.getElementById("scheduleMatchSave").textContent="Save Match Changes";document.getElementById("scheduleMatchCancel").style.display="inline-flex";matchScheduleForm.scrollIntoView({behavior:"smooth",block:"start"});};
+window.toggleScheduledMatch=async function(id,published){const {error}=await sb.from("matches").update({published}).eq("id",id);if(error)return alert("Could not update match: "+error.message);await loadScheduleManager();await loadGameDayMatches(id);};
+window.deleteScheduledMatch=async function(id){const hasEvents=gameDayMatches.some(m=>m.id===id)&&gameDayEvents.some(e=>e.match_id===id);if(!confirm(hasEvents?"This match may already contain Game Day events. Delete it anyway?":"Delete this match?"))return;const {error}=await sb.from("matches").delete().eq("id",id);if(error)return alert("Could not delete match: "+error.message);await loadScheduleManager();await loadGameDayMatches();};
+document.getElementById("scheduleMatchCancel").addEventListener("click",resetMatchScheduleForm);
+matchScheduleForm.addEventListener("submit",async e=>{e.preventDefault();const id=document.getElementById("scheduleMatchId").value,side=document.getElementById("scheduleSide").value,opponent=document.getElementById("scheduleOpponent").value.trim(),date=document.getElementById("scheduleDate").value,time=document.getElementById("scheduleTime").value,arrival=document.getElementById("scheduleArrival").value,location=document.getElementById("scheduleLocation").value.trim(),status=document.getElementById("scheduleStatus").value;if(!opponent||!date||!time||!location)return alert("Add opponent, date, kickoff time and location.");const home_team=side==="home"?"SKOR FC":opponent,away_team=side==="home"?opponent:"SKOR FC",kickoff=localIso(date,time),arrival_at=arrival?localIso(date,arrival):null;const {data:{user}}=await sb.auth.getUser();let payload={kickoff,arrival_at,home_team,away_team,location,status,published:true,home_logo:logoForTeam(home_team),away_logo:logoForTeam(away_team)};let result;if(id){result=await sb.from("matches").update(payload).eq("id",id);}else{payload.slug=`${date}-${slugBase(opponent)}`;payload.created_by=user?.id||null;result=await sb.from("matches").insert(payload);if(result.error&&String(result.error.message).toLowerCase().includes("duplicate")){payload.slug=`${date}-${slugBase(opponent)}-${Date.now().toString().slice(-5)}`;result=await sb.from("matches").insert(payload);}}if(result.error){setScheduleMessage("scheduleMatchStatus","Could not save match: "+result.error.message,false);return;}setScheduleMessage("scheduleMatchStatus",id?"Match updated everywhere.":"Match added and published.",true);resetMatchScheduleForm();await loadScheduleManager();await loadGameDayMatches();});
 
 
 const form=document.getElementById("announcementForm");
