@@ -73,6 +73,12 @@
     .announcement-item{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
     .announcement-item strong{display:block;margin-bottom:3px}
     .announcement-item small{color:var(--muted)}
+    .motm-panel{margin-top:18px;border:1px solid var(--line);border-radius:16px;padding:18px;background:#fff}
+    .motm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .motm-panel textarea{min-height:90px}
+    .motm-preview{margin-top:14px;padding:14px;border-radius:12px;background:#faf9f7;border:1px solid var(--line)}
+    .motm-preview strong{display:block;font-size:1.05rem}
+    .motm-preview small{color:var(--muted)}
     @media(max-width:980px){
       .app{grid-template-columns:78px 1fr}
       aside{padding:18px 10px}
@@ -472,7 +478,43 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+// Man of the Match UI (Supabase persistence will be connected with the match tables)
+(function(){
+  const sel=document.getElementById('motmPlayer');
+  if(!sel) return;
+  const manualWrap=document.getElementById('motmManualWrap');
+  const manualName=document.getElementById('motmManualName');
+  const reason=document.getElementById('motmReason');
+  const preview=document.getElementById('motmPreview');
+  const saveBtn=document.getElementById('saveMotmBtn');
+  const clearBtn=document.getElementById('clearMotmBtn');
+
+  const roster=[
+    ['2','Ivan'],['9','Andres'],['17','David'],['18','Jason'],['20','Ayman'],['6','Julio'],['7','Tom'],['14','Pedro'],['16','CJ'],['19','Dez'],['8','Adolpho'],['22','Vignesh'],['11','Edward'],['1','Todd'],['3','Brad'],['21','Andres'],['12','Koushyar'],['15','Andrew'],['4','Nick']
+  ];
+  const guestNumbers=['23','26','44','55','66','69','77','88'];
+  sel.innerHTML='<option value="">Select player...</option>'+roster.map(([n,name])=>`<option value="roster|${n}|${name}">#${n} ${name}</option>`).join('')+guestNumbers.map(n=>`<option value="manual|${n}|">#${n} — Enter name</option>`).join('')+'<option value="manual||">Other player / number — Enter manually</option>';
+  sel.addEventListener('change',()=>{ manualWrap.style.display=sel.value.startsWith('manual|')?'block':'none'; });
+  function label(){
+    if(!sel.value) return '';
+    const [kind,num,name]=sel.value.split('|');
+    if(kind==='roster') return `#${num} ${name}`;
+    const typed=(manualName.value||'').trim();
+    return `${num?('#'+num+' '):''}${typed||'Unnamed player'}`.trim();
+  }
+  saveBtn.addEventListener('click',()=>{
+    if(!sel.value){ alert('Select the Man of the Match.'); return; }
+    if(sel.value.startsWith('manual|') && !(manualName.value||'').trim()){ alert('Enter the player name.'); return; }
+    if(!(reason.value||'').trim()){ alert('Add a reason for Man of the Match.'); return; }
+    preview.style.display='block';
+    preview.innerHTML=`<strong>${label()}</strong><small>Man of the Match</small><div style="margin-top:7px">${escapeHtml(reason.value.trim())}</div>`;
+    alert('Man of the Match saved in this page preview. Supabase persistence will be connected with the match tables.');
+  });
+  clearBtn.addEventListener('click',()=>{ sel.value=''; manualName.value=''; reason.value=''; manualWrap.style.display='none'; preview.style.display='none'; preview.innerHTML=''; });
+})();
+
+</script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -781,6 +823,42 @@ function escapeHtml(value){
 
 document.getElementById("aDate").valueAsDate=new Date();
 loadAnnouncements();
+
+// Man of the Match UI (Supabase persistence will be connected with the match tables)
+(function(){
+  const sel=document.getElementById('motmPlayer');
+  if(!sel) return;
+  const manualWrap=document.getElementById('motmManualWrap');
+  const manualName=document.getElementById('motmManualName');
+  const reason=document.getElementById('motmReason');
+  const preview=document.getElementById('motmPreview');
+  const saveBtn=document.getElementById('saveMotmBtn');
+  const clearBtn=document.getElementById('clearMotmBtn');
+
+  const roster=[
+    ['2','Ivan'],['9','Andres'],['17','David'],['18','Jason'],['20','Ayman'],['6','Julio'],['7','Tom'],['14','Pedro'],['16','CJ'],['19','Dez'],['8','Adolpho'],['22','Vignesh'],['11','Edward'],['1','Todd'],['3','Brad'],['21','Andres'],['12','Koushyar'],['15','Andrew'],['4','Nick']
+  ];
+  const guestNumbers=['23','26','44','55','66','69','77','88'];
+  sel.innerHTML='<option value="">Select player...</option>'+roster.map(([n,name])=>`<option value="roster|${n}|${name}">#${n} ${name}</option>`).join('')+guestNumbers.map(n=>`<option value="manual|${n}|">#${n} — Enter name</option>`).join('')+'<option value="manual||">Other player / number — Enter manually</option>';
+  sel.addEventListener('change',()=>{ manualWrap.style.display=sel.value.startsWith('manual|')?'block':'none'; });
+  function label(){
+    if(!sel.value) return '';
+    const [kind,num,name]=sel.value.split('|');
+    if(kind==='roster') return `#${num} ${name}`;
+    const typed=(manualName.value||'').trim();
+    return `${num?('#'+num+' '):''}${typed||'Unnamed player'}`.trim();
+  }
+  saveBtn.addEventListener('click',()=>{
+    if(!sel.value){ alert('Select the Man of the Match.'); return; }
+    if(sel.value.startsWith('manual|') && !(manualName.value||'').trim()){ alert('Enter the player name.'); return; }
+    if(!(reason.value||'').trim()){ alert('Add a reason for Man of the Match.'); return; }
+    preview.style.display='block';
+    preview.innerHTML=`<strong>${label()}</strong><small>Man of the Match</small><div style="margin-top:7px">${escapeHtml(reason.value.trim())}</div>`;
+    alert('Man of the Match saved in this page preview. Supabase persistence will be connected with the match tables.');
+  });
+  clearBtn.addEventListener('click',()=>{ sel.value=''; manualName.value=''; reason.value=''; manualWrap.style.display='none'; preview.style.display='none'; preview.innerHTML=''; });
+})();
+
 </script>
 </body>
 </html>
