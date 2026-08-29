@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SKOR FC | Roswell Over 30 Soccer | AC Me Rollin Update</title>
+<title>SKOR FC | Roswell Over 30 Soccer</title>
 <meta name="description" content="SKOR FC — Over 30 competitive soccer in Roswell, Georgia. Play Fast. Play SKOR.">
 <style>
 :root{
@@ -325,6 +325,28 @@ img{max-width:100%}
   .player-photo{height:145px}
   .player-avatar{width:64px;height:64px;font-size:26px}
 }
+
+/* Match Center live-data additions */
+.match-scoreline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:7px 0 10px}
+.match-scoreline .team-name{font-size:clamp(20px,2vw,31px);font-weight:950;text-transform:uppercase}
+.match-scoreline .score{font-size:clamp(28px,3vw,44px);font-weight:950;letter-spacing:-.04em;color:#fff}
+.match-scorers{margin-top:10px;color:#d6d8dc;font-size:12px;line-height:1.6}
+.match-scorers strong{color:#fff}
+.live-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:#951535;color:#fff;font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase;margin-left:7px}
+.live-pill.final{background:#30343a}
+.game-row-link{display:grid;grid-template-columns:76px 1fr auto;min-height:75px;border-top:1px solid #292d31;text-decoration:none;color:inherit;transition:background .16s ease}
+.game-row-link:first-child{border-top:0}
+.game-row-link:hover{background:#15181c}
+.game-row-link .date-box,.game-row-link .game-info,.game-row-link .row-logos{min-width:0}
+.game-result{align-self:center;margin-right:10px;font-size:13px;font-weight:950;color:#fff}
+@media(max-width:760px){
+  .game-row-link{grid-template-columns:58px 1fr auto;min-height:70px}
+  .match-scoreline{gap:7px}
+  .match-scoreline .team-name{font-size:17px}
+  .match-scoreline .score{font-size:25px}
+  .match-scorers{font-size:10.5px}
+}
+
 </style>
 </head>
 <body>
@@ -380,7 +402,7 @@ img{max-width:100%}
           </div>
           <div class="match-logos" id="nextMatchLogos"></div>
         </div>
-        <a class="match-cta" href="#schedule">Match<br>Center ›</a>
+        <a class="match-cta" id="matchCenterLink" href="matches.html">Match<br>Center ›</a>
       </div>
     </div>
   </section>
@@ -405,7 +427,7 @@ img{max-width:100%}
             <div class="megaphone">⚽</div>
             <div>
               <h3>Upcoming Game — Lone Wolves United</h3>
-              <p>Arrive by 4:15 PM at Groveway Community Park. RSVP on WhatsApp before August 26 at 12:00 PM. Kit: White Kit · Black shorts · Black socks.</p>
+              <p>Arrive by 4:15 PM at Groveway Community Park. RSVP on WhatsApp before August 26 at 12:00 PM. Kit: Maroon Kit · Black shorts · Black socks.</p>
               <small>Match day reminder · August 30, 2026</small>
             </div>
           </div>
@@ -621,181 +643,217 @@ loadPublicAnnouncements();
 
 const SKOR_GAMES = [
   {
+    slug:"2026-08-30-lone-wolves-united",
     kickoff:"2026-08-30T17:00:00-04:00",
+    arrival:"4:15 PM", kit:"Maroon Kit", status:"scheduled",
     home:"Lone Wolves United", away:"SKOR FC",
     location:"Groveway Community Park · Upper Field",
     homeLogo:"assets/lone-wolves-logo.jpg", awayLogo:"assets/skor fc logo transparent.png"
   },
   {
+    slug:"2026-09-13-ac-me-rollin",
     kickoff:"2026-09-13T19:00:00-04:00",
+    arrival:"6:45 PM", kit:"", status:"scheduled",
     home:"SKOR FC", away:"AC Me Rollin (formerly known as Hamilton)",
     location:"Roswell Area Park MS#3",
     homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/ac-me-rollin-logo.png"
   },
   {
+    slug:"2026-09-20-ctm",
     kickoff:"2026-09-20T15:00:00-04:00",
-    home:"SKOR FC", away:"CTM",
+    home:"SKOR FC", away:"CTM", status:"scheduled",
     location:"Groveway Community Park · Upper Field",
     homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/ctm-logo.png"
   },
   {
+    slug:"2026-09-25-press-pray-fc",
     kickoff:"2026-09-25T19:00:00-04:00",
-    home:"Press & Pray FC", away:"SKOR FC",
+    home:"Press & Pray FC", away:"SKOR FC", status:"scheduled",
     location:"East Roswell Park SC#2",
     homeLogo:"assets/press-pray-logo.png", awayLogo:"assets/skor fc logo transparent.png"
   },
   {
+    slug:"2026-09-27-milliken",
     kickoff:"2026-09-27T11:00:00-04:00",
-    home:"SKOR FC", away:"Milliken",
+    home:"SKOR FC", away:"Milliken", status:"scheduled",
     location:"East Roswell Park SC#2",
     homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/milliken-logo.png"
   },
   {
+    slug:"2026-10-04-majestic-sc",
     kickoff:"2026-10-04T11:00:00-04:00",
-    home:"Majestic SC", away:"SKOR FC",
+    home:"Majestic SC", away:"SKOR FC", status:"scheduled",
     location:"East Roswell Park SC#1",
     homeLogo:"assets/majestic-logo.png", awayLogo:"assets/skor fc logo transparent.png"
   },
   {
+    slug:"2026-10-11-rovers-ruckus",
     kickoff:"2026-10-11T19:00:00-04:00",
-    home:"SKOR FC", away:"Rovers Ruckus",
+    home:"SKOR FC", away:"Rovers Ruckus", status:"scheduled",
     location:"East Roswell Park SC#2",
     homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/rovers-ruckus-logo.png"
   },
   {
+    slug:"2026-10-18-concord-fc",
     kickoff:"2026-10-18T17:00:00-04:00",
-    home:"Concord FC", away:"SKOR FC",
+    home:"Concord FC", away:"SKOR FC", status:"scheduled",
     location:"East Roswell Park SC#1",
     homeLogo:"assets/concord-logo.png", awayLogo:"assets/skor fc logo transparent.png"
   },
   {
+    slug:"2026-10-25-latinos-fc",
     kickoff:"2026-10-25T19:00:00-04:00",
-    home:"SKOR FC", away:"Latinos FC",
+    home:"SKOR FC", away:"Latinos FC", status:"scheduled",
     location:"East Roswell Park SC#1",
     homeLogo:"assets/skor fc logo transparent.png", awayLogo:"assets/latinos-logo.png"
   },
   {
+    slug:"2026-11-01-lone-wolves-united",
     kickoff:"2026-11-01T11:00:00-05:00",
-    home:"Lone Wolves United", away:"SKOR FC",
+    home:"Lone Wolves United", away:"SKOR FC", status:"scheduled",
     location:"East Roswell Park SC#1",
     homeLogo:"assets/lone-wolves-logo.jpg", awayLogo:"assets/skor fc logo transparent.png"
   }
 ];
 
 const GAME_WINDOW_MS = 2 * 60 * 60 * 1000;
+let MATCHES = [...SKOR_GAMES];
+let MATCH_EVENTS = [];
 
-function gameDate(game){
-  return new Date(game.kickoff);
-}
-
+function gameDate(game){ return new Date(game.kickoff); }
 function isStillUpcoming(game, now){
+  if(game.status === "final") return now.getTime() < gameDate(game).getTime() + GAME_WINDOW_MS;
   return now.getTime() < gameDate(game).getTime() + GAME_WINDOW_MS;
 }
-
 function formatFullDate(date){
-  return new Intl.DateTimeFormat("en-US",{
-    timeZone:"America/New_York",
-    weekday:"long",
-    month:"short",
-    day:"numeric",
-    year:"numeric"
-  }).format(date);
+  return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"long",month:"short",day:"numeric",year:"numeric"}).format(date);
 }
-
 function formatTime(date){
-  return new Intl.DateTimeFormat("en-US",{
-    timeZone:"America/New_York",
-    hour:"numeric",
-    minute:"2-digit"
-  }).format(date);
+  return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"}).format(date);
 }
-
-function monthLabel(date){
-  return new Intl.DateTimeFormat("en-US",{
-    timeZone:"America/New_York",
-    month:"short"
-  }).format(date).toUpperCase();
+function monthLabel(date){ return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short"}).format(date).toUpperCase(); }
+function dayLabel(date){ return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",day:"2-digit"}).format(date); }
+function statusLabel(status){
+  return ({first_half:"LIVE · 1ST HALF",halftime:"HALFTIME",second_half:"LIVE · 2ND HALF",final:"FINAL",scheduled:"NEXT MATCH"})[status] || "NEXT MATCH";
 }
-
-function dayLabel(date){
-  return new Intl.DateTimeFormat("en-US",{
-    timeZone:"America/New_York",
-    day:"2-digit"
-  }).format(date);
+function isLiveStatus(status){ return ["first_half","halftime","second_half"].includes(status); }
+function teamLogo(team){
+  const t=(team||"").toLowerCase();
+  if(t.includes("skor fc")) return "assets/skor fc logo transparent.png";
+  if(t.includes("lone wolves")) return "assets/lone-wolves-logo.jpg";
+  if(t.includes("ac me rollin")) return "assets/ac-me-rollin-logo.png";
+  if(t === "ctm") return "assets/ctm-logo.png";
+  if(t.includes("press & pray")) return "assets/press-pray-logo.png";
+  if(t.includes("milliken")) return "assets/milliken-logo.png";
+  if(t.includes("majestic")) return "assets/majestic-logo.png";
+  if(t.includes("rovers ruckus")) return "assets/rovers-ruckus-logo.png";
+  if(t.includes("concord")) return "assets/concord-logo.png";
+  if(t.includes("latinos")) return "assets/latinos-logo.png";
+  return "assets/skor fc logo transparent.png";
 }
-
+function normalizeMatch(row){
+  return {
+    id:row.id,
+    slug:row.slug,
+    kickoff:row.kickoff,
+    arrival:row.arrival_time || row.arrival || "",
+    kit:row.kit || "",
+    status:row.status || "scheduled",
+    home:row.home_team || row.home,
+    away:row.away_team || row.away,
+    location:row.location || "",
+    homeLogo:row.home_logo || teamLogo(row.home_team || row.home),
+    awayLogo:row.away_logo || teamLogo(row.away_team || row.away)
+  };
+}
+function eventsFor(game){ return game?.id ? MATCH_EVENTS.filter(e=>e.match_id===game.id) : []; }
+function scoreFor(game){
+  let skor=0, opponent=0;
+  eventsFor(game).forEach(e=>{
+    if(e.event_type==="skor_goal" || e.event_type==="opponent_own_goal") skor++;
+    if(e.event_type==="opponent_goal" || e.event_type==="skor_own_goal") opponent++;
+  });
+  const homeIsSkor=game.home==="SKOR FC";
+  return {skor,opponent,home:homeIsSkor?skor:opponent,away:homeIsSkor?opponent:skor};
+}
+function scorerSummary(game){
+  const goals=eventsFor(game).filter(e=>e.event_type==="skor_goal" || e.event_type==="opponent_own_goal");
+  if(!goals.length) return "";
+  return goals.map(e=>{
+    if(e.event_type==="opponent_own_goal") return "⚽ Opponent own goal";
+    const player=e.player_name ? `${e.player_name}${e.player_number?` #${e.player_number}`:""}` : "SKOR goal";
+    const assist=e.assist_player_name ? ` · Assist: ${e.assist_player_name}${e.assist_player_number?` #${e.assist_player_number}`:""}` : "";
+    return `⚽ ${player}${assist}`;
+  }).join("<br>");
+}
 function logoBadge(team, src, large=false){
-  const cls = large ? "match-team-badge" : "row-logo-badge";
-  const teamClass = team === "SKOR FC" ? "skor" : "opponent";
-  return `<div class="${cls} ${teamClass}" title="${team}">
-    <img src="${src}" alt="${team} logo">
-  </div>`;
+  const cls=large?"match-team-badge":"row-logo-badge";
+  const teamClass=team==="SKOR FC"?"skor":"opponent";
+  return `<div class="${cls} ${teamClass}" title="${escapeHtmlMatch(team)}"><img src="${src}" alt="${escapeHtmlMatch(team)} logo"></div>`;
 }
+function escapeHtmlMatch(value){ return String(value||"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s])); }
 
 function renderNextMatch(game){
-  const card = document.getElementById("nextMatchCard");
-  const title = document.getElementById("nextMatchTitle");
-  const meta = document.getElementById("nextMatchMeta");
-  const logos = document.getElementById("nextMatchLogos");
-
+  const card=document.getElementById("nextMatchCard");
+  const title=document.getElementById("nextMatchTitle");
+  const meta=document.getElementById("nextMatchMeta");
+  const logos=document.getElementById("nextMatchLogos");
+  const link=document.getElementById("matchCenterLink");
   if(!game){
-    card.innerHTML = `<div class="match-complete">
-      <div class="match-label">2026 Season</div>
-      <h2>No upcoming matches scheduled</h2>
-    </div>`;
+    card.innerHTML=`<div class="match-complete"><div class="match-label">2026 Season</div><h2>No upcoming matches scheduled</h2><a class="btn btn-secondary" style="margin-top:14px" href="matches.html#past">Past Matches</a></div>`;
     return;
   }
-
-  const date = gameDate(game);
-  title.textContent = `${game.home} vs ${game.away}`;
-  meta.innerHTML = `
-    <span><strong>${formatFullDate(date)}</strong></span>
-    <span><strong>${formatTime(date)}</strong></span>
-    <span><strong>${game.location}</strong></span>`;
-  logos.innerHTML =
-    logoBadge(game.home, game.homeLogo, true) +
-    logoBadge(game.away, game.awayLogo, true);
+  const date=gameDate(game), score=scoreFor(game);
+  const showScore=isLiveStatus(game.status)||game.status==="final"||eventsFor(game).length>0;
+  const label=statusLabel(game.status);
+  document.querySelector("#nextMatchCard .match-label").innerHTML=`${label}${isLiveStatus(game.status)?'<span class="live-pill">LIVE</span>':game.status==='final'?'<span class="live-pill final">FINAL</span>':''}`;
+  if(showScore){
+    title.innerHTML=`${escapeHtmlMatch(game.home)} <strong>${score.home}</strong> – <strong>${score.away}</strong> ${escapeHtmlMatch(game.away)}`;
+  } else {
+    title.textContent=`${game.home} vs ${game.away}`;
+  }
+  const scorer=scorerSummary(game);
+  meta.innerHTML=`<span><strong>${formatFullDate(date)}</strong></span><span><strong>${formatTime(date)}</strong></span><span><strong>${escapeHtmlMatch(game.location)}</strong></span>${scorer?`<div class="match-scorers">${scorer}</div>`:""}`;
+  logos.innerHTML=logoBadge(game.home,game.homeLogo,true)+logoBadge(game.away,game.awayLogo,true);
+  link.href=`matches.html?game=${encodeURIComponent(game.slug)}`;
 }
 
 function renderUpcomingGames(games){
-  const container = document.getElementById("upcomingGames");
-
-  if(!games.length){
-    container.innerHTML = `<div class="schedule-empty">No additional matches are currently scheduled.</div>`;
-    return;
-  }
-
-  container.innerHTML = games.map(game => {
-    const date = gameDate(game);
-    const isHome = game.home === "SKOR FC";
-    return `<div class="game-row">
+  const container=document.getElementById("upcomingGames");
+  if(!games.length){ container.innerHTML=`<div class="schedule-empty">No additional matches are currently scheduled. <a href="matches.html#past">View past matches →</a></div>`; return; }
+  container.innerHTML=games.map(game=>{
+    const date=gameDate(game), score=scoreFor(game);
+    const showScore=isLiveStatus(game.status)||game.status==="final"||eventsFor(game).length>0;
+    return `<a class="game-row-link" href="matches.html?game=${encodeURIComponent(game.slug)}">
       <div class="date-box">${monthLabel(date)}<strong>${dayLabel(date)}</strong></div>
-      <div class="game-info">
-        <h3>${game.home} vs ${game.away}</h3>
-        <p>${formatTime(date)} · ${game.location}</p>
-      </div>
-      <div class="row-logos" aria-label="${game.home} and ${game.away} logos">
-        ${logoBadge(game.home, game.homeLogo)}
-        ${logoBadge(game.away, game.awayLogo)}
-      </div>
-    </div>`;
+      <div class="game-info"><h3>${escapeHtmlMatch(game.home)} vs ${escapeHtmlMatch(game.away)}</h3><p>${formatTime(date)} · ${escapeHtmlMatch(game.location)}</p></div>
+      ${showScore?`<div class="game-result">${score.home}–${score.away}</div>`:`<div class="row-logos" aria-label="team logos">${logoBadge(game.home,game.homeLogo)}${logoBadge(game.away,game.awayLogo)}</div>`}
+    </a>`;
   }).join("");
 }
-
 function updateSchedule(){
-  const now = new Date();
-  const upcoming = SKOR_GAMES
-    .filter(game => isStillUpcoming(game, now))
-    .sort((a,b) => gameDate(a) - gameDate(b));
-
-  renderNextMatch(upcoming[0] || null);
+  const now=new Date();
+  const upcoming=MATCHES.filter(game=>isStillUpcoming(game,now)).sort((a,b)=>gameDate(a)-gameDate(b));
+  renderNextMatch(upcoming[0]||null);
   renderUpcomingGames(upcoming);
+}
+async function loadMatchCenterData(){
+  try{
+    const {data,error}=await publicDb.from("matches").select("id,slug,kickoff,arrival_time,kit,status,home_team,away_team,location,home_logo,away_logo,published").eq("published",true).order("kickoff",{ascending:true});
+    if(error || !data?.length){ if(error) console.info("Match Center using schedule fallback:",error.message); updateSchedule(); return; }
+    MATCHES=data.map(normalizeMatch);
+    const ids=MATCHES.map(m=>m.id).filter(Boolean);
+    if(ids.length){
+      const {data:events,error:eventError}=await publicDb.from("match_events").select("id,match_id,event_type,player_name,player_number,assist_player_name,assist_player_number,half,event_order,created_at").in("match_id",ids).order("event_order",{ascending:true});
+      if(!eventError && events) MATCH_EVENTS=events;
+    }
+    updateSchedule();
+  }catch(err){ console.info("Match Center using schedule fallback:",err); updateSchedule(); }
 }
 
 updateSchedule();
-
-/* Refresh periodically so a page left open can roll forward automatically. */
-setInterval(updateSchedule, 5 * 60 * 1000);
+loadMatchCenterData();
+setInterval(loadMatchCenterData, 60 * 1000);
 
 document.querySelectorAll('#navLinks a').forEach(a=>{
   a.addEventListener('click',()=>{
