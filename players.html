@@ -66,6 +66,11 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
 .stats-head h2{margin:0;font-size:30px}
 .stats-head p{margin:5px 0 0;color:#898d94;font-size:13px}
 .stats-live{font-size:10px;font-weight:900;letter-spacing:.10em;text-transform:uppercase;color:#b51b40}
+.season-record{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:18px}
+.record-tile{border:1px solid #303338;border-radius:14px;background:linear-gradient(145deg,#121519,#0b0d10);padding:15px;text-align:center}
+.record-tile span{display:block;color:#85898f;font-size:9px;font-weight:950;letter-spacing:.10em;text-transform:uppercase}
+.record-tile strong{display:block;margin-top:5px;font-size:25px;line-height:1}
+.record-note{color:#72767c;font-size:10px;margin:-8px 0 20px;line-height:1.45}
 .season-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
 .stat-tile{border:1px solid #303338;border-radius:14px;background:linear-gradient(155deg,#121519,#090b0d);padding:17px}
 .stat-tile span{display:block;color:#878b91;font-size:10px;font-weight:900;letter-spacing:.10em;text-transform:uppercase}
@@ -92,6 +97,9 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
  .stats-head{align-items:start;flex-direction:column}
  .season-overview{grid-template-columns:repeat(2,1fr)}
  .stat-tile:last-child{grid-column:1/-1}
+ .season-record{grid-template-columns:repeat(4,1fr);gap:7px}
+ .record-tile{padding:12px 7px}
+ .record-tile strong{font-size:21px}
  .leaders{grid-template-columns:1fr}
  .player-stats{grid-template-columns:repeat(5,1fr);gap:3px}
  .player-stat strong{font-size:15px}
@@ -174,6 +182,17 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
       <div class="stat-tile"><span>Red Cards</span><strong id="teamRed">0</strong></div>
       <div class="stat-tile"><span>MOTM Awards</span><strong id="teamMotm">0</strong></div>
     </div>
+
+    <div class="season-record" aria-label="2026 team season record">
+      <div class="record-tile"><span>Played</span><strong id="recordPlayed">0</strong></div>
+      <div class="record-tile"><span>Wins</span><strong id="recordWins">0</strong></div>
+      <div class="record-tile"><span>Draws</span><strong id="recordDraws">0</strong></div>
+      <div class="record-tile"><span>Losses</span><strong id="recordLosses">0</strong></div>
+      <div class="record-tile"><span>GF</span><strong id="recordGF">0</strong></div>
+      <div class="record-tile"><span>GA</span><strong id="recordGA">0</strong></div>
+      <div class="record-tile"><span>GD</span><strong id="recordGD">0</strong></div>
+    </div>
+    <div class="record-note">Season record uses matches marked <strong>Final</strong>. GF = Goals For, GA = Goals Against, GD = Goal Difference.</div>
 
     <div class="leaders">
       <div class="leader-card"><span>Leading Scorer</span><strong id="goalLeader">—</strong><small id="goalLeaderSub">No goals recorded yet</small></div>
@@ -665,6 +684,27 @@ async function loadSeasonStats(){
 
     const validMatchIds=new Set((matches||[]).filter(m=>m.status!=="scheduled").map(m=>m.id));
     const seasonEvents=(events||[]).filter(e=>validMatchIds.has(e.match_id));
+    const finalMatches=(matches||[]).filter(m=>m.status==="final");
+    let recordWins=0,recordDraws=0,recordLosses=0,recordGF=0,recordGA=0;
+    for(const m of finalMatches){
+      let gf=0,ga=0;
+      for(const e of (events||[]).filter(e=>e.match_id===m.id)){
+        if(e.event_type==="skor_goal" || e.event_type==="opponent_own_goal") gf++;
+        else if(e.event_type==="opponent_goal" || e.event_type==="skor_own_goal") ga++;
+      }
+      recordGF+=gf; recordGA+=ga;
+      if(gf>ga) recordWins++;
+      else if(gf<ga) recordLosses++;
+      else recordDraws++;
+    }
+    document.getElementById("recordPlayed").textContent=finalMatches.length;
+    document.getElementById("recordWins").textContent=recordWins;
+    document.getElementById("recordDraws").textContent=recordDraws;
+    document.getElementById("recordLosses").textContent=recordLosses;
+    document.getElementById("recordGF").textContent=recordGF;
+    document.getElementById("recordGA").textContent=recordGA;
+    const gd=recordGF-recordGA;
+    document.getElementById("recordGD").textContent=gd>0?`+${gd}`:String(gd);
     const stats=new Map();
     roster.forEach(p=>stats.set(playerKey(p.number,p.name),newStat(p.number,p.name)));
 
