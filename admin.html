@@ -98,6 +98,7 @@
       .nav button span{display:block;white-space:nowrap}
       .grid{grid-template-columns:1fr 1fr}
       .fieldrow{grid-template-columns:1fr}
+      .motm-grid{grid-template-columns:1fr}
       .top{align-items:flex-start}
       .user .name{display:none}
     }
@@ -363,6 +364,33 @@
           <div class="sub">Recorded in match order. Use Edit or Delete to correct a sideline entry.</div>
           <div class="event-log" id="gameDayEventLog"><div style="color:var(--muted);font-size:.9rem">No events loaded.</div></div>
         </div>
+
+        <div class="panel motm-panel">
+          <h2>Man of the Match</h2>
+          <div class="sub">Set this during or after the match. It will appear on the public match summary once Supabase match publishing is connected.</div>
+          <div class="motm-grid">
+            <div>
+              <label>Player</label>
+              <select id="motmPlayer"></select>
+              <div class="manual-player-fields" id="motmManualWrap">
+                <div class="fieldrow">
+                  <div><label>Player name</label><input id="motmManualName" placeholder="Enter player name"></div>
+                  <div><label>Jersey number</label><input id="motmManualNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="e.g. 23"></div>
+                </div>
+                <small class="manual-hint">For an extra jersey, guest player, or anyone not yet on the roster.</small>
+              </div>
+            </div>
+            <div>
+              <label>Reason</label>
+              <textarea id="motmReason" placeholder="Why was this player Man of the Match?"></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+            <button class="btn btn-primary" id="saveMotmBtn" type="button">Save / Update Man of the Match</button>
+            <button class="btn btn-light" id="clearMotmBtn" type="button">Clear</button>
+          </div>
+          <div class="motm-preview" id="motmPreview" style="display:none"></div>
+        </div>
       </div>
     </section>
 
@@ -478,43 +506,7 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-// Man of the Match UI (Supabase persistence will be connected with the match tables)
-(function(){
-  const sel=document.getElementById('motmPlayer');
-  if(!sel) return;
-  const manualWrap=document.getElementById('motmManualWrap');
-  const manualName=document.getElementById('motmManualName');
-  const reason=document.getElementById('motmReason');
-  const preview=document.getElementById('motmPreview');
-  const saveBtn=document.getElementById('saveMotmBtn');
-  const clearBtn=document.getElementById('clearMotmBtn');
-
-  const roster=[
-    ['2','Ivan'],['9','Andres'],['17','David'],['18','Jason'],['20','Ayman'],['6','Julio'],['7','Tom'],['14','Pedro'],['16','CJ'],['19','Dez'],['8','Adolpho'],['22','Vignesh'],['11','Edward'],['1','Todd'],['3','Brad'],['21','Andres'],['12','Koushyar'],['15','Andrew'],['4','Nick']
-  ];
-  const guestNumbers=['23','26','44','55','66','69','77','88'];
-  sel.innerHTML='<option value="">Select player...</option>'+roster.map(([n,name])=>`<option value="roster|${n}|${name}">#${n} ${name}</option>`).join('')+guestNumbers.map(n=>`<option value="manual|${n}|">#${n} — Enter name</option>`).join('')+'<option value="manual||">Other player / number — Enter manually</option>';
-  sel.addEventListener('change',()=>{ manualWrap.style.display=sel.value.startsWith('manual|')?'block':'none'; });
-  function label(){
-    if(!sel.value) return '';
-    const [kind,num,name]=sel.value.split('|');
-    if(kind==='roster') return `#${num} ${name}`;
-    const typed=(manualName.value||'').trim();
-    return `${num?('#'+num+' '):''}${typed||'Unnamed player'}`.trim();
-  }
-  saveBtn.addEventListener('click',()=>{
-    if(!sel.value){ alert('Select the Man of the Match.'); return; }
-    if(sel.value.startsWith('manual|') && !(manualName.value||'').trim()){ alert('Enter the player name.'); return; }
-    if(!(reason.value||'').trim()){ alert('Add a reason for Man of the Match.'); return; }
-    preview.style.display='block';
-    preview.innerHTML=`<strong>${label()}</strong><small>Man of the Match</small><div style="margin-top:7px">${escapeHtml(reason.value.trim())}</div>`;
-    alert('Man of the Match saved in this page preview. Supabase persistence will be connected with the match tables.');
-  });
-  clearBtn.addEventListener('click',()=>{ sel.value=''; manualName.value=''; reason.value=''; manualWrap.style.display='none'; preview.style.display='none'; preview.innerHTML=''; });
-})();
-
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -830,6 +822,7 @@ loadAnnouncements();
   if(!sel) return;
   const manualWrap=document.getElementById('motmManualWrap');
   const manualName=document.getElementById('motmManualName');
+  const manualNumber=document.getElementById('motmManualNumber');
   const reason=document.getElementById('motmReason');
   const preview=document.getElementById('motmPreview');
   const saveBtn=document.getElementById('saveMotmBtn');
@@ -846,7 +839,9 @@ loadAnnouncements();
     const [kind,num,name]=sel.value.split('|');
     if(kind==='roster') return `#${num} ${name}`;
     const typed=(manualName.value||'').trim();
-    return `${num?('#'+num+' '):''}${typed||'Unnamed player'}`.trim();
+    const typedNumber=(manualNumber?.value||'').trim();
+    const finalNumber=num || typedNumber;
+    return `${finalNumber?('#'+finalNumber+' '):''}${typed||'Unnamed player'}`.trim();
   }
   saveBtn.addEventListener('click',()=>{
     if(!sel.value){ alert('Select the Man of the Match.'); return; }
@@ -856,7 +851,7 @@ loadAnnouncements();
     preview.innerHTML=`<strong>${label()}</strong><small>Man of the Match</small><div style="margin-top:7px">${escapeHtml(reason.value.trim())}</div>`;
     alert('Man of the Match saved in this page preview. Supabase persistence will be connected with the match tables.');
   });
-  clearBtn.addEventListener('click',()=>{ sel.value=''; manualName.value=''; reason.value=''; manualWrap.style.display='none'; preview.style.display='none'; preview.innerHTML=''; });
+  clearBtn.addEventListener('click',()=>{ sel.value=''; manualName.value=''; if(manualNumber) manualNumber.value=''; reason.value=''; manualWrap.style.display='none'; preview.style.display='none'; preview.innerHTML=''; });
 })();
 
 </script>
