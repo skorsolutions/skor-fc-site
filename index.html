@@ -347,6 +347,16 @@ img{max-width:100%}
   .match-scorers{font-size:10.5px}
 }
 
+
+/* Upcoming practices v14 */
+.practices-section{padding-top:0}
+.practice-list{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.practice-card{border:1px solid #2b2f35;background:linear-gradient(155deg,#111419,#090b0e);border-radius:14px;padding:18px;text-decoration:none;display:block}
+.practice-card .practice-date{color:#b51b40;font-size:11px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.practice-card h3{margin:0 0 7px;font-size:20px}.practice-card p{margin:4px 0;color:#aeb2b8;font-size:13px;line-height:1.45}
+.practice-empty{border:1px dashed #34383e;border-radius:13px;padding:18px;color:#8f949b}
+@media(max-width:800px){.practice-list{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -439,6 +449,18 @@ img{max-width:100%}
           <div><div class="eyebrow">2026 Season</div><h2>Upcoming Games</h2></div>
         </div>
         <div class="card schedule-card" id="upcomingGames" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section practices-section" id="practices">
+    <div class="wrap">
+      <div class="section-title">
+        <div><div class="eyebrow">Team Training</div><h2>Upcoming Practices</h2></div>
+      </div>
+      <div class="practice-list" id="upcomingPractices" aria-live="polite">
+        <div class="practice-empty">No upcoming practices are currently published.</div>
       </div>
     </div>
   </section>
@@ -831,6 +853,19 @@ function renderUpcomingGames(games){
     </a>`;
   }).join("");
 }
+
+function practiceDateLabel(date){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"long",month:"short",day:"numeric"}).format(date);}
+async function loadUpcomingPractices(){
+  const target=document.getElementById("upcomingPractices");if(!target)return;
+  try{
+    const cutoff=new Date(Date.now()-4*60*60*1000).toISOString();
+    const {data,error}=await publicDb.from("practices").select("id,title,starts_at,location,notes,published").eq("published",true).gte("starts_at",cutoff).order("starts_at",{ascending:true}).limit(6);
+    if(error)throw error;
+    if(!data?.length){target.innerHTML='<div class="practice-empty">No upcoming practices are currently published.</div>';return;}
+    target.innerHTML=data.map(p=>{const d=new Date(p.starts_at);return `<article class="practice-card"><div class="practice-date">${escapeHtmlMatch(practiceDateLabel(d))} · ${escapeHtmlMatch(formatTime(d))}</div><h3>${escapeHtmlMatch(p.title||"SKOR FC Practice")}</h3><p><strong>${escapeHtmlMatch(p.location||"")}</strong></p>${p.notes?`<p>${escapeHtmlMatch(p.notes)}</p>`:""}</article>`;}).join("");
+  }catch(err){console.info("Practices unavailable:",err);target.innerHTML='<div class="practice-empty">No upcoming practices are currently published.</div>';}
+}
+
 function updateSchedule(){
   const now=new Date();
   const upcoming=MATCHES.filter(game=>isStillUpcoming(game,now)).sort((a,b)=>gameDate(a)-gameDate(b));
@@ -853,7 +888,9 @@ async function loadMatchCenterData(){
 
 updateSchedule();
 loadMatchCenterData();
+loadUpcomingPractices();
 setInterval(loadMatchCenterData, 60 * 1000);
+setInterval(loadUpcomingPractices, 60 * 1000);
 
 document.querySelectorAll('#navLinks a').forEach(a=>{
   a.addEventListener('click',()=>{
