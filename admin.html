@@ -172,6 +172,9 @@
     .event-btn span{display:block;margin-top:4px;color:var(--muted);font-weight:600;font-size:.76rem}
     .event-btn.goal{border-left:5px solid #4e8778}.event-btn.own{border-left:5px solid #866a3e}.event-btn.card-yellow{border-left:5px solid #d6b800}.event-btn.card-red{border-left:5px solid #b91f37}
     .event-editor{display:none;border:1px solid #d9d6d1;background:#faf9f7;border-radius:14px;padding:16px;margin-top:14px}.event-editor.open{display:block}
+    .manual-player-fields{display:none;margin-top:9px;padding:12px;border:1px dashed #cfc9c4;border-radius:10px;background:#fff}.manual-player-fields.open{display:block}
+    .manual-hint{display:block;margin-top:7px;color:var(--muted);font-size:.76rem;line-height:1.4}
+    .event-group-label{grid-column:1/-1;margin:4px 0 -2px;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;font-weight:950;color:var(--muted)}
     .event-log{display:grid;gap:8px}.event-log-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
     .event-log-item small{color:var(--muted)}.event-actions{display:flex;gap:6px}.mini-btn{border:1px solid #d9d6d1;background:#fff;border-radius:8px;padding:6px 8px;font-size:.72rem;font-weight:800;cursor:pointer}
     .backend-warning{padding:12px 14px;background:#fff6df;border:1px solid #ead8a6;color:#735b1b;border-radius:12px;font-size:.85rem}
@@ -303,19 +306,47 @@
           <h2>Record Event</h2>
           <div class="sub">Score changes are generated from the events below, so correcting an event also corrects the score.</div>
           <div class="event-buttons">
+            <div class="event-group-label">Goals</div>
             <button class="event-btn goal" type="button" data-event="skor_goal">⚽ SKOR Goal<span>Choose scorer + assist</span></button>
             <button class="event-btn goal" type="button" data-event="opponent_goal">⚽ Opponent Goal<span>Opponent score +1</span></button>
             <button class="event-btn own" type="button" data-event="opponent_own_goal">↩ Opponent Own Goal<span>SKOR score +1</span></button>
             <button class="event-btn own" type="button" data-event="skor_own_goal">↪ SKOR Own Goal<span>Opponent score +1</span></button>
-            <button class="event-btn card-yellow" type="button" data-event="yellow_card">🟨 Yellow Card<span>Choose SKOR player</span></button>
-            <button class="event-btn card-red" type="button" data-event="red_card">🟥 Red Card<span>Choose SKOR player</span></button>
+            <div class="event-group-label">SKOR FC Cards</div>
+            <button class="event-btn card-yellow" type="button" data-event="yellow_card">🟨 SKOR Yellow Card<span>Choose SKOR player</span></button>
+            <button class="event-btn card-red" type="button" data-event="red_card">🟥 SKOR Red Card<span>Choose SKOR player</span></button>
+            <div class="event-group-label">Opponent Cards</div>
+            <button class="event-btn card-yellow" type="button" data-event="opponent_yellow_card">🟨 Opponent Yellow Card<span>Enter number/name if known</span></button>
+            <button class="event-btn card-red" type="button" data-event="opponent_red_card">🟥 Opponent Red Card<span>Enter number/name if known</span></button>
           </div>
 
           <div class="event-editor" id="eventEditor">
             <strong id="eventEditorTitle">Record Event</strong>
             <div class="form" style="margin-top:12px">
-              <div id="eventPlayerWrap"><label>Player</label><select id="eventPlayer"></select></div>
-              <div id="eventAssistWrap"><label>Assist</label><select id="eventAssist"></select></div>
+              <div id="eventPlayerWrap">
+                <label>Player</label><select id="eventPlayer"></select>
+                <div class="manual-player-fields" id="eventPlayerManual">
+                  <div class="fieldrow">
+                    <div><label>Player name</label><input id="eventPlayerManualName" placeholder="Enter player name"></div>
+                    <div><label>Jersey number</label><input id="eventPlayerManualNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="e.g. 23"></div>
+                  </div>
+                  <small class="manual-hint">Use this for an unassigned/guest jersey or any player not yet in the roster.</small>
+                </div>
+              </div>
+              <div id="eventAssistWrap">
+                <label>Assist</label><select id="eventAssist"></select>
+                <div class="manual-player-fields" id="eventAssistManual">
+                  <div class="fieldrow">
+                    <div><label>Assist player name</label><input id="eventAssistManualName" placeholder="Enter player name"></div>
+                    <div><label>Jersey number</label><input id="eventAssistManualNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="e.g. 44"></div>
+                  </div>
+                </div>
+              </div>
+              <div id="opponentPlayerWrap" style="display:none">
+                <div class="fieldrow">
+                  <div><label>Opponent player name <span style="font-weight:500;color:var(--muted)">(optional)</span></label><input id="opponentPlayerName" placeholder="If known"></div>
+                  <div><label>Opponent jersey # <span style="font-weight:500;color:var(--muted)">(optional)</span></label><input id="opponentPlayerNumber" type="number" min="0" max="99" inputmode="numeric" placeholder="e.g. 12"></div>
+                </div>
+              </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="saveMatchEvent" type="button">Save Event</button><button class="btn btn-light" id="cancelMatchEvent" type="button">Cancel</button></div>
             </div>
           </div>
@@ -568,18 +599,50 @@ document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("clic
 const ROSTER=[
   {key:"2-ivan",number:2,name:"Ivan"},{key:"9-andres",number:9,name:"Andres"},{key:"17-david",number:17,name:"David"},{key:"18-jason",number:18,name:"Jason"},{key:"20-ayman",number:20,name:"Ayman"},{key:"6-julio",number:6,name:"Julio"},{key:"7-tom",number:7,name:"Tom"},{key:"14-pedro",number:14,name:"Pedro"},{key:"16-cj",number:16,name:"CJ"},{key:"19-dez",number:19,name:"Dez"},{key:"8-adolpho",number:8,name:"Adolpho"},{key:"22-vignesh",number:22,name:"Vignesh"},{key:"11-edward",number:11,name:"Edward"},{key:"1-todd",number:1,name:"Todd"},{key:"3-brad",number:3,name:"Brad"},{key:"21-andres",number:21,name:"Andres"},{key:"12-koushyar",number:12,name:"Koushyar"},{key:"15-andrew",number:15,name:"Andrew"},{key:"4-nick",number:4,name:"Nick"}
 ];
+/* Extra physical jerseys available for guests/unassigned players. */
+const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,77,88,69];
 const GAME_FALLBACK=[
   {slug:"2026-08-30-lone-wolves-united",kickoff:"2026-08-30T17:00:00-04:00",home_team:"Lone Wolves United",away_team:"SKOR FC",location:"Groveway Community Park · Upper Field",status:"scheduled"},
   {slug:"2026-09-13-ac-me-rollin",kickoff:"2026-09-13T19:00:00-04:00",home_team:"SKOR FC",away_team:"AC Me Rollin (formerly known as Hamilton)",location:"Roswell Area Park MS#3",status:"scheduled"}
 ];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
-const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend");
+const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
 function gdEsc(v){return String(v||"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
-function rosterOptions(includeNone=false){return (includeNone?'<option value="">Unassisted / No assist</option>':'<option value="">Select player…</option>')+ROSTER.map(p=>`<option value="${p.key}">#${p.number} ${p.name}</option>`).join("");}
+function rosterOptions(includeNone=false){
+  const first=includeNone?'<option value="">Unassisted / No assist</option>':'<option value="">Select player…</option>';
+  const roster='<optgroup label="Roster">'+ROSTER.map(p=>`<option value="${p.key}">#${p.number} ${p.name}</option>`).join("")+'</optgroup>';
+  const extras='<optgroup label="Unassigned / Guest Jerseys">'+EXTRA_JERSEY_NUMBERS.map(n=>`<option value="extra-${n}">#${n} — Enter name</option>`).join("")+'</optgroup>';
+  const manual='<option value="manual">Other player / number — Enter manually</option>';
+  return first+roster+extras+manual;
+}
 eventPlayer.innerHTML=rosterOptions(false);eventAssist.innerHTML=rosterOptions(true);
+function manualSelection(selectEl){
+  const value=selectEl.value;
+  if(value==="manual")return{manual:true,number:""};
+  if(value.startsWith("extra-"))return{manual:true,number:value.replace("extra-","")};
+  return{manual:false,number:""};
+}
+function syncManualFields(selectEl,wrap,nameInput,numberInput,keepValues=false){
+  const sel=manualSelection(selectEl);wrap.classList.toggle("open",sel.manual);
+  if(sel.manual&&!keepValues){nameInput.value="";numberInput.value=sel.number;}
+  if(!sel.manual&&!keepValues){nameInput.value="";numberInput.value="";}
+}
+eventPlayer.addEventListener("change",()=>syncManualFields(eventPlayer,eventPlayerManual,eventPlayerManualName,eventPlayerManualNumber));
+eventAssist.addEventListener("change",()=>syncManualFields(eventAssist,eventAssistManual,eventAssistManualName,eventAssistManualNumber));
+function selectedPlayerData(selectEl,nameInput,numberInput){
+  const roster=ROSTER.find(p=>p.key===selectEl.value);if(roster)return{key:roster.key,name:roster.name,number:roster.number};
+  const sel=manualSelection(selectEl);if(sel.manual){const name=nameInput.value.trim();const number=numberInput.value.trim();return{key:selectEl.value,name:name||null,number:number?Number(number):null,manual:true};}
+  return null;
+}
+function setPlayerEditorValue(selectEl,wrap,nameInput,numberInput,key,name,number,allowNone=false){
+  if(!key&&!name&&!number){selectEl.value="";syncManualFields(selectEl,wrap,nameInput,numberInput,true);nameInput.value="";numberInput.value="";return;}
+  if(key && ROSTER.some(p=>p.key===key)){selectEl.value=key;syncManualFields(selectEl,wrap,nameInput,numberInput,true);nameInput.value="";numberInput.value="";return;}
+  const extraKey=number!=null && EXTRA_JERSEY_NUMBERS.includes(Number(number))?`extra-${Number(number)}`:"manual";
+  selectEl.value=extraKey;syncManualFields(selectEl,wrap,nameInput,numberInput,true);nameInput.value=name||"";numberInput.value=number??(extraKey.startsWith("extra-")?extraKey.replace("extra-",""):"");
+}
 function gdFormat(d){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(d));}
 function gdScore(){let skor=0,opponent=0;gameDayEvents.forEach(e=>{if(["skor_goal","opponent_own_goal"].includes(e.event_type))skor++;if(["opponent_goal","skor_own_goal"].includes(e.event_type))opponent++;});const homeIsSkor=gameDaySelected?.home_team==="SKOR FC";return{home:homeIsSkor?skor:opponent,away:homeIsSkor?opponent:skor};}
-function gdEventLabel(e){const half=e.half==="second"?"2nd Half":"1st Half";if(e.event_type==="skor_goal")return `⚽ ${gdEsc(e.player_name||"SKOR Goal")}${e.player_number?` #${e.player_number}`:""}${e.assist_player_name?` · Assist: ${gdEsc(e.assist_player_name)}${e.assist_player_number?` #${e.assist_player_number}`:""}`:" · Unassisted"}`;if(e.event_type==="opponent_goal")return `⚽ Opponent Goal`;if(e.event_type==="opponent_own_goal")return `⚽ Opponent Own Goal — SKOR +1`;if(e.event_type==="skor_own_goal")return `⚽ SKOR Own Goal — Opponent +1`;if(e.event_type==="yellow_card")return `🟨 ${gdEsc(e.player_name||"SKOR Player")}${e.player_number?` #${e.player_number}`:""}`;if(e.event_type==="red_card")return `🟥 ${gdEsc(e.player_name||"SKOR Player")}${e.player_number?` #${e.player_number}`:""}`;return gdEsc(e.event_type);}
+function gdEventLabel(e){if(e.event_type==="skor_goal")return `⚽ ${gdEsc(e.player_name||"SKOR Goal")}${e.player_number!=null?` #${e.player_number}`:""}${e.assist_player_name||e.assist_player_number!=null?` · Assist: ${gdEsc(e.assist_player_name||"Player")}${e.assist_player_number!=null?` #${e.assist_player_number}`:""}`:" · Unassisted"}`;if(e.event_type==="opponent_goal")return `⚽ Opponent Goal`;if(e.event_type==="opponent_own_goal")return `⚽ Opponent Own Goal — SKOR +1`;if(e.event_type==="skor_own_goal")return `⚽ SKOR Own Goal — Opponent +1`;if(e.event_type==="yellow_card")return `🟨 SKOR — ${gdEsc(e.player_name||"Player")}${e.player_number!=null?` #${e.player_number}`:""}`;if(e.event_type==="red_card")return `🟥 SKOR — ${gdEsc(e.player_name||"Player")}${e.player_number!=null?` #${e.player_number}`:""}`;if(e.event_type==="opponent_yellow_card")return `🟨 Opponent — ${gdEsc(e.player_name||"Player")}${e.player_number!=null?` #${e.player_number}`:""}`;if(e.event_type==="opponent_red_card")return `🟥 Opponent — ${gdEsc(e.player_name||"Player")}${e.player_number!=null?` #${e.player_number}`:""}`;return gdEsc(e.event_type);}
 function renderGameDay(){if(!gameDaySelected)return;document.getElementById("gameDayHome").childNodes[0].nodeValue=gameDaySelected.home_team;document.getElementById("gameDayAway").childNodes[0].nodeValue=gameDaySelected.away_team;document.getElementById("gameDayHomeRole").textContent=gameDaySelected.home_team==="SKOR FC"?"SKOR FC":"Opponent";document.getElementById("gameDayAwayRole").textContent=gameDaySelected.away_team==="SKOR FC"?"SKOR FC":"Opponent";const sc=gdScore();document.getElementById("gameDayScore").textContent=`${sc.home} – ${sc.away}`;document.querySelectorAll(".status-btn").forEach(b=>b.classList.toggle("active",b.dataset.status===gameDaySelected.status));eventLog.innerHTML=gameDayEvents.length?gameDayEvents.map(e=>`<div class="event-log-item"><div><strong>${gdEventLabel(e)}</strong><br><small>${e.half==="second"?"2nd Half":"1st Half"}</small></div><div class="event-actions"><button class="mini-btn" type="button" onclick="editGameEvent('${e.id}')">Edit</button><button class="mini-btn" type="button" onclick="deleteGameEvent('${e.id}')">Delete</button></div></div>`).join(""):'<div style="color:var(--muted);font-size:.9rem">No events recorded yet.</div>';}
 async function loadGameDayMatches(){
   if(!sb)return;
@@ -589,10 +652,33 @@ async function loadGameDayMatches(){
 async function loadGameDayEvents(){if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}const {data,error}=await sb.from("match_events").select("id,match_id,event_type,player_key,player_name,player_number,assist_player_key,assist_player_name,assist_player_number,half,event_order,created_at").eq("match_id",gameDaySelected.id).order("event_order",{ascending:true});if(error){backendBox.className="backend-warning";backendBox.textContent="Could not load match events: "+error.message;gameDayEvents=[];}else gameDayEvents=data||[];renderGameDay();}
 gameDayMatch.addEventListener("change",async()=>{if(!gameDayReady){const i=Number(gameDayMatch.value.replace("fallback-",""));gameDaySelected=gameDayMatches[i]||gameDayMatches[0];gameDayEvents=[];renderGameDay();return;}gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value);await loadGameDayEvents();});
 document.querySelectorAll(".status-btn").forEach(btn=>btn.addEventListener("click",async()=>{if(!gameDayReady){alert("Create the match stats Supabase tables first. The HTML layout is ready.");return;}const status=btn.dataset.status;if(status==="final"&&!confirm("Mark this match Final? You can change it later if needed."))return;const {error}=await sb.from("matches").update({status}).eq("id",gameDaySelected.id);if(error){alert("Could not update match status: "+error.message);return;}gameDaySelected.status=status;if(status==="first_half")eventHalf.value="first";if(status==="second_half")eventHalf.value="second";renderGameDay();}));
-function openEventEditor(type,event=null){currentEventType=type;editingEventId=event?.id||null;eventEditor.classList.add("open");const titles={skor_goal:"SKOR Goal",opponent_goal:"Opponent Goal",opponent_own_goal:"Opponent Own Goal",skor_own_goal:"SKOR Own Goal",yellow_card:"Yellow Card",red_card:"Red Card"};eventEditorTitle.textContent=(editingEventId?"Edit ":"Record ")+(titles[type]||"Event");const needsPlayer=["skor_goal","yellow_card","red_card"].includes(type);eventPlayerWrap.style.display=needsPlayer?"block":"none";eventAssistWrap.style.display=type==="skor_goal"?"block":"none";eventPlayer.value=event?.player_key||"";eventAssist.value=event?.assist_player_key||"";eventHalf.value=event?.half||eventHalf.value;document.getElementById("saveMatchEvent").textContent=editingEventId?"Save Changes":"Save Event";eventEditor.scrollIntoView({behavior:"smooth",block:"nearest"});}
+function openEventEditor(type,event=null){
+  currentEventType=type;editingEventId=event?.id||null;eventEditor.classList.add("open");
+  const titles={skor_goal:"SKOR Goal",opponent_goal:"Opponent Goal",opponent_own_goal:"Opponent Own Goal",skor_own_goal:"SKOR Own Goal",yellow_card:"SKOR Yellow Card",red_card:"SKOR Red Card",opponent_yellow_card:"Opponent Yellow Card",opponent_red_card:"Opponent Red Card"};
+  eventEditorTitle.textContent=(editingEventId?"Edit ":"Record ")+(titles[type]||"Event");
+  const needsSkorPlayer=["skor_goal","yellow_card","red_card"].includes(type),needsOpponentPlayer=["opponent_yellow_card","opponent_red_card"].includes(type);
+  eventPlayerWrap.style.display=needsSkorPlayer?"block":"none";eventAssistWrap.style.display=type==="skor_goal"?"block":"none";opponentPlayerWrap.style.display=needsOpponentPlayer?"block":"none";
+  setPlayerEditorValue(eventPlayer,eventPlayerManual,eventPlayerManualName,eventPlayerManualNumber,event?.player_key,event?.player_name,event?.player_number);
+  setPlayerEditorValue(eventAssist,eventAssistManual,eventAssistManualName,eventAssistManualNumber,event?.assist_player_key,event?.assist_player_name,event?.assist_player_number,true);
+  opponentPlayerName.value=needsOpponentPlayer?(event?.player_name||""):"";opponentPlayerNumber.value=needsOpponentPlayer?(event?.player_number??""):"";
+  eventHalf.value=event?.half||eventHalf.value;document.getElementById("saveMatchEvent").textContent=editingEventId?"Save Changes":"Save Event";eventEditor.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
 document.querySelectorAll(".event-btn").forEach(btn=>btn.addEventListener("click",()=>openEventEditor(btn.dataset.event)));
 document.getElementById("cancelMatchEvent").addEventListener("click",()=>{eventEditor.classList.remove("open");editingEventId=null;currentEventType=null;});
-document.getElementById("saveMatchEvent").addEventListener("click",async()=>{if(!gameDayReady){alert("Create the Supabase match stats tables first. Then these buttons will publish live.");return;}const needsPlayer=["skor_goal","yellow_card","red_card"].includes(currentEventType);const player=ROSTER.find(p=>p.key===eventPlayer.value);const assist=ROSTER.find(p=>p.key===eventAssist.value);if(needsPlayer&&!player){alert("Select a player.");return;}const {data:{user}}=await sb.auth.getUser();const payload={match_id:gameDaySelected.id,event_type:currentEventType,half:eventHalf.value,player_key:player?.key||null,player_name:player?.name||null,player_number:player?.number||null,assist_player_key:currentEventType==="skor_goal"?(assist?.key||null):null,assist_player_name:currentEventType==="skor_goal"?(assist?.name||null):null,assist_player_number:currentEventType==="skor_goal"?(assist?.number||null):null,created_by:user?.id||null};let result;if(editingEventId){delete payload.match_id;delete payload.created_by;result=await sb.from("match_events").update(payload).eq("id",editingEventId);}else result=await sb.from("match_events").insert(payload);if(result.error){alert("Could not save event: "+result.error.message);return;}eventEditor.classList.remove("open");editingEventId=null;currentEventType=null;await loadGameDayEvents();});
+document.getElementById("saveMatchEvent").addEventListener("click",async()=>{
+  if(!gameDayReady){alert("Create the Supabase match stats tables first. Then these buttons will publish live.");return;}
+  const needsSkorPlayer=["skor_goal","yellow_card","red_card"].includes(currentEventType),needsOpponentPlayer=["opponent_yellow_card","opponent_red_card"].includes(currentEventType);
+  const player=needsSkorPlayer?selectedPlayerData(eventPlayer,eventPlayerManualName,eventPlayerManualNumber):null;
+  const assist=currentEventType==="skor_goal"?selectedPlayerData(eventAssist,eventAssistManualName,eventAssistManualNumber):null;
+  if(needsSkorPlayer&&!player){alert("Select a player, an unassigned jersey number, or Other player / number.");return;}
+  if(needsSkorPlayer&&player.manual&&!player.name){alert("Enter the player's name for the unassigned/manual jersey.");return;}
+  if(currentEventType==="skor_goal"&&assist?.manual&&!assist.name){alert("Enter the assist player's name, or choose Unassisted / No assist.");return;}
+  let eventPlayerData=player;
+  if(needsOpponentPlayer){const name=opponentPlayerName.value.trim(),number=opponentPlayerNumber.value.trim();eventPlayerData={key:null,name:name||null,number:number?Number(number):null};}
+  const {data:{user}}=await sb.auth.getUser();
+  const payload={match_id:gameDaySelected.id,event_type:currentEventType,half:eventHalf.value,player_key:eventPlayerData?.key||null,player_name:eventPlayerData?.name||null,player_number:eventPlayerData?.number??null,assist_player_key:currentEventType==="skor_goal"?(assist?.key||null):null,assist_player_name:currentEventType==="skor_goal"?(assist?.name||null):null,assist_player_number:currentEventType==="skor_goal"?(assist?.number??null):null,created_by:user?.id||null};
+  let result;if(editingEventId){delete payload.match_id;delete payload.created_by;result=await sb.from("match_events").update(payload).eq("id",editingEventId);}else result=await sb.from("match_events").insert(payload);if(result.error){alert("Could not save event: "+result.error.message);return;}eventEditor.classList.remove("open");editingEventId=null;currentEventType=null;await loadGameDayEvents();
+});
 window.editGameEvent=function(id){const e=gameDayEvents.find(x=>x.id===id);if(e)openEventEditor(e.event_type,e);};
 window.deleteGameEvent=async function(id){if(!gameDayReady)return;if(!confirm("Delete this match event? The score will update automatically."))return;const {error}=await sb.from("match_events").delete().eq("id",id);if(error){alert("Could not delete event: "+error.message);return;}await loadGameDayEvents();};
 
