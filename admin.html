@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v19" />
-  <title>SKOR FC Admin | Lineups v19</title>
+  <meta name="skor-build" content="lineup-admin-v20" />
+  <title>SKOR FC Admin | Lineups v20</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -252,7 +252,7 @@
     @media(max-width:720px){.lineup-toolbar{grid-template-columns:1fr}.player-pool{grid-template-columns:repeat(3,1fr)}.formation-slot{width:68px;min-height:66px}.jersey{width:44px;height:40px}.player-peg{width:64px}.peg-name{font-size:.64rem}.sub-row{grid-template-columns:58px 1fr 18px 1fr auto}}
 
 
-    /* Lineup Builder v19 - independent captain tactical board */
+    /* Lineup Builder v20 - single captain tactical board */
     .v19-lineup-badge{display:inline-flex;align-items:center;gap:7px;background:#17181d;color:#fff;border-radius:999px;padding:7px 11px;font-size:.72rem;font-weight:950;letter-spacing:.08em;margin-bottom:10px}
     .v19-lineup-count{display:inline-flex;align-items:center;background:#f5e8ec;color:var(--maroon-dark);border:1px solid #e4c6cf;border-radius:999px;padding:5px 9px;font-size:.72rem;font-weight:900;margin-left:6px}
     .v19-help{margin:8px 0 12px;padding:10px 12px;background:#f7f5f3;border:1px solid var(--line);border-radius:10px;font-size:.78rem;color:var(--muted)}
@@ -570,7 +570,7 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V19</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V20 — SINGLE ENGINE</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, set the bench, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -672,7 +672,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v19 - intentionally independent of the main admin/Supabase script */
+/* SKOR FC Lineup Builder v20 - the ONLY lineup engine in this file */
 (function(){
   const roster = [
     {number:2,name:"Ivan"},{number:9,name:"Andres"},{number:17,name:"David"},{number:18,name:"Jason"},
@@ -788,7 +788,7 @@
   if(clear) clear.addEventListener("click",()=>{state.slots={};state.bench=[];selectedPlayer=null;render();markStatus("Pitch and bench cleared.");});
 
   render();
-  markStatus("Lineup Builder v19 ready — 19 players loaded.");
+  markStatus("Lineup Builder v20 ready — 19 players loaded. One lineup engine only.");
 })();
 </script>
 
@@ -1280,190 +1280,12 @@ loadAnnouncements();
 })();
 
 
-// Lineup Lab v17 — browser-saved prototype. Supabase persistence comes after workflow validation.
-const LINEUP_POS_GROUPS=[
-  {key:"GK",label:"Goalkeeper"},{key:"FB",label:"Fullback / Wingback"},{key:"CB",label:"Center Back"},
-  {key:"DM",label:"Defensive Mid"},{key:"CM",label:"Central Mid"},{key:"AM",label:"Attacking Mid"},
-  {key:"W",label:"Wing"},{key:"ST",label:"Striker"}
-];
-const FORMATIONS={
-  "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
-  "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
-  "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
-  "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
-};
-let lineupState={formation:"4-2-3-1",slots:{},bench:[],depth:{},subs:[]};
-let lineupDragPlayer=null;
-function lineupKey(){return `skorLineupsV17:${document.getElementById("lineupEvent")?.value||"general"}`;}
-function lineupPlayerId(p){return `${p.number}-${p.name}`;}
-function findLineupPlayer(id){return ROSTER.find(p=>lineupPlayerId(p)===id);}
-function lineupEsc(v){return gdEsc(v);}
-function lineupPeg(p,compact=false){return `<div class="player-peg${compact?' compact':''}" draggable="true" data-lineup-player="${lineupEsc(lineupPlayerId(p))}"><div class="jersey">${lineupEsc(p.number)}</div><div class="peg-name">${lineupEsc(p.name)}</div></div>`;}
-function ensureDepth(){LINEUP_POS_GROUPS.forEach(g=>{if(!Array.isArray(lineupState.depth[g.key]))lineupState.depth[g.key]=[];});}
-function renderLineupPitch(){
-  const pitch=document.getElementById("lineupPitch"); if(!pitch)return;
-  pitch.querySelectorAll(".formation-slot").forEach(n=>n.remove());
-  (FORMATIONS[lineupState.formation]||FORMATIONS["4-2-3-1"]).forEach(([label,x,y])=>{
-    const slot=document.createElement("div");slot.className="formation-slot";slot.dataset.slot=label;slot.style.left=x+"%";slot.style.top=y+"%";
-    const pid=lineupState.slots[label],p=findLineupPlayer(pid);slot.innerHTML=p?lineupPeg(p):`<div class="slot-label">${label}</div>`;
-    slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("dragover")});slot.addEventListener("dragleave",()=>slot.classList.remove("dragover"));
-    slot.addEventListener("drop",e=>{e.preventDefault();slot.classList.remove("dragover");if(lineupDragPlayer)assignLineupPlayer(label,lineupDragPlayer);});
-    pitch.appendChild(slot);
-  });
-  bindLineupDrags();
-}
-function assignLineupPlayer(slot,pid){
-  Object.keys(lineupState.slots).forEach(k=>{if(lineupState.slots[k]===pid)delete lineupState.slots[k];});
-  lineupState.bench=lineupState.bench.filter(x=>x!==pid);lineupState.slots[slot]=pid;renderLineupAll();
-}
-function renderLineupPool(){
-  const used=new Set([...Object.values(lineupState.slots),...lineupState.bench]);
-  document.getElementById("lineupPlayerPool").innerHTML=ROSTER.map(p=>`<div class="player-card${used.has(lineupPlayerId(p))?' on-field':''}">${lineupPeg(p,true)}</div>`).join("");bindLineupDrags();
-}
-function renderLineupBench(){
-  const box=document.getElementById("lineupBenchList");box.innerHTML=lineupState.bench.map(id=>{const p=findLineupPlayer(id);return p?`<div class="bench-player" draggable="true" data-lineup-player="${lineupEsc(id)}">#${p.number} ${lineupEsc(p.name)}</div>`:""}).join("")||'<span style="font-size:.8rem;color:var(--muted)">Drop substitutes here</span>';bindLineupDrags();
-}
-function bindLineupDrags(){document.querySelectorAll("[data-lineup-player]").forEach(el=>{el.ondragstart=()=>{lineupDragPlayer=el.dataset.lineupPlayer};el.ondragend=()=>{lineupDragPlayer=null};});}
-function renderLineupDepth(){
-  ensureDepth();const grid=document.getElementById("lineupDepthGrid");
-  grid.innerHTML=LINEUP_POS_GROUPS.map(g=>`<div class="depth-row"><div class="depth-pos">${g.key}<br><span style="font-weight:600;color:var(--muted);letter-spacing:0">${g.label}</span></div><div class="depth-players">${ROSTER.map(p=>{const id=lineupPlayerId(p),sel=lineupState.depth[g.key].includes(id);return `<button type="button" class="depth-chip${sel?' selected':''}" data-depth-pos="${g.key}" data-depth-player="${lineupEsc(id)}">#${p.number} ${lineupEsc(p.name)}</button>`}).join("")}</div></div>`).join("");
-  grid.querySelectorAll(".depth-chip").forEach(b=>b.onclick=()=>{const a=lineupState.depth[b.dataset.depthPos],id=b.dataset.depthPlayer,i=a.indexOf(id);i>=0?a.splice(i,1):a.push(id);renderLineupDepth();});
-}
-function lineupSelectOptions(selected=""){return '<option value="">Select…</option>'+ROSTER.map(p=>`<option value="${lineupEsc(lineupPlayerId(p))}"${lineupPlayerId(p)===selected?' selected':''}>#${p.number} ${lineupEsc(p.name)}</option>`).join("");}
-function renderSubPlan(){
-  const box=document.getElementById("lineupSubPlan");box.innerHTML=lineupState.subs.map((r,i)=>`<div class="sub-row"><input aria-label="Minute" type="number" min="1" max="120" value="${lineupEsc(r.minute||"")}" placeholder="Min" data-sub-minute="${i}"><select data-sub-out="${i}">${lineupSelectOptions(r.out)}</select><span>→</span><select data-sub-in="${i}">${lineupSelectOptions(r.in)}</select><button class="mini-btn" type="button" data-sub-remove="${i}">×</button></div>`).join("")||'<div style="color:var(--muted);font-size:.84rem">No planned substitutions yet.</div>';
-  box.querySelectorAll("[data-sub-minute]").forEach(x=>x.oninput=()=>lineupState.subs[+x.dataset.subMinute].minute=x.value);box.querySelectorAll("[data-sub-out]").forEach(x=>x.onchange=()=>lineupState.subs[+x.dataset.subOut].out=x.value);box.querySelectorAll("[data-sub-in]").forEach(x=>x.onchange=()=>lineupState.subs[+x.dataset.subIn].in=x.value);box.querySelectorAll("[data-sub-remove]").forEach(x=>x.onclick=()=>{lineupState.subs.splice(+x.dataset.subRemove,1);renderSubPlan();});
-}
-function renderLineupAll(){renderLineupPitch();renderLineupPool();renderLineupBench();renderLineupDepth();renderSubPlan();}
-function savedLineupVariations(){try{return JSON.parse(localStorage.getItem(lineupKey())||"[]")}catch{return []}}
-function renderVariationList(){
-  const list=savedLineupVariations(),box=document.getElementById("lineupVariationList");box.innerHTML=list.length?list.map((v,i)=>`<div class="variation-item"><button class="mini-btn" type="button" data-load-variation="${i}" style="text-align:left"><strong>${lineupEsc(v.name)}</strong><br><small>${lineupEsc(v.state.formation)} · ${Object.keys(v.state.slots||{}).length} starters</small></button><button class="mini-btn" type="button" data-delete-variation="${i}">Delete</button></div>`).join(""):'<div style="font-size:.82rem;color:var(--muted)">No saved variations for this event.</div>';
-  box.querySelectorAll("[data-load-variation]").forEach(b=>b.onclick=()=>{const v=savedLineupVariations()[+b.dataset.loadVariation];if(!v)return;lineupState=JSON.parse(JSON.stringify(v.state));document.getElementById("lineupFormation").value=lineupState.formation;document.getElementById("lineupVariationName").value=v.name;renderLineupAll();setLineupStatus(`Loaded ${v.name}.`,true);});
-  box.querySelectorAll("[data-delete-variation]").forEach(b=>b.onclick=()=>{const a=savedLineupVariations();a.splice(+b.dataset.deleteVariation,1);localStorage.setItem(lineupKey(),JSON.stringify(a));renderVariationList();});
-}
-function setLineupStatus(msg,ok=true){const x=document.getElementById("lineupStatus");if(!x)return;x.textContent=msg;x.className="lineup-status "+(ok?"ok":"err");}
-function loadLineupEventOptions(){
-  const sel=document.getElementById("lineupEvent");if(!sel)return;const current=sel.value;const matches=(gameDayMatches||[]);sel.innerHTML='<option value="general">General / Practice Board</option>'+matches.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${lineupEsc(m.home_team)} vs ${lineupEsc(m.away_team)}</option>`).join("");if([...sel.options].some(o=>o.value===current))sel.value=current;renderVariationList();
-}
-(function initLineupLab(){
-  const formation=document.getElementById("lineupFormation");if(!formation)return;
-  formation.addEventListener("change",()=>{lineupState.formation=formation.value;lineupState.slots={};renderLineupAll();setLineupStatus("Formation changed. Starting XI cleared; bench and coverage were kept.",true);});
-  document.getElementById("lineupEvent").addEventListener("change",()=>{lineupState={formation:formation.value,slots:{},bench:[],depth:{},subs:[]};renderLineupAll();renderVariationList();setLineupStatus("Event changed. Load a saved variation or build a new one.",true);});
-  document.getElementById("saveLineupVariation").addEventListener("click",()=>{const name=document.getElementById("lineupVariationName").value.trim()||"Untitled";const a=savedLineupVariations(),copy=JSON.parse(JSON.stringify(lineupState)),idx=a.findIndex(v=>v.name.toLowerCase()===name.toLowerCase());const rec={name,updatedAt:new Date().toISOString(),state:copy};idx>=0?a[idx]=rec:a.push(rec);localStorage.setItem(lineupKey(),JSON.stringify(a));renderVariationList();setLineupStatus(`Saved “${name}” in this browser.`,true);});
-  document.getElementById("clearLineupBtn").addEventListener("click",()=>{if(confirm("Clear all starters from the pitch?")){lineupState.slots={};renderLineupAll();}});
-  document.getElementById("addSubPlanBtn").addEventListener("click",()=>{lineupState.subs.push({minute:"",out:"",in:""});renderSubPlan();});
-  const bench=document.getElementById("lineupBench");bench.addEventListener("dragover",e=>{e.preventDefault();bench.classList.add("dragover")});bench.addEventListener("dragleave",()=>bench.classList.remove("dragover"));bench.addEventListener("drop",e=>{e.preventDefault();bench.classList.remove("dragover");if(!lineupDragPlayer)return;Object.keys(lineupState.slots).forEach(k=>{if(lineupState.slots[k]===lineupDragPlayer)delete lineupState.slots[k];});if(!lineupState.bench.includes(lineupDragPlayer))lineupState.bench.push(lineupDragPlayer);renderLineupAll();});
-  renderLineupAll();renderVariationList();
-})();
+// Legacy lineup engine removed in v20. The independent builder above is the only lineup engine.
 
 </script>
 
-<script>
-/* Lineup Lab v18 independent bootstrap.
-   Runs in its own script so unrelated admin runtime errors cannot prevent the lineup builder from loading. */
-(function(){
-  const roster=[
-    {number:2,name:"Ivan"},{number:9,name:"Andres"},{number:17,name:"David"},{number:18,name:"Jason"},{number:20,name:"Ayman"},
-    {number:6,name:"Julio"},{number:7,name:"Tom"},{number:14,name:"Pedro"},{number:16,name:"CJ"},{number:19,name:"Dez"},
-    {number:8,name:"Adolpho"},{number:22,name:"Vignesh"},{number:11,name:"Edward"},{number:1,name:"Todd"},{number:3,name:"Brad"},
-    {number:21,name:"Andres"},{number:12,name:"Koushyar"},{number:15,name:"Andrew"},{number:4,name:"Nick"}
-  ];
-  const formations={
-    "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
-    "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
-    "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
-    "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
-  };
-  const pitch=document.getElementById('lineupPitch');
-  const pool=document.getElementById('lineupPlayerPool');
-  const formationSel=document.getElementById('lineupFormation');
-  const bench=document.getElementById('lineupBench');
-  const benchList=document.getElementById('lineupBenchList');
-  const clearBtn=document.getElementById('clearLineupBtn');
-  if(!pitch||!pool||!formationSel||!bench||!benchList) return;
+<!-- Legacy v18 lineup bootstrap removed in v20 -->
 
-  // If the original v17 initializer already succeeded, leave it alone.
-  if(pitch.querySelector('.formation-slot') && pool.querySelector('[data-lineup-player]')) return;
-
-  let state={formation:formationSel.value||'4-2-3-1',slots:{},bench:[]};
-  let dragId='';
-  let selectedId='';
-  const idOf=p=>`${p.number}-${p.name}`;
-  const getPlayer=id=>roster.find(p=>idOf(p)===id);
-  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  const peg=p=>`<div class="player-peg"><div class="jersey">${p.number}</div><div class="peg-name">${esc(p.name)}</div></div>`;
-
-  function status(text){
-    const el=document.getElementById('lineupStatus');
-    if(el){ el.textContent=text; el.className='lineup-status ok'; }
-  }
-  function renderPitch(){
-    pitch.querySelectorAll('.formation-slot').forEach(el=>el.remove());
-    (formations[state.formation]||formations['4-2-3-1']).forEach(([label,x,y])=>{
-      const slot=document.createElement('button');
-      slot.type='button'; slot.className='formation-slot'; slot.dataset.slot=label;
-      slot.style.left=x+'%'; slot.style.top=y+'%';
-      const p=getPlayer(state.slots[label]);
-      slot.innerHTML=p?peg(p):`<div class="slot-label">${label}</div>`;
-      slot.addEventListener('dragover',e=>{e.preventDefault();slot.classList.add('dragover');});
-      slot.addEventListener('dragleave',()=>slot.classList.remove('dragover'));
-      slot.addEventListener('drop',e=>{e.preventDefault();slot.classList.remove('dragover');if(dragId)assign(label,dragId);});
-      // Non-drag fallback: select a player in pool, then click a position.
-      slot.addEventListener('click',()=>{
-        if(selectedId){ assign(label,selectedId); selectedId=''; renderPool(); return; }
-        if(state.slots[label]){ delete state.slots[label]; renderAll(); status(`${label} cleared.`); }
-      });
-      pitch.appendChild(slot);
-    });
-  }
-  function assign(slot,id){
-    Object.keys(state.slots).forEach(k=>{if(state.slots[k]===id) delete state.slots[k];});
-    state.bench=state.bench.filter(x=>x!==id);
-    state.slots[slot]=id;
-    renderAll();
-    const p=getPlayer(id); status(`${p?.name||'Player'} placed at ${slot}.`);
-  }
-  function renderPool(){
-    const used=new Set([...Object.values(state.slots),...state.bench]);
-    pool.innerHTML=roster.map(p=>{
-      const id=idOf(p),active=selectedId===id;
-      return `<button type="button" class="player-card${used.has(id)?' on-field':''}" draggable="true" data-v18-player="${esc(id)}" aria-pressed="${active?'true':'false'}" style="${active?'outline:3px solid var(--maroon);':''}"><div class="player-peg compact"><div class="jersey">${p.number}</div><div class="peg-name">${esc(p.name)}</div></div></button>`;
-    }).join('');
-    pool.querySelectorAll('[data-v18-player]').forEach(el=>{
-      el.addEventListener('dragstart',()=>{dragId=el.dataset.v18Player;});
-      el.addEventListener('dragend',()=>{dragId='';});
-      el.addEventListener('click',()=>{
-        selectedId=selectedId===el.dataset.v18Player?'':el.dataset.v18Player;
-        renderPool();
-        if(selectedId){const p=getPlayer(selectedId);status(`${p.name} selected — click a position on the pitch.`);} else status('Player selection cleared.');
-      });
-    });
-  }
-  function renderBench(){
-    benchList.innerHTML=state.bench.length?state.bench.map(id=>{const p=getPlayer(id);return p?`<button type="button" class="bench-player" draggable="true" data-v18-bench="${esc(id)}">#${p.number} ${esc(p.name)}</button>`:'';}).join(''):'<span style="font-size:.8rem;color:var(--muted)">Drop substitutes here</span>';
-    benchList.querySelectorAll('[data-v18-bench]').forEach(el=>{
-      el.addEventListener('dragstart',()=>{dragId=el.dataset.v18Bench;});
-      el.addEventListener('dragend',()=>{dragId='';});
-      el.addEventListener('click',()=>{state.bench=state.bench.filter(x=>x!==el.dataset.v18Bench);renderAll();});
-    });
-  }
-  function renderAll(){renderPitch();renderPool();renderBench();}
-
-  bench.addEventListener('dragover',e=>{e.preventDefault();bench.classList.add('dragover');});
-  bench.addEventListener('dragleave',()=>bench.classList.remove('dragover'));
-  bench.addEventListener('drop',e=>{
-    e.preventDefault(); bench.classList.remove('dragover'); if(!dragId)return;
-    Object.keys(state.slots).forEach(k=>{if(state.slots[k]===dragId) delete state.slots[k];});
-    if(!state.bench.includes(dragId)) state.bench.push(dragId);
-    renderAll(); const p=getPlayer(dragId); status(`${p?.name||'Player'} moved to the bench.`);
-  });
-  formationSel.addEventListener('change',()=>{state={formation:formationSel.value,slots:{},bench:state.bench};selectedId='';renderAll();status(`Formation changed to ${state.formation}.`);});
-  if(clearBtn) clearBtn.addEventListener('click',()=>{state.slots={};selectedId='';renderAll();status('Pitch cleared.');});
-
-  renderAll();
-  status('19 SKOR FC players loaded. Drag a jersey to the pitch, or click a player then click a position.');
-})();
-</script>
 
 </body>
 </html>
