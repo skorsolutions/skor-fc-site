@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v17" />
-  <title>SKOR FC Admin | Lineups v17</title>
+  <meta name="skor-build" content="lineup-admin-v18" />
+  <title>SKOR FC Admin | Lineups v18</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -590,7 +590,7 @@
           <div class="lineup-side">
             <div class="mini-panel">
               <h3>Players</h3><div class="sub">Drag a jersey onto any position. A player can only occupy one starting slot.</div>
-              <div class="player-pool" id="lineupPlayerPool"></div>
+              <div class="player-pool" id="lineupPlayerPool"><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="2-Ivan" aria-label="#2 Ivan"><div class="player-peg compact"><div class="jersey">2</div><div class="peg-name">Ivan</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="9-Andres" aria-label="#9 Andres"><div class="player-peg compact"><div class="jersey">9</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="17-David" aria-label="#17 David"><div class="player-peg compact"><div class="jersey">17</div><div class="peg-name">David</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="18-Jason" aria-label="#18 Jason"><div class="player-peg compact"><div class="jersey">18</div><div class="peg-name">Jason</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="20-Ayman" aria-label="#20 Ayman"><div class="player-peg compact"><div class="jersey">20</div><div class="peg-name">Ayman</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="6-Julio" aria-label="#6 Julio"><div class="player-peg compact"><div class="jersey">6</div><div class="peg-name">Julio</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="7-Tom" aria-label="#7 Tom"><div class="player-peg compact"><div class="jersey">7</div><div class="peg-name">Tom</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="14-Pedro" aria-label="#14 Pedro"><div class="player-peg compact"><div class="jersey">14</div><div class="peg-name">Pedro</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="16-CJ" aria-label="#16 CJ"><div class="player-peg compact"><div class="jersey">16</div><div class="peg-name">CJ</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="19-Dez" aria-label="#19 Dez"><div class="player-peg compact"><div class="jersey">19</div><div class="peg-name">Dez</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="8-Adolpho" aria-label="#8 Adolpho"><div class="player-peg compact"><div class="jersey">8</div><div class="peg-name">Adolpho</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="22-Vignesh" aria-label="#22 Vignesh"><div class="player-peg compact"><div class="jersey">22</div><div class="peg-name">Vignesh</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="11-Edward" aria-label="#11 Edward"><div class="player-peg compact"><div class="jersey">11</div><div class="peg-name">Edward</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="1-Todd" aria-label="#1 Todd"><div class="player-peg compact"><div class="jersey">1</div><div class="peg-name">Todd</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="3-Brad" aria-label="#3 Brad"><div class="player-peg compact"><div class="jersey">3</div><div class="peg-name">Brad</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="21-Andres" aria-label="#21 Andres"><div class="player-peg compact"><div class="jersey">21</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="12-Koushyar" aria-label="#12 Koushyar"><div class="player-peg compact"><div class="jersey">12</div><div class="peg-name">Koushyar</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="15-Andrew" aria-label="#15 Andrew"><div class="player-peg compact"><div class="jersey">15</div><div class="peg-name">Andrew</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="4-Nick" aria-label="#4 Nick"><div class="player-peg compact"><div class="jersey">4</div><div class="peg-name">Nick</div></div></button></div>
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
             </div>
 
@@ -1227,5 +1227,113 @@ function loadLineupEventOptions(){
 })();
 
 </script>
+
+<script>
+/* Lineup Lab v18 independent bootstrap.
+   Runs in its own script so unrelated admin runtime errors cannot prevent the lineup builder from loading. */
+(function(){
+  const roster=[
+    {number:2,name:"Ivan"},{number:9,name:"Andres"},{number:17,name:"David"},{number:18,name:"Jason"},{number:20,name:"Ayman"},
+    {number:6,name:"Julio"},{number:7,name:"Tom"},{number:14,name:"Pedro"},{number:16,name:"CJ"},{number:19,name:"Dez"},
+    {number:8,name:"Adolpho"},{number:22,name:"Vignesh"},{number:11,name:"Edward"},{number:1,name:"Todd"},{number:3,name:"Brad"},
+    {number:21,name:"Andres"},{number:12,name:"Koushyar"},{number:15,name:"Andrew"},{number:4,name:"Nick"}
+  ];
+  const formations={
+    "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
+    "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
+    "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
+    "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
+  };
+  const pitch=document.getElementById('lineupPitch');
+  const pool=document.getElementById('lineupPlayerPool');
+  const formationSel=document.getElementById('lineupFormation');
+  const bench=document.getElementById('lineupBench');
+  const benchList=document.getElementById('lineupBenchList');
+  const clearBtn=document.getElementById('clearLineupBtn');
+  if(!pitch||!pool||!formationSel||!bench||!benchList) return;
+
+  // If the original v17 initializer already succeeded, leave it alone.
+  if(pitch.querySelector('.formation-slot') && pool.querySelector('[data-lineup-player]')) return;
+
+  let state={formation:formationSel.value||'4-2-3-1',slots:{},bench:[]};
+  let dragId='';
+  let selectedId='';
+  const idOf=p=>`${p.number}-${p.name}`;
+  const getPlayer=id=>roster.find(p=>idOf(p)===id);
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const peg=p=>`<div class="player-peg"><div class="jersey">${p.number}</div><div class="peg-name">${esc(p.name)}</div></div>`;
+
+  function status(text){
+    const el=document.getElementById('lineupStatus');
+    if(el){ el.textContent=text; el.className='lineup-status ok'; }
+  }
+  function renderPitch(){
+    pitch.querySelectorAll('.formation-slot').forEach(el=>el.remove());
+    (formations[state.formation]||formations['4-2-3-1']).forEach(([label,x,y])=>{
+      const slot=document.createElement('button');
+      slot.type='button'; slot.className='formation-slot'; slot.dataset.slot=label;
+      slot.style.left=x+'%'; slot.style.top=y+'%';
+      const p=getPlayer(state.slots[label]);
+      slot.innerHTML=p?peg(p):`<div class="slot-label">${label}</div>`;
+      slot.addEventListener('dragover',e=>{e.preventDefault();slot.classList.add('dragover');});
+      slot.addEventListener('dragleave',()=>slot.classList.remove('dragover'));
+      slot.addEventListener('drop',e=>{e.preventDefault();slot.classList.remove('dragover');if(dragId)assign(label,dragId);});
+      // Non-drag fallback: select a player in pool, then click a position.
+      slot.addEventListener('click',()=>{
+        if(selectedId){ assign(label,selectedId); selectedId=''; renderPool(); return; }
+        if(state.slots[label]){ delete state.slots[label]; renderAll(); status(`${label} cleared.`); }
+      });
+      pitch.appendChild(slot);
+    });
+  }
+  function assign(slot,id){
+    Object.keys(state.slots).forEach(k=>{if(state.slots[k]===id) delete state.slots[k];});
+    state.bench=state.bench.filter(x=>x!==id);
+    state.slots[slot]=id;
+    renderAll();
+    const p=getPlayer(id); status(`${p?.name||'Player'} placed at ${slot}.`);
+  }
+  function renderPool(){
+    const used=new Set([...Object.values(state.slots),...state.bench]);
+    pool.innerHTML=roster.map(p=>{
+      const id=idOf(p),active=selectedId===id;
+      return `<button type="button" class="player-card${used.has(id)?' on-field':''}" draggable="true" data-v18-player="${esc(id)}" aria-pressed="${active?'true':'false'}" style="${active?'outline:3px solid var(--maroon);':''}"><div class="player-peg compact"><div class="jersey">${p.number}</div><div class="peg-name">${esc(p.name)}</div></div></button>`;
+    }).join('');
+    pool.querySelectorAll('[data-v18-player]').forEach(el=>{
+      el.addEventListener('dragstart',()=>{dragId=el.dataset.v18Player;});
+      el.addEventListener('dragend',()=>{dragId='';});
+      el.addEventListener('click',()=>{
+        selectedId=selectedId===el.dataset.v18Player?'':el.dataset.v18Player;
+        renderPool();
+        if(selectedId){const p=getPlayer(selectedId);status(`${p.name} selected — click a position on the pitch.`);} else status('Player selection cleared.');
+      });
+    });
+  }
+  function renderBench(){
+    benchList.innerHTML=state.bench.length?state.bench.map(id=>{const p=getPlayer(id);return p?`<button type="button" class="bench-player" draggable="true" data-v18-bench="${esc(id)}">#${p.number} ${esc(p.name)}</button>`:'';}).join(''):'<span style="font-size:.8rem;color:var(--muted)">Drop substitutes here</span>';
+    benchList.querySelectorAll('[data-v18-bench]').forEach(el=>{
+      el.addEventListener('dragstart',()=>{dragId=el.dataset.v18Bench;});
+      el.addEventListener('dragend',()=>{dragId='';});
+      el.addEventListener('click',()=>{state.bench=state.bench.filter(x=>x!==el.dataset.v18Bench);renderAll();});
+    });
+  }
+  function renderAll(){renderPitch();renderPool();renderBench();}
+
+  bench.addEventListener('dragover',e=>{e.preventDefault();bench.classList.add('dragover');});
+  bench.addEventListener('dragleave',()=>bench.classList.remove('dragover'));
+  bench.addEventListener('drop',e=>{
+    e.preventDefault(); bench.classList.remove('dragover'); if(!dragId)return;
+    Object.keys(state.slots).forEach(k=>{if(state.slots[k]===dragId) delete state.slots[k];});
+    if(!state.bench.includes(dragId)) state.bench.push(dragId);
+    renderAll(); const p=getPlayer(dragId); status(`${p?.name||'Player'} moved to the bench.`);
+  });
+  formationSel.addEventListener('change',()=>{state={formation:formationSel.value,slots:{},bench:state.bench};selectedId='';renderAll();status(`Formation changed to ${state.formation}.`);});
+  if(clearBtn) clearBtn.addEventListener('click',()=>{state.slots={};selectedId='';renderAll();status('Pitch cleared.');});
+
+  renderAll();
+  status('19 SKOR FC players loaded. Drag a jersey to the pitch, or click a player then click a position.');
+})();
+</script>
+
 </body>
 </html>
