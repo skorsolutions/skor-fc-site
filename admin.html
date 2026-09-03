@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v20" />
-  <title>SKOR FC Admin | Lineups v20</title>
+  <meta name="skor-build" content="lineup-admin-v22-production" />
+  <title>SKOR FC Admin | Lineups v22</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -570,7 +570,7 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V20 — SINGLE ENGINE</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V22</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, set the bench, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -788,9 +788,10 @@
   if(clear) clear.addEventListener("click",()=>{state.slots={};state.bench=[];selectedPlayer=null;render();markStatus("Pitch and bench cleared.");});
 
   render();
-  markStatus("Lineup Builder v20 ready — 19 players loaded. One lineup engine only.");
+  markStatus("Lineup Builder v22 ready — 19 players loaded.");
 })();
 </script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -868,7 +869,7 @@ googleLogin.addEventListener("click", async ()=>{
   const { error } = await sb.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: "https://skorfc.net/admin.html"
+      redirectTo: window.location.origin + window.location.pathname
     }
   });
   if(error){
@@ -1280,7 +1281,7 @@ loadAnnouncements();
 })();
 
 
-// Legacy lineup engine removed in v20. The independent builder above is the only lineup engine.
+// The independent v22 builder above is the only lineup engine.
 
 </script>
 
