@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="schedule-admin-v16" />
-  <title>SKOR FC Admin | Schedule v16</title>
+  <meta name="skor-build" content="lineup-admin-v17" />
+  <title>SKOR FC Admin | Lineups v17</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -203,6 +203,53 @@
     .form-status{display:none;margin:10px 0 0;padding:10px 12px;border-radius:10px;font-size:.86rem}
     .form-status.ok{display:block;background:#edf7ef;color:#256b34}.form-status.err{display:block;background:#fdecef;color:#8b1e3f}
     @media(max-width:900px){.schedule-grid{grid-template-columns:1fr}}
+
+
+    /* Lineup Builder v17 */
+    .lineup-shell{display:grid;gap:18px}
+    .lineup-toolbar{display:grid;grid-template-columns:1.2fr .8fr .8fr auto;gap:10px;align-items:end}
+    .lineup-workspace{display:grid;grid-template-columns:minmax(560px,1.45fr) minmax(300px,.7fr);gap:18px;align-items:start}
+    .pitch-wrap{background:#15171a;border-radius:20px;padding:14px;box-shadow:var(--shadow)}
+    .soccer-pitch{position:relative;aspect-ratio:68/105;max-height:720px;margin:auto;background:linear-gradient(90deg,rgba(255,255,255,.035) 0 50%,rgba(0,0,0,.025) 50%),repeating-linear-gradient(0deg,#4e875b 0 11%,#558e61 11% 22%);border:3px solid rgba(255,255,255,.9);border-radius:8px;overflow:hidden}
+    .soccer-pitch:before{content:"";position:absolute;inset:49.6% 0 auto;height:2px;background:rgba(255,255,255,.82)}
+    .soccer-pitch:after{content:"";position:absolute;width:20%;aspect-ratio:1;border:2px solid rgba(255,255,255,.82);border-radius:50%;left:40%;top:calc(50% - 10%)}
+    .pitch-box{position:absolute;left:21%;width:58%;height:16%;border:2px solid rgba(255,255,255,.82)}
+    .pitch-box.top{top:-2px}.pitch-box.bottom{bottom:-2px}
+    .six-box{position:absolute;left:35%;width:30%;height:7%;border:2px solid rgba(255,255,255,.82)}
+    .six-box.top{top:-2px}.six-box.bottom{bottom:-2px}
+    .formation-slot{position:absolute;transform:translate(-50%,-50%);width:86px;min-height:76px;border:2px dashed rgba(255,255,255,.5);border-radius:14px;display:grid;place-items:center;text-align:center;color:#fff;cursor:pointer;transition:.15s;background:rgba(0,0,0,.08);z-index:3}
+    .formation-slot:hover,.formation-slot.dragover{border-color:#fff;background:rgba(255,255,255,.13)}
+    .slot-label{font-size:.66rem;font-weight:950;letter-spacing:.08em;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+    .player-peg{width:78px;display:grid;justify-items:center;gap:2px;cursor:grab;user-select:none}
+    .player-peg:active{cursor:grabbing}.player-peg.compact{width:68px}
+    .jersey{position:relative;width:52px;height:46px;background:var(--maroon);clip-path:polygon(20% 0,35% 7%,65% 7%,80% 0,100% 19%,85% 34%,78% 28%,78% 100%,22% 100%,22% 28%,15% 34%,0 19%);display:grid;place-items:center;color:#fff;font-size:1rem;font-weight:950;filter:drop-shadow(0 4px 4px rgba(0,0,0,.25))}
+    .jersey:before{content:"";position:absolute;top:2px;width:16px;height:8px;border-radius:0 0 12px 12px;background:#17181c}
+    .peg-name{font-size:.72rem;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .player-card .peg-name{color:var(--ink);text-shadow:none}
+    .player-pool{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:430px;overflow:auto;padding-right:3px}
+    .player-card{border:1px solid var(--line);border-radius:12px;padding:9px 5px;background:#faf9f7;display:grid;place-items:center;cursor:grab}
+    .player-card.on-field{opacity:.42}.player-card:hover{border-color:#bca8af;background:#fff}
+    .bench-zone{margin-top:14px;border:2px dashed #d7d2cd;border-radius:14px;min-height:92px;padding:10px;background:#faf9f7}
+    .bench-zone.dragover{border-color:var(--maroon);background:#fff5f8}
+    .bench-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .bench-player{border:1px solid var(--line);border-radius:999px;background:#fff;padding:7px 10px;font-size:.78rem;font-weight:900;cursor:grab}
+    .lineup-side{display:grid;gap:14px}
+    .mini-panel{border:1px solid var(--line);background:#fff;border-radius:16px;padding:16px}
+    .mini-panel h3{margin:0 0 3px;font-size:1rem}.mini-panel .sub{margin-bottom:12px}
+    .variation-list{display:grid;gap:7px}
+    .variation-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#faf9f7}
+    .depth-grid{display:grid;gap:9px}
+    .depth-row{display:grid;grid-template-columns:86px 1fr;gap:8px;align-items:start;border-top:1px solid var(--line);padding-top:9px}
+    .depth-row:first-child{border-top:0;padding-top:0}.depth-pos{font-size:.72rem;font-weight:950;letter-spacing:.06em;color:var(--maroon)}
+    .depth-players{display:flex;flex-wrap:wrap;gap:5px;min-height:28px;border-radius:8px}
+    .depth-chip{border:1px solid #d8d3cf;background:#fff;border-radius:999px;padding:5px 7px;font-size:.7rem;font-weight:850;cursor:pointer}
+    .depth-chip.selected{background:#f5e8ec;border-color:#cda9b4;color:var(--maroon-dark)}
+    .sub-plan{display:grid;gap:8px}
+    .sub-row{display:grid;grid-template-columns:70px 1fr 22px 1fr auto;gap:6px;align-items:center}
+    .sub-row select{padding:7px 8px;font-size:.78rem}.sub-minute{font-size:.74rem;font-weight:900;color:var(--muted)}
+    .lineup-status{font-size:.8rem;color:var(--muted);min-height:20px}.lineup-status.ok{color:#2d6759}.lineup-status.err{color:#8b1e3f}
+    @media(max-width:1120px){.lineup-workspace{grid-template-columns:1fr}.soccer-pitch{max-height:680px}.lineup-toolbar{grid-template-columns:1fr 1fr}.player-pool{grid-template-columns:repeat(5,1fr)}}
+    @media(max-width:720px){.lineup-toolbar{grid-template-columns:1fr}.player-pool{grid-template-columns:repeat(3,1fr)}.formation-slot{width:68px;min-height:66px}.jersey{width:44px;height:40px}.player-peg{width:64px}.peg-name{font-size:.64rem}.sub-row{grid-template-columns:58px 1fr 18px 1fr auto}}
 
 </style>
 </head>
@@ -514,15 +561,62 @@
     </section>
 
     <section class="view" id="lineups">
-      <div class="panel">
-        <h2>Lineups & practice formations</h2>
-        <div class="sub">This becomes the visual pitch builder in phase two.</div>
-        <div class="fieldrow">
-          <div><label>Event</label><select><option>Aug 30 — Lone Wolves United vs. SKOR FC</option><option>Aug 26 — Team Practice</option></select></div>
-          <div><label>Formation</label><select><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option><option>Custom</option></select></div>
+      <div class="lineup-shell">
+        <div class="panel">
+          <h2>Lineup Lab</h2>
+          <div class="sub">Build matchday XIs, experiment with variations, set the bench, and plan who covers each position.</div>
+          <div class="lineup-toolbar">
+            <div><label>Match / Event</label><select id="lineupEvent"><option value="general">General / Practice Board</option></select></div>
+            <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option></select></div>
+            <div><label>Variation name</label><input id="lineupVariationName" value="Balanced" placeholder="Balanced, Aggressive, Protect Lead..."></div>
+            <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button>
+          </div>
+          <div class="lineup-status" id="lineupStatus"></div>
         </div>
-        <div style="height:420px;margin-top:18px;border-radius:18px;background:linear-gradient(#5a8b65,#4f805b);border:8px solid #fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.55);display:grid;place-items:center;color:#fff;font-weight:900;text-align:center">
-          INTERACTIVE SOCCER PITCH<br><span style="font-weight:500;font-size:.85rem;opacity:.85">Drag players into formation positions</span>
+
+        <div class="lineup-workspace">
+          <div>
+            <div class="pitch-wrap">
+              <div class="soccer-pitch" id="lineupPitch">
+                <div class="pitch-box top"></div><div class="six-box top"></div><div class="pitch-box bottom"></div><div class="six-box bottom"></div>
+              </div>
+            </div>
+            <div class="panel" style="margin-top:14px">
+              <h2>Bench</h2><div class="sub">Drag players here to designate the matchday bench. Drag them back to the player pool to remove them.</div>
+              <div class="bench-zone" id="lineupBench"><div class="bench-list" id="lineupBenchList"></div></div>
+            </div>
+          </div>
+
+          <div class="lineup-side">
+            <div class="mini-panel">
+              <h3>Players</h3><div class="sub">Drag a jersey onto any position. A player can only occupy one starting slot.</div>
+              <div class="player-pool" id="lineupPlayerPool"></div>
+              <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
+            </div>
+
+            <div class="mini-panel">
+              <h3>Saved Variations</h3><div class="sub">Different tactical versions for the selected event.</div>
+              <div class="variation-list" id="lineupVariationList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Position Depth & Sub Coverage</h2>
+          <div class="sub">Mark every player who can cover each role. This becomes the foundation for substitution recommendations and future AI lineup generation.</div>
+          <div class="depth-grid" id="lineupDepthGrid"></div>
+        </div>
+
+        <div class="panel">
+          <h2>Planned Substitutions</h2>
+          <div class="sub">Create a simple rotation plan by approximate match minute. This is planning only—it does not affect Game Day stats.</div>
+          <div class="sub-plan" id="lineupSubPlan"></div>
+          <button class="btn btn-light" id="addSubPlanBtn" type="button" style="margin-top:10px">+ Add planned sub</button>
+        </div>
+
+        <div class="panel" style="background:#17181d;color:#fff">
+          <h2>Future: SKOR AI Lineup Assistant</h2>
+          <div class="sub" style="color:#b9bbc3;margin-bottom:0">Later we can score lineup options using availability, preferred positions, captain notes, past starts, minutes, goals/assists, cards, Man of the Match selections, and eventually player ratings/performance. The data structures in this builder are designed so AI can recommend—not silently overwrite—a captain's lineup.</div>
         </div>
       </div>
     </section>
@@ -791,7 +885,7 @@ async function loadGameDayMatches(preferredId=null){
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v14";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
-  gameDayMatch.value=pick.id;gameDaySelected=pick;await loadGameDayEvents();
+  gameDayMatch.value=pick.id;gameDaySelected=pick;loadLineupEventOptions();await loadGameDayEvents();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
@@ -1053,6 +1147,83 @@ loadAnnouncements();
     if(error){alert('Could not clear Man of the Match: '+error.message);return;}
     gameDaySelected.man_of_match_player_name=null;gameDaySelected.man_of_match_player_number=null;gameDaySelected.man_of_match_roster_player_number=null;gameDaySelected.man_of_match_reason=null;renderMotm();
   });
+})();
+
+
+// Lineup Lab v17 — browser-saved prototype. Supabase persistence comes after workflow validation.
+const LINEUP_POS_GROUPS=[
+  {key:"GK",label:"Goalkeeper"},{key:"FB",label:"Fullback / Wingback"},{key:"CB",label:"Center Back"},
+  {key:"DM",label:"Defensive Mid"},{key:"CM",label:"Central Mid"},{key:"AM",label:"Attacking Mid"},
+  {key:"W",label:"Wing"},{key:"ST",label:"Striker"}
+];
+const FORMATIONS={
+  "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
+  "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
+  "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
+  "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
+};
+let lineupState={formation:"4-2-3-1",slots:{},bench:[],depth:{},subs:[]};
+let lineupDragPlayer=null;
+function lineupKey(){return `skorLineupsV17:${document.getElementById("lineupEvent")?.value||"general"}`;}
+function lineupPlayerId(p){return `${p.number}-${p.name}`;}
+function findLineupPlayer(id){return ROSTER.find(p=>lineupPlayerId(p)===id);}
+function lineupEsc(v){return gdEsc(v);}
+function lineupPeg(p,compact=false){return `<div class="player-peg${compact?' compact':''}" draggable="true" data-lineup-player="${lineupEsc(lineupPlayerId(p))}"><div class="jersey">${lineupEsc(p.number)}</div><div class="peg-name">${lineupEsc(p.name)}</div></div>`;}
+function ensureDepth(){LINEUP_POS_GROUPS.forEach(g=>{if(!Array.isArray(lineupState.depth[g.key]))lineupState.depth[g.key]=[];});}
+function renderLineupPitch(){
+  const pitch=document.getElementById("lineupPitch"); if(!pitch)return;
+  pitch.querySelectorAll(".formation-slot").forEach(n=>n.remove());
+  (FORMATIONS[lineupState.formation]||FORMATIONS["4-2-3-1"]).forEach(([label,x,y])=>{
+    const slot=document.createElement("div");slot.className="formation-slot";slot.dataset.slot=label;slot.style.left=x+"%";slot.style.top=y+"%";
+    const pid=lineupState.slots[label],p=findLineupPlayer(pid);slot.innerHTML=p?lineupPeg(p):`<div class="slot-label">${label}</div>`;
+    slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("dragover")});slot.addEventListener("dragleave",()=>slot.classList.remove("dragover"));
+    slot.addEventListener("drop",e=>{e.preventDefault();slot.classList.remove("dragover");if(lineupDragPlayer)assignLineupPlayer(label,lineupDragPlayer);});
+    pitch.appendChild(slot);
+  });
+  bindLineupDrags();
+}
+function assignLineupPlayer(slot,pid){
+  Object.keys(lineupState.slots).forEach(k=>{if(lineupState.slots[k]===pid)delete lineupState.slots[k];});
+  lineupState.bench=lineupState.bench.filter(x=>x!==pid);lineupState.slots[slot]=pid;renderLineupAll();
+}
+function renderLineupPool(){
+  const used=new Set([...Object.values(lineupState.slots),...lineupState.bench]);
+  document.getElementById("lineupPlayerPool").innerHTML=ROSTER.map(p=>`<div class="player-card${used.has(lineupPlayerId(p))?' on-field':''}">${lineupPeg(p,true)}</div>`).join("");bindLineupDrags();
+}
+function renderLineupBench(){
+  const box=document.getElementById("lineupBenchList");box.innerHTML=lineupState.bench.map(id=>{const p=findLineupPlayer(id);return p?`<div class="bench-player" draggable="true" data-lineup-player="${lineupEsc(id)}">#${p.number} ${lineupEsc(p.name)}</div>`:""}).join("")||'<span style="font-size:.8rem;color:var(--muted)">Drop substitutes here</span>';bindLineupDrags();
+}
+function bindLineupDrags(){document.querySelectorAll("[data-lineup-player]").forEach(el=>{el.ondragstart=()=>{lineupDragPlayer=el.dataset.lineupPlayer};el.ondragend=()=>{lineupDragPlayer=null};});}
+function renderLineupDepth(){
+  ensureDepth();const grid=document.getElementById("lineupDepthGrid");
+  grid.innerHTML=LINEUP_POS_GROUPS.map(g=>`<div class="depth-row"><div class="depth-pos">${g.key}<br><span style="font-weight:600;color:var(--muted);letter-spacing:0">${g.label}</span></div><div class="depth-players">${ROSTER.map(p=>{const id=lineupPlayerId(p),sel=lineupState.depth[g.key].includes(id);return `<button type="button" class="depth-chip${sel?' selected':''}" data-depth-pos="${g.key}" data-depth-player="${lineupEsc(id)}">#${p.number} ${lineupEsc(p.name)}</button>`}).join("")}</div></div>`).join("");
+  grid.querySelectorAll(".depth-chip").forEach(b=>b.onclick=()=>{const a=lineupState.depth[b.dataset.depthPos],id=b.dataset.depthPlayer,i=a.indexOf(id);i>=0?a.splice(i,1):a.push(id);renderLineupDepth();});
+}
+function lineupSelectOptions(selected=""){return '<option value="">Select…</option>'+ROSTER.map(p=>`<option value="${lineupEsc(lineupPlayerId(p))}"${lineupPlayerId(p)===selected?' selected':''}>#${p.number} ${lineupEsc(p.name)}</option>`).join("");}
+function renderSubPlan(){
+  const box=document.getElementById("lineupSubPlan");box.innerHTML=lineupState.subs.map((r,i)=>`<div class="sub-row"><input aria-label="Minute" type="number" min="1" max="120" value="${lineupEsc(r.minute||"")}" placeholder="Min" data-sub-minute="${i}"><select data-sub-out="${i}">${lineupSelectOptions(r.out)}</select><span>→</span><select data-sub-in="${i}">${lineupSelectOptions(r.in)}</select><button class="mini-btn" type="button" data-sub-remove="${i}">×</button></div>`).join("")||'<div style="color:var(--muted);font-size:.84rem">No planned substitutions yet.</div>';
+  box.querySelectorAll("[data-sub-minute]").forEach(x=>x.oninput=()=>lineupState.subs[+x.dataset.subMinute].minute=x.value);box.querySelectorAll("[data-sub-out]").forEach(x=>x.onchange=()=>lineupState.subs[+x.dataset.subOut].out=x.value);box.querySelectorAll("[data-sub-in]").forEach(x=>x.onchange=()=>lineupState.subs[+x.dataset.subIn].in=x.value);box.querySelectorAll("[data-sub-remove]").forEach(x=>x.onclick=()=>{lineupState.subs.splice(+x.dataset.subRemove,1);renderSubPlan();});
+}
+function renderLineupAll(){renderLineupPitch();renderLineupPool();renderLineupBench();renderLineupDepth();renderSubPlan();}
+function savedLineupVariations(){try{return JSON.parse(localStorage.getItem(lineupKey())||"[]")}catch{return []}}
+function renderVariationList(){
+  const list=savedLineupVariations(),box=document.getElementById("lineupVariationList");box.innerHTML=list.length?list.map((v,i)=>`<div class="variation-item"><button class="mini-btn" type="button" data-load-variation="${i}" style="text-align:left"><strong>${lineupEsc(v.name)}</strong><br><small>${lineupEsc(v.state.formation)} · ${Object.keys(v.state.slots||{}).length} starters</small></button><button class="mini-btn" type="button" data-delete-variation="${i}">Delete</button></div>`).join(""):'<div style="font-size:.82rem;color:var(--muted)">No saved variations for this event.</div>';
+  box.querySelectorAll("[data-load-variation]").forEach(b=>b.onclick=()=>{const v=savedLineupVariations()[+b.dataset.loadVariation];if(!v)return;lineupState=JSON.parse(JSON.stringify(v.state));document.getElementById("lineupFormation").value=lineupState.formation;document.getElementById("lineupVariationName").value=v.name;renderLineupAll();setLineupStatus(`Loaded ${v.name}.`,true);});
+  box.querySelectorAll("[data-delete-variation]").forEach(b=>b.onclick=()=>{const a=savedLineupVariations();a.splice(+b.dataset.deleteVariation,1);localStorage.setItem(lineupKey(),JSON.stringify(a));renderVariationList();});
+}
+function setLineupStatus(msg,ok=true){const x=document.getElementById("lineupStatus");if(!x)return;x.textContent=msg;x.className="lineup-status "+(ok?"ok":"err");}
+function loadLineupEventOptions(){
+  const sel=document.getElementById("lineupEvent");if(!sel)return;const current=sel.value;const matches=(gameDayMatches||[]);sel.innerHTML='<option value="general">General / Practice Board</option>'+matches.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${lineupEsc(m.home_team)} vs ${lineupEsc(m.away_team)}</option>`).join("");if([...sel.options].some(o=>o.value===current))sel.value=current;renderVariationList();
+}
+(function initLineupLab(){
+  const formation=document.getElementById("lineupFormation");if(!formation)return;
+  formation.addEventListener("change",()=>{lineupState.formation=formation.value;lineupState.slots={};renderLineupAll();setLineupStatus("Formation changed. Starting XI cleared; bench and coverage were kept.",true);});
+  document.getElementById("lineupEvent").addEventListener("change",()=>{lineupState={formation:formation.value,slots:{},bench:[],depth:{},subs:[]};renderLineupAll();renderVariationList();setLineupStatus("Event changed. Load a saved variation or build a new one.",true);});
+  document.getElementById("saveLineupVariation").addEventListener("click",()=>{const name=document.getElementById("lineupVariationName").value.trim()||"Untitled";const a=savedLineupVariations(),copy=JSON.parse(JSON.stringify(lineupState)),idx=a.findIndex(v=>v.name.toLowerCase()===name.toLowerCase());const rec={name,updatedAt:new Date().toISOString(),state:copy};idx>=0?a[idx]=rec:a.push(rec);localStorage.setItem(lineupKey(),JSON.stringify(a));renderVariationList();setLineupStatus(`Saved “${name}” in this browser.`,true);});
+  document.getElementById("clearLineupBtn").addEventListener("click",()=>{if(confirm("Clear all starters from the pitch?")){lineupState.slots={};renderLineupAll();}});
+  document.getElementById("addSubPlanBtn").addEventListener("click",()=>{lineupState.subs.push({minute:"",out:"",in:""});renderSubPlan();});
+  const bench=document.getElementById("lineupBench");bench.addEventListener("dragover",e=>{e.preventDefault();bench.classList.add("dragover")});bench.addEventListener("dragleave",()=>bench.classList.remove("dragover"));bench.addEventListener("drop",e=>{e.preventDefault();bench.classList.remove("dragover");if(!lineupDragPlayer)return;Object.keys(lineupState.slots).forEach(k=>{if(lineupState.slots[k]===lineupDragPlayer)delete lineupState.slots[k];});if(!lineupState.bench.includes(lineupDragPlayer))lineupState.bench.push(lineupDragPlayer);renderLineupAll();});
+  renderLineupAll();renderVariationList();
 })();
 
 </script>
