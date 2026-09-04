@@ -4,12 +4,130 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090a0d">
-<meta name="skor-build" content="gameday-v41-adaptive-consensus">
-<title>SKOR FC | Crowd Game Day</title>
+<meta name="skor-build" content="gameday-v45-centered-score-impact-adaptive-consensus">
+<title>SKOR FC | Crowd Game Day v45</title>
 <meta name="description" content="SKOR FC crowd-powered live match scoring, referee decision review and Man of the Match voting.">
 <style>
 :root{--bg:#07080a;--panel:#111318;--panel2:#171a20;--line:#2d3138;--text:#f5f5f6;--muted:#9da2aa;--maroon:#8f1836;--maroon2:#b51c43;--green:#2f7a5c;--amber:#9b7220;--red:#a52a3d;--blue:#315b85}
 *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif}button,input,select,textarea{font:inherit}button{touch-action:manipulation}.wrap{width:min(760px,calc(100% - 24px));margin:auto}.top{position:sticky;top:0;z-index:20;background:rgba(7,8,10,.94);backdrop-filter:blur(14px);border-bottom:1px solid #22262c}.topin{height:62px;display:flex;align-items:center;gap:11px}.top img{width:38px;height:38px;object-fit:contain}.brand{font-weight:950;letter-spacing:.04em}.spacer{flex:1}.user{font-size:11px;color:#aeb2b8;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logout{border:1px solid #3c4148;background:#111318;color:#ddd;border-radius:8px;padding:8px 9px;font-size:10px;font-weight:850}.screen{display:none;padding:24px 0 50px}.screen.active{display:block}.card{border:1px solid var(--line);background:linear-gradient(145deg,#14171c,#0c0e11);border-radius:17px;padding:18px;margin-bottom:12px}.eyebrow{font-size:10px;color:#d3637c;font-weight:950;letter-spacing:.13em;text-transform:uppercase}.title{font-size:34px;line-height:.95;margin:7px 0 10px;letter-spacing:-.04em}.sub{color:var(--muted);line-height:1.5;font-size:13px}.btn{border:0;border-radius:11px;min-height:46px;padding:0 15px;font-weight:900;cursor:pointer}.primary{background:linear-gradient(135deg,#681028,var(--maroon2));color:#fff}.secondary{background:#181b20;border:1px solid #3b4047;color:#fff}.full{width:100%}.form{display:grid;gap:11px;margin-top:16px}label{font-size:12px;font-weight:850}input,select,textarea{width:100%;min-height:46px;border:1px solid #3a3e45;border-radius:10px;background:#0c0e12;color:#fff;padding:11px 12px;font-size:16px;outline:none}textarea{min-height:88px;resize:vertical}.status{margin-top:10px;font-size:12px;color:#c5c8cc}.error{color:#ff9eb2}.matchhead{text-align:center;padding:20px 14px}.matchteams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-top:14px}.team{font-weight:950;font-size:16px;text-transform:uppercase;line-height:1.1}.score{font-size:52px;font-weight:950;letter-spacing:-.06em}.phase{display:inline-flex;margin-top:12px;padding:6px 10px;border-radius:999px;background:#242830;color:#d9dce0;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}.crowdline{margin-top:9px;color:#8fae9f;font-size:11px;font-weight:800}.actiongrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.eventbtn{min-height:74px;border:1px solid #343941;border-radius:14px;background:#15181d;color:#fff;padding:12px;text-align:left;font-weight:950;cursor:pointer}.eventbtn span{display:block;margin-top:4px;color:#8e949c;font-size:10px;font-weight:650}.eventbtn.goal{border-left:5px solid var(--green)}.eventbtn.cardy{border-left:5px solid #d3b121}.eventbtn.cardr{border-left:5px solid #ba3247}.eventbtn.ref{border-left:5px solid var(--blue)}.sectiontitle{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:10px}.sectiontitle h2{margin:0;font-size:19px}.chipwrap{display:flex;flex-wrap:wrap;gap:7px}.chip{border:1px solid #3b4048;background:#171a1f;color:#eee;border-radius:999px;padding:8px 10px;min-height:38px;font-size:12px;font-weight:850;cursor:pointer}.chip.selected{background:var(--maroon);border-color:var(--maroon)}.feed{display:grid;gap:8px}.feeditem{border:1px solid #2d3137;background:#0f1115;border-radius:13px;padding:12px}.feedtop{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}.feedtitle{font-weight:900;font-size:13px}.meta{color:#858b93;font-size:10px;margin-top:3px}.confidence{display:inline-flex;border-radius:999px;padding:5px 7px;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.05em;background:#2b2f35;color:#bbb}.confidence.confirmed{background:#163329;color:#77c7a1}.confidence.disputed{background:#3a1c23;color:#e990a2}.voteactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.mini{border:1px solid #3b4048;background:#171a1f;color:#ddd;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:850}.pendingbar{margin-top:8px;padding:8px 10px;border:1px solid #443d2a;background:#1e1a0d;border-radius:9px;color:#d3b968;font-size:10px}.motmgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.motmchip{min-height:54px;border:1px solid #363a41;background:#15181d;color:#fff;border-radius:12px;padding:8px;font-weight:900}.motmchip.selected{background:#6e132c;border-color:#a62043}.refvote{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}.refvote button{min-height:38px;border:1px solid #383d44;border-radius:8px;background:#171a1f;color:#ddd;font-size:10px;font-weight:900}.empty{color:#81868e;font-size:12px;padding:12px 2px}.modal{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);padding:18px;overflow:auto}.modal.open{display:grid;place-items:start center}.sheet{width:min(620px,100%);margin-top:6vh;background:#111318;border:1px solid #343941;border-radius:18px;padding:18px}.sheethead{display:flex;align-items:center;justify-content:space-between;gap:10px}.sheethead h2{margin:0;font-size:20px}.close{border:1px solid #3a3e45;background:#191c21;color:#fff;border-radius:9px;width:40px;height:40px}.hidden{display:none!important}.notice{padding:10px 12px;border-radius:10px;background:#151d19;border:1px solid #274234;color:#93c1aa;font-size:11px;line-height:1.45}.loginlogo{width:94px;height:94px;object-fit:contain;display:block;margin:0 auto 14px}.center{text-align:center}.sessionpick{display:grid;gap:8px;margin-top:12px}.sessionbtn{border:1px solid #343941;background:#15181d;color:#fff;border-radius:12px;padding:13px;text-align:left}.sessionbtn strong{display:block}.sessionbtn span{display:block;margin-top:4px;color:#92979f;font-size:11px}@media(max-width:520px){.wrap{width:calc(100% - 18px)}.screen{padding-top:14px}.card{padding:14px}.title{font-size:30px}.score{font-size:44px}.team{font-size:13px}.eventbtn{min-height:70px}.motmgrid{grid-template-columns:1fr 1fr}.user{display:none}.sheet{margin-top:1vh}.actiongrid{gap:7px}}
+
+/* SKOR FC v43 — immediate visual distinction for primary goal reports */
+.eventbtn.skor-goal{
+  background:#dff3e4;
+  border-color:#8fc59b;
+  border-left:5px solid #4d9660;
+  color:#173c21;
+}
+.eventbtn.skor-goal span{color:#477052}
+.eventbtn.opponent-goal{
+  background:#f3dce1;
+  border-color:#d39ca8;
+  border-left:5px solid #a53a51;
+  color:#651b2d;
+}
+.eventbtn.opponent-goal span{color:#87505d}
+@media (hover:hover) and (pointer:fine){
+  .eventbtn.skor-goal:hover{background:#d3edd9;border-color:#76b687}
+  .eventbtn.opponent-goal:hover{background:#edced5;border-color:#bf8492}
+}
+
+
+/* SKOR FC v44 — score impact buttons */
+.eventbtn.score-effect{
+  display:grid;
+  grid-template-columns:52px minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  min-height:86px;
+  padding:10px 12px;
+  text-align:left;
+}
+.eventbtn.score-effect .score-impact{
+  display:grid;
+  place-items:center;
+  width:50px;
+  height:50px;
+  margin:0;
+  border-radius:13px;
+  font-size:44px;
+  line-height:1;
+  font-weight:950;
+}
+.eventbtn.score-effect .score-copy{
+  display:block;
+  margin:0;
+  color:inherit;
+  min-width:0;
+}
+.eventbtn.score-effect .score-copy b{
+  display:block;
+  font-size:14px;
+  line-height:1.1;
+  font-weight:950;
+}
+.eventbtn.score-effect .score-copy small{
+  display:block;
+  margin-top:5px;
+  font-size:10px;
+  line-height:1.2;
+  font-weight:650;
+}
+.eventbtn.score-positive{
+  background:#dff3e4;
+  border-color:#8fc59b;
+  border-left-color:#4d9660;
+  color:#173c21;
+}
+.eventbtn.score-positive .score-impact{
+  background:#bfe5c8;
+  color:#276b39;
+}
+.eventbtn.score-positive .score-copy small{color:#477052}
+.eventbtn.score-negative{
+  background:#f3dce1;
+  border-color:#d39ca8;
+  border-left-color:#a53a51;
+  color:#651b2d;
+}
+.eventbtn.score-negative .score-impact{
+  background:#e7b9c3;
+  color:#8e253d;
+}
+.eventbtn.score-negative .score-copy small{color:#87505d}
+@media(max-width:480px){
+  .eventbtn.score-effect{
+    grid-template-columns:44px minmax(0,1fr);
+    min-height:80px;
+    gap:8px;
+    padding:9px 10px;
+  }
+  .eventbtn.score-effect .score-impact{
+    width:42px;height:42px;font-size:38px;border-radius:11px;
+  }
+  .eventbtn.score-effect .score-copy b{font-size:12px}
+  .eventbtn.score-effect .score-copy small{font-size:9px}
+}
+
+
+/* SKOR FC v45 — optical centering for + / − score-impact glyphs */
+.eventbtn.score-effect .score-impact{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  text-align:center;
+  font-family:Arial, Helvetica, sans-serif;
+  font-variant-numeric:lining-nums;
+  line-height:1;
+  overflow:hidden;
+}
+.eventbtn.score-positive .score-impact{
+  padding-bottom:2px;
+}
+.eventbtn.score-negative .score-impact{
+  padding-bottom:5px;
+}
+
 </style>
 </head>
 <body>
@@ -49,10 +167,10 @@
   <div class="card">
     <div class="sectiontitle"><div><div class="eyebrow">Report what you saw</div><h2>Match Events</h2></div></div>
     <div class="actiongrid">
-      <button class="eventbtn goal" data-report="skor_goal" type="button">⚽ SKOR Goal<span>Scorer + assist</span></button>
-      <button class="eventbtn goal" data-report="opponent_goal" type="button">⚽ Opponent Goal<span>Opponent scores</span></button>
-      <button class="eventbtn goal" data-report="opponent_own_goal" type="button">↩ Opponent Own Goal<span>SKOR scores</span></button>
-      <button class="eventbtn goal" data-report="skor_own_goal" type="button">↪ SKOR Own Goal<span>Opponent scores</span></button>
+      <button class="eventbtn goal skor-goal score-effect score-positive" data-report="skor_goal" type="button"><span class="score-impact" aria-hidden="true">+</span><span class="score-copy"><b>SKOR Goal</b><small>Scorer + assist</small></span></button>
+      <button class="eventbtn goal opponent-goal score-effect score-negative" data-report="opponent_goal" type="button"><span class="score-impact" aria-hidden="true">−</span><span class="score-copy"><b>Opponent Goal</b><small>Opponent scores</small></span></button>
+      <button class="eventbtn goal score-effect score-positive" data-report="opponent_own_goal" type="button"><span class="score-impact" aria-hidden="true">+</span><span class="score-copy"><b>Opponent Own Goal</b><small>SKOR scores</small></span></button>
+      <button class="eventbtn goal score-effect score-negative" data-report="skor_own_goal" type="button"><span class="score-impact" aria-hidden="true">−</span><span class="score-copy"><b>SKOR Own Goal</b><small>Opponent scores</small></span></button>
       <button class="eventbtn cardy" data-report="skor_yellow_card" type="button">🟨 SKOR Yellow<span>Choose player</span></button>
       <button class="eventbtn cardr" data-report="skor_red_card" type="button">🟥 SKOR Red<span>Choose player</span></button>
       <button class="eventbtn cardy" data-report="opponent_yellow_card" type="button">🟨 Opponent Yellow<span>Name/# optional</span></button>
