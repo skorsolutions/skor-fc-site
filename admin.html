@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v39-viewer-role-production" />
-  <title>SKOR FC Admin | Lineups v39</title>
+  <meta name="skor-build" content="lineup-admin-v41-adaptive-consensus-production" />
+  <title>SKOR FC Admin | Crowd Scoring v41</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -976,6 +976,41 @@
     body.viewer-mode #lineups .player-card,body.viewer-mode #lineups .depth-chip,body.viewer-mode #lineups .sub-player-chip{cursor:default!important}
     @media(max-width:650px){.portal-role-badge{order:3}.viewer-banner{align-items:flex-start;flex-direction:column}}
 
+
+    /* =========================================================
+       SKOR FC v41 — Crowd Scoring + adaptive consensus
+       ========================================================= */
+    .crowd-admin-panel{border-color:#dacbd0;background:linear-gradient(145deg,#fff,#fbf7f8)}
+    .crowd-admin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    .crowd-live-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 9px;background:#f1f2f4;color:#666;font-size:.68rem;font-weight:950;letter-spacing:.07em;text-transform:uppercase}
+    .crowd-live-badge.open{background:#e8f3ee;color:#28634f}
+    .crowd-live-badge.open:before{content:"";width:7px;height:7px;border-radius:50%;background:#3e876c}
+    .crowd-admin-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr);gap:16px;margin-top:16px}
+    .crowd-stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+    .crowd-stat{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;text-align:center}
+    .crowd-stat strong{display:block;font-size:1.25rem}.crowd-stat span{display:block;margin-top:3px;color:var(--muted);font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+    .crowd-admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .crowd-admin-actions .btn{min-height:42px}
+    .crowd-qr-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px;min-width:0}
+    .crowd-qr-wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    #crowdQrCode{width:174px;min-height:174px;display:grid;place-items:center;background:#fff;border-radius:10px;border:1px solid #eee;padding:8px}
+    #crowdQrCode img,#crowdQrCode canvas{max-width:156px!important;width:156px!important;height:156px!important}
+    .crowd-link-box{min-width:0;flex:1}
+    .crowd-link-box input{font-size:.78rem;background:#fafafa}
+    .crowd-admin-status{margin-top:9px;color:var(--muted);font-size:.76rem;line-height:1.4}
+    .crowd-participants{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+    .crowd-person{display:inline-flex;align-items:center;padding:5px 8px;border-radius:999px;background:#f2f3f5;color:#4c5057;font-size:.7rem;font-weight:800}
+    body.viewer-mode .crowd-admin-actions{display:none!important}
+    body.viewer-mode #crowdMotmToggle{display:none!important}
+    @media(max-width:850px){.crowd-admin-grid{grid-template-columns:1fr}.crowd-stat-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:520px){.crowd-stat-grid{grid-template-columns:repeat(2,1fr)}.crowd-admin-actions .btn{width:100%}.crowd-qr-wrap{justify-content:center}.crowd-link-box{flex-basis:100%}}
+
+
+    .crowd-head-badges{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+    .crowd-consensus-badge{display:inline-flex;padding:6px 9px;border-radius:999px;background:#eef3f0;color:#356653;border:1px solid #cfdfd7;font-size:.68rem;font-weight:900;white-space:nowrap}
+    .crowd-person.inactive{opacity:.48}
+    @media(max-width:650px){.crowd-head-badges{justify-content:flex-start}}
+
 </style>
 </head>
 <body>
@@ -1009,7 +1044,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v39</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v41</div>
   </aside>
 
   <main>
@@ -1094,6 +1129,53 @@
           <div class="fieldrow" style="margin-top:14px">
             <div><label>Match</label><select id="gameDayMatch"></select></div>
             <div><label>Event half</label><select id="eventHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
+          </div>
+        </div>
+
+        <div class="panel crowd-admin-panel" id="crowdAdminPanel">
+          <div class="crowd-admin-head">
+            <div>
+              <h2>Crowd Scoring</h2>
+              <div class="sub">Captain-controlled QR access for this match. Participants use a separate mobile Game Day page and never enter the Captain Portal.</div>
+            </div>
+            <div class="crowd-head-badges"><span class="crowd-consensus-badge" id="crowdConsensusRule">Adaptive Consensus</span><span class="crowd-live-badge" id="crowdSessionBadge">Not Started</span></div>
+          </div>
+
+          <div class="crowd-stat-grid">
+            <div class="crowd-stat"><strong id="crowdScoreAdmin">0–0</strong><span>Crowd Score</span></div>
+            <div class="crowd-stat"><strong id="crowdParticipantCount">0</strong><span>Active Scorers</span></div>
+            <div class="crowd-stat"><strong id="crowdConfirmedCount">0</strong><span>Confirmed</span></div>
+            <div class="crowd-stat"><strong id="crowdPendingCount">0</strong><span>Pending</span></div>
+            <div class="crowd-stat"><strong id="crowdRefCount">0</strong><span>Ref Reviews</span></div>
+            <div class="crowd-stat"><strong id="crowdMotmCount">0</strong><span>MOTM Votes</span></div>
+          </div>
+
+          <div class="crowd-admin-grid">
+            <div>
+              <div class="crowd-admin-actions">
+                <button class="btn btn-primary" id="crowdStartBtn" type="button">Start Crowd Scoring</button>
+                <button class="btn btn-light" id="crowdGenerateQrBtn" type="button" style="display:none">Generate QR</button>
+                <button class="btn btn-light" id="crowdMotmToggle" type="button" style="display:none">Open MOTM Voting</button>
+                <button class="btn btn-light" id="crowdCloseBtn" type="button" style="display:none">Close Crowd Scoring</button>
+              </div>
+              <div class="crowd-admin-status" id="crowdAdminStatus">Select a match, then start a crowd-scoring session.</div>
+              <div class="crowd-participants" id="crowdParticipantList"></div>
+            </div>
+
+            <div class="crowd-qr-card" id="crowdQrCard" style="display:none">
+              <div class="crowd-qr-wrap">
+                <div id="crowdQrCode" aria-label="Crowd scoring QR code"></div>
+                <div class="crowd-link-box">
+                  <strong>Join this match</strong>
+                  <div class="sub" style="margin:4px 0 9px">Anyone with this QR can sign in and join the crowd-scoring session until you close it.</div>
+                  <input id="crowdJoinLink" readonly aria-label="Crowd scoring join link">
+                  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">
+                    <button class="mini-btn" id="crowdCopyLinkBtn" type="button">Copy Link</button>
+                    <a class="mini-btn" id="crowdOpenPageLink" href="gameday.html" target="_blank" rel="noopener">Open Page</a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1339,7 +1421,7 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V39</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V40</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -1480,7 +1562,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v39 - shared plans with captain/viewer portal roles */
+/* SKOR FC Lineup Builder v41 - adaptive crowd consensus + captain/viewer roles */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -2456,6 +2538,7 @@
 </script>
 
 
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
@@ -2906,13 +2989,137 @@ function renderGameDay(){
   eventLog.innerHTML=gameDayEvents.length?gameDayEvents.map(e=>`<div class="event-log-item"><div><strong>${gdEventLabel(e)}</strong><br><small>${e.half==="second"?"2nd Half":"1st Half"} · Event ${e.sequence??""}</small></div><div class="event-actions"><button class="mini-btn" type="button" onclick="editGameEvent('${e.id}')">Edit</button><button class="mini-btn" type="button" onclick="deleteGameEvent('${e.id}')">Delete</button></div></div>`).join(""):'<div style="color:var(--muted);font-size:.9rem">No events recorded yet.</div>';
   renderMotm();
 }
+
+// =========================================================
+// SKOR FC v41 — Crowd Scoring captain control plane + adaptive consensus
+// =========================================================
+let crowdSession=null,crowdInvite=null,crowdParticipants=[],crowdSummaryTimer=null;
+const crowdStartBtn=document.getElementById("crowdStartBtn"),crowdGenerateQrBtn=document.getElementById("crowdGenerateQrBtn"),crowdMotmToggle=document.getElementById("crowdMotmToggle"),crowdCloseBtn=document.getElementById("crowdCloseBtn"),crowdSessionBadge=document.getElementById("crowdSessionBadge"),crowdAdminStatus=document.getElementById("crowdAdminStatus"),crowdQrCard=document.getElementById("crowdQrCard"),crowdQrCode=document.getElementById("crowdQrCode"),crowdJoinLink=document.getElementById("crowdJoinLink"),crowdCopyLinkBtn=document.getElementById("crowdCopyLinkBtn"),crowdOpenPageLink=document.getElementById("crowdOpenPageLink"),crowdParticipantList=document.getElementById("crowdParticipantList");
+function crowdStatus(msg){if(crowdAdminStatus)crowdAdminStatus.textContent=msg;}
+function crowdCode(){return (crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}-${Math.random()}`).replace(/-/g,"");}
+function crowdExpiryForMatch(){
+  const kickoff=gameDaySelected?.kickoff?new Date(gameDaySelected.kickoff).getTime():Date.now();
+  const afterKickoff=kickoff+(4*60*60*1000),afterNow=Date.now()+(4*60*60*1000);
+  return new Date(Math.max(afterKickoff,afterNow)).toISOString();
+}
+function renderCrowdQr(){
+  if(!crowdInvite?.invite_code){crowdQrCard.style.display="none";return;}
+  const link=`${location.origin}/gameday.html?code=${encodeURIComponent(crowdInvite.invite_code)}`;
+  crowdJoinLink.value=link;crowdOpenPageLink.href=link;crowdQrCard.style.display="block";crowdQrCode.innerHTML="";
+  if(window.QRCode){new QRCode(crowdQrCode,{text:link,width:156,height:156,correctLevel:QRCode.CorrectLevel.M});}
+  else crowdQrCode.textContent="QR library unavailable — use the join link.";
+}
+function renderCrowdAdmin(){
+  const open=!!crowdSession?.active && (!crowdSession.expires_at||new Date(crowdSession.expires_at)>new Date());
+  crowdSessionBadge.textContent=open?"Open":"Not Started";crowdSessionBadge.classList.toggle("open",open);
+  crowdStartBtn.style.display=open?"none":"inline-flex";
+  crowdGenerateQrBtn.style.display=open?"inline-flex":"none";
+  crowdMotmToggle.style.display=open?"inline-flex":"none";
+  crowdCloseBtn.style.display=open?"inline-flex":"none";
+  if(open)crowdMotmToggle.textContent=crowdSession.motm_voting_open?"Close MOTM Voting":"Open MOTM Voting";
+  if(!open){crowdQrCard.style.display="none";crowdParticipantList.innerHTML="";}
+  renderCrowdQr();
+}
+async function loadCrowdAdmin(){
+  crowdSession=null;crowdInvite=null;crowdParticipants=[];
+  ["crowdScoreAdmin","crowdParticipantCount","crowdConfirmedCount","crowdPendingCount","crowdRefCount","crowdMotmCount"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=id==="crowdScoreAdmin"?"0–0":"0";});
+  if(!gameDaySelected?.id){crowdStatus("Select a match first.");renderCrowdAdmin();return;}
+  const s=await sb.from("game_day_sessions").select("id,match_id,active,motm_voting_open,ref_review_open,expires_at,created_at").eq("match_id",gameDaySelected.id).maybeSingle();
+  if(s.error){crowdStatus("Crowd Scoring is not installed yet. Run the v40 SQL, then the v41 adaptive-consensus SQL.");renderCrowdAdmin();return;}
+  crowdSession=s.data||null;
+  if(!crowdSession){crowdStatus("No crowd-scoring session for this match yet.");renderCrowdAdmin();return;}
+  const [inv,people,events,reports,refs,motm]=await Promise.all([
+    sb.from("game_day_invites").select("id,invite_code,active,expires_at,created_at").eq("session_id",crowdSession.id).eq("active",true).order("created_at",{ascending:false}).limit(1),
+    sb.from("game_day_participants").select("user_id,display_name,joined_at,last_seen_at").eq("session_id",crowdSession.id).order("joined_at",{ascending:true}),
+    sb.from("game_day_crowd_events").select("id,event_type,active,participant_count_snapshot,consensus_threshold").eq("session_id",crowdSession.id).eq("active",true),
+    sb.from("game_day_event_reports").select("event_id,verdict").eq("session_id",crowdSession.id),
+    sb.from("game_day_ref_decisions").select("id").eq("session_id",crowdSession.id).eq("active",true),
+    sb.from("game_day_motm_votes").select("user_id").eq("session_id",crowdSession.id)
+  ]);
+  crowdInvite=inv.data?.[0]||null;crowdParticipants=people.data||[];
+  const reportRows=reports.data||[],eventRows=events.data||[];
+  const ACTIVE_WINDOW_MS=5*60*1000;
+  const activeCutoff=Date.now()-ACTIVE_WINDOW_MS;
+  const activePeople=crowdParticipants.filter(p=>{
+    const seen=new Date(p.last_seen_at||p.joined_at||0).getTime();
+    return Number.isFinite(seen)&&seen>=activeCutoff;
+  });
+  const adaptiveThreshold=n=>{
+    n=Math.max(1,Number(n)||0);
+    return Math.min(6,Math.ceil(Math.sqrt(n)));
+  };
+  const newEventThreshold=adaptiveThreshold(activePeople.length);
+  let confirmed=0,pending=0,crowdSkor=0,crowdOpp=0;
+  eventRows.forEach(ev=>{
+    const rs=reportRows.filter(r=>r.event_id===ev.id);
+    const yes=rs.filter(r=>r.verdict==="confirm").length;
+    const no=rs.filter(r=>r.verdict==="dispute").length;
+    const needed=Math.max(1,Number(ev.consensus_threshold)||adaptiveThreshold(Number(ev.participant_count_snapshot)||activePeople.length));
+    const isConfirmed=yes>=needed&&yes>no;
+    if(isConfirmed){
+      confirmed++;
+      if(["skor_goal","opponent_own_goal"].includes(ev.event_type))crowdSkor++;
+      if(["opponent_goal","skor_own_goal"].includes(ev.event_type))crowdOpp++;
+    }else pending++;
+  });
+  const homeSkor=gameDaySelected.home_team==="SKOR FC";
+  document.getElementById("crowdScoreAdmin").textContent=homeSkor?`${crowdSkor}–${crowdOpp}`:`${crowdOpp}–${crowdSkor}`;
+  document.getElementById("crowdParticipantCount").textContent=activePeople.length;
+  document.getElementById("crowdConfirmedCount").textContent=confirmed;
+  document.getElementById("crowdPendingCount").textContent=pending;
+  document.getElementById("crowdRefCount").textContent=(refs.data||[]).length;
+  document.getElementById("crowdMotmCount").textContent=(motm.data||[]).length;
+  const rule=document.getElementById("crowdConsensusRule");
+  if(rule)rule.textContent=`${newEventThreshold} confirmation${newEventThreshold===1?"":"s"} needed now`;
+  const activeIds=new Set(activePeople.map(p=>p.user_id));
+  crowdParticipantList.innerHTML=crowdParticipants
+    .slice()
+    .sort((a,b)=>(activeIds.has(b.user_id)?1:0)-(activeIds.has(a.user_id)?1:0))
+    .map(p=>`<span class="crowd-person ${activeIds.has(p.user_id)?"":"inactive"}">${gdEsc(p.display_name||"Scorer")}${activeIds.has(p.user_id)?"":" · idle"}</span>`)
+    .join("");
+  const open=!!crowdSession.active&&(!crowdSession.expires_at||new Date(crowdSession.expires_at)>new Date());
+  crowdStatus(open
+    ? `Crowd scoring is open for ${gameDaySelected.home_team} vs ${gameDaySelected.away_team}. ${activePeople.length} active of ${crowdParticipants.length} joined. New events currently need ${newEventThreshold} matching confirmation${newEventThreshold===1?"":"s"}.`
+    : "Crowd scoring is closed for this match.");
+  renderCrowdAdmin();
+}
+async function ensureCrowdSession(){
+  if(!portalCanWrite()){viewerBlocked("start Crowd Scoring");return null;}
+  if(!gameDaySelected?.id){alert("Select a match first.");return null;}
+  if(crowdSession?.active)return crowdSession;
+  const {data:{user}}=await sb.auth.getUser();
+  const payload={match_id:gameDaySelected.id,active:true,motm_voting_open:false,ref_review_open:true,expires_at:crowdExpiryForMatch(),created_by:user?.id||null,updated_at:new Date().toISOString()};
+  let r;
+  if(crowdSession?.id)r=await sb.from("game_day_sessions").update(payload).eq("id",crowdSession.id).select().single();
+  else r=await sb.from("game_day_sessions").insert(payload).select().single();
+  if(r.error){alert("Could not start Crowd Scoring: "+r.error.message);return null;}
+  crowdSession=r.data;await loadCrowdAdmin();return crowdSession;
+}
+async function generateCrowdQr(){
+  if(!portalCanWrite()){viewerBlocked("generate Crowd Scoring QR codes");return;}
+  const session=await ensureCrowdSession();if(!session)return;
+  await sb.from("game_day_invites").update({active:false}).eq("session_id",session.id).eq("active",true);
+  const {data:{user}}=await sb.auth.getUser();
+  const payload={session_id:session.id,invite_code:crowdCode(),active:true,expires_at:session.expires_at,created_by:user?.id||null};
+  const r=await sb.from("game_day_invites").insert(payload).select().single();
+  if(r.error){alert("Could not generate QR: "+r.error.message);return;}
+  crowdInvite=r.data;renderCrowdQr();crowdStatus("New Crowd Scoring QR generated. It remains valid until the session closes or expires.");
+}
+if(crowdStartBtn)crowdStartBtn.addEventListener("click",async()=>{const s=await ensureCrowdSession();if(s&&!crowdInvite)await generateCrowdQr();});
+if(crowdGenerateQrBtn)crowdGenerateQrBtn.addEventListener("click",generateCrowdQr);
+if(crowdMotmToggle)crowdMotmToggle.addEventListener("click",async()=>{if(!portalCanWrite()){viewerBlocked("change crowd MOTM voting");return;}if(!crowdSession)return;const next=!crowdSession.motm_voting_open;const r=await sb.from("game_day_sessions").update({motm_voting_open:next,updated_at:new Date().toISOString()}).eq("id",crowdSession.id);if(r.error)return alert(r.error.message);await loadCrowdAdmin();});
+if(crowdCloseBtn)crowdCloseBtn.addEventListener("click",async()=>{if(!portalCanWrite()){viewerBlocked("close Crowd Scoring");return;}if(!crowdSession||!confirm("Close Crowd Scoring for this match? Existing crowd data will be kept."))return;await sb.from("game_day_invites").update({active:false}).eq("session_id",crowdSession.id);const r=await sb.from("game_day_sessions").update({active:false,motm_voting_open:false,updated_at:new Date().toISOString()}).eq("id",crowdSession.id);if(r.error)return alert(r.error.message);await loadCrowdAdmin();});
+if(crowdCopyLinkBtn)crowdCopyLinkBtn.addEventListener("click",async()=>{const text=crowdJoinLink.value;if(!text)return;try{await navigator.clipboard.writeText(text);crowdStatus("Join link copied.");}catch{crowdJoinLink.focus();crowdJoinLink.select();crowdStatus("Copy the selected join link.");}});
+function startCrowdSummaryRefresh(){if(crowdSummaryTimer)clearInterval(crowdSummaryTimer);crowdSummaryTimer=setInterval(()=>{if(document.getElementById("gameday")?.classList.contains("active"))loadCrowdAdmin();},10000);}
+startCrowdSummaryRefresh();
+
 async function loadGameDayMatches(preferredId=null){
   const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v14";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
-  gameDayMatch.value=pick.id;gameDaySelected=pick;window.SKORLineup?.setEvents(gameDayMatches,false);await loadGameDayEvents();
+  gameDayMatch.value=pick.id;gameDaySelected=pick;window.SKORLineup?.setEvents(gameDayMatches,false);await loadGameDayEvents();await loadCrowdAdmin();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
@@ -2920,7 +3127,7 @@ async function loadGameDayEvents(){
   if(error){backendBox.className="backend-warning";backendBox.textContent="Could not load match events: "+error.message;gameDayEvents=[];}else{backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected.";gameDayEvents=data||[];}
   renderGameDay();
 }
-gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;await loadGameDayEvents();});
+gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;await loadGameDayEvents();await loadCrowdAdmin();});
 document.querySelectorAll(".status-btn").forEach(btn=>btn.addEventListener("click",async()=>{
   if(!portalCanWrite()){viewerBlocked("change match status");return;}
   if(!gameDayReady||!gameDaySelected)return;
