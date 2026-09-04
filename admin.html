@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v24-mobile-production" />
-  <title>SKOR FC Admin | Lineups v24</title>
+  <meta name="skor-build" content="lineup-admin-v27-tinker-production" />
+  <title>SKOR FC Admin | Lineups v27</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -623,6 +623,112 @@
       .schedule-grid{grid-template-columns:1fr}
     }
 
+
+    /* =========================================================
+       SKOR FC LINEUP PLANNING v25
+       Variations + position depth chart + phase-based substitutions
+       ========================================================= */
+    .variation-count{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:22px;height:22px;margin-left:5px;padding:0 6px;
+      border-radius:999px;background:#f5e8ec;color:var(--maroon-dark);
+      border:1px solid #e4c6cf;font-size:.68rem;font-weight:950;
+    }
+    .variation-item{grid-template-columns:minmax(0,1fr) auto}
+    .variation-load{
+      width:100%;border:0;background:transparent;text-align:left;cursor:pointer;padding:0;color:inherit;
+    }
+    .variation-load strong{display:block;font-size:.84rem}
+    .variation-meta{display:block;margin-top:3px;color:var(--muted);font-size:.66rem;line-height:1.25}
+    .variation-delete{align-self:stretch}
+
+    .depth-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .depth-row{
+      display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;
+      align-items:start;border:1px solid var(--line);padding:11px;
+      border-radius:12px;background:#faf9f7;
+    }
+    .depth-row:first-child{border-top:1px solid var(--line);padding-top:11px}
+    .depth-pos{font-size:.74rem;font-weight:950;letter-spacing:.055em;color:var(--maroon)}
+    .depth-pos span{display:block;margin-top:3px;font-size:.62rem;font-weight:700;color:var(--muted);letter-spacing:0;line-height:1.2}
+    .depth-lane{display:grid;gap:7px}
+    .depth-selected{display:flex;flex-wrap:wrap;gap:5px;min-height:27px;align-items:center}
+    .depth-empty{font-size:.72rem;color:var(--muted);font-style:italic}
+    .depth-chip.selected{
+      display:inline-flex;align-items:center;gap:5px;
+      background:#f5e8ec;border-color:#cda9b4;color:var(--maroon-dark);
+      padding:5px 7px;
+    }
+    .depth-rank{font-size:.58rem;opacity:.72}
+    .depth-remove{font-weight:950;font-size:.8rem;line-height:1}
+    .depth-add{min-height:36px!important;padding:6px 8px!important;font-size:.74rem!important;background:#fff}
+
+    .sub-plan{display:grid;gap:10px}
+    .sub-phase{
+      border:1px solid var(--line);border-radius:12px;background:#faf9f7;padding:11px;
+    }
+    .sub-phase-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .sub-phase-title{font-size:.82rem;font-weight:950;color:#222}
+    .sub-phase-note{font-size:.64rem;color:var(--muted);text-align:right}
+    .sub-row{
+      display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr) auto;
+      gap:7px;align-items:center;
+    }
+    .sub-row + .sub-row{margin-top:7px}
+    .sub-row select{min-width:0;padding:8px;font-size:.78rem}
+    .sub-arrow{text-align:center;font-weight:950;color:var(--maroon)}
+    .sub-remove{width:34px;height:34px;padding:0}
+    .sub-labels{
+      display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(0,1fr) auto;
+      gap:7px;margin-bottom:4px;
+    }
+    .sub-labels span{font-size:.6rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+    .sub-labels span:nth-child(2){visibility:hidden}
+
+    @media(max-width:900px){
+      .depth-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:650px){
+      #lineups .depth-grid{display:grid!important;grid-template-columns:1fr!important;gap:7px}
+      #lineups .depth-row{
+        grid-template-columns:66px minmax(0,1fr)!important;
+        gap:7px;padding:8px!important;
+      }
+      #lineups .depth-pos{font-size:.65rem}
+      #lineups .depth-pos span{font-size:.53rem}
+      #lineups .depth-chip.selected{font-size:.58rem;padding:4px 6px}
+      #lineups .depth-add{min-height:34px!important;font-size:.66rem!important;padding:5px!important}
+      #lineups .sub-phase{padding:8px}
+      #lineups .sub-phase-head{margin-bottom:6px}
+      #lineups .sub-phase-title{font-size:.72rem}
+      #lineups .sub-phase-note{font-size:.55rem}
+      #lineups .sub-row{
+        grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 28px!important;
+        gap:4px!important;
+      }
+      #lineups .sub-row select{min-height:36px!important;padding:5px!important;font-size:.62rem!important}
+      #lineups .sub-remove{width:28px;height:32px;font-size:.7rem}
+      #lineups .sub-labels{
+        grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 28px;
+        gap:4px;
+      }
+      #lineups .sub-labels span{font-size:.52rem}
+      #lineups .variation-item{padding:7px}
+      #lineups .variation-load strong{font-size:.72rem}
+      #lineups .variation-meta{font-size:.56rem}
+    }
+
+
+    .shared-badge{
+      display:inline-flex;align-items:center;
+      margin-left:5px;padding:3px 6px;border-radius:999px;
+      background:#e8f5ec;color:#216636;border:1px solid #bddfc6;
+      font-size:.56rem;font-weight:950;letter-spacing:.06em;vertical-align:middle;
+    }
+    .variation-owner{
+      display:inline-block;margin-top:3px;font-size:.61rem;color:#6d7077;font-weight:800;
+    }
+
 </style>
 </head>
 <body>
@@ -656,7 +762,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v24</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v27</div>
   </aside>
 
   <main>
@@ -935,11 +1041,11 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V24</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V27</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, set the bench, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
-            <div><label>Match / Event</label><select id="lineupEvent"><option value="general">General / Practice Board</option></select></div>
+            <div><label>Game / Shared Tinker Board</label><select id="lineupEvent"><option value="tinker">Tinker / New Board</option></select></div>
             <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option></select></div>
             <div><label>Variation name</label><input id="lineupVariationName" value="Balanced" placeholder="Balanced, Aggressive, Protect Lead..."></div>
             <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button>
@@ -968,7 +1074,7 @@
             </div>
 
             <div class="mini-panel lineup-variations-panel">
-              <h3>Saved Variations</h3><div class="sub">Different tactical versions for the selected event.</div>
+              <h3>Saved Variations <span class="variation-count" id="lineupVariationCount">0</span> <span class="shared-badge">SHARED</span></h3><div class="sub">Shared with every approved captain. Each save includes the formation, XI, bench, depth chart and planned substitutions.</div><button class="mini-btn" id="refreshLineupVariations" type="button" style="margin-bottom:8px">Refresh shared variations</button>
               <div class="variation-list" id="lineupVariationList"></div>
             </div>
           </div>
@@ -976,15 +1082,15 @@
 
         <div class="panel">
           <h2>Position Depth & Sub Coverage</h2>
-          <div class="sub">Mark every player who can cover each role. This becomes the foundation for substitution recommendations and future AI lineup generation.</div>
+          <div class="sub">Build a depth chart by position. A player can appear in as many positions as needed. This depth chart is saved inside each variation.</div>
           <div class="depth-grid" id="lineupDepthGrid"></div>
         </div>
 
         <div class="panel">
           <h2>Planned Substitutions</h2>
-          <div class="sub">Create a simple rotation plan by approximate match minute. This is planning only—it does not affect Game Day stats.</div>
+          <div class="sub">Plan the first change, second change, and any half-time swaps. The full sub plan is saved with the selected variation.</div>
           <div class="sub-plan" id="lineupSubPlan"></div>
-          <button class="btn btn-light" id="addSubPlanBtn" type="button" style="margin-top:10px">+ Add planned sub</button>
+          <button class="btn btn-light" id="addSubPlanBtn" type="button" style="margin-top:10px">+ Add half-time sub</button>
         </div>
 
         <div class="panel" style="background:#17181d;color:#fff">
@@ -1037,7 +1143,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v20 - the ONLY lineup engine in this file */
+/* SKOR FC Lineup Builder v27 - shared games + named Tinker boards */
 (function(){
   const roster = [
     {number:2,name:"Ivan"},{number:9,name:"Andres"},{number:17,name:"David"},{number:18,name:"Jason"},
@@ -1046,138 +1152,534 @@
     {number:11,name:"Edward"},{number:1,name:"Todd"},{number:3,name:"Brad"},{number:21,name:"Andres"},
     {number:12,name:"Koushyar"},{number:15,name:"Andrew"},{number:4,name:"Nick"}
   ];
+
   const formations = {
     "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
     "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
     "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
     "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
   };
-  const state = { formation:"4-2-3-1", slots:{}, bench:[] };
+
+  const depthPositions = [
+    {key:"GK",label:"Goalkeeper"},
+    {key:"LB",label:"Left Back / LWB"},
+    {key:"CB",label:"Center Back"},
+    {key:"RB",label:"Right Back / RWB"},
+    {key:"CDM",label:"Defensive Mid"},
+    {key:"CM",label:"Central Mid"},
+    {key:"CAM",label:"Attacking Mid"},
+    {key:"LW",label:"Left Wing / LM"},
+    {key:"RW",label:"Right Wing / RM"},
+    {key:"ST",label:"Striker"}
+  ];
+
+  const DRAFT_PREFIX = "skorLineupDraftV26";
+  let captainKey = "captain";
+  let eventMatches = new Map();
   let selectedPlayer = null;
   let draggedPlayer = null;
+  let sharedVariations = [];
+  let sharedTinkerVariations = [];
+  let realtimeChannel = null;
+  let state = blankState("4-2-3-1");
 
-  function id(p){ return p.number + "-" + p.name; }
-  function player(pid){ return roster.find(p => id(p) === pid); }
-  function esc(v){ return String(v).replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s])); }
-  function peg(p, compact){
-    return '<div class="player-peg'+(compact?' compact':'')+'" draggable="true" data-v19-player="'+esc(id(p))+'">'+
+  function blankSubs(){
+    return {first:{out:"",in:""},second:{out:"",in:""},halftime:[{out:"",in:""}]};
+  }
+  function blankState(formation){
+    return {formation:formation||"4-2-3-1",slots:{},bench:[],depth:{},subs:blankSubs()};
+  }
+  function normalizeSubs(value){
+    return {
+      first:{out:value?.first?.out||"",in:value?.first?.in||""},
+      second:{out:value?.second?.out||"",in:value?.second?.in||""},
+      halftime:Array.isArray(value?.halftime)&&value.halftime.length
+        ? value.halftime.map(x=>({out:x?.out||"",in:x?.in||""}))
+        : [{out:"",in:""}]
+    };
+  }
+  function normalizeState(value){
+    const formation=(value?.formation&&formations[value.formation])?value.formation:"4-2-3-1";
+    const depth={};
+    depthPositions.forEach(pos=>{
+      const raw=Array.isArray(value?.depth?.[pos.key])?value.depth[pos.key]:[];
+      depth[pos.key]=raw.filter(pid=>!!player(pid));
+    });
+    return {
+      formation,
+      slots:(value?.slots&&typeof value.slots==="object")?value.slots:{},
+      bench:Array.isArray(value?.bench)?value.bench.filter(pid=>!!player(pid)):[],
+      depth,
+      subs:normalizeSubs(value?.subs)
+    };
+  }
+
+  function id(p){ return p.number+"-"+p.name; }
+  function player(pid){ return roster.find(p=>id(p)===pid); }
+  function esc(v){ return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s])); }
+  function clone(v){ return JSON.parse(JSON.stringify(v)); }
+  function selectedEventValue(){ return document.getElementById("lineupEvent")?.value||"tinker"; }
+  function eventKey(){
+    const value=selectedEventValue();
+    return value.startsWith("variation:")?"tinker":value;
+  }
+  function eventLabel(){
+    const sel=document.getElementById("lineupEvent");
+    const value=selectedEventValue();
+    if(value.startsWith("variation:")) return "Tinker / No Game";
+    return sel?.options?.[sel.selectedIndex]?.text||"Tinker / No Game";
+  }
+  function draftKey(){ return `${DRAFT_PREFIX}:${captainKey}:${eventKey()}`; }
+  function sbClient(){ return window.SKORSupabase||null; }
+
+  function markStatus(msg,ok=true){
+    const el=document.getElementById("lineupStatus");
+    if(el){el.textContent=msg;el.className="lineup-status "+(ok?"ok":"err");}
+  }
+  function persistDraft(){
+    try{localStorage.setItem(draftKey(),JSON.stringify(state));}
+    catch(e){console.warn("Could not save lineup draft",e);}
+  }
+  function loadDraft(){
+    try{
+      const raw=localStorage.getItem(draftKey());
+      state=raw?normalizeState(JSON.parse(raw)):blankState(document.getElementById("lineupFormation")?.value||"4-2-3-1");
+    }catch{
+      state=blankState(document.getElementById("lineupFormation")?.value||"4-2-3-1");
+    }
+    const formation=document.getElementById("lineupFormation");
+    if(formation)formation.value=state.formation;
+  }
+  function formatStamp(iso){
+    try{return new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(iso));}
+    catch{return "";}
+  }
+  function formatMatch(m){
+    let date="";
+    try{date=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"}).format(new Date(m.kickoff));}
+    catch{date="Game";}
+    return `${date} — ${m.home_team||"Home"} vs ${m.away_team||"Away"}`;
+  }
+  function loadVariationRecord(rec){
+    if(!rec)return;
+    state=normalizeState(clone(rec.state));
+    const formation=document.getElementById("lineupFormation");
+    if(formation)formation.value=state.formation;
+    const name=document.getElementById("lineupVariationName");
+    if(name)name.value=rec.name||"";
+    selectedPlayer=null;
+    persistDraft();
+    renderAll();
+    markStatus('Loaded shared variation "'+(rec.name||"Untitled")+'" by '+(rec.created_by_name||"Captain")+'.');
+  }
+  function peg(p,compact){
+    return '<div class="player-peg'+(compact?' compact':'')+'" draggable="true" data-v26-player="'+esc(id(p))+'">'+
       '<div class="jersey">'+esc(p.number)+'</div><div class="peg-name">'+esc(p.name)+'</div></div>';
   }
-  function markStatus(msg){
-    const el=document.getElementById("lineupStatus");
-    if(el){ el.textContent=msg; el.className="lineup-status ok"; }
-  }
+
   function assign(slot,pid){
-    if(!pid) return;
-    Object.keys(state.slots).forEach(k=>{ if(state.slots[k]===pid) delete state.slots[k]; });
+    if(!pid)return;
+    Object.keys(state.slots).forEach(k=>{if(state.slots[k]===pid)delete state.slots[k];});
     state.bench=state.bench.filter(x=>x!==pid);
     state.slots[slot]=pid;
     selectedPlayer=null;
-    render();
-    markStatus((player(pid)?.name||"Player")+" assigned to "+slot+".");
+    persistDraft();
+    renderCore();
+    markStatus((player(pid)?.name||"Player")+" assigned to "+slot+". Unsaved changes are only on this device.");
   }
+
   function renderPitch(){
     const pitch=document.getElementById("lineupPitch");
-    if(!pitch) return;
+    if(!pitch)return;
     pitch.querySelectorAll(".formation-slot").forEach(el=>el.remove());
     (formations[state.formation]||formations["4-2-3-1"]).forEach(([label,x,y])=>{
       const slot=document.createElement("button");
       slot.type="button";
       slot.className="formation-slot";
-      slot.dataset.v19Slot=label;
+      slot.dataset.v26Slot=label;
       slot.style.left=x+"%";
       slot.style.top=y+"%";
       const p=player(state.slots[label]);
-      slot.innerHTML=p ? peg(p,false) : '<div class="slot-label">'+label+'</div>';
+      slot.innerHTML=p?peg(p,false):'<div class="slot-label">'+label+'</div>';
       slot.addEventListener("click",()=>{
-        if(selectedPlayer){ assign(label,selectedPlayer); return; }
+        if(selectedPlayer){assign(label,selectedPlayer);return;}
         if(p){
           selectedPlayer=id(p);
           renderPool();
-          markStatus(p.name+" selected — tap another position or tap Bench.");
+          markStatus(p.name+" selected — tap another position or Bench.");
         }
       });
       slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("dragover");});
       slot.addEventListener("dragleave",()=>slot.classList.remove("dragover"));
-      slot.addEventListener("drop",e=>{e.preventDefault();slot.classList.remove("dragover");if(draggedPlayer)assign(label,draggedPlayer);});
+      slot.addEventListener("drop",e=>{
+        e.preventDefault();slot.classList.remove("dragover");
+        if(draggedPlayer)assign(label,draggedPlayer);
+      });
       pitch.appendChild(slot);
     });
   }
+
   function renderPool(){
     const pool=document.getElementById("lineupPlayerPool");
-    if(!pool) return;
+    if(!pool)return;
     const used=new Set([...Object.values(state.slots),...state.bench]);
     pool.innerHTML=roster.map(p=>{
-      const pid=id(p), active=selectedPlayer===pid;
-      return '<button type="button" class="player-card v19-card'+(used.has(pid)?' on-field':'')+(active?' v19-selected':'')+'" data-v19-select="'+esc(pid)+'">'+peg(p,true)+'</button>';
+      const pid=id(p),active=selectedPlayer===pid;
+      return '<button type="button" class="player-card v19-card'+(used.has(pid)?' on-field':'')+(active?' v19-selected':'')+'" data-v26-select="'+esc(pid)+'">'+peg(p,true)+'</button>';
     }).join("");
-    pool.querySelectorAll("[data-v19-select]").forEach(btn=>btn.addEventListener("click",()=>{
-      selectedPlayer=btn.dataset.v19Select;
+    pool.querySelectorAll("[data-v26-select]").forEach(btn=>btn.addEventListener("click",()=>{
+      selectedPlayer=btn.dataset.v26Select;
       renderPool();
-      markStatus((player(selectedPlayer)?.name||"Player")+" selected — click a position on the pitch.");
+      markStatus((player(selectedPlayer)?.name||"Player")+" selected — tap a position on the pitch.");
     }));
   }
+
   function renderBench(){
     const list=document.getElementById("lineupBenchList");
-    if(!list) return;
-    list.innerHTML=state.bench.length ? state.bench.map(pid=>{
-      const p=player(pid); return p?'<div class="bench-player" draggable="true" data-v19-player="'+esc(pid)+'">#'+p.number+' '+esc(p.name)+'</div>':'';
-    }).join("") : '<span style="font-size:.8rem;color:var(--muted)">No bench players yet.</span>';
+    if(!list)return;
+    list.innerHTML=state.bench.length?state.bench.map(pid=>{
+      const p=player(pid);
+      return p?'<div class="bench-player" draggable="true" data-v26-player="'+esc(pid)+'">#'+p.number+' '+esc(p.name)+'</div>':'';
+    }).join(""):'<span style="font-size:.8rem;color:var(--muted)">No bench players yet.</span>';
   }
+
   function bindDrags(){
-    document.querySelectorAll("[data-v19-player]").forEach(el=>{
-      el.addEventListener("dragstart",()=>{draggedPlayer=el.dataset.v19Player;});
+    document.querySelectorAll("[data-v26-player]").forEach(el=>{
+      el.addEventListener("dragstart",()=>{draggedPlayer=el.dataset.v26Player;});
       el.addEventListener("dragend",()=>{draggedPlayer=null;});
     });
-    document.querySelectorAll(".bench-player[data-v19-player]").forEach(el=>{
+    document.querySelectorAll(".bench-player[data-v26-player]").forEach(el=>{
       el.addEventListener("click",e=>{
         e.stopPropagation();
-        selectedPlayer=el.dataset.v19Player;
+        selectedPlayer=el.dataset.v26Player;
         renderPool();
         markStatus((player(selectedPlayer)?.name||"Player")+" selected from bench — tap a position.");
       });
     });
     const bench=document.getElementById("lineupBench");
-    if(bench && !bench.dataset.v19Bound){
-      bench.dataset.v19Bound="1";
+    if(bench&&!bench.dataset.v26Bound){
+      bench.dataset.v26Bound="1";
       bench.addEventListener("dragover",e=>{e.preventDefault();bench.classList.add("dragover");});
       bench.addEventListener("dragleave",()=>bench.classList.remove("dragover"));
       bench.addEventListener("drop",e=>{
-        e.preventDefault(); bench.classList.remove("dragover");
-        if(!draggedPlayer) return;
+        e.preventDefault();bench.classList.remove("dragover");
+        if(!draggedPlayer)return;
         Object.keys(state.slots).forEach(k=>{if(state.slots[k]===draggedPlayer)delete state.slots[k];});
-        if(!state.bench.includes(draggedPlayer)) state.bench.push(draggedPlayer);
-        selectedPlayer=null; render(); markStatus((player(draggedPlayer)?.name||"Player")+" moved to bench.");
+        if(!state.bench.includes(draggedPlayer))state.bench.push(draggedPlayer);
+        const moved=draggedPlayer;
+        selectedPlayer=null;persistDraft();renderCore();
+        markStatus((player(moved)?.name||"Player")+" moved to bench. Unsaved changes are only on this device.");
       });
       bench.addEventListener("click",()=>{
-        if(!selectedPlayer) return;
+        if(!selectedPlayer)return;
         const pid=selectedPlayer;
         Object.keys(state.slots).forEach(k=>{if(state.slots[k]===pid)delete state.slots[k];});
-        if(!state.bench.includes(pid)) state.bench.push(pid);
-        selectedPlayer=null;
-        render();
-        markStatus((player(pid)?.name||"Player")+" moved to bench.");
+        if(!state.bench.includes(pid))state.bench.push(pid);
+        selectedPlayer=null;persistDraft();renderCore();
+        markStatus((player(pid)?.name||"Player")+" moved to bench. Unsaved changes are only on this device.");
       });
     }
   }
-  function render(){
-    renderPitch(); renderPool(); renderBench(); bindDrags();
+
+  function depthOptions(selectedIds){
+    const selected=new Set(selectedIds||[]);
+    return '<option value="">+ Add player to this position</option>'+
+      roster.filter(p=>!selected.has(id(p))).map(p=>'<option value="'+esc(id(p))+'">#'+p.number+' '+esc(p.name)+'</option>').join("");
+  }
+
+  function renderDepth(){
+    const grid=document.getElementById("lineupDepthGrid");
+    if(!grid)return;
+    depthPositions.forEach(pos=>{if(!Array.isArray(state.depth[pos.key]))state.depth[pos.key]=[];});
+    grid.innerHTML=depthPositions.map(pos=>{
+      const members=state.depth[pos.key];
+      const chips=members.length?members.map((pid,index)=>{
+        const p=player(pid);if(!p)return "";
+        return '<button type="button" class="depth-chip selected" data-depth-remove="'+esc(pos.key)+'" data-depth-player="'+esc(pid)+'">'+
+          '<span class="depth-rank">'+(index+1)+'.</span> #'+p.number+' '+esc(p.name)+' <span class="depth-remove">×</span></button>';
+      }).join(""):'<span class="depth-empty">No players assigned</span>';
+      return '<div class="depth-row"><div class="depth-pos">'+esc(pos.key)+'<span>'+esc(pos.label)+'</span></div>'+
+        '<div class="depth-lane"><div class="depth-selected">'+chips+'</div>'+
+        '<select class="depth-add" data-depth-add="'+esc(pos.key)+'">'+depthOptions(members)+'</select></div></div>';
+    }).join("");
+
+    grid.querySelectorAll("[data-depth-add]").forEach(sel=>sel.addEventListener("change",()=>{
+      const pos=sel.dataset.depthAdd,pid=sel.value;
+      if(!pid)return;
+      if(!state.depth[pos].includes(pid))state.depth[pos].push(pid);
+      persistDraft();renderDepth();
+      markStatus((player(pid)?.name||"Player")+" added to "+pos+" depth. Save a variation to share it.");
+    }));
+    grid.querySelectorAll("[data-depth-remove]").forEach(btn=>btn.addEventListener("click",()=>{
+      const pos=btn.dataset.depthRemove,pid=btn.dataset.depthPlayer;
+      state.depth[pos]=state.depth[pos].filter(x=>x!==pid);
+      persistDraft();renderDepth();
+    }));
+  }
+
+  function playerOptions(selected){
+    return '<option value="">Select player…</option>'+
+      roster.map(p=>'<option value="'+esc(id(p))+'"'+(id(p)===selected?' selected':'')+'>#'+p.number+' '+esc(p.name)+'</option>').join("");
+  }
+  function subRowHTML(record,phase,index=null,removable=false){
+    const suffix=index===null?phase:phase+"-"+index;
+    return '<div class="sub-row" data-sub-row="'+esc(suffix)+'">'+
+      '<select data-sub-out="'+esc(phase)+'"'+(index===null?'':' data-sub-index="'+index+'"')+'>'+playerOptions(record.out)+'</select>'+
+      '<span class="sub-arrow">→</span>'+
+      '<select data-sub-in="'+esc(phase)+'"'+(index===null?'':' data-sub-index="'+index+'"')+'>'+playerOptions(record.in)+'</select>'+
+      (removable?'<button class="mini-btn sub-remove" type="button" data-sub-remove="'+index+'">×</button>':'<span></span>')+
+      '</div>';
+  }
+  function renderSubPlan(){
+    const box=document.getElementById("lineupSubPlan");
+    if(!box)return;
+    state.subs=normalizeSubs(state.subs);
+    const labels='<div class="sub-labels"><span>Player Out</span><span>→</span><span>Player In</span><span></span></div>';
+    box.innerHTML=
+      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">First Sub</div><div class="sub-phase-note">First planned change</div></div>'+labels+subRowHTML(state.subs.first,"first")+'</div>'+
+      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">Second Sub</div><div class="sub-phase-note">Second planned change</div></div>'+labels+subRowHTML(state.subs.second,"second")+'</div>'+
+      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">Half-time Subs</div><div class="sub-phase-note">Add as many swaps as needed</div></div>'+labels+
+      state.subs.halftime.map((r,i)=>subRowHTML(r,"halftime",i,true)).join("")+'</div>';
+
+    box.querySelectorAll("[data-sub-out]").forEach(sel=>sel.addEventListener("change",()=>{
+      const phase=sel.dataset.subOut;
+      if(phase==="halftime")state.subs.halftime[+sel.dataset.subIndex].out=sel.value;
+      else state.subs[phase].out=sel.value;
+      persistDraft();
+      markStatus("Sub plan changed. Save a variation to share it.");
+    }));
+    box.querySelectorAll("[data-sub-in]").forEach(sel=>sel.addEventListener("change",()=>{
+      const phase=sel.dataset.subIn;
+      if(phase==="halftime")state.subs.halftime[+sel.dataset.subIndex].in=sel.value;
+      else state.subs[phase].in=sel.value;
+      persistDraft();
+      markStatus("Sub plan changed. Save a variation to share it.");
+    }));
+    box.querySelectorAll("[data-sub-remove]").forEach(btn=>btn.addEventListener("click",()=>{
+      state.subs.halftime.splice(+btn.dataset.subRemove,1);
+      if(!state.subs.halftime.length)state.subs.halftime.push({out:"",in:""});
+      persistDraft();renderSubPlan();
+    }));
+  }
+
+  function renderVariations(){
+    const box=document.getElementById("lineupVariationList");
+    const count=document.getElementById("lineupVariationCount");
+    if(!box)return;
+    if(count)count.textContent=sharedVariations.length;
+    box.innerHTML=sharedVariations.length?sharedVariations.map(v=>{
+      const snapshot=normalizeState(v.state||{});
+      const starters=Object.keys(snapshot.slots||{}).length;
+      const bench=(snapshot.bench||[]).length;
+      const owner=v.created_by_name||"Captain";
+      return '<div class="variation-item">'+
+        '<button type="button" class="variation-load" data-load-variation="'+esc(v.id)+'"><strong>'+esc(v.name)+'</strong>'+
+        '<span class="variation-meta">'+esc(snapshot.formation)+' · '+starters+' starters · '+bench+' bench · '+esc(formatStamp(v.created_at))+'</span>'+
+        '<span class="variation-owner">Saved by '+esc(owner)+'</span></button>'+
+        '<button class="mini-btn variation-delete" type="button" data-delete-variation="'+esc(v.id)+'">Delete</button></div>';
+    }).join(""):'<div style="font-size:.82rem;color:var(--muted)">No shared variations for this game yet.</div>';
+
+    box.querySelectorAll("[data-load-variation]").forEach(btn=>btn.addEventListener("click",()=>{
+      const rec=sharedVariations.find(v=>String(v.id)===String(btn.dataset.loadVariation));
+      loadVariationRecord(rec);
+    }));
+
+    box.querySelectorAll("[data-delete-variation]").forEach(btn=>btn.addEventListener("click",async()=>{
+      const rec=sharedVariations.find(v=>String(v.id)===String(btn.dataset.deleteVariation));
+      if(!rec)return;
+      if(!confirm('Delete shared variation "'+rec.name+'"? This removes it for every captain.'))return;
+      const sb=sbClient();
+      if(!sb){markStatus("Supabase is not connected.",false);return;}
+      const {error}=await sb.from("lineup_variations").delete().eq("id",rec.id);
+      if(error){markStatus("Could not delete shared variation: "+error.message,false);return;}
+      await refreshVariations(false);
+      markStatus('Deleted shared variation "'+rec.name+'".');
+    }));
+  }
+
+  async function refreshTinkerVariations(){
+    const sb=sbClient();
+    if(!sb){sharedTinkerVariations=[];renderEventOptions();return;}
+    const {data,error}=await sb.from("lineup_variations")
+      .select("id,name,state,created_by_name,created_at")
+      .eq("event_key","tinker")
+      .order("created_at",{ascending:false});
+    if(error){
+      console.warn("Could not load shared Tinker boards:",error.message);
+      return;
+    }
+    sharedTinkerVariations=data||[];
+    renderEventOptions();
+  }
+
+  async function refreshVariations(showMessage=true){
+    const sb=sbClient();
+    if(!sb){
+      sharedVariations=[];
+      renderVariations();
+      if(showMessage)markStatus("Supabase is not connected yet.",false);
+      return;
+    }
+    const {data,error}=await sb.from("lineup_variations")
+      .select("id,event_key,event_label,name,state,created_by,created_by_name,created_by_email,created_at,updated_at")
+      .eq("event_key",eventKey())
+      .order("created_at",{ascending:false});
+    if(error){
+      sharedVariations=[];
+      renderVariations();
+      if(showMessage)markStatus("Shared variations unavailable: "+error.message,false);
+      return;
+    }
+    sharedVariations=data||[];
+    if(eventKey()==="tinker"){
+      sharedTinkerVariations=sharedVariations.slice();
+      renderEventOptions();
+    }
+    renderVariations();
+    if(showMessage)markStatus(sharedVariations.length+" shared variation"+(sharedVariations.length===1?"":"s")+" loaded for "+eventLabel()+".");
+  }
+
+  function ensureRealtime(){
+    const sb=sbClient();
+    if(!sb||realtimeChannel)return;
+    realtimeChannel=sb.channel("skor-lineup-variations-shared")
+      .on("postgres_changes",{event:"*",schema:"public",table:"lineup_variations"},()=>{
+        refreshTinkerVariations();
+        refreshVariations(false);
+      })
+      .subscribe();
+  }
+
+  function renderCore(){renderPitch();renderPool();renderBench();bindDrags();}
+  function renderAll(){renderCore();renderDepth();renderSubPlan();renderVariations();}
+
+  function renderEventOptions(){
+    const sel=document.getElementById("lineupEvent");
+    if(!sel)return;
+    const current=sel.value||"tinker";
+    const matches=[...eventMatches.values()].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+    const tinkerOptions=sharedTinkerVariations.map(v=>
+      '<option value="variation:'+esc(String(v.id))+'">Tinker — '+esc(v.name)+' · '+esc(v.created_by_name||"Captain")+'</option>'
+    ).join("");
+    const gameOptions=matches.map(m=>
+      '<option value="'+esc(String(m.id))+'">'+esc(formatMatch(m))+'</option>'
+    ).join("");
+    sel.innerHTML=
+      '<optgroup label="Tinker">'+
+        '<option value="tinker">Tinker / New Board</option>'+
+        tinkerOptions+
+      '</optgroup>'+
+      (gameOptions?'<optgroup label="Games">'+gameOptions+'</optgroup>':'');
+    sel.value=[...sel.options].some(o=>o.value===current)?current:"tinker";
+  }
+
+  function setEvents(matches,authoritative=false){
+    if(authoritative)eventMatches=new Map();
+    (matches||[]).forEach(m=>{if(m?.id)eventMatches.set(String(m.id),m);});
+    renderEventOptions();
+    refreshTinkerVariations();
+    refreshVariations(false);
+  }
+  function setCaptain(value){
+    captainKey=String(value||"captain").replace(/[^a-zA-Z0-9@._-]/g,"_");
+    loadDraft();selectedPlayer=null;renderAll();
+    ensureRealtime();
+    refreshTinkerVariations();
+    refreshVariations(false);
   }
 
   const formation=document.getElementById("lineupFormation");
-  if(formation){
-    formation.addEventListener("change",()=>{
-      state.formation=formation.value;
-      state.slots={};
-      render();
-      markStatus("Formation changed to "+state.formation+".");
-    });
-  }
-  const clear=document.getElementById("clearLineupBtn");
-  if(clear) clear.addEventListener("click",()=>{state.slots={};state.bench=[];selectedPlayer=null;render();markStatus("Pitch and bench cleared.");});
+  const eventSel=document.getElementById("lineupEvent");
+  const saveBtn=document.getElementById("saveLineupVariation");
+  const clearBtn=document.getElementById("clearLineupBtn");
+  const addSubBtn=document.getElementById("addSubPlanBtn");
+  const refreshBtn=document.getElementById("refreshLineupVariations");
 
-  render();
-  markStatus("Lineup Builder v24 ready — 19 players loaded.");
+  if(formation)formation.addEventListener("change",()=>{
+    state.formation=formation.value;
+    state.slots={};selectedPlayer=null;
+    persistDraft();renderCore();
+    markStatus("Formation changed to "+state.formation+". Starting XI cleared; bench, depth and sub plan kept.");
+  });
+
+  if(eventSel)eventSel.addEventListener("change",async()=>{
+    const selected=selectedEventValue();
+    if(selected.startsWith("variation:")){
+      const variationId=selected.slice("variation:".length);
+      let rec=sharedTinkerVariations.find(v=>String(v.id)===variationId);
+      if(!rec){
+        await refreshTinkerVariations();
+        rec=sharedTinkerVariations.find(v=>String(v.id)===variationId);
+      }
+      sharedVariations=sharedTinkerVariations.slice();
+      loadVariationRecord(rec);
+      renderVariations();
+      return;
+    }
+    loadDraft();selectedPlayer=null;sharedVariations=[];renderAll();
+    await refreshVariations(true);
+  });
+
+  if(saveBtn)saveBtn.addEventListener("click",async()=>{
+    const sb=sbClient();
+    if(!sb){markStatus("Supabase is not connected.",false);return;}
+    const name=document.getElementById("lineupVariationName").value.trim()||"Untitled";
+    const originalText=saveBtn.textContent;
+    saveBtn.disabled=true;saveBtn.textContent="Saving…";
+    try{
+      const {data:{user},error:userError}=await sb.auth.getUser();
+      if(userError||!user)throw new Error(userError?.message||"Captain session not found.");
+      const fullName=user.user_metadata?.full_name||user.user_metadata?.name||user.email||"Captain";
+      const payload={
+        event_key:eventKey(),
+        event_label:eventLabel(),
+        name,
+        state:clone(state),
+        created_by:user.id,
+        created_by_name:fullName,
+        created_by_email:user.email||null
+      };
+      const {error}=await sb.from("lineup_variations").insert(payload);
+      if(error)throw error;
+      persistDraft();
+      await refreshVariations(false);
+      if(eventKey()==="tinker")await refreshTinkerVariations();
+      markStatus('Saved shared variation "'+name+'". Every captain can now see it.');
+    }catch(err){
+      markStatus("Could not save shared variation: "+(err?.message||err),false);
+    }finally{
+      saveBtn.disabled=false;saveBtn.textContent=originalText;
+    }
+  });
+
+  if(refreshBtn)refreshBtn.addEventListener("click",()=>refreshVariations(true));
+
+  if(clearBtn)clearBtn.addEventListener("click",()=>{
+    if(!confirm("Clear the starting XI and bench?"))return;
+    state.slots={};state.bench=[];selectedPlayer=null;
+    persistDraft();renderCore();
+    markStatus("Pitch and bench cleared. Depth chart and sub plan were kept.");
+  });
+
+  if(addSubBtn)addSubBtn.addEventListener("click",()=>{
+    state.subs=normalizeSubs(state.subs);
+    state.subs.halftime.push({out:"",in:""});
+    persistDraft();renderSubPlan();
+    markStatus("Half-time substitution added. Save a variation to share the plan.");
+  });
+
+  loadDraft();
+  renderEventOptions();
+  renderAll();
+  markStatus("Lineup Builder v27 ready. Shared games and named Tinker boards use Supabase.");
+
+  window.SKORLineup={
+    setEvents,
+    setCaptain,
+    refreshVariations,
+    getState:()=>clone(state),
+    reload:()=>{loadDraft();renderAll();refreshVariations(false);}
+  };
 })();
 </script>
 
@@ -1187,6 +1689,7 @@
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+window.SKORSupabase = sb;
 
 const authGate = document.getElementById("authGate");
 const adminApp = document.getElementById("adminApp");
@@ -1214,6 +1717,7 @@ function showDashboard(user){
   document.getElementById("userName").textContent = fullName;
   document.getElementById("userEmail").textContent = email;
   document.getElementById("userAvatar").textContent = (fullName.trim()[0] || "C").toUpperCase();
+  window.SKORLineup?.setCaptain(user.id || email || "captain");
   loadGameDayMatches();
   loadScheduleManager();
 }
@@ -1405,7 +1909,7 @@ async function loadGameDayMatches(preferredId=null){
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v14";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
-  gameDayMatch.value=pick.id;gameDaySelected=pick;loadLineupEventOptions();await loadGameDayEvents();
+  gameDayMatch.value=pick.id;gameDaySelected=pick;window.SKORLineup?.setEvents(gameDayMatches,false);await loadGameDayEvents();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
@@ -1507,7 +2011,7 @@ async function loadScheduleManager(){
     sb.from("matches").select("id,slug,kickoff,arrival_at,home_team,away_team,location,status,published,home_logo,away_logo").order("kickoff",{ascending:true})
   ]);
   if(p.error){practiceList.innerHTML=`<div class="form-status err">Could not load practices: ${scheduleEsc(p.error.message)}</div>`;}else{schedulePractices=p.data||[];renderPracticeManager();}
-  if(m.error){matchScheduleList.innerHTML=`<div class="form-status err">Could not load matches: ${scheduleEsc(m.error.message)}</div>`;}else{scheduleMatches=m.data||[];renderMatchManager();}
+  if(m.error){matchScheduleList.innerHTML=`<div class="form-status err">Could not load matches: ${scheduleEsc(m.error.message)}</div>`;}else{scheduleMatches=m.data||[];window.SKORLineup?.setEvents(scheduleMatches,true);renderMatchManager();}
 }
 function renderPracticeManager(){
   const now=Date.now()-12*60*60*1000;
@@ -1670,7 +2174,7 @@ loadAnnouncements();
 })();
 
 
-// The independent v22 builder above is the only lineup engine.
+// The independent v27 builder above is the only lineup engine.
 
 </script>
 
