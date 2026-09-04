@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v32-captain-notes-export-production" />
-  <title>SKOR FC Admin | Lineups v32</title>
+  <meta name="skor-build" content="lineup-admin-v35-sub-chips-production" />
+  <title>SKOR FC Admin | Lineups v35</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -845,6 +845,95 @@
       #lineups .captain-badge{width:15px;height:15px;right:-5px;top:-4px;font-size:.48rem}
     }
 
+
+    /* =========================================================
+       SKOR FC v33 — flexible first-half / second-half sub plans
+       ========================================================= */
+    .sub-plan-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .sub-plan-actions .btn{flex:0 0 auto}
+    @media(max-width:650px){
+      #lineups .sub-plan-actions{flex-direction:column}
+      #lineups .sub-plan-actions .btn{width:100%}
+    }
+
+
+    /* =========================================================
+       SKOR FC v35 — tap-to-toggle player chips for grouped subs
+       ========================================================= */
+    .sub-row.multi-sub{
+      grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr) 34px;
+      align-items:start;
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+    }
+    .sub-chip-side{min-width:0}
+    .sub-chip-side-head{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      margin-bottom:7px;
+    }
+    .sub-chip-side-title{
+      font-size:.69rem;font-weight:950;text-transform:uppercase;
+      letter-spacing:.055em;color:var(--muted);
+    }
+    .sub-chip-count{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:24px;height:20px;padding:0 6px;border-radius:999px;
+      background:#f1f2f5;color:#4d5158;font-size:.6rem;font-weight:950;
+    }
+    .sub-chip-list{
+      display:flex;flex-wrap:wrap;gap:5px;
+      max-height:154px;overflow-y:auto;
+      padding:3px 2px 5px;
+      -webkit-overflow-scrolling:touch;
+    }
+    .sub-player-chip{
+      appearance:none;border:1px solid #d9dce2;background:#f7f8fa;color:#262930;
+      border-radius:999px;padding:7px 9px;min-height:34px;
+      font-size:.69rem;font-weight:850;line-height:1;
+      cursor:pointer;touch-action:manipulation;
+      transition:background .12s ease,border-color .12s ease,color .12s ease,transform .08s ease;
+    }
+    .sub-player-chip:active{transform:scale(.97)}
+    .sub-player-chip.out.selected{
+      background:#801A3D;border-color:#801A3D;color:#fff;
+    }
+    .sub-player-chip.in.selected{
+      background:#234b74;border-color:#234b74;color:#fff;
+    }
+    .sub-multi-help{
+      margin-top:6px;
+      font-size:.66rem;
+      color:var(--muted);
+      font-weight:700;
+      line-height:1.25;
+    }
+    .sub-event-number{
+      grid-column:1/-1;
+      font-size:.7rem;font-weight:950;color:#333;
+      margin-bottom:-2px;
+    }
+    @media(max-width:650px){
+      #lineups .sub-row.multi-sub{
+        grid-template-columns:1fr;
+        gap:7px!important;
+        padding:8px;
+      }
+      #lineups .sub-row.multi-sub .sub-arrow{
+        text-align:center;
+        padding:0;
+        transform:rotate(90deg);
+      }
+      #lineups .sub-player-chip{
+        min-height:32px;
+        padding:6px 8px;
+        font-size:.64rem;
+      }
+      #lineups .sub-chip-list{max-height:176px}
+      #lineups .sub-event-number{margin-bottom:0}
+    }
+
 </style>
 </head>
 <body>
@@ -878,7 +967,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v32</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v35</div>
   </aside>
 
   <main>
@@ -1193,7 +1282,7 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V32</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V35</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -1241,16 +1330,16 @@
 
         <div class="panel">
           <h2>Planned Substitutions</h2>
-          <div class="sub">Plan the first change, second change, and any half-time swaps. The full sub plan is saved with the selected variation.</div>
+          <div class="sub">Plan as many substitutions as you want for the first half and second half. Each planned sub can include multiple players out and multiple players in. Tap player chips to build each group change.</div>
           <div class="sub-plan" id="lineupSubPlan"></div>
-          <button class="btn btn-light" id="addSubPlanBtn" type="button" style="margin-top:10px">+ Add half-time sub</button>
+          <div class="sub-plan-actions"><button class="btn btn-light" id="addFirstHalfSubBtn" type="button">+ Add first-half sub</button><button class="btn btn-light" id="addSecondHalfSubBtn" type="button">+ Add second-half sub</button></div>
         </div>
 
         <div class="panel gameplan-export-panel">
           <div class="gameplan-export-head">
             <div>
               <h2>Shareable Gameplan Export</h2>
-              <div class="sub">Load any saved variation or use the current board, then export a WhatsApp-ready PNG or JPG. Captain, quote, notes, substitute count, lineup, coverage, and first subs are included.</div>
+              <div class="sub">Load any saved variation or use the current board, then export a WhatsApp-ready PNG or JPG. Captain, quote, notes, substitute count, lineup, coverage, and grouped planned substitutions are included.</div>
             </div>
             <div class="gameplan-export-actions">
               <button class="btn btn-primary" id="exportGameplanPng" type="button">Export PNG</button>
@@ -1322,7 +1411,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v30 - shared roster + gameplan export */
+/* SKOR FC Lineup Builder v35 - grouped substitutions with tap-to-toggle player chips */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -1364,17 +1453,31 @@
   let state = blankState("4-2-3-1");
 
   function isFreeform(formation){ return formation === FREEFORM; }
-  function blankSubs(){ return {first:{out:"",in:""},second:{out:"",in:""},halftime:[{out:"",in:""}]}; }
+  function blankSubs(){ return {firstHalf:[{out:[],in:[]}],secondHalf:[{out:[],in:[]}]}; }
   function blankState(formation){
     return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),labelMode:"names",captainId:"",quote:"",notes:""};
   }
   function normalizeSubs(value){
+    const normalizeIds=v=>{
+      if(Array.isArray(v)) return v.filter(Boolean).map(String);
+      return v ? [String(v)] : [];
+    };
+    const row=x=>({out:normalizeIds(x?.out),in:normalizeIds(x?.in)});
+    // Backward compatibility:
+    // old shape: {first, second, halftime[]}
+    if(value && (!Array.isArray(value.firstHalf) || !Array.isArray(value.secondHalf)) && ("first" in value || "second" in value || "halftime" in value)){
+      const firstHalf=[row(value?.first), row(value?.second)].filter(x=>x.out.length||x.in.length);
+      const secondHalf=Array.isArray(value?.halftime)?value.halftime.map(row).filter(x=>x.out.length||x.in.length):[];
+      return {
+        firstHalf:firstHalf.length?firstHalf:[{out:[],in:[]}],
+        secondHalf:secondHalf.length?secondHalf:[{out:[],in:[]}]
+      };
+    }
+    const firstHalf=Array.isArray(value?.firstHalf)?value.firstHalf.map(row).filter(Boolean):[];
+    const secondHalf=Array.isArray(value?.secondHalf)?value.secondHalf.map(row).filter(Boolean):[];
     return {
-      first:{out:value?.first?.out||"",in:value?.first?.in||""},
-      second:{out:value?.second?.out||"",in:value?.second?.in||""},
-      halftime:Array.isArray(value?.halftime)&&value.halftime.length
-        ? value.halftime.map(x=>({out:x?.out||"",in:x?.in||""}))
-        : [{out:"",in:""}]
+      firstHalf:firstHalf.length?firstHalf:[{out:[],in:[]}],
+      secondHalf:secondHalf.length?secondHalf:[{out:[],in:[]}]
     };
   }
   function normalizeState(value){
@@ -1512,6 +1615,11 @@
     if(!p)return String(pid||"Unknown");
     return short?("#"+p.number+" "+shortName(p.name)):("#"+p.number+" "+p.name);
   }
+  function prettyPlayers(values, short=false){
+    const ids=Array.isArray(values)?values.filter(Boolean):[];
+    return ids.length?ids.map(pid=>prettyPlayer(pid,short)).join(", "):"Not set";
+  }
+
   function svgTextBlock(text,x,y,maxChars,lineHeight,maxLines,attrs=""){
     const raw=String(text||"").trim();
     if(!raw)return "";
@@ -1538,8 +1646,11 @@
       clipped.map((line,i)=>'<tspan x="'+x+'" dy="'+(i===0?0:lineHeight)+'">'+esc(line)+'</tspan>').join("")+
       '</text>';
   }
-  function filledHalftimeSubs(snapshot=state){
-    return (snapshot?.subs?.halftime||[]).filter(row=>row && (row.out || row.in));
+  function filledSecondHalfSubs(snapshot=state){
+    return (snapshot?.subs?.secondHalf||[]).filter(row=>row && (row.out || row.in));
+  }
+  function filledFirstHalfSubs(snapshot=state){
+    return (snapshot?.subs?.firstHalf||[]).filter(row=>row && (row.out || row.in));
   }
   function fieldEntries(snapshot=state){
     if(isFreeform(snapshot.formation)){
@@ -1565,15 +1676,12 @@
     return raw.replace(/[^a-z0-9\- _]/gi,"").replace(/\s+/g,"_")+"."+ext;
   }
   function buildGameplanSvg(){
-    const W=1080,H=1600;
+    const W=1080,H=1800;
     const previewTitle=(document.getElementById("lineupVariationName")?.value||"Untitled Variation").trim()||"Untitled Variation";
     const eventTitle=eventLabel()||"Tinker / No Game";
     const starters=fieldEntries();
-    const firstSubs=[
-      {title:"First Sub", pair:state?.subs?.first||{}},
-      {title:"Second Sub", pair:state?.subs?.second||{}}
-    ];
-    const halftimeCount=filledHalftimeSubs().length;
+    const firstHalfSubs=filledFirstHalfSubs();
+    const secondHalfSubs=filledSecondHalfSubs();
     const substituteCount=(state.bench||[]).length;
     const captain=player(state.captainId);
     const captainText=captain?("#"+captain.number+" "+captain.name):"Not selected";
@@ -1647,32 +1755,32 @@
       `;
     }).join("") : `<text x="${subsCardX+24}" y="${subsCardY+112}" font-size="24" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No substitute coverage assigned.</text>`;
 
-    const planCardX=686, planCardY=908, planCardW=344, planCardH=440;
-    const firstSubRows = firstSubs.map((entry, idx)=>{
-      const top = planCardY + 92 + idx*116;
-      const outText = entry.pair.out ? prettyPlayer(entry.pair.out, false) : "Not set";
-      const inText = entry.pair.in ? prettyPlayer(entry.pair.in, false) : "Not set";
-      const isSet = entry.pair.out || entry.pair.in;
-      return `
-        <rect x="${planCardX+20}" y="${top-42}" width="${planCardW-40}" height="84" rx="18" ry="18" fill="${isSet ? '#f7eef1' : '#f5f6f8'}" stroke="${isSet ? '#e8cad5' : '#ebedf2'}"/>
-        <text x="${planCardX+36}" y="${top-13}" font-size="17" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">${esc(entry.title)}</text>
-        <text x="${planCardX+36}" y="${top+17}" font-size="17" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(outText)}</text>
-        <text x="${planCardX+planCardW/2}" y="${top+17}" text-anchor="middle" font-size="21" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">→</text>
-        <text x="${planCardX+planCardW-36}" y="${top+17}" text-anchor="end" font-size="17" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(inText)}</text>
-      `;
-    }).join("");
+    const planCardX=686, planCardY=908, planCardW=344, planCardH=720;
+    const renderPlanRows=(rows,startY,labelColor)=>{
+      return rows.slice(0,4).map((entry, idx)=>{
+        const top = startY + idx*74;
+        const outText = prettyPlayers(entry.out, true);
+        const inText = prettyPlayers(entry.in, true);
+        return `
+          <text x="${planCardX+32}" y="${top}" font-size="16" font-weight="900" fill="${labelColor}" font-family="Arial, Helvetica, sans-serif">${idx+1}${idx===0?'st':idx===1?'nd':idx===2?'rd':'th'}</text>
+          ${svgTextBlock('Out: '+outText, planCardX+68, top-2, 24, 16, 2, 'font-size="14" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+          ${svgTextBlock('In: '+inText, planCardX+68, top+28, 24, 16, 2, 'font-size="14" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+        `;
+      }).join("");
+    };
 
-    const halftimeNote = halftimeCount
-      ? `<text x="${planCardX+24}" y="${planCardY+354}" font-size="17" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">${esc(String(halftimeCount))} halftime change${halftimeCount===1?"":"s"} also planned.</text>`
-      : `<text x="${planCardX+24}" y="${planCardY+354}" font-size="17" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No halftime changes planned.</text>`;
+    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1020, '#801A3D') : `<text x="${planCardX+24}" y="1020" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
+    const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1326, '#234b74') : `<text x="${planCardX+24}" y="1326" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
+    const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1312" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
+    const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1618" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
 
-    const messageY=1378;
+    const messageY=1640;
     const quoteBlock = state.quote ? `
       <rect x="50" y="${messageY}" width="980" height="76" rx="20" ry="20" fill="#801A3D"/>
       ${svgTextBlock('“'+state.quote+'”',74,messageY+46,78,24,2,'font-size="24" font-style="italic" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif"')}
     ` : "";
 
-    const notesY=state.quote ? 1470 : 1378;
+    const notesY=state.quote ? 1732 : 1640;
     const notesBlock = state.notes ? `
       <rect x="50" y="${notesY}" width="980" height="${state.quote?92:168}" rx="20" ry="20" fill="#f7f8fa" stroke="#dfe2e7"/>
       <text x="74" y="${notesY+31}" font-size="18" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">GAMEPLAN NOTES</text>
@@ -1690,10 +1798,14 @@
       ${subsRows}
 
       <rect x="${planCardX}" y="${planCardY}" width="${planCardW}" height="${planCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
-      <text x="${planCardX+24}" y="${planCardY+48}" font-size="28" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">First Subs</text>
-      <text x="${planCardX+24}" y="${planCardY+72}" font-size="16" font-weight="700" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">First planned changes in the game.</text>
-      ${firstSubRows}
-      ${halftimeNote}
+      <text x="${planCardX+24}" y="${planCardY+48}" font-size="28" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Subs</text>
+      <text x="${planCardX+24}" y="${planCardY+72}" font-size="16" font-weight="700" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">First half and second half sequences.</text>
+      <text x="${planCardX+24}" y="984" font-size="17" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
+      ${firstHalfRows}
+      ${firstHalfExtra}
+      <text x="${planCardX+24}" y="1294" font-size="17" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
+      ${secondHalfRows}
+      ${secondHalfExtra}
 
       ${quoteBlock}
       ${notesBlock}
@@ -1714,7 +1826,7 @@
       const img=new Image();
       img.onload=()=>{
         const canvas=document.createElement("canvas");
-        canvas.width=1080; canvas.height=1600;
+        canvas.width=1080; canvas.height=1800;
         const ctx=canvas.getContext("2d");
         if(ext==="jpg"){
           ctx.fillStyle="#ffffff";
@@ -1947,43 +2059,66 @@
     }));
   }
 
-  function playerOptions(selected){
-    return '<option value="">Select player…</option>'+
-      roster.map(p=>'<option value="'+esc(id(p))+'"'+(id(p)===selected?' selected':'')+'>#'+p.number+' '+esc(p.name)+'</option>').join('');
+  function ordinal(n){
+    const mod100=n%100;
+    if(mod100>=11&&mod100<=13)return n+"th";
+    const mod10=n%10;
+    return n+(mod10===1?"st":mod10===2?"nd":mod10===3?"rd":"th");
+  }
+  function subChipListHTML(selectedIds,phase,index,side){
+    const selected=new Set(Array.isArray(selectedIds)?selectedIds:[]);
+    return '<div class="sub-chip-side">'+
+      '<div class="sub-chip-side-head"><span class="sub-chip-side-title">'+(side==="out"?"Players Out":"Players In")+'</span><span class="sub-chip-count">'+selected.size+'</span></div>'+
+      '<div class="sub-chip-list">'+
+        roster.map(p=>{
+          const pid=id(p),active=selected.has(pid);
+          return '<button type="button" class="sub-player-chip '+side+(active?' selected':'')+'" aria-pressed="'+(active?'true':'false')+'" data-sub-chip="1" data-sub-side="'+side+'" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" data-sub-player="'+esc(pid)+'">#'+p.number+' '+esc(p.name)+'</button>';
+        }).join('')+
+      '</div>'+
+      '<div class="sub-multi-help">'+(side==="out"?"Tap everyone leaving in this change.":"Tap everyone entering in this change.")+'</div>'+
+    '</div>';
   }
   function subRowHTML(record,phase,index=null,removable=false){
     const suffix=index===null?phase:phase+'-'+index;
-    return '<div class="sub-row" data-sub-row="'+esc(suffix)+'">'+
-      '<select data-sub-out="'+esc(phase)+'"'+(index===null?'':' data-sub-index="'+index+'"')+'>'+playerOptions(record.out)+'</select>'+
+    return '<div class="sub-row multi-sub" data-sub-row="'+esc(suffix)+'">'+
+      '<div class="sub-event-number">'+ordinal(index+1)+' planned sub</div>'+
+      subChipListHTML(record.out,phase,index,'out')+
       '<span class="sub-arrow">→</span>'+
-      '<select data-sub-in="'+esc(phase)+'"'+(index===null?'':' data-sub-index="'+index+'"')+'>'+playerOptions(record.in)+'</select>'+
-      (removable?'<button class="mini-btn sub-remove" type="button" data-sub-remove="'+index+'">×</button>':'<span></span>')+
+      subChipListHTML(record.in,phase,index,'in')+
+      (removable?'<button class="mini-btn sub-remove" type="button" data-sub-remove="'+index+'" data-sub-phase="'+esc(phase)+'" title="Remove this planned sub">×</button>':'<span></span>')+
       '</div>';
+  }
+  function subPhaseHTML(title,note,phase,rows){
+    return '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">'+title+'</div><div class="sub-phase-note">'+note+'</div></div>'+
+      rows.map((r,i)=>subRowHTML(r,phase,i,true)).join('')+'</div>';
   }
   function renderSubPlan(){
     const box=document.getElementById('lineupSubPlan'); if(!box)return;
     state.subs=normalizeSubs(state.subs);
-    const labels='<div class="sub-labels"><span>Player Out</span><span>→</span><span>Player In</span><span></span></div>';
     box.innerHTML=
-      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">First Sub</div><div class="sub-phase-note">First planned change</div></div>'+labels+subRowHTML(state.subs.first,'first')+'</div>'+
-      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">Second Sub</div><div class="sub-phase-note">Second planned change</div></div>'+labels+subRowHTML(state.subs.second,'second')+'</div>'+
-      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">Half-time Subs</div><div class="sub-phase-note">Add as many swaps as needed</div></div>'+labels+
-      state.subs.halftime.map((r,i)=>subRowHTML(r,'halftime',i,true)).join('')+'</div>';
-    box.querySelectorAll('[data-sub-out]').forEach(sel=>sel.addEventListener('change',()=>{
-      const phase=sel.dataset.subOut;
-      if(phase==='halftime') state.subs.halftime[+sel.dataset.subIndex].out=sel.value;
-      else state.subs[phase].out=sel.value;
-      persistDraft(); markStatus('Sub plan changed. Save a variation to share it.');
-    }));
-    box.querySelectorAll('[data-sub-in]').forEach(sel=>sel.addEventListener('change',()=>{
-      const phase=sel.dataset.subIn;
-      if(phase==='halftime') state.subs.halftime[+sel.dataset.subIndex].in=sel.value;
-      else state.subs[phase].in=sel.value;
-      persistDraft(); markStatus('Sub plan changed. Save a variation to share it.');
+      subPhaseHTML('First Half Subs','1st, 2nd, 3rd, 4th... planned changes before halftime','firstHalf',state.subs.firstHalf)+
+      subPhaseHTML('Second Half Subs','1st, 2nd, 3rd, 4th... planned changes after halftime','secondHalf',state.subs.secondHalf);
+
+    box.querySelectorAll('[data-sub-chip]').forEach(btn=>btn.addEventListener('click',()=>{
+      const phase=btn.dataset.subPhase;
+      const idx=+btn.dataset.subIndex;
+      const side=btn.dataset.subSide;
+      const pid=btn.dataset.subPlayer;
+      if(!Array.isArray(state.subs[phase]) || !state.subs[phase][idx] || !["out","in"].includes(side))return;
+      const current=new Set(Array.isArray(state.subs[phase][idx][side])?state.subs[phase][idx][side]:[]);
+      if(current.has(pid))current.delete(pid);else current.add(pid);
+      state.subs[phase][idx][side]=Array.from(current);
+      persistDraft();
+      renderSubPlan();
+      markStatus('Sub plan changed. Save a variation to share it.');
     }));
     box.querySelectorAll('[data-sub-remove]').forEach(btn=>btn.addEventListener('click',()=>{
-      state.subs.halftime.splice(+btn.dataset.subRemove,1);
-      if(!state.subs.halftime.length) state.subs.halftime.push({out:'',in:''});
+      const phase=btn.dataset.subPhase;
+      const idx=+btn.dataset.subRemove;
+      if(Array.isArray(state.subs[phase])){
+        state.subs[phase].splice(idx,1);
+        if(!state.subs[phase].length) state.subs[phase].push({out:[],in:[]});
+      }
       persistDraft(); renderSubPlan();
     }));
   }
@@ -2113,7 +2248,8 @@
   const gameplanNotes=document.getElementById('gameplanNotes');
   const saveBtn=document.getElementById('saveLineupVariation');
   const clearBtn=document.getElementById('clearLineupBtn');
-  const addSubBtn=document.getElementById('addSubPlanBtn');
+  const addFirstHalfSubBtn=document.getElementById('addFirstHalfSubBtn');
+  const addSecondHalfSubBtn=document.getElementById('addSecondHalfSubBtn');
   const refreshBtn=document.getElementById('refreshLineupVariations');
   const exportPngBtn=document.getElementById('exportGameplanPng');
   const exportJpgBtn=document.getElementById('exportGameplanJpg');
@@ -2220,17 +2356,23 @@
     persistDraft(); renderCore();
     markStatus('Pitch/custom board and substitutes cleared. Depth chart and sub plan were kept.');
   });
-  if(addSubBtn) addSubBtn.addEventListener('click',()=>{
+  if(addFirstHalfSubBtn) addFirstHalfSubBtn.addEventListener('click',()=>{
     state.subs=normalizeSubs(state.subs);
-    state.subs.halftime.push({out:'',in:''});
+    state.subs.firstHalf.push({out:[],in:[]});
     persistDraft(); renderSubPlan();
-    markStatus('Half-time substitution added. Save a variation to share the plan.');
+    markStatus('First-half substitution added. Save a variation to share the plan.');
+  });
+  if(addSecondHalfSubBtn) addSecondHalfSubBtn.addEventListener('click',()=>{
+    state.subs=normalizeSubs(state.subs);
+    state.subs.secondHalf.push({out:[],in:[]});
+    persistDraft(); renderSubPlan();
+    markStatus('Second-half substitution added. Save a variation to share the plan.');
   });
 
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v32 ready. Captain, quote, notes, and substitute count are now included in the shared gameplan export.');
+  markStatus('Lineup Builder v33 ready. Planned substitutions now support unlimited grouped first-half and second-half sequences.');
 
   window.SKORLineup={
     setRoster,
@@ -2837,7 +2979,7 @@ loadAnnouncements();
 })();
 
 
-// The independent v32 builder above is the only lineup engine.
+// The independent v35 builder above is the only lineup engine.
 
 </script>
 
