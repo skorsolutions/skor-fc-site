@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SKOR FC | Squad</title>
 <meta name="description" content="Meet the SKOR FC squad — Over 30 soccer in Roswell, Georgia.">
+<meta name="skor-build" content="public-shared-data-v37">
 <style>
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -135,6 +136,8 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
  .squad-grid{grid-template-columns:1fr}
  .player-photo{height:210px}
 }
+
+.player-photo .public-player-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}.player-photo .public-player-photo~.player-avatar{display:none}
 </style>
 </head>
 <body>
@@ -159,7 +162,7 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
       <div class="eyebrow">Roswell, Georgia · Established 2026</div>
       <h1>THE <span>SQUAD.</span></h1>
       <p>Meet the players representing SKOR FC. Player profiles intentionally display first names only.</p>
-      <div class="count">19 PLAYERS · 2026 ROSTER</div>
+      <div class="count" id="rosterCount">19 PLAYERS · 2026 ROSTER</div>
     </div>
   </section>
 
@@ -210,7 +213,7 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
       <div class="legend">New players marked in maroon</div>
     </div>
 
-    <div class="squad-grid">
+    <div class="squad-grid" id="squadGrid">
 
       <article class="player-card">
         <div class="player-photo" aria-label="Photo pending for Ivan">
@@ -636,13 +639,39 @@ const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const statsDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
-const roster = [
-  {number:"2",name:"Ivan"},{number:"9",name:"Andres"},{number:"17",name:"David"},{number:"18",name:"Jason"},
-  {number:"20",name:"Ayman"},{number:"6",name:"Julio"},{number:"7",name:"Tom"},{number:"14",name:"Pedro"},
-  {number:"16",name:"CJ"},{number:"19",name:"Dez"},{number:"8",name:"Adolpho"},{number:"22",name:"Vignesh"},
-  {number:"11",name:"Edward"},{number:"1",name:"Todd"},{number:"3",name:"Brad"},{number:"21",name:"Andres"},
-  {number:"12",name:"Koushyar"},{number:"15",name:"Andrew"},{number:"4",name:"Nick"}
+const FALLBACK_ROSTER = [
+  {player_key:"2-Ivan",number:"2",name:"Ivan",position:"Defence",bio:"Bio pending.",is_new:true},
+  {player_key:"9-Andres",number:"9",name:"Andres",position:"Midfield / Forward",bio:"Bio pending.",is_new:true},
+  {player_key:"17-David",number:"17",name:"David",position:"Midfield",bio:"Bio pending.",is_new:true},
+  {player_key:"18-Jason",number:"18",name:"Jason",position:"Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"20-Ayman",number:"20",name:"Ayman",position:"Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"6-Julio",number:"6",name:"Julio",position:"Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"7-Tom",number:"7",name:"Tom",position:"Midfield / Defence",bio:"Bio pending.",is_new:false},
+  {player_key:"14-Pedro",number:"14",name:"Pedro",position:"Forward / Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"16-CJ",number:"16",name:"CJ",position:"Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"19-Dez",number:"19",name:"Dez",position:"Forward / Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"8-Adolpho",number:"8",name:"Adolpho",position:"Forward",bio:"Bio pending.",is_new:false},
+  {player_key:"22-Vignesh",number:"22",name:"Vignesh",position:"Forward",bio:"Bio pending.",is_new:false},
+  {player_key:"11-Edward",number:"11",name:"Edward",position:"Defence / Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"1-Todd",number:"1",name:"Todd",position:"Keeper",bio:"Bio pending.",is_new:false},
+  {player_key:"3-Brad",number:"3",name:"Brad",position:"Defence / Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"21-Andres",number:"21",name:"Andres",position:"Midfield / Defence",bio:"Bio pending.",is_new:false},
+  {player_key:"12-Koushyar",number:"12",name:"Koushyar",position:"Midfield / Defence",bio:"Bio pending.",is_new:false},
+  {player_key:"15-Andrew",number:"15",name:"Andrew",position:"Defence / Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"4-Nick",number:"4",name:"Nick",position:"Defence",bio:"Bio pending.",is_new:false}
 ];
+let roster=[...FALLBACK_ROSTER];
+
+
+function rosterEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
+function rosterInitial(v){return String(v||"?").trim().charAt(0).toUpperCase()||"?";}
+function renderRosterCards(){
+  const grid=document.getElementById("squadGrid"),count=document.getElementById("rosterCount");if(!grid)return;if(count)count.textContent=`${roster.length} PLAYER${roster.length===1?"":"S"} · 2026 ROSTER`;
+  grid.innerHTML=roster.map(p=>`<article class="player-card"><div class="player-photo" aria-label="${rosterEsc(p.name)}"><div class="player-number-bg">${rosterEsc(p.number)}</div>${p.photo_url?`<img class="public-player-photo" src="${rosterEsc(p.photo_url)}" alt="${rosterEsc(p.name)}">`:''}<div class="player-avatar">${rosterEsc(rosterInitial(p.name))}</div>${p.is_new?'<span class="new-badge">NEW PLAYER</span>':'<span class="photo-pending">PHOTO PENDING</span>'}</div><div class="player-details"><div class="shirt">#${rosterEsc(p.number)}</div><h2>${rosterEsc(p.name)}</h2><div class="position">${rosterEsc(p.position||"Player")}</div><p>${rosterEsc(p.bio||"Bio pending.")}</p><div class="player-stats" data-player-number="${rosterEsc(p.number)}" data-player-name="${rosterEsc(p.name)}"><div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div><div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div><div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div><div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div><div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div></div></div></article>`).join("");
+}
+async function loadPublicRoster(){
+  try{const {data,error}=await statsDb.from("public_roster").select("player_key,display_name,jersey_number,position,bio,is_new,photo_url,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(error)throw error;if(data?.length){roster=data.map(p=>({player_key:p.player_key,number:String(p.jersey_number),name:p.display_name,position:p.position||"Player",bio:p.bio||"Bio pending.",is_new:!!p.is_new,photo_url:p.photo_url||null}));renderRosterCards();}}catch(err){console.info("Using built-in roster fallback:",err?.message||err);renderRosterCards();}
+}
 
 function norm(v){ return String(v || "").trim().toLowerCase(); }
 function playerKey(number,name){ return `${String(number||"").trim()}|${norm(name)}`; }
@@ -770,7 +799,9 @@ async function loadSeasonStats(){
     status.textContent="Stats temporarily unavailable";
   }
 }
-loadSeasonStats();
+async function initSquadPage(){await loadPublicRoster();await loadSeasonStats();}
+initSquadPage();
+setInterval(initSquadPage,60*1000);
 </script>
 
 </body>
