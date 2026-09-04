@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v29-supabase-roster-production" />
-  <title>SKOR FC Admin | Lineups v29</title>
+  <meta name="skor-build" content="lineup-admin-v32-captain-notes-export-production" />
+  <title>SKOR FC Admin | Lineups v32</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -796,6 +796,55 @@
       #roster .roster-table-wrap{margin:0 -2px}
     }
 
+
+    /* =========================================================
+       SKOR FC v30 — shareable gameplan export
+       ========================================================= */
+    .gameplan-export-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+    .gameplan-export-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .gameplan-preview-shell{
+      margin-top:12px;padding:12px;border-radius:18px;
+      background:linear-gradient(180deg,#f6f7fb 0%,#eef0f6 100%);
+      border:1px solid rgba(0,0,0,.07)
+    }
+    .gameplan-preview{
+      width:100%;max-width:880px;margin:0 auto;border-radius:16px;overflow:hidden;
+      background:#fff;border:1px solid rgba(0,0,0,.08);box-shadow:0 16px 38px rgba(18,20,30,.12)
+    }
+    .gameplan-preview svg{display:block;width:100%;height:auto}
+    @media(max-width:780px){
+      .gameplan-export-head{flex-direction:column}
+      .gameplan-export-actions{width:100%}
+      .gameplan-export-actions .btn{flex:1 1 180px}
+      .gameplan-preview-shell{padding:8px}
+    }
+
+
+    /* =========================================================
+       SKOR FC v32 — captain + quote + notes in gameplan export
+       ========================================================= */
+    .captain-badge{
+      position:absolute;right:-6px;top:-5px;
+      width:20px;height:20px;border-radius:999px;
+      display:grid;place-items:center;
+      background:#fff;color:var(--maroon);
+      border:2px solid var(--maroon);
+      font-size:.63rem;font-weight:950;line-height:1;
+      filter:drop-shadow(0 2px 3px rgba(0,0,0,.2));
+      z-index:4;
+    }
+    .player-peg{position:relative}
+    .gameplan-message-grid{
+      display:grid;grid-template-columns:minmax(220px,.65fr) minmax(320px,1.35fr);
+      gap:12px;margin-top:14px;
+    }
+    .gameplan-message-grid label{display:block;margin-bottom:5px;font-size:.72rem;font-weight:900;color:#444}
+    .gameplan-message-grid textarea{resize:vertical}
+    @media(max-width:650px){
+      #lineups .gameplan-message-grid{grid-template-columns:1fr!important}
+      #lineups .captain-badge{width:15px;height:15px;right:-5px;top:-4px;font-size:.48rem}
+    }
+
 </style>
 </head>
 <body>
@@ -829,7 +878,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v29</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v32</div>
   </aside>
 
   <main>
@@ -1144,13 +1193,14 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V29</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V32</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
             <div><label>Game / Shared Tinker Board</label><select id="lineupEvent"><option value="tinker">Tinker / New Board</option></select></div>
             <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option><option>Freeform / Custom</option></select></div><div><label>Player Labels</label><select id="lineupLabelMode"><option value="names">Names + Numbers</option><option value="numbers">Numbers Only</option></select></div>
             <div><label>Variation name</label><input id="lineupVariationName" value="Balanced" placeholder="Balanced, Aggressive, Protect Lead..."></div>
+            <div><label>Captain</label><select id="lineupCaptain"><option value="">Select captain…</option></select></div>
             <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button>
           </div>
           <div class="lineup-status" id="lineupStatus"></div>
@@ -1164,20 +1214,20 @@
               </div>
             </div>
             <div class="panel" style="margin-top:14px">
-              <h2>Bench</h2><div class="sub">Drag players here to designate the matchday bench. Drag them back to the player pool to remove them.</div>
+              <h2>Substitutes</h2><div class="sub">Drag players here to designate matchday substitutes. Drag them back to the player pool to remove them.</div>
               <div class="bench-zone" id="lineupBench"><div class="bench-list" id="lineupBenchList"></div></div>
             </div>
           </div>
 
           <div class="lineup-side">
             <div class="mini-panel lineup-players-panel">
-              <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. In Freeform / Custom, drag or tap to place players anywhere. Phone: tap a player, then tap a position or the pitch.</div><div class="v19-help">All roster players are rendered here directly in the HTML. This panel does not depend on Supabase or Game Day loading.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Bench to bench the selected player.</div>
+              <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. In Freeform / Custom, drag or tap to place players anywhere. Phone: tap a player, then tap a position or the pitch.</div><div class="v19-help">All active roster players sync from Supabase. Add a player in Roster and they will appear here automatically.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Substitutes to move the selected player there.</div>
               <div class="player-pool" id="lineupPlayerPool"><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="2-Ivan" aria-label="#2 Ivan"><div class="player-peg compact"><div class="jersey">2</div><div class="peg-name">Ivan</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="9-Andres" aria-label="#9 Andres"><div class="player-peg compact"><div class="jersey">9</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="17-David" aria-label="#17 David"><div class="player-peg compact"><div class="jersey">17</div><div class="peg-name">David</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="18-Jason" aria-label="#18 Jason"><div class="player-peg compact"><div class="jersey">18</div><div class="peg-name">Jason</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="20-Ayman" aria-label="#20 Ayman"><div class="player-peg compact"><div class="jersey">20</div><div class="peg-name">Ayman</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="6-Julio" aria-label="#6 Julio"><div class="player-peg compact"><div class="jersey">6</div><div class="peg-name">Julio</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="7-Tom" aria-label="#7 Tom"><div class="player-peg compact"><div class="jersey">7</div><div class="peg-name">Tom</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="14-Pedro" aria-label="#14 Pedro"><div class="player-peg compact"><div class="jersey">14</div><div class="peg-name">Pedro</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="16-CJ" aria-label="#16 CJ"><div class="player-peg compact"><div class="jersey">16</div><div class="peg-name">CJ</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="19-Dez" aria-label="#19 Dez"><div class="player-peg compact"><div class="jersey">19</div><div class="peg-name">Dez</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="8-Adolpho" aria-label="#8 Adolpho"><div class="player-peg compact"><div class="jersey">8</div><div class="peg-name">Adolpho</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="22-Vignesh" aria-label="#22 Vignesh"><div class="player-peg compact"><div class="jersey">22</div><div class="peg-name">Vignesh</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="11-Edward" aria-label="#11 Edward"><div class="player-peg compact"><div class="jersey">11</div><div class="peg-name">Edward</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="1-Todd" aria-label="#1 Todd"><div class="player-peg compact"><div class="jersey">1</div><div class="peg-name">Todd</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="3-Brad" aria-label="#3 Brad"><div class="player-peg compact"><div class="jersey">3</div><div class="peg-name">Brad</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="21-Andres" aria-label="#21 Andres"><div class="player-peg compact"><div class="jersey">21</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="12-Koushyar" aria-label="#12 Koushyar"><div class="player-peg compact"><div class="jersey">12</div><div class="peg-name">Koushyar</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="15-Andrew" aria-label="#15 Andrew"><div class="player-peg compact"><div class="jersey">15</div><div class="peg-name">Andrew</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="4-Nick" aria-label="#4 Nick"><div class="player-peg compact"><div class="jersey">4</div><div class="peg-name">Nick</div></div></button></div>
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
             </div>
 
             <div class="mini-panel lineup-variations-panel">
-              <h3>Saved Variations <span class="variation-count" id="lineupVariationCount">0</span> <span class="shared-badge">SHARED</span></h3><div class="sub">Shared with every approved captain. Each save includes the formation, XI, bench, depth chart and planned substitutions.</div><button class="mini-btn" id="refreshLineupVariations" type="button" style="margin-bottom:8px">Refresh shared variations</button>
+              <h3>Saved Variations <span class="variation-count" id="lineupVariationCount">0</span> <span class="shared-badge">SHARED</span></h3><div class="sub">Shared with every approved captain. Each save includes the formation, lineup, substitutes, depth chart, planned substitutions, and a shareable gameplan view.</div><button class="mini-btn" id="refreshLineupVariations" type="button" style="margin-bottom:8px">Refresh shared variations</button>
               <div class="variation-list" id="lineupVariationList"></div>
             </div>
           </div>
@@ -1194,6 +1244,32 @@
           <div class="sub">Plan the first change, second change, and any half-time swaps. The full sub plan is saved with the selected variation.</div>
           <div class="sub-plan" id="lineupSubPlan"></div>
           <button class="btn btn-light" id="addSubPlanBtn" type="button" style="margin-top:10px">+ Add half-time sub</button>
+        </div>
+
+        <div class="panel gameplan-export-panel">
+          <div class="gameplan-export-head">
+            <div>
+              <h2>Shareable Gameplan Export</h2>
+              <div class="sub">Load any saved variation or use the current board, then export a WhatsApp-ready PNG or JPG. Captain, quote, notes, substitute count, lineup, coverage, and first subs are included.</div>
+            </div>
+            <div class="gameplan-export-actions">
+              <button class="btn btn-primary" id="exportGameplanPng" type="button">Export PNG</button>
+              <button class="btn btn-light" id="exportGameplanJpg" type="button">Export JPG</button>
+            </div>
+          </div>
+          <div class="gameplan-message-grid">
+            <div>
+              <label>Inspirational quote</label>
+              <input id="gameplanQuote" maxlength="100" placeholder="Let's GO!">
+            </div>
+            <div>
+              <label>Gameplan notes</label>
+              <textarea id="gameplanNotes" maxlength="280" rows="3" placeholder="Todd will call the subs.&#10;Be ready on the sideline."></textarea>
+            </div>
+          </div>
+          <div class="gameplan-preview-shell">
+            <div class="gameplan-preview" id="gameplanPreview"></div>
+          </div>
         </div>
 
         <div class="panel" style="background:#17181d;color:#fff">
@@ -1246,7 +1322,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v29 - shared Supabase roster + freeform custom */
+/* SKOR FC Lineup Builder v30 - shared roster + gameplan export */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -1290,7 +1366,7 @@
   function isFreeform(formation){ return formation === FREEFORM; }
   function blankSubs(){ return {first:{out:"",in:""},second:{out:"",in:""},halftime:[{out:"",in:""}]}; }
   function blankState(formation){
-    return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),labelMode:"names"};
+    return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),labelMode:"names",captainId:"",quote:"",notes:""};
   }
   function normalizeSubs(value){
     return {
@@ -1324,7 +1400,10 @@
       bench:Array.isArray(value?.bench)?value.bench.filter(Boolean):[],
       depth,
       subs:normalizeSubs(value?.subs),
-      labelMode:value?.labelMode==="numbers"?"numbers":"names"
+      labelMode:value?.labelMode==="numbers"?"numbers":"names",
+      captainId:String(value?.captainId||""),
+      quote:String(value?.quote||"").slice(0,100),
+      notes:String(value?.notes||"").slice(0,280)
     };
   }
 
@@ -1361,14 +1440,33 @@
   function modeClass(){ return state.labelMode === "numbers" ? "mode-numbers" : "mode-names"; }
   function peg(p,compact,onPitch=false){
     const pitchAttr = onPitch ? ' data-pitch-peg="1"' : '';
+    const captain = onPitch && state.captainId===id(p) ? '<span class="captain-badge" title="Captain">C</span>' : '';
     return '<div class="player-peg'+(compact?' compact':'')+' '+modeClass()+'" draggable="true" data-v28-player="'+esc(id(p))+'"'+pitchAttr+'>'+
-      '<div class="jersey">'+esc(p.number)+'</div><div class="peg-name">'+esc(p.name)+'</div></div>';
+      '<div class="jersey">'+esc(p.number)+'</div>'+captain+'<div class="peg-name">'+esc(p.name)+'</div></div>';
   }
   function markStatus(msg,ok=true){
     const el=document.getElementById("lineupStatus");
     if(el){el.textContent=msg;el.className="lineup-status "+(ok?"ok":"err");}
   }
-  function persistDraft(){ try{ localStorage.setItem(draftKey(), JSON.stringify(state)); }catch(e){ console.warn("Could not save lineup draft",e);} }
+  function renderCaptainOptions(){
+    const sel=document.getElementById("lineupCaptain");
+    if(!sel)return;
+    const current=state.captainId||"";
+    sel.innerHTML='<option value="">Select captain…</option>'+
+      roster.map(p=>'<option value="'+esc(id(p))+'">#'+p.number+' '+esc(p.name)+'</option>').join("");
+    if([...sel.options].some(o=>o.value===current))sel.value=current;
+    else sel.value="";
+  }
+  function syncGameplanControls(){
+    const captain=document.getElementById("lineupCaptain");
+    const quote=document.getElementById("gameplanQuote");
+    const notes=document.getElementById("gameplanNotes");
+    renderCaptainOptions();
+    if(captain)captain.value=[...captain.options].some(o=>o.value===state.captainId)?state.captainId:"";
+    if(quote)quote.value=state.quote||"";
+    if(notes)notes.value=state.notes||"";
+  }
+  function persistDraft(){ try{ localStorage.setItem(draftKey(), JSON.stringify(state)); }catch(e){ console.warn("Could not save lineup draft",e);} renderGameplanPreview(); }
   function loadDraft(){
     try{
       const raw=localStorage.getItem(draftKey());
@@ -1378,6 +1476,7 @@
     const labels=document.getElementById("lineupLabelMode");
     if(formation) formation.value=state.formation;
     if(labels) labels.value=state.labelMode||"names";
+    syncGameplanControls();
   }
   function formatStamp(iso){ try{return new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(iso));} catch{return "";} }
   function formatMatch(m){
@@ -1395,10 +1494,258 @@
     if(formation) formation.value=state.formation;
     if(labels) labels.value=state.labelMode||"names";
     if(name) name.value=rec.name||"";
+    syncGameplanControls();
     selectedPlayer=null;
     persistDraft();
     renderAll();
     markStatus('Loaded shared variation "'+(rec.name||"Untitled")+'" by '+(rec.created_by_name||"Captain")+'.');
+  }
+
+  function shortName(name){
+    const text=String(name||"").trim();
+    if(!text)return "";
+    const first=text.split(/\s+/)[0];
+    return first.length>12?first.slice(0,12):first;
+  }
+  function prettyPlayer(pid, short=false){
+    const p=player(pid);
+    if(!p)return String(pid||"Unknown");
+    return short?("#"+p.number+" "+shortName(p.name)):("#"+p.number+" "+p.name);
+  }
+  function svgTextBlock(text,x,y,maxChars,lineHeight,maxLines,attrs=""){
+    const raw=String(text||"").trim();
+    if(!raw)return "";
+    const lines=[];
+    raw.split(/\n+/).forEach(paragraph=>{
+      const words=paragraph.trim().split(/\s+/).filter(Boolean);
+      let line="";
+      words.forEach(word=>{
+        const candidate=line?(line+" "+word):word;
+        if(candidate.length>maxChars && line){
+          lines.push(line);
+          line=word;
+        }else{
+          line=candidate;
+        }
+      });
+      if(line)lines.push(line);
+    });
+    const clipped=lines.slice(0,maxLines);
+    if(lines.length>maxLines && clipped.length){
+      clipped[clipped.length-1]=clipped[clipped.length-1].replace(/[.…]*$/,"")+"…";
+    }
+    return '<text x="'+x+'" y="'+y+'" '+attrs+'>'+
+      clipped.map((line,i)=>'<tspan x="'+x+'" dy="'+(i===0?0:lineHeight)+'">'+esc(line)+'</tspan>').join("")+
+      '</text>';
+  }
+  function filledHalftimeSubs(snapshot=state){
+    return (snapshot?.subs?.halftime||[]).filter(row=>row && (row.out || row.in));
+  }
+  function fieldEntries(snapshot=state){
+    if(isFreeform(snapshot.formation)){
+      return Object.entries(snapshot.freeform||{})
+        .map(([pid,pt])=>({pid,x:+pt.x,y:+pt.y,label:""}))
+        .filter(entry=>player(entry.pid) && Number.isFinite(entry.x) && Number.isFinite(entry.y));
+    }
+    return (formations[snapshot.formation]||formations["4-2-3-1"])
+      .map(([label,x,y])=>{
+        const pid=snapshot?.slots?.[label];
+        return pid?{pid,x,y,label}:null;
+      }).filter(Boolean);
+  }
+  function coverageForPlayer(pid, snapshot=state){
+    return depthPositions
+      .filter(pos=>Array.isArray(snapshot?.depth?.[pos.key]) && snapshot.depth[pos.key].includes(pid))
+      .map(pos=>pos.key);
+  }
+  function gameplanFileName(ext){
+    const eventPart=(eventLabel()||"Gameplan").replace(/^Tinker\s*\/\s*/i,"");
+    const namePart=(document.getElementById("lineupVariationName")?.value||"Gameplan").trim();
+    const raw=("SKOR FC "+(eventPart||"Gameplan")+" "+(namePart||"Gameplan")).replace(/\s+/g," ").trim();
+    return raw.replace(/[^a-z0-9\- _]/gi,"").replace(/\s+/g,"_")+"."+ext;
+  }
+  function buildGameplanSvg(){
+    const W=1080,H=1600;
+    const previewTitle=(document.getElementById("lineupVariationName")?.value||"Untitled Variation").trim()||"Untitled Variation";
+    const eventTitle=eventLabel()||"Tinker / No Game";
+    const starters=fieldEntries();
+    const firstSubs=[
+      {title:"First Sub", pair:state?.subs?.first||{}},
+      {title:"Second Sub", pair:state?.subs?.second||{}}
+    ];
+    const halftimeCount=filledHalftimeSubs().length;
+    const substituteCount=(state.bench||[]).length;
+    const captain=player(state.captainId);
+    const captainText=captain?("#"+captain.number+" "+captain.name):"Not selected";
+    const pitchX=70,pitchY=212,pitchW=940,pitchH=630;
+    const showNames=(state.labelMode||"names")!=="numbers";
+    const hasFieldPlayers=starters.length>0;
+
+    const subsByPosition = depthPositions.map(pos=>{
+      const names=(state?.depth?.[pos.key]||[])
+        .map(pid=>player(pid))
+        .filter(Boolean)
+        .map(p=>"#"+p.number+" "+shortName(p.name));
+      return {key:pos.key, names};
+    }).filter(row=>row.names.length);
+
+    const header = `
+      <rect x="0" y="0" width="${W}" height="${H}" fill="#13161d"/>
+      <rect x="32" y="28" rx="28" ry="28" width="${W-64}" height="${H-56}" fill="#ffffff"/>
+      <rect x="32" y="28" rx="28" ry="28" width="${W-64}" height="144" fill="#801A3D"/>
+      <text x="72" y="84" font-size="40" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">SKOR FC GAMEPLAN</text>
+      <text x="72" y="120" font-size="22" font-weight="700" fill="#f3dce5" font-family="Arial, Helvetica, sans-serif">${esc(eventTitle)}</text>
+      <text x="${W-72}" y="82" text-anchor="end" font-size="32" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(previewTitle)}</text>
+      <text x="${W-72}" y="116" text-anchor="end" font-size="20" font-weight="700" fill="#f3dce5" font-family="Arial, Helvetica, sans-serif">${esc(state.formation||"4-2-3-1")}</text>
+      <text x="72" y="151" font-size="18" font-weight="800" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">Captain: ${esc(captainText)}</text>
+      <text x="${W-72}" y="151" text-anchor="end" font-size="18" font-weight="800" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">Substitutes: ${substituteCount}</text>
+    `;
+
+    const pitch = `
+      <rect x="50" y="178" width="980" height="698" rx="24" ry="24" fill="#f8faf9" stroke="#d8dbe1"/>
+      <text x="74" y="204" font-size="26" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Starting Lineup</text>
+      <rect x="${pitchX}" y="${pitchY}" width="${pitchW}" height="${pitchH}" rx="34" ry="34" fill="#2f8b43"/>
+      <rect x="${pitchX+12}" y="${pitchY+12}" width="${pitchW-24}" height="${pitchH-24}" rx="28" ry="28" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <line x1="${pitchX}" y1="${pitchY + pitchH/2}" x2="${pitchX+pitchW}" y2="${pitchY + pitchH/2}" stroke="#d6f0da" stroke-width="4"/>
+      <circle cx="${pitchX + pitchW/2}" cy="${pitchY + pitchH/2}" r="88" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <circle cx="${pitchX + pitchW/2}" cy="${pitchY + pitchH/2}" r="4" fill="#d6f0da"/>
+      <rect x="${pitchX + pitchW*0.25}" y="${pitchY}" width="${pitchW*0.5}" height="92" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*0.37}" y="${pitchY}" width="${pitchW*0.26}" height="36" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*0.25}" y="${pitchY+pitchH-92}" width="${pitchW*0.5}" height="92" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*0.37}" y="${pitchY+pitchH-36}" width="${pitchW*0.26}" height="36" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      ${!hasFieldPlayers ? `<text x="${pitchX + pitchW/2}" y="${pitchY + pitchH/2}" text-anchor="middle" font-size="30" font-weight="800" fill="#edf7ef" font-family="Arial, Helvetica, sans-serif">No lineup placed yet</text>` : ""}
+    `;
+
+    const markerSvg = starters.map(entry=>{
+      const p=player(entry.pid);
+      if(!p) return "";
+      const x=pitchX + (entry.x/100)*pitchW;
+      const y=pitchY + (entry.y/100)*pitchH;
+      const role = !isFreeform(state.formation) && entry.label ? `<text x="${x}" y="${y-36}" text-anchor="middle" font-size="16" font-weight="900" fill="#e8f3ea" font-family="Arial, Helvetica, sans-serif">${esc(entry.label)}</text>` : "";
+      const name = showNames ? `<text x="${x}" y="${y+40}" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}</text>` : "";
+      const captainBadge = state.captainId===entry.pid ? `
+        <circle cx="${x+23}" cy="${y-22}" r="13" fill="#ffffff" stroke="#801A3D" stroke-width="3"/>
+        <text x="${x+23}" y="${y-17}" text-anchor="middle" font-size="14" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">C</text>
+      ` : "";
+      return `
+        ${role}
+        <circle cx="${x}" cy="${y}" r="24" fill="#801A3D" stroke="#ffffff" stroke-width="4"/>
+        <text x="${x}" y="${y+8}" text-anchor="middle" font-size="22" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(p.number)}</text>
+        ${captainBadge}
+        ${name}
+      `;
+    }).join("");
+
+    const subsCardX=50, subsCardY=908, subsCardW=612, subsCardH=440;
+    const subsRows = subsByPosition.length ? subsByPosition.map((row, idx)=>{
+      const rowY = subsCardY + 102 + idx*32;
+      const names = row.names.join(", ");
+      return `
+        <text x="${subsCardX+24}" y="${rowY}" font-size="19" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">${esc(row.key)}</text>
+        <text x="${subsCardX+84}" y="${rowY}" font-size="18" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(names)}</text>
+        <line x1="${subsCardX+20}" y1="${rowY+13}" x2="${subsCardX+subsCardW-20}" y2="${rowY+13}" stroke="#eceef3"/>
+      `;
+    }).join("") : `<text x="${subsCardX+24}" y="${subsCardY+112}" font-size="24" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No substitute coverage assigned.</text>`;
+
+    const planCardX=686, planCardY=908, planCardW=344, planCardH=440;
+    const firstSubRows = firstSubs.map((entry, idx)=>{
+      const top = planCardY + 92 + idx*116;
+      const outText = entry.pair.out ? prettyPlayer(entry.pair.out, false) : "Not set";
+      const inText = entry.pair.in ? prettyPlayer(entry.pair.in, false) : "Not set";
+      const isSet = entry.pair.out || entry.pair.in;
+      return `
+        <rect x="${planCardX+20}" y="${top-42}" width="${planCardW-40}" height="84" rx="18" ry="18" fill="${isSet ? '#f7eef1' : '#f5f6f8'}" stroke="${isSet ? '#e8cad5' : '#ebedf2'}"/>
+        <text x="${planCardX+36}" y="${top-13}" font-size="17" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">${esc(entry.title)}</text>
+        <text x="${planCardX+36}" y="${top+17}" font-size="17" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(outText)}</text>
+        <text x="${planCardX+planCardW/2}" y="${top+17}" text-anchor="middle" font-size="21" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">→</text>
+        <text x="${planCardX+planCardW-36}" y="${top+17}" text-anchor="end" font-size="17" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(inText)}</text>
+      `;
+    }).join("");
+
+    const halftimeNote = halftimeCount
+      ? `<text x="${planCardX+24}" y="${planCardY+354}" font-size="17" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">${esc(String(halftimeCount))} halftime change${halftimeCount===1?"":"s"} also planned.</text>`
+      : `<text x="${planCardX+24}" y="${planCardY+354}" font-size="17" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No halftime changes planned.</text>`;
+
+    const messageY=1378;
+    const quoteBlock = state.quote ? `
+      <rect x="50" y="${messageY}" width="980" height="76" rx="20" ry="20" fill="#801A3D"/>
+      ${svgTextBlock('“'+state.quote+'”',74,messageY+46,78,24,2,'font-size="24" font-style="italic" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif"')}
+    ` : "";
+
+    const notesY=state.quote ? 1470 : 1378;
+    const notesBlock = state.notes ? `
+      <rect x="50" y="${notesY}" width="980" height="${state.quote?92:168}" rx="20" ry="20" fill="#f7f8fa" stroke="#dfe2e7"/>
+      <text x="74" y="${notesY+31}" font-size="18" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">GAMEPLAN NOTES</text>
+      ${svgTextBlock(state.notes,74,notesY+58,92,22,state.quote?2:5,'font-size="18" font-weight="800" fill="#374151" font-family="Arial, Helvetica, sans-serif"')}
+    ` : "";
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+      ${header}
+      ${pitch}
+      ${markerSvg}
+
+      <rect x="${subsCardX}" y="${subsCardY}" width="${subsCardW}" height="${subsCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
+      <text x="${subsCardX+24}" y="${subsCardY+48}" font-size="28" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Substitutes · ${substituteCount}</text>
+      <text x="${subsCardX+24}" y="${subsCardY+72}" font-size="16" font-weight="700" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">Coverage grouped by position from Position Depth.</text>
+      ${subsRows}
+
+      <rect x="${planCardX}" y="${planCardY}" width="${planCardW}" height="${planCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
+      <text x="${planCardX+24}" y="${planCardY+48}" font-size="28" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">First Subs</text>
+      <text x="${planCardX+24}" y="${planCardY+72}" font-size="16" font-weight="700" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">First planned changes in the game.</text>
+      ${firstSubRows}
+      ${halftimeNote}
+
+      ${quoteBlock}
+      ${notesBlock}
+    </svg>`;
+  }
+
+  function renderGameplanPreview(){
+    const holder=document.getElementById("gameplanPreview");
+    if(!holder)return;
+    holder.innerHTML=buildGameplanSvg();
+  }
+  async function exportGameplanAs(format){
+    const ext=format==="jpg"?"jpg":"png";
+    try{
+      const svgText=buildGameplanSvg();
+      const blob=new Blob([svgText],{type:"image/svg+xml;charset=utf-8"});
+      const url=URL.createObjectURL(blob);
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        canvas.width=1080; canvas.height=1600;
+        const ctx=canvas.getContext("2d");
+        if(ext==="jpg"){
+          ctx.fillStyle="#ffffff";
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+        }
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((outBlob)=>{
+          if(!outBlob){
+            markStatus("Could not create the export file.",false);
+            return;
+          }
+          const downloadUrl=URL.createObjectURL(outBlob);
+          const a=document.createElement("a");
+          a.href=downloadUrl;
+          a.download=gameplanFileName(ext);
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(()=>URL.revokeObjectURL(downloadUrl),2000);
+          markStatus("Gameplan exported as "+ext.toUpperCase()+".");
+        }, ext==="jpg"?"image/jpeg":"image/png", 0.94);
+      };
+      img.onerror=()=>{
+        URL.revokeObjectURL(url);
+        markStatus("Could not render the gameplan image.",false);
+      };
+      img.src=url;
+    }catch(err){
+      markStatus("Could not export gameplan: "+(err?.message||err),false);
+    }
   }
 
   function assign(slot,pid){
@@ -1527,7 +1874,7 @@
     list.innerHTML=state.bench.length?state.bench.map(pid=>{
       const p=player(pid);
       return p?'<div class="bench-player" draggable="true" data-v28-player="'+esc(pid)+'">#'+p.number+' '+esc(p.name)+'</div>':'';
-    }).join(''):'<span style="font-size:.8rem;color:var(--muted)">No bench players yet.</span>';
+    }).join(''):'<span style="font-size:.8rem;color:var(--muted)">No substitutes listed yet.</span>';
   }
 
   function bindDrags(){
@@ -1653,7 +2000,7 @@
       const owner=v.created_by_name||'Captain';
       return '<div class="variation-item">'+
         '<button type="button" class="variation-load" data-load-variation="'+esc(v.id)+'"><strong>'+esc(v.name)+'</strong>'+
-        '<span class="variation-meta">'+esc(snapshot.formation)+' · '+starters+' on field · '+bench+' bench · '+esc(formatStamp(v.created_at))+'</span>'+
+        '<span class="variation-meta">'+esc(snapshot.formation)+' · '+starters+' on field · '+bench+' substitutes · '+esc(formatStamp(v.created_at))+'</span>'+
         '<span class="variation-owner">Saved by '+esc(owner)+'</span></button>'+
         '<button class="mini-btn variation-delete" type="button" data-delete-variation="'+esc(v.id)+'">Delete</button></div>';
     }).join(''):'<div style="font-size:.82rem;color:var(--muted)">No shared variations for this game yet.</div>';
@@ -1712,7 +2059,7 @@
   }
 
   function renderCore(){ renderPitch(); renderPool(); renderBench(); bindDrags(); }
-  function renderAll(){ renderCore(); renderDepth(); renderSubPlan(); renderVariations(); }
+  function renderAll(){ renderCore(); renderDepth(); renderSubPlan(); renderVariations(); renderGameplanPreview(); }
   function renderEventOptions(){
     const sel=document.getElementById('lineupEvent'); if(!sel) return;
     const current=sel.value||'tinker';
@@ -1737,6 +2084,7 @@
       .sort((a,b)=>a.number-b.number || a.name.localeCompare(b.name));
     if(!next.length)return;
     roster=next;
+    renderCaptainOptions();
     renderAll();
     markStatus("Roster synced from Supabase — "+roster.length+" active players available.");
   }
@@ -1759,10 +2107,16 @@
   const formation=document.getElementById('lineupFormation');
   const eventSel=document.getElementById('lineupEvent');
   const labelMode=document.getElementById('lineupLabelMode');
+  const variationNameInput=document.getElementById('lineupVariationName');
+  const captainSelect=document.getElementById('lineupCaptain');
+  const gameplanQuote=document.getElementById('gameplanQuote');
+  const gameplanNotes=document.getElementById('gameplanNotes');
   const saveBtn=document.getElementById('saveLineupVariation');
   const clearBtn=document.getElementById('clearLineupBtn');
   const addSubBtn=document.getElementById('addSubPlanBtn');
   const refreshBtn=document.getElementById('refreshLineupVariations');
+  const exportPngBtn=document.getElementById('exportGameplanPng');
+  const exportJpgBtn=document.getElementById('exportGameplanJpg');
 
   if(formation) formation.addEventListener('change',()=>{
     const next=formation.value;
@@ -1787,13 +2141,28 @@
     state.slots={};
     selectedPlayer=null;
     persistDraft(); renderCore();
-    markStatus('Formation changed to '+state.formation+'. Starting XI cleared; bench, depth and sub plan kept.');
+    markStatus('Formation changed to '+state.formation+'. Starting XI cleared; substitutes, depth and sub plan kept.');
   });
 
   if(labelMode) labelMode.addEventListener('change',()=>{
     state.labelMode = labelMode.value === 'numbers' ? 'numbers' : 'names';
     persistDraft(); renderCore();
     markStatus(state.labelMode==='numbers' ? 'Player display set to numbers only.' : 'Player display set to names + numbers.');
+  });
+
+  if(captainSelect) captainSelect.addEventListener('change',()=>{
+    state.captainId=captainSelect.value||"";
+    persistDraft();
+    renderCore();
+    markStatus(state.captainId ? (prettyPlayer(state.captainId,false)+" selected as captain.") : "Captain cleared.");
+  });
+  if(gameplanQuote) gameplanQuote.addEventListener('input',()=>{
+    state.quote=gameplanQuote.value.slice(0,100);
+    persistDraft();
+  });
+  if(gameplanNotes) gameplanNotes.addEventListener('input',()=>{
+    state.notes=gameplanNotes.value.slice(0,280);
+    persistDraft();
   });
 
   if(eventSel) eventSel.addEventListener('change', async()=>{
@@ -1841,12 +2210,15 @@
       saveBtn.disabled=false; saveBtn.textContent=originalText;
     }
   });
+  if(variationNameInput) variationNameInput.addEventListener('input',()=>renderGameplanPreview());
+  if(exportPngBtn) exportPngBtn.addEventListener('click',()=>exportGameplanAs('png'));
+  if(exportJpgBtn) exportJpgBtn.addEventListener('click',()=>exportGameplanAs('jpg'));
   if(refreshBtn) refreshBtn.addEventListener('click',()=>refreshVariations(true));
   if(clearBtn) clearBtn.addEventListener('click',()=>{
-    if(!confirm('Clear the starting XI / custom board and bench?')) return;
+    if(!confirm('Clear the starting XI / custom board and substitutes?')) return;
     state.slots={}; state.freeform={}; state.bench=[]; selectedPlayer=null;
     persistDraft(); renderCore();
-    markStatus('Pitch/custom board and bench cleared. Depth chart and sub plan were kept.');
+    markStatus('Pitch/custom board and substitutes cleared. Depth chart and sub plan were kept.');
   });
   if(addSubBtn) addSubBtn.addEventListener('click',()=>{
     state.subs=normalizeSubs(state.subs);
@@ -1858,7 +2230,7 @@
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v29 ready. Roster, shared variations, named Tinker boards, and Freeform / Custom layouts use Supabase.');
+  markStatus('Lineup Builder v32 ready. Captain, quote, notes, and substitute count are now included in the shared gameplan export.');
 
   window.SKORLineup={
     setRoster,
@@ -2465,7 +2837,7 @@ loadAnnouncements();
 })();
 
 
-// The independent v29 builder above is the only lineup engine.
+// The independent v32 builder above is the only lineup engine.
 
 </script>
 
