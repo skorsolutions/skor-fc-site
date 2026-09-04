@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SKOR FC | Over 30 Soccer in Roswell, Georgia</title>
 <meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, match results, season stats, practices, and club updates.">
+<meta name="skor-build" content="public-shared-data-v37">
 <style>
 :root{
   --bg:#07080a;
@@ -357,6 +358,11 @@ img{max-width:100%}
 .practice-empty{border:1px dashed #34383e;border-radius:13px;padding:18px;color:#8f949b}
 @media(max-width:800px){.practice-list{grid-template-columns:1fr}}
 
+
+/* v37 live public roster + field registry */
+.player-photo .public-player-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}.player-photo .public-player-photo+.player-avatar{display:none}
+.fields-public-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}.field-public-card{padding:24px}.field-public-card h3{margin:7px 0 7px;font-size:25px;text-transform:uppercase}.field-public-card p{margin:6px 0;color:#b9bdc3;line-height:1.45}.field-public-card .field-address{color:#8f949b;font-size:12px}.field-public-card .btn{margin-top:12px}
+@media(max-width:700px){.fields-public-grid{grid-template-columns:1fr}.field-public-card{padding:20px}}
 </style>
 </head>
 <body>
@@ -471,7 +477,7 @@ img{max-width:100%}
         <div><div class="eyebrow">2026 Roster</div><h2>The Squad</h2></div>
         <a class="section-link" href="players.html">Meet the whole team →</a>
       </div>
-      <div class="squad-grid">
+      <div class="squad-grid" id="homeSquadGrid">
         <a class="player-card" href="players.html">
           <div class="player-photo"><span class="new-badge">NEW</span><div class="player-num-bg">2</div><div class="player-avatar">I</div></div>
           <div class="player-info"><div class="player-no">#2</div><h3>Ivan</h3><div class="player-pos">Defence</div></div>
@@ -527,30 +533,11 @@ img{max-width:100%}
 
   <section class="section" id="fields">
     <div class="wrap">
-      <div class="section-title">
-        <div><div class="eyebrow">Training &amp; Match Locations</div><h2>Fields</h2></div>
-      </div>
-
-      <div class="feature-grid">
-        <div class="card join-card">
-          <div class="eyebrow">Primary Match Field</div>
-          <h2 style="font-size:34px">East Roswell Park</h2>
-          <p>SKOR FC home fixtures use SC#1 and SC#2 depending on the schedule.</p>
-          <a class="btn btn-secondary" href="https://www.google.com/maps/search/?api=1&query=East+Roswell+Park+Roswell+GA" target="_blank" rel="noopener">Directions</a>
-        </div>
-        <div class="card join-card">
-          <div class="eyebrow">Match Field</div>
-          <h2 style="font-size:34px">Groveway Community Park</h2>
-          <p>Selected fixtures use the Upper Field at Groveway Community Park.</p>
-          <a class="btn btn-secondary" href="https://www.google.com/maps/search/?api=1&query=Groveway+Community+Park+Roswell+GA" target="_blank" rel="noopener">Directions</a>
-        </div>
-      </div>
-
-      <div class="card join-card" style="margin-top:20px">
-        <div class="eyebrow">Primary Training Field</div>
-        <h2 style="font-size:34px">Sweet Apple Park</h2>
-        <p>Primary SKOR FC training location in Roswell.</p>
-        <a class="btn btn-primary" href="https://www.google.com/maps/search/?api=1&query=Sweet+Apple+Park+Roswell+GA" target="_blank" rel="noopener">Directions</a>
+      <div class="section-title"><div><div class="eyebrow">Training &amp; Match Locations</div><h2>Fields</h2></div></div>
+      <div class="fields-public-grid" id="publicFieldsGrid">
+        <div class="card field-public-card"><div class="eyebrow">Match Field</div><h3>East Roswell Park</h3><p>SC#1 / SC#2</p><p class="field-address">9000 Fouts Road, Roswell, GA 30076</p></div>
+        <div class="card field-public-card"><div class="eyebrow">Match Field</div><h3>Groveway Community Park</h3><p>Upper Field</p><p class="field-address">160 Frank Lewis Drive, Roswell, GA 30075</p></div>
+        <div class="card field-public-card"><div class="eyebrow">Training Field</div><h3>Sweet Apple Park</h3><p>Field 1</p><p class="field-address">11850 Crabapple Road, Roswell, GA 30075</p></div>
       </div>
     </div>
   </section>
@@ -599,6 +586,39 @@ img{max-width:100%}
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const publicDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+let PUBLIC_FIELDS_HOME=[],PUBLIC_ROSTER_HOME=[];
+const HOME_FALLBACK_ROSTER=[
+  {player_key:"2-Ivan",display_name:"Ivan",jersey_number:2,position:"Defence",is_new:true},
+  {player_key:"9-Andres",display_name:"Andres",jersey_number:9,position:"Midfield / Forward",is_new:true},
+  {player_key:"17-David",display_name:"David",jersey_number:17,position:"Midfield",is_new:true},
+  {player_key:"18-Jason",display_name:"Jason",jersey_number:18,position:"Midfield",is_new:false},
+  {player_key:"20-Ayman",display_name:"Ayman",jersey_number:20,position:"Midfield",is_new:false},
+  {player_key:"6-Julio",display_name:"Julio",jersey_number:6,position:"Midfield",is_new:false}
+];
+function publicEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
+function firstInitial(v){return String(v||"?").trim().charAt(0).toUpperCase()||"?";}
+function renderHomeRoster(rows){
+  const grid=document.getElementById("homeSquadGrid");if(!grid)return;const list=(rows||[]).slice(0,6);if(!list.length)return;
+  grid.innerHTML=list.map(p=>`<a class="player-card" href="players.html"><div class="player-photo">${p.is_new?'<span class="new-badge">NEW</span>':''}<div class="player-num-bg">${publicEsc(p.jersey_number)}</div>${p.photo_url?`<img class="public-player-photo" src="${publicEsc(p.photo_url)}" alt="${publicEsc(p.display_name)}">`:''}<div class="player-avatar">${publicEsc(firstInitial(p.display_name))}</div></div><div class="player-info"><div class="player-no">#${publicEsc(p.jersey_number)}</div><h3>${publicEsc(p.display_name)}</h3><div class="player-pos">${publicEsc(p.position||"Player")}</div></div></a>`).join("");
+}
+async function loadPublicRosterHome(){
+  try{const {data,error}=await publicDb.from("public_roster").select("player_key,display_name,jersey_number,position,is_new,photo_url,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(error)throw error;if(data){PUBLIC_ROSTER_HOME=data;if(data.length)renderHomeRoster(data);}}catch(err){console.info("Public roster fallback:",err?.message||err);}
+}
+function homePublicName(name,rosterNumber){const found=PUBLIC_ROSTER_HOME.find(p=>String(p.jersey_number)===String(rosterNumber||""));if(found)return found.display_name;const raw=String(name||"").trim();return raw?raw.split(/\s+/)[0]:"";}
+function publicFieldLabel(f){return f.field_number?`${f.name} · ${f.field_number}`:f.name;}
+function mapHrefForField(f){return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(f.address||publicFieldLabel(f));}
+function homeLocationKey(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
+function homeFieldForLocation(location){const key=homeLocationKey(location);return PUBLIC_FIELDS_HOME.find(f=>homeLocationKey(publicFieldLabel(f))===key)||null;}
+function homeFieldLink(location){const f=homeFieldForLocation(location);if(!f)return publicEsc(location);return `<a href="${mapHrefForField(f)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-decoration-color:#7e3449;text-underline-offset:3px" title="${publicEsc(f.address||location)}">${publicEsc(location)}</a>`;}
+function renderPublicFields(rows){
+  const grid=document.getElementById("publicFieldsGrid");if(!grid||!rows?.length)return;
+  grid.innerHTML=rows.map(f=>`<article class="card field-public-card"><div class="eyebrow">${publicEsc(f.surface||"SKOR FC Field")}</div><h3>${publicEsc(f.name)}</h3>${f.field_number?`<p><strong>${publicEsc(f.field_number)}</strong></p>`:""}<p class="field-address">${publicEsc(f.address||"")}</p>${f.parking_notes?`<p>${publicEsc(f.parking_notes)}</p>`:""}<a class="btn btn-secondary" href="${mapHrefForField(f)}" target="_blank" rel="noopener">Directions</a></article>`).join("");
+}
+async function loadPublicFields(){
+  try{const {data,error}=await publicDb.from("public_fields").select("id,name,address,field_number,surface,parking_notes,sort_order,created_at").order("sort_order",{ascending:true}).order("name",{ascending:true});if(error)throw error;if(data?.length){PUBLIC_FIELDS_HOME=data;renderPublicFields(data);updateSchedule();loadUpcomingPractices();}}catch(err){console.info("Public fields fallback:",err?.message||err);}
+}
+
 
 function announcementIcon(type){
   const icons={Match:"⚽",Practice:"●",Fees:"$", "Field Change":"⌖", Team:"◀"};
@@ -662,6 +682,9 @@ async function loadPublicAnnouncements(){
 }
 
 loadPublicAnnouncements();
+renderHomeRoster(HOME_FALLBACK_ROSTER);
+loadPublicRosterHome();
+loadPublicFields();
 
 const SKOR_GAMES = [
   {
@@ -803,8 +826,10 @@ function scorerSummary(game){
   if(!goals.length) return "";
   return goals.map(e=>{
     if(e.event_type==="opponent_own_goal") return "⚽ Opponent own goal";
-    const player=e.player_name ? `${e.player_name}${e.player_number?` #${e.player_number}`:""}` : "SKOR goal";
-    const assist=e.assist_player_name ? ` · Assist: ${e.assist_player_name}${e.assist_player_number?` #${e.assist_player_number}`:""}` : "";
+    const safePlayer=homePublicName(e.player_name,e.roster_player_number);
+    const safeAssist=homePublicName(e.assist_player_name,e.assist_roster_player_number);
+    const player=safePlayer ? `${safePlayer}${e.player_number?` #${e.player_number}`:""}` : "SKOR goal";
+    const assist=safeAssist ? ` · Assist: ${safeAssist}${e.assist_player_number?` #${e.assist_player_number}`:""}` : "";
     return `⚽ ${player}${assist}`;
   }).join("<br>");
 }
@@ -835,7 +860,7 @@ function renderNextMatch(game){
     title.textContent=`${game.home} vs ${game.away}`;
   }
   const scorer=scorerSummary(game);
-  meta.innerHTML=`<span><strong>${formatFullDate(date)}</strong></span><span><strong>${formatTime(date)}</strong></span><span><strong>${escapeHtmlMatch(game.location)}</strong></span>${scorer?`<div class="match-scorers">${scorer}</div>`:""}`;
+  meta.innerHTML=`<span><strong>${formatFullDate(date)}</strong></span><span><strong>${formatTime(date)}</strong></span><span><strong>${homeFieldLink(game.location)}</strong></span>${scorer?`<div class="match-scorers">${scorer}</div>`:""}`;
   logos.innerHTML=logoBadge(game.home,game.homeLogo,true)+logoBadge(game.away,game.awayLogo,true);
   link.href=`matches.html?game=${encodeURIComponent(game.slug)}`;
 }
@@ -862,7 +887,7 @@ async function loadUpcomingPractices(){
     const {data,error}=await publicDb.from("practices").select("id,title,starts_at,location,notes,published").eq("published",true).gte("starts_at",cutoff).order("starts_at",{ascending:true}).limit(6);
     if(error)throw error;
     if(!data?.length){target.innerHTML='<div class="practice-empty">No upcoming practices are currently published.</div>';return;}
-    target.innerHTML=data.map(p=>{const d=new Date(p.starts_at);return `<article class="practice-card"><div class="practice-date">${escapeHtmlMatch(practiceDateLabel(d))} · ${escapeHtmlMatch(formatTime(d))}</div><h3>${escapeHtmlMatch(p.title||"SKOR FC Practice")}</h3><p><strong>${escapeHtmlMatch(p.location||"")}</strong></p>${p.notes?`<p>${escapeHtmlMatch(p.notes)}</p>`:""}</article>`;}).join("");
+    target.innerHTML=data.map(p=>{const d=new Date(p.starts_at);return `<article class="practice-card"><div class="practice-date">${escapeHtmlMatch(practiceDateLabel(d))} · ${escapeHtmlMatch(formatTime(d))}</div><h3>${escapeHtmlMatch(p.title||"SKOR FC Practice")}</h3><p><strong>${homeFieldLink(p.location||"")}</strong></p>${p.notes?`<p>${escapeHtmlMatch(p.notes)}</p>`:""}</article>`;}).join("");
   }catch(err){console.info("Practices unavailable:",err);target.innerHTML='<div class="practice-empty">No upcoming practices are currently published.</div>';}
 }
 
@@ -879,7 +904,7 @@ async function loadMatchCenterData(){
     MATCHES=data.map(normalizeMatch);
     const ids=MATCHES.map(m=>m.id).filter(Boolean);
     if(ids.length){
-      const {data:events,error:eventError}=await publicDb.from("match_events").select("id,match_id,event_type,player_name,player_number,assist_player_name,assist_player_number,half,sequence,created_at").in("match_id",ids).order("sequence",{ascending:true});
+      const {data:events,error:eventError}=await publicDb.from("match_events").select("id,match_id,event_type,player_name,player_number,roster_player_number,assist_player_name,assist_player_number,assist_roster_player_number,half,sequence,created_at").in("match_id",ids).order("sequence",{ascending:true});
       if(!eventError && events) MATCH_EVENTS=events;
     }
     updateSchedule();
@@ -891,6 +916,8 @@ loadMatchCenterData();
 loadUpcomingPractices();
 setInterval(loadMatchCenterData, 60 * 1000);
 setInterval(loadUpcomingPractices, 60 * 1000);
+setInterval(loadPublicRosterHome, 60 * 1000);
+setInterval(loadPublicFields, 60 * 1000);
 
 document.querySelectorAll('#navLinks a').forEach(a=>{
   a.addEventListener('click',()=>{
