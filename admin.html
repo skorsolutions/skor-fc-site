@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v41-adaptive-consensus-production" />
-  <title>SKOR FC Admin | Crowd Scoring v41</title>
+  <meta name="skor-build" content="lineup-admin-v42-crowd-quick-launch-production" />
+  <title>SKOR FC Admin | Crowd Scoring v42</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -978,7 +978,7 @@
 
 
     /* =========================================================
-       SKOR FC v41 — Crowd Scoring + adaptive consensus
+       SKOR FC v42 — Crowd Scoring + adaptive consensus + quick launch
        ========================================================= */
     .crowd-admin-panel{border-color:#dacbd0;background:linear-gradient(145deg,#fff,#fbf7f8)}
     .crowd-admin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
@@ -1044,7 +1044,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v41</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v42</div>
   </aside>
 
   <main>
@@ -1080,6 +1080,7 @@
           <div class="sub">The things captains will use most often.</div>
           <div class="actions">
             <button class="action" onclick="openView('gameday')">⚽ Open Game Day</button>
+            <button class="action" onclick="openCrowdScoring()">👥 Crowd Scoring</button>
             <button class="action" onclick="openView('announcements')">＋ New announcement</button>
             <button class="action" onclick="openView('schedule')">＋ Add practice</button>
             <button class="action" onclick="openView('schedule')">⚽ Add match</button>
@@ -1562,7 +1563,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v41 - adaptive crowd consensus + captain/viewer roles */
+/* SKOR FC Lineup Builder v42 - crowd quick launch + adaptive consensus + captain/viewer roles */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -2674,6 +2675,17 @@ function openView(id){
   document.getElementById("pageSub").textContent=meta[id][1];
   window.scrollTo({top:0,behavior:"smooth"});
 }
+function openCrowdScoring(){
+  if(!portalCanWrite()){
+    viewerBlocked("manage Crowd Scoring");
+    return;
+  }
+  openView("gameday");
+  window.setTimeout(()=>{
+    const panel=document.getElementById("crowdAdminPanel");
+    if(panel)panel.scrollIntoView({behavior:"smooth",block:"start"});
+  },300);
+}
 document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>openView(btn.dataset.view)));
 
 
@@ -2991,7 +3003,7 @@ function renderGameDay(){
 }
 
 // =========================================================
-// SKOR FC v41 — Crowd Scoring captain control plane + adaptive consensus
+// SKOR FC v42 — Crowd Scoring captain control plane + adaptive consensus + dashboard quick launch
 // =========================================================
 let crowdSession=null,crowdInvite=null,crowdParticipants=[],crowdSummaryTimer=null;
 const crowdStartBtn=document.getElementById("crowdStartBtn"),crowdGenerateQrBtn=document.getElementById("crowdGenerateQrBtn"),crowdMotmToggle=document.getElementById("crowdMotmToggle"),crowdCloseBtn=document.getElementById("crowdCloseBtn"),crowdSessionBadge=document.getElementById("crowdSessionBadge"),crowdAdminStatus=document.getElementById("crowdAdminStatus"),crowdQrCard=document.getElementById("crowdQrCard"),crowdQrCode=document.getElementById("crowdQrCode"),crowdJoinLink=document.getElementById("crowdJoinLink"),crowdCopyLinkBtn=document.getElementById("crowdCopyLinkBtn"),crowdOpenPageLink=document.getElementById("crowdOpenPageLink"),crowdParticipantList=document.getElementById("crowdParticipantList");
