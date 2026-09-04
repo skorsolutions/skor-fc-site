@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v35-sub-chips-production" />
-  <title>SKOR FC Admin | Lineups v35</title>
+  <meta name="skor-build" content="lineup-admin-v36-export-spacing-production" />
+  <title>SKOR FC Admin | Lineups v36</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -967,7 +967,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v35</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v36</div>
   </aside>
 
   <main>
@@ -1282,7 +1282,7 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V35</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V36</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -1769,7 +1769,7 @@
       }).join("");
     };
 
-    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1020, '#801A3D') : `<text x="${planCardX+24}" y="1020" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
+    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1030, '#801A3D') : `<text x="${planCardX+24}" y="1020" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
     const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1326, '#234b74') : `<text x="${planCardX+24}" y="1326" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
     const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1312" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
     const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1618" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
@@ -1799,8 +1799,7 @@
 
       <rect x="${planCardX}" y="${planCardY}" width="${planCardW}" height="${planCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
       <text x="${planCardX+24}" y="${planCardY+48}" font-size="28" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Subs</text>
-      <text x="${planCardX+24}" y="${planCardY+72}" font-size="16" font-weight="700" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">First half and second half sequences.</text>
-      <text x="${planCardX+24}" y="984" font-size="17" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
+      <text x="${planCardX+24}" y="995" font-size="17" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
       ${firstHalfRows}
       ${firstHalfExtra}
       <text x="${planCardX+24}" y="1294" font-size="17" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
@@ -2979,7 +2978,7 @@ loadAnnouncements();
 })();
 
 
-// The independent v35 builder above is the only lineup engine.
+// The independent v36 builder above is the only lineup engine.
 
 </script>
 
