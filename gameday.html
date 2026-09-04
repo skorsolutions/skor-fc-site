@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090a0d">
+<meta name="skor-build" content="gameday-v41-adaptive-consensus">
+<title>SKOR FC | Crowd Game Day</title>
+<meta name="description" content="SKOR FC crowd-powered live match scoring, referee decision review and Man of the Match voting.">
+<style>
+:root{--bg:#07080a;--panel:#111318;--panel2:#171a20;--line:#2d3138;--text:#f5f5f6;--muted:#9da2aa;--maroon:#8f1836;--maroon2:#b51c43;--green:#2f7a5c;--amber:#9b7220;--red:#a52a3d;--blue:#315b85}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif}button,input,select,textarea{font:inherit}button{touch-action:manipulation}.wrap{width:min(760px,calc(100% - 24px));margin:auto}.top{position:sticky;top:0;z-index:20;background:rgba(7,8,10,.94);backdrop-filter:blur(14px);border-bottom:1px solid #22262c}.topin{height:62px;display:flex;align-items:center;gap:11px}.top img{width:38px;height:38px;object-fit:contain}.brand{font-weight:950;letter-spacing:.04em}.spacer{flex:1}.user{font-size:11px;color:#aeb2b8;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logout{border:1px solid #3c4148;background:#111318;color:#ddd;border-radius:8px;padding:8px 9px;font-size:10px;font-weight:850}.screen{display:none;padding:24px 0 50px}.screen.active{display:block}.card{border:1px solid var(--line);background:linear-gradient(145deg,#14171c,#0c0e11);border-radius:17px;padding:18px;margin-bottom:12px}.eyebrow{font-size:10px;color:#d3637c;font-weight:950;letter-spacing:.13em;text-transform:uppercase}.title{font-size:34px;line-height:.95;margin:7px 0 10px;letter-spacing:-.04em}.sub{color:var(--muted);line-height:1.5;font-size:13px}.btn{border:0;border-radius:11px;min-height:46px;padding:0 15px;font-weight:900;cursor:pointer}.primary{background:linear-gradient(135deg,#681028,var(--maroon2));color:#fff}.secondary{background:#181b20;border:1px solid #3b4047;color:#fff}.full{width:100%}.form{display:grid;gap:11px;margin-top:16px}label{font-size:12px;font-weight:850}input,select,textarea{width:100%;min-height:46px;border:1px solid #3a3e45;border-radius:10px;background:#0c0e12;color:#fff;padding:11px 12px;font-size:16px;outline:none}textarea{min-height:88px;resize:vertical}.status{margin-top:10px;font-size:12px;color:#c5c8cc}.error{color:#ff9eb2}.matchhead{text-align:center;padding:20px 14px}.matchteams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-top:14px}.team{font-weight:950;font-size:16px;text-transform:uppercase;line-height:1.1}.score{font-size:52px;font-weight:950;letter-spacing:-.06em}.phase{display:inline-flex;margin-top:12px;padding:6px 10px;border-radius:999px;background:#242830;color:#d9dce0;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}.crowdline{margin-top:9px;color:#8fae9f;font-size:11px;font-weight:800}.actiongrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.eventbtn{min-height:74px;border:1px solid #343941;border-radius:14px;background:#15181d;color:#fff;padding:12px;text-align:left;font-weight:950;cursor:pointer}.eventbtn span{display:block;margin-top:4px;color:#8e949c;font-size:10px;font-weight:650}.eventbtn.goal{border-left:5px solid var(--green)}.eventbtn.cardy{border-left:5px solid #d3b121}.eventbtn.cardr{border-left:5px solid #ba3247}.eventbtn.ref{border-left:5px solid var(--blue)}.sectiontitle{display:flex;align-items:end;justify-content:space-between;gap:10px;margin-bottom:10px}.sectiontitle h2{margin:0;font-size:19px}.chipwrap{display:flex;flex-wrap:wrap;gap:7px}.chip{border:1px solid #3b4048;background:#171a1f;color:#eee;border-radius:999px;padding:8px 10px;min-height:38px;font-size:12px;font-weight:850;cursor:pointer}.chip.selected{background:var(--maroon);border-color:var(--maroon)}.feed{display:grid;gap:8px}.feeditem{border:1px solid #2d3137;background:#0f1115;border-radius:13px;padding:12px}.feedtop{display:flex;justify-content:space-between;gap:9px;align-items:flex-start}.feedtitle{font-weight:900;font-size:13px}.meta{color:#858b93;font-size:10px;margin-top:3px}.confidence{display:inline-flex;border-radius:999px;padding:5px 7px;font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.05em;background:#2b2f35;color:#bbb}.confidence.confirmed{background:#163329;color:#77c7a1}.confidence.disputed{background:#3a1c23;color:#e990a2}.voteactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.mini{border:1px solid #3b4048;background:#171a1f;color:#ddd;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:850}.pendingbar{margin-top:8px;padding:8px 10px;border:1px solid #443d2a;background:#1e1a0d;border-radius:9px;color:#d3b968;font-size:10px}.motmgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.motmchip{min-height:54px;border:1px solid #363a41;background:#15181d;color:#fff;border-radius:12px;padding:8px;font-weight:900}.motmchip.selected{background:#6e132c;border-color:#a62043}.refvote{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}.refvote button{min-height:38px;border:1px solid #383d44;border-radius:8px;background:#171a1f;color:#ddd;font-size:10px;font-weight:900}.empty{color:#81868e;font-size:12px;padding:12px 2px}.modal{display:none;position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);padding:18px;overflow:auto}.modal.open{display:grid;place-items:start center}.sheet{width:min(620px,100%);margin-top:6vh;background:#111318;border:1px solid #343941;border-radius:18px;padding:18px}.sheethead{display:flex;align-items:center;justify-content:space-between;gap:10px}.sheethead h2{margin:0;font-size:20px}.close{border:1px solid #3a3e45;background:#191c21;color:#fff;border-radius:9px;width:40px;height:40px}.hidden{display:none!important}.notice{padding:10px 12px;border-radius:10px;background:#151d19;border:1px solid #274234;color:#93c1aa;font-size:11px;line-height:1.45}.loginlogo{width:94px;height:94px;object-fit:contain;display:block;margin:0 auto 14px}.center{text-align:center}.sessionpick{display:grid;gap:8px;margin-top:12px}.sessionbtn{border:1px solid #343941;background:#15181d;color:#fff;border-radius:12px;padding:13px;text-align:left}.sessionbtn strong{display:block}.sessionbtn span{display:block;margin-top:4px;color:#92979f;font-size:11px}@media(max-width:520px){.wrap{width:calc(100% - 18px)}.screen{padding-top:14px}.card{padding:14px}.title{font-size:30px}.score{font-size:44px}.team{font-size:13px}.eventbtn{min-height:70px}.motmgrid{grid-template-columns:1fr 1fr}.user{display:none}.sheet{margin-top:1vh}.actiongrid{gap:7px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap topin"><img src="assets/skor fc logo transparent.png" alt="SKOR FC"><div class="brand">SKOR FC GAME DAY</div><div class="spacer"></div><div class="user" id="topUser"></div><button class="logout hidden" id="logoutBtn" type="button">Log out</button></div></header>
+
+<main class="wrap">
+<section class="screen active" id="loginScreen">
+  <div class="card center" style="margin-top:24px">
+    <img class="loginlogo" src="assets/skor fc logo transparent.png" alt="SKOR FC crest">
+    <div class="eyebrow">Crowd-Powered Match Day</div>
+    <h1 class="title">Score it together.</h1>
+    <p class="sub">Help record goals, assists and cards, review referee decisions, and vote for Man of the Match. Your reports are compared with other scorers before they become community-confirmed.</p>
+    <button class="btn primary full" id="googleBtn" type="button" style="margin-top:18px">Continue with Google</button>
+    <div class="status" id="loginStatus"></div>
+  </div>
+</section>
+
+<section class="screen" id="joinScreen">
+  <div class="card">
+    <div class="eyebrow">Join Game Day</div><h1 class="title">Choose a match.</h1>
+    <p class="sub">Scan a captain's QR code or enter the invite code. If you already joined an active match, it will appear below.</p>
+    <div class="form"><div><label>Invite code</label><input id="inviteCode" autocomplete="off" placeholder="Paste or enter code"></div><button class="btn primary" id="joinBtn" type="button">Join Match</button></div>
+    <div class="status" id="joinStatus"></div>
+    <div class="sessionpick" id="mySessions"></div>
+  </div>
+</section>
+
+<section class="screen" id="gameScreen">
+  <div class="card matchhead">
+    <div class="eyebrow" id="matchDate">GAME DAY</div>
+    <div class="matchteams"><div class="team" id="homeTeam">Home</div><div class="score" id="crowdScore">0–0</div><div class="team" id="awayTeam">Away</div></div>
+    <div class="phase" id="matchPhase">Crowd Scoring Open</div>
+    <div class="crowdline" id="crowdLine">0 scorers joined</div>
+    <div class="pendingbar hidden" id="pendingScore"></div>
+  </div>
+
+  <div class="card">
+    <div class="sectiontitle"><div><div class="eyebrow">Report what you saw</div><h2>Match Events</h2></div></div>
+    <div class="actiongrid">
+      <button class="eventbtn goal" data-report="skor_goal" type="button">⚽ SKOR Goal<span>Scorer + assist</span></button>
+      <button class="eventbtn goal" data-report="opponent_goal" type="button">⚽ Opponent Goal<span>Opponent scores</span></button>
+      <button class="eventbtn goal" data-report="opponent_own_goal" type="button">↩ Opponent Own Goal<span>SKOR scores</span></button>
+      <button class="eventbtn goal" data-report="skor_own_goal" type="button">↪ SKOR Own Goal<span>Opponent scores</span></button>
+      <button class="eventbtn cardy" data-report="skor_yellow_card" type="button">🟨 SKOR Yellow<span>Choose player</span></button>
+      <button class="eventbtn cardr" data-report="skor_red_card" type="button">🟥 SKOR Red<span>Choose player</span></button>
+      <button class="eventbtn cardy" data-report="opponent_yellow_card" type="button">🟨 Opponent Yellow<span>Name/# optional</span></button>
+      <button class="eventbtn cardr" data-report="opponent_red_card" type="button">🟥 Opponent Red<span>Name/# optional</span></button>
+      <button class="eventbtn ref" id="refCallBtn" type="button" style="grid-column:1/-1">⚖️ Referee Decision Review<span>Foul, penalty, offside, handball, cards and more</span></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sectiontitle"><div><div class="eyebrow">Consensus</div><h2>Crowd Event Feed</h2></div><span class="confidence" id="consensusRule">Adaptive consensus</span></div>
+    <div class="feed" id="eventFeed"><div class="empty">No crowd events yet.</div></div>
+  </div>
+
+  <div class="card" id="refSection">
+    <div class="sectiontitle"><div><div class="eyebrow">Referee Review</div><h2>Decision Polls</h2></div></div>
+    <div class="feed" id="refFeed"><div class="empty">No referee decisions flagged yet.</div></div>
+  </div>
+
+  <div class="card hidden" id="motmSection">
+    <div class="sectiontitle"><div><div class="eyebrow">Post-Match Vote</div><h2>Man of the Match</h2></div></div>
+    <p class="sub">One vote per scorer. You can change your vote while voting is open.</p>
+    <div class="motmgrid" id="motmGrid"></div>
+    <div class="status" id="motmStatus"></div>
+  </div>
+</section>
+</main>
+
+<div class="modal" id="eventModal"><div class="sheet"><div class="sheethead"><h2 id="eventModalTitle">Report Event</h2><button class="close" data-close="eventModal" type="button">×</button></div><div class="form">
+  <div><label>Half</label><select id="eventHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
+  <div id="playerChoiceWrap"><label>SKOR Player</label><select id="eventPlayer"><option value="">Select player…</option></select></div>
+  <div id="assistChoiceWrap"><label>Assist</label><select id="eventAssist"><option value="">Unassisted / No assist</option></select></div>
+  <div id="opponentWrap" class="hidden"><label>Opponent player (optional)</label><input id="opponentName" placeholder="Name or jersey number if known"></div>
+  <button class="btn primary" id="saveEventBtn" type="button">Submit Report</button><div class="status" id="eventModalStatus"></div>
+</div></div></div>
+
+<div class="modal" id="refModal"><div class="sheet"><div class="sheethead"><h2>Referee Decision Review</h2><button class="close" data-close="refModal" type="button">×</button></div><div class="form">
+  <div><label>Half</label><select id="refHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
+  <div><label>Decision</label><select id="refType"><option>Foul / No Foul</option><option>Penalty / No Penalty</option><option>Offside / Onside</option><option>Yellow Card / No Card</option><option>Red Card / No Red Card</option><option>Handball / No Handball</option><option>Goal Allowed / Goal Disallowed</option><option>Throw-in / Corner / Goal Kick</option><option>Other</option></select></div>
+  <div><label>What happened? <span style="color:#777;font-weight:500">(optional)</span></label><textarea id="refDescription" placeholder="Example: Possible handball in the box"></textarea></div>
+  <div><label>Your view</label><select id="refVote"><option value="disagree">Disagree with referee</option><option value="agree">Agree with referee</option><option value="unsure">Unsure</option></select></div>
+  <button class="btn primary" id="saveRefBtn" type="button">Submit Ref Review</button><div class="status" id="refModalStatus"></div>
+</div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+let user=null,sessionId=null,session=null,match=null,roster=[],participants=[],events=[],reports=[],refDecisions=[],refVotes=[],motmVotes=[],currentEventType=null,refreshTimer=null,presenceTimer=null,realtimeChannel=null;
+const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
+function showScreen(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');}
+function setStatus(id,msg,error=false){const e=$(id);if(!e)return;e.textContent=msg||"";e.classList.toggle('error',!!error);}
+function queryCode(){const q=new URLSearchParams(location.search).get('code')||'';if(q)sessionStorage.setItem('skorGameDayInvite',q);return q||sessionStorage.getItem('skorGameDayInvite')||'';}
+function fmtDate(v){if(!v)return"GAME DAY";return new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(v));}
+function displayNameFromUser(u){return u?.user_metadata?.full_name||u?.user_metadata?.name||u?.email?.split('@')[0]||'Scorer';}
+async function init(){const {data}=await db.auth.getSession();user=data.session?.user||null;if(user)await afterLogin();else showScreen('loginScreen');}
+async function afterLogin(){user=(await db.auth.getUser()).data.user;$('topUser').textContent=displayNameFromUser(user);$('logoutBtn').classList.remove('hidden');const code=queryCode();if(code){$('inviteCode').value=code;const ok=await joinByCode(code,true);if(ok)return;}await loadMySessions();showScreen('joinScreen');}
+$('googleBtn').addEventListener('click',async()=>{setStatus('loginStatus','Opening Google…');const code=queryCode();if(code)sessionStorage.setItem('skorGameDayInvite',code);const redirect=`${location.origin}/gameday.html`;const {error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirect}});if(error)setStatus('loginStatus',error.message,true);});
+$('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.href='gameday.html';});
+$('joinBtn').addEventListener('click',()=>joinByCode($('inviteCode').value.trim(),false));
+async function joinByCode(code,quiet){if(!code){if(!quiet)setStatus('joinStatus','Enter an invite code.',true);return false;}const {data,error}=await db.rpc('join_game_day_session',{p_invite_code:code});if(error){if(!quiet)setStatus('joinStatus',error.message,true);return false;}const row=Array.isArray(data)?data[0]:data;if(!row?.session_id){if(!quiet)setStatus('joinStatus','Invite could not be claimed.',true);return false;}sessionStorage.removeItem('skorGameDayInvite');history.replaceState({},'',location.pathname);await openSession(row.session_id);return true;}
+async function loadMySessions(){const {data,error}=await db.from('game_day_participants').select('session_id,joined_at').eq('user_id',user.id).order('joined_at',{ascending:false});if(error){setStatus('joinStatus','Crowd Game Day is not installed yet. Ask a captain to deploy the v40 SQL and v41 adaptive-consensus patch.',true);return;}const ids=[...new Set((data||[]).map(x=>x.session_id))];if(!ids.length){$('mySessions').innerHTML='<div class="empty">No active joined matches yet.</div>';return;}const s=await db.from('game_day_sessions').select('id,match_id,active,expires_at').in('id',ids);const active=(s.data||[]).filter(x=>x.active&&(!x.expires_at||new Date(x.expires_at)>new Date()));if(!active.length){$('mySessions').innerHTML='<div class="empty">No active joined matches.</div>';return;}const mids=active.map(x=>x.match_id);const m=await db.from('matches').select('id,kickoff,home_team,away_team').in('id',mids);const byId=Object.fromEntries((m.data||[]).map(x=>[x.id,x]));$('mySessions').innerHTML=active.map(x=>{const mm=byId[x.match_id]||{};return `<button class="sessionbtn" type="button" data-session="${x.id}"><strong>${esc(mm.home_team||'Match')} vs ${esc(mm.away_team||'')}</strong><span>${esc(fmtDate(mm.kickoff))}</span></button>`}).join('');$('mySessions').querySelectorAll('[data-session]').forEach(b=>b.addEventListener('click',()=>openSession(b.dataset.session)));if(active.length===1)await openSession(active[0].id);}
+async function openSession(id){
+  sessionId=id;
+  await touchPresence();
+  await loadAll();
+  if(!session||!match){setStatus('joinStatus','Could not load that Game Day session.',true);return;}
+  showScreen('gameScreen');
+  subscribeRealtime();
+  if(refreshTimer)clearInterval(refreshTimer);
+  refreshTimer=setInterval(loadAll,7000);
+  if(presenceTimer)clearInterval(presenceTimer);
+  presenceTimer=setInterval(touchPresence,30000);
+}
+async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_sessions').select('id,match_id,active,motm_voting_open,ref_review_open,expires_at').eq('id',sessionId).single();if(s.error){return;}session=s.data;const [m,r,p,e,er,rd,rv,mv]=await Promise.all([
+ db.from('matches').select('id,kickoff,status,home_team,away_team,location').eq('id',session.match_id).single(),
+ db.from('public_roster').select('player_key,display_name,jersey_number,position').order('jersey_number',{ascending:true}),
+ db.from('game_day_participants').select('user_id,display_name,joined_at,last_seen_at').eq('session_id',sessionId),
+ db.from('game_day_crowd_events').select('*').eq('session_id',sessionId).eq('active',true).order('created_at',{ascending:false}),
+ db.from('game_day_event_reports').select('event_id,user_id,verdict,player_key,player_name,player_number,assist_player_key,assist_player_name,assist_player_number,opponent_player_name').eq('session_id',sessionId),
+ db.from('game_day_ref_decisions').select('*').eq('session_id',sessionId).eq('active',true).order('created_at',{ascending:false}),
+ db.from('game_day_ref_votes').select('decision_id,user_id,vote').eq('session_id',sessionId),
+ db.from('game_day_motm_votes').select('user_id,player_key,player_name,player_number').eq('session_id',sessionId)
+]);match=m.data||null;roster=r.data||[];participants=p.data||[];events=e.data||[];reports=er.data||[];refDecisions=rd.data||[];refVotes=rv.data||[];motmVotes=mv.data||[];render();}
+const ACTIVE_WINDOW_MS=5*60*1000;
+function activeParticipants(){
+  const cutoff=Date.now()-ACTIVE_WINDOW_MS;
+  return participants.filter(p=>{
+    const seen=new Date(p.last_seen_at||p.joined_at||0).getTime();
+    return Number.isFinite(seen)&&seen>=cutoff;
+  });
+}
+function adaptiveThreshold(n){
+  n=Math.max(1,Number(n)||0);
+  return Math.min(6,Math.ceil(Math.sqrt(n)));
+}
+function eventCounts(id){const rs=reports.filter(x=>x.event_id===id);return{confirm:rs.filter(x=>x.verdict==='confirm').length,dispute:rs.filter(x=>x.verdict==='dispute').length,mine:rs.find(x=>x.user_id===user.id)?.verdict||null};}
+function eventThreshold(ev){
+  return Math.max(1,Number(ev?.consensus_threshold)||adaptiveThreshold(Number(ev?.participant_count_snapshot)||activeParticipants().length));
+}
+function isConfirmed(ev){const c=eventCounts(ev.id);const needed=eventThreshold(ev);return c.confirm>=needed&&c.confirm>c.dispute;}
+function crowdScore(){let skor=0,opp=0,pSkor=0,pOpp=0;events.forEach(ev=>{const conf=isConfirmed(ev),sk=['skor_goal','opponent_own_goal'].includes(ev.event_type),op=['opponent_goal','skor_own_goal'].includes(ev.event_type);if(conf){if(sk)skor++;if(op)opp++;}else{if(sk)pSkor++;if(op)pOpp++;}});const homeSkor=match?.home_team==='SKOR FC';return{home:homeSkor?skor:opp,away:homeSkor?opp:skor,pSkor,pOpp};}
+async function touchPresence(){
+  if(!sessionId||!user)return;
+  const {error}=await db.rpc('touch_game_day_presence',{p_session_id:sessionId});
+  if(error&&String(error.message||'').includes('does not exist'))console.info('Deploy v41 adaptive-consensus SQL to enable active-scorer presence.');
+}
+function assistConsensus(ev){const rs=reports.filter(r=>r.event_id===ev.id&&r.verdict==='confirm'&&r.assist_player_name);if(!rs.length)return null;const counts={};rs.forEach(r=>{const k=r.assist_player_key||r.assist_player_name;counts[k]=(counts[k]||{n:0,name:r.assist_player_name,number:r.assist_player_number});counts[k].n++;});return Object.values(counts).sort((a,b)=>b.n-a.n)[0]||null;}
+function eventLabel(ev){const pn=ev.player_name?`${ev.player_number?'#'+ev.player_number+' ':''}${ev.player_name}`:'';const ac=assistConsensus(ev);if(ev.event_type==='skor_goal')return `⚽ SKOR Goal${pn?' — '+pn:''}${ac?` · Assist ${ac.number?'#'+ac.number+' ':''}${ac.name} (${ac.n})`:''}`;if(ev.event_type==='opponent_goal')return `⚽ Opponent Goal`;if(ev.event_type==='opponent_own_goal')return `↩ Opponent Own Goal — SKOR`;if(ev.event_type==='skor_own_goal')return `↪ SKOR Own Goal — Opponent`;if(ev.event_type==='skor_yellow_card')return `🟨 SKOR Yellow${pn?' — '+pn:''}`;if(ev.event_type==='skor_red_card')return `🟥 SKOR Red${pn?' — '+pn:''}`;if(ev.event_type==='opponent_yellow_card')return `🟨 Opponent Yellow${ev.opponent_player_name?' — '+ev.opponent_player_name:''}`;if(ev.event_type==='opponent_red_card')return `🟥 Opponent Red${ev.opponent_player_name?' — '+ev.opponent_player_name:''}`;return ev.event_type;}
+function render(){
+  if(!match)return;
+  $('homeTeam').textContent=match.home_team;
+  $('awayTeam').textContent=match.away_team;
+  $('matchDate').textContent=fmtDate(match.kickoff);
+  const active=activeParticipants();
+  const currentNeeded=adaptiveThreshold(active.length);
+  const sc=crowdScore();
+  $('crowdScore').textContent=`${sc.home}–${sc.away}`;
+  $('crowdLine').textContent=`${active.length} active scorer${active.length===1?'':'s'} · ${participants.length} joined · ${events.filter(isConfirmed).length} confirmed event${events.filter(isConfirmed).length===1?'':'s'}`;
+  const rule=$('consensusRule');
+  if(rule)rule.textContent=`${currentNeeded} confirmation${currentNeeded===1?'':'s'} needed now`;
+  $('matchPhase').textContent=session.active?'Crowd Scoring Open':'Crowd Scoring Closed';
+  const pending=[];
+  if(sc.pSkor)pending.push(`SKOR +${sc.pSkor} pending`);
+  if(sc.pOpp)pending.push(`Opponent +${sc.pOpp} pending`);
+  $('pendingScore').classList.toggle('hidden',!pending.length);
+  $('pendingScore').textContent=pending.join(' · ');
+  renderRosterOptions();renderEventFeed();renderRefFeed();renderMotm();
+  document.querySelectorAll('[data-report],#refCallBtn').forEach(b=>b.disabled=!session.active);
+}
+function renderRosterOptions(){const opts='<option value="">Select player…</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">#${p.jersey_number} ${esc(p.display_name)}</option>`).join('');const cur=$('eventPlayer').value;$('eventPlayer').innerHTML=opts;if([...$('eventPlayer').options].some(o=>o.value===cur))$('eventPlayer').value=cur;const acur=$('eventAssist').value;$('eventAssist').innerHTML='<option value="">Unassisted / No assist</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">#${p.jersey_number} ${esc(p.display_name)}</option>`).join('');if([...$('eventAssist').options].some(o=>o.value===acur))$('eventAssist').value=acur;}
+function renderEventFeed(){
+  if(!events.length){$('eventFeed').innerHTML='<div class="empty">No crowd events yet.</div>';return;}
+  $('eventFeed').innerHTML=events.map(ev=>{
+    const c=eventCounts(ev.id),needed=eventThreshold(ev),conf=isConfirmed(ev);
+    const dis=c.dispute>=needed&&c.dispute>=c.confirm;
+    const crowdAtEvent=Math.max(1,Number(ev.participant_count_snapshot)||participants.length||1);
+    return `<div class="feeditem"><div class="feedtop"><div><div class="feedtitle">${esc(eventLabel(ev))}</div><div class="meta">${ev.half==='second'?'2nd':'1st'} half · ${c.confirm}/${needed} confirmations · ${c.dispute} dispute · ${crowdAtEvent} scorer${crowdAtEvent===1?'':'s'} active when reported</div></div><span class="confidence ${conf?'confirmed':dis?'disputed':''}">${conf?'Confirmed':dis?'Disputed':'Pending'}</span></div><div class="voteactions"><button class="mini" data-evote="confirm" data-eid="${ev.id}" type="button">${c.mine==='confirm'?'✓ ':''}Confirm</button><button class="mini" data-evote="dispute" data-eid="${ev.id}" type="button">${c.mine==='dispute'?'✓ ':''}Dispute</button></div></div>`;
+  }).join('');
+  $('eventFeed').querySelectorAll('[data-evote]').forEach(b=>b.addEventListener('click',()=>voteEvent(b.dataset.eid,b.dataset.evote)));
+}
+async function voteEvent(id,verdict){const {error}=await db.rpc('vote_game_day_event',{p_event_id:id,p_verdict:verdict});if(error)return alert(error.message);await loadAll();}
+function renderRefFeed(){if(!refDecisions.length){$('refFeed').innerHTML='<div class="empty">No referee decisions flagged yet.</div>';return;}$('refFeed').innerHTML=refDecisions.map(d=>{const vs=refVotes.filter(v=>v.decision_id===d.id),agree=vs.filter(v=>v.vote==='agree').length,disagree=vs.filter(v=>v.vote==='disagree').length,unsure=vs.filter(v=>v.vote==='unsure').length,mine=vs.find(v=>v.user_id===user.id)?.vote;const total=vs.length,pct=total?Math.round(disagree/total*100):0;return `<div class="feeditem"><div class="feedtop"><div><div class="feedtitle">⚖️ ${esc(d.decision_type)}</div><div class="meta">${d.half==='second'?'2nd':'1st'} half${d.description?' · '+esc(d.description):''}</div></div><span class="confidence ${disagree>agree?'disputed':''}">${total?`${pct}% disagree`:'Vote open'}</span></div><div class="refvote"><button data-rvote="agree" data-rid="${d.id}" type="button">${mine==='agree'?'✓ ':''}Agree ${agree}</button><button data-rvote="disagree" data-rid="${d.id}" type="button">${mine==='disagree'?'✓ ':''}Disagree ${disagree}</button><button data-rvote="unsure" data-rid="${d.id}" type="button">${mine==='unsure'?'✓ ':''}Unsure ${unsure}</button></div></div>`}).join('');$('refFeed').querySelectorAll('[data-rvote]').forEach(b=>b.addEventListener('click',()=>voteRef(b.dataset.rid,b.dataset.rvote)));}
+async function voteRef(id,vote){const {error}=await db.rpc('vote_ref_decision',{p_decision_id:id,p_vote:vote});if(error)return alert(error.message);await loadAll();}
+function renderMotm(){const open=!!session.motm_voting_open;$('motmSection').classList.toggle('hidden',!open);if(!open)return;const mine=motmVotes.find(v=>v.user_id===user.id);$('motmGrid').innerHTML=roster.map(p=>`<button class="motmchip ${mine?.player_key===p.player_key?'selected':''}" data-motm="${esc(p.player_key)}" type="button">#${p.jersey_number}<br>${esc(p.display_name)}</button>`).join('');$('motmGrid').querySelectorAll('[data-motm]').forEach(b=>b.addEventListener('click',()=>castMotm(b.dataset.motm)));setStatus('motmStatus',mine?`Your vote: ${mine.player_number?'#'+mine.player_number+' ':''}${mine.player_name}`:'Choose one SKOR FC player.');}
+async function castMotm(key){const p=roster.find(x=>x.player_key===key);if(!p)return;const {error}=await db.rpc('cast_game_day_motm_vote',{p_session_id:sessionId,p_player_key:p.player_key,p_player_name:p.display_name,p_player_number:p.jersey_number});if(error)return setStatus('motmStatus',error.message,true);await loadAll();}
+document.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>openEventModal(b.dataset.report)));
+function openEventModal(type){currentEventType=type;$('eventModalTitle').textContent=({'skor_goal':'SKOR Goal','opponent_goal':'Opponent Goal','opponent_own_goal':'Opponent Own Goal','skor_own_goal':'SKOR Own Goal','skor_yellow_card':'SKOR Yellow Card','skor_red_card':'SKOR Red Card','opponent_yellow_card':'Opponent Yellow Card','opponent_red_card':'Opponent Red Card'}[type]||'Report Event');const needsPlayer=['skor_goal','skor_yellow_card','skor_red_card'].includes(type),needsAssist=type==='skor_goal',opp=['opponent_goal','opponent_yellow_card','opponent_red_card'].includes(type);$('playerChoiceWrap').classList.toggle('hidden',!needsPlayer);$('assistChoiceWrap').classList.toggle('hidden',!needsAssist);$('opponentWrap').classList.toggle('hidden',!opp);$('eventPlayer').value='';$('eventAssist').value='';$('opponentName').value='';setStatus('eventModalStatus','');$('eventModal').classList.add('open');}
+$('saveEventBtn').addEventListener('click',async()=>{const type=currentEventType,p=roster.find(x=>x.player_key===$('eventPlayer').value),a=roster.find(x=>x.player_key===$('eventAssist').value),needs=['skor_goal','skor_yellow_card','skor_red_card'].includes(type);if(needs&&!p)return setStatus('eventModalStatus','Choose a SKOR player.',true);const {error}=await db.rpc('report_game_day_event',{p_session_id:sessionId,p_event_type:type,p_half:$('eventHalf').value,p_player_key:p?.player_key||null,p_player_name:p?.display_name||null,p_player_number:p?.jersey_number||null,p_assist_player_key:a?.player_key||null,p_assist_player_name:a?.display_name||null,p_assist_player_number:a?.jersey_number||null,p_opponent_player_name:$('opponentName').value.trim()||null});if(error)return setStatus('eventModalStatus',error.message,true);$('eventModal').classList.remove('open');await loadAll();});
+$('refCallBtn').addEventListener('click',()=>{$('refDescription').value='';setStatus('refModalStatus','');$('refModal').classList.add('open');});
+$('saveRefBtn').addEventListener('click',async()=>{const {error}=await db.rpc('report_ref_decision',{p_session_id:sessionId,p_half:$('refHalf').value,p_decision_type:$('refType').value,p_description:$('refDescription').value.trim()||null,p_vote:$('refVote').value});if(error)return setStatus('refModalStatus',error.message,true);$('refModal').classList.remove('open');await loadAll();});
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>$(b.dataset.close).classList.remove('open')));document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
+function subscribeRealtime(){if(realtimeChannel){db.removeChannel(realtimeChannel);realtimeChannel=null;}realtimeChannel=db.channel('skor-crowd-'+sessionId).on('postgres_changes',{event:'*',schema:'public',table:'game_day_participants',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_crowd_events',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_event_reports',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_ref_decisions',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_ref_votes',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_motm_votes',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_day_sessions',filter:`id=eq.${sessionId}`},loadAll).subscribe();}
+db.auth.onAuthStateChange((_e,s)=>{if(s?.user&&!user){setTimeout(afterLogin,0)}});init();
+</script>
+</body>
+</html>
