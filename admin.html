@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v37-shared-data-production" />
-  <title>SKOR FC Admin | Lineups v37</title>
+  <meta name="skor-build" content="lineup-admin-v38-live-dashboard-production" />
+  <title>SKOR FC Admin | Lineups v38</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -944,6 +944,21 @@
     .field-name-main{font-weight:900;color:#262930}.field-designation{font-size:.72rem;color:var(--muted);margin-top:3px}.field-notes-cell{max-width:310px;white-space:normal;line-height:1.4}
     @media(max-width:900px){.fields-admin-grid{grid-template-columns:1fr}}
     @media(max-width:650px){#fields .fields-table{min-width:700px}#fields .panel{overflow:hidden}#fields .fields-table-wrap{margin:0 -2px}}
+
+    /* =========================================================
+       SKOR FC v38 — live captain dashboard
+       ========================================================= */
+    .dashboard-lower-grid{align-items:start}
+    .dashboard-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .dashboard-pill{background:#f1e8eb;color:var(--maroon)}
+    .dashboard-announcement-body{white-space:pre-wrap;line-height:1.5}
+    #dashboardNextPractice{font-size:1.2rem;line-height:1.15}
+    @media(max-width:650px){
+      #dashboardNextPractice{font-size:1rem}
+      #dashboard .dashboard-lower-grid{grid-template-columns:1fr}
+      #dashboard .dashboard-table-wrap .table{min-width:560px}
+    }
+
 </style>
 </head>
 <body>
@@ -977,7 +992,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v37</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v38</div>
   </aside>
 
   <main>
@@ -995,10 +1010,10 @@
 
     <section class="view active" id="dashboard">
       <div class="grid">
-        <div class="metric"><span>Active Players</span><strong>19</strong></div>
-        <div class="metric"><span>Next Practice</span><strong>4 days</strong></div>
-        <div class="metric"><span>Join Requests</span><strong>3</strong></div>
-        <div class="metric"><span>Unpaid Fees</span><strong>5</strong></div>
+        <div class="metric"><span>Active Players</span><strong id="dashboardActivePlayers">—</strong></div>
+        <div class="metric"><span>Next Practice</span><strong id="dashboardNextPractice">—</strong></div>
+        <div class="metric"><span>Join Requests</span><strong>0</strong></div>
+        <div class="metric"><span>Unpaid Fees</span><strong>0</strong></div>
       </div>
 
       <div class="content-grid">
@@ -1018,23 +1033,32 @@
 
         <div class="panel nextmatch">
           <span class="pill">Next Match</span>
-          <h3>Lone Wolves United vs. SKOR FC</h3>
-          <div class="sub">Sunday, Aug 30 • 5:00 PM<br>Arrive 4:15 PM • Maroon kit</div>
-          <button class="btn btn-primary" onclick="openView('gameday')">Open Game Day</button>
+          <h3 id="dashboardNextMatchTitle">Loading schedule…</h3>
+          <div class="sub" id="dashboardNextMatchMeta">Checking published matches.</div>
+          <button class="btn btn-primary" id="dashboardGameDayBtn" onclick="openView('gameday')">Open Game Day</button>
         </div>
       </div>
 
-      <div class="panel" style="margin-top:18px">
-        <h2>Upcoming activity</h2>
-        <div class="sub">Games and practices currently published.</div>
-        <table class="table">
-          <thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td>Aug 30</td><td>Match</td><td>Lone Wolves United vs. SKOR FC</td><td><span class="status">Published</span></td></tr>
-            <tr><td>Sep 13</td><td>Match</td><td>SKOR FC vs. AC Me Rollin</td><td><span class="status">Published</span></td></tr>
-            <tr><td>Sep 20</td><td>Match</td><td>SKOR FC vs. CTM</td><td><span class="status">Published</span></td></tr>
-          </tbody>
-        </table>
+      <div class="content-grid dashboard-lower-grid">
+        <div class="panel">
+          <h2>Upcoming activity</h2>
+          <div class="sub">Next published matches and practices from Schedule.</div>
+          <div class="dashboard-table-wrap">
+            <table class="table">
+              <thead><tr><th>Date</th><th>Type</th><th>Event</th><th>Status</th></tr></thead>
+              <tbody id="dashboardActivityBody">
+                <tr><td colspan="4">Loading schedule…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <span class="pill dashboard-pill">Latest Announcement</span>
+          <h2 id="dashboardAnnouncementTitle" style="margin-top:14px">Loading announcements…</h2>
+          <div class="sub dashboard-announcement-body" id="dashboardAnnouncementBody">Checking Supabase.</div>
+          <button class="btn btn-light" type="button" onclick="openView('announcements')">Manage Announcements</button>
+        </div>
       </div>
     </section>
 
@@ -1292,7 +1316,7 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V37</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V38</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -2588,6 +2612,77 @@ function renderRosterTable(){
       <td><span class="status">${p.active===false?"Inactive":"Active"}</span></td>
     </tr>`).join("");
 }
+function dashboardDateTime(value){
+  if(!value)return "—";
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return String(value);
+  return d.toLocaleString("en-US",{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+}
+function dashboardDateShort(value){
+  if(!value)return "—";
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return String(value);
+  return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
+}
+function updateDashboardRoster(){
+  const el=document.getElementById("dashboardActivePlayers");
+  if(el)el.textContent=TEAM_ROSTER.filter(p=>p.active!==false).length;
+}
+function updateDashboardSchedule(){
+  const now=Date.now();
+  const practices=(schedulePractices||[])
+    .filter(p=>p.published!==false && new Date(p.starts_at).getTime()>=now)
+    .sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  const matches=(scheduleMatches||[])
+    .filter(m=>m.published!==false && m.status!=="final" && new Date(m.kickoff).getTime()>=now)
+    .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+
+  const practiceEl=document.getElementById("dashboardNextPractice");
+  if(practiceEl){
+    practiceEl.textContent=practices[0] ? dashboardDateShort(practices[0].starts_at) : "No practice scheduled";
+    practiceEl.title=practices[0] ? dashboardDateTime(practices[0].starts_at)+" · "+(practices[0].location||"") : "";
+  }
+
+  const nextMatch=matches[0];
+  const title=document.getElementById("dashboardNextMatchTitle");
+  const meta=document.getElementById("dashboardNextMatchMeta");
+  const gameDayBtn=document.getElementById("dashboardGameDayBtn");
+  if(title)title.textContent=nextMatch ? `${nextMatch.home_team} vs. ${nextMatch.away_team}` : "No match scheduled";
+  if(meta){
+    if(nextMatch){
+      const arrival=nextMatch.arrival_at ? `<br>Arrive ${new Date(nextMatch.arrival_at).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}` : "";
+      meta.innerHTML=`${scheduleEsc(dashboardDateTime(nextMatch.kickoff))}<br>${scheduleEsc(nextMatch.location||"Location TBD")}${arrival}`;
+    }else{
+      meta.textContent="Add the next match in Schedule when it is confirmed.";
+    }
+  }
+  if(gameDayBtn)gameDayBtn.style.display=nextMatch?"inline-flex":"none";
+
+  const activity=[
+    ...practices.map(p=>({when:p.starts_at,type:"Practice",event:p.title||"SKOR FC Practice",status:"Published"})),
+    ...matches.map(m=>({when:m.kickoff,type:"Match",event:`${m.home_team} vs. ${m.away_team}`,status:m.status==="scheduled"?"Published":m.status}))
+  ].sort((a,b)=>new Date(a.when)-new Date(b.when)).slice(0,6);
+
+  const body=document.getElementById("dashboardActivityBody");
+  if(body){
+    body.innerHTML=activity.length ? activity.map(item=>`
+      <tr>
+        <td>${scheduleEsc(dashboardDateShort(item.when))}</td>
+        <td>${scheduleEsc(item.type)}</td>
+        <td>${scheduleEsc(item.event)}</td>
+        <td><span class="status">${scheduleEsc(String(item.status||"Published").replace(/_/g," "))}</span></td>
+      </tr>`).join("") : '<tr><td colspan="4">No upcoming published matches or practices.</td></tr>';
+  }
+}
+function updateDashboardAnnouncement(items){
+  const active=(items||[]).filter(a=>a.active!==false);
+  const latest=active[0]||null;
+  const title=document.getElementById("dashboardAnnouncementTitle");
+  const body=document.getElementById("dashboardAnnouncementBody");
+  if(title)title.textContent=latest ? latest.title : "No published announcements";
+  if(body)body.textContent=latest ? latest.body : "Publish an announcement when there is something the team needs to know.";
+}
+
 async function loadTeamRoster(showMessage=false){
   const {data,error}=await sb
     .from("team_roster")
@@ -2609,6 +2704,7 @@ async function loadTeamRoster(showMessage=false){
     name:String(p.full_name||"Player").trim().split(/\s+/)[0]
   }));
   renderRosterTable();
+  updateDashboardRoster();
   refreshGameDayRosterOptions();
   window.SKORLineup?.setRoster(TEAM_ROSTER);
   if(showMessage)setRosterStatus("Roster refreshed — "+active.length+" active players.",true);
@@ -2882,6 +2978,7 @@ async function loadScheduleManager(){
   ]);
   if(p.error){practiceList.innerHTML=`<div class="form-status err">Could not load practices: ${scheduleEsc(p.error.message)}</div>`;}else{schedulePractices=p.data||[];renderPracticeManager();}
   if(m.error){matchScheduleList.innerHTML=`<div class="form-status err">Could not load matches: ${scheduleEsc(m.error.message)}</div>`;}else{scheduleMatches=m.data||[];window.SKORLineup?.setEvents(scheduleMatches,true);renderMatchManager();}
+  updateDashboardSchedule();
 }
 function renderPracticeManager(){
   const now=Date.now()-12*60*60*1000;
@@ -2930,8 +3027,11 @@ async function loadAnnouncements(){
   if(error){
     console.error(error);
     list.innerHTML='<div style="color:#8b1e3f;font-size:.9rem">Could not load announcements. Make sure the announcements table and RLS policies have been created in Supabase.</div>';
+    updateDashboardAnnouncement([]);
     return;
   }
+
+  updateDashboardAnnouncement(items||[]);
 
   if(!items?.length){
     list.innerHTML='<div style="color:var(--muted);font-size:.9rem">No announcements published yet.</div>';
