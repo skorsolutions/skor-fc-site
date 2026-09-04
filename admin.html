@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v36-export-spacing-production" />
-  <title>SKOR FC Admin | Lineups v36</title>
+  <meta name="skor-build" content="lineup-admin-v37-shared-data-production" />
+  <title>SKOR FC Admin | Lineups v37</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -934,6 +934,16 @@
       #lineups .sub-event-number{margin-bottom:0}
     }
 
+
+    /* v37 shared Supabase field registry */
+    .fields-admin-grid{grid-template-columns:minmax(330px,.82fr) minmax(0,1.35fr)}
+    .fields-heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .fields-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .fields-table{width:100%;min-width:760px}
+    .fields-table td{vertical-align:top}
+    .field-name-main{font-weight:900;color:#262930}.field-designation{font-size:.72rem;color:var(--muted);margin-top:3px}.field-notes-cell{max-width:310px;white-space:normal;line-height:1.4}
+    @media(max-width:900px){.fields-admin-grid{grid-template-columns:1fr}}
+    @media(max-width:650px){#fields .fields-table{min-width:700px}#fields .panel{overflow:hidden}#fields .fields-table-wrap{margin:0 -2px}}
 </style>
 </head>
 <body>
@@ -967,7 +977,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v36</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v37</div>
   </aside>
 
   <main>
@@ -1232,7 +1242,7 @@
       <div class="content-grid roster-admin-grid">
         <div class="panel">
           <h2>Add Player</h2>
-          <div class="sub">Players are stored in Supabase and automatically become available in Lineups, position depth, planned substitutions, Game Day, and Man of the Match.</div>
+          <div class="sub">Players are stored in Supabase and automatically become available in Lineups, Game Day, the homepage squad, players page, stats and Man of the Match. The public site displays first names only; email and phone remain captain-only.</div>
           <form class="form" id="rosterForm">
             <div class="roster-form-grid">
               <div>
@@ -1282,7 +1292,7 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V36</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V37</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -1369,14 +1379,26 @@
     </section>
 
     <section class="view" id="fields">
-      <div class="panel"><h2>Fields</h2><div class="sub">Save addresses once, then reuse them for every event.</div>
-        <form class="form">
-          <div><label>Field name</label><input placeholder="East Roswell Park"></div>
-          <div><label>Address</label><input placeholder="9000 Fouts Road, Roswell, GA"></div>
-          <div class="fieldrow"><div><label>Field number</label><input placeholder="#2"></div><div><label>Surface</label><select><option>Turf</option><option>Grass</option></select></div></div>
-          <div><label>Parking / access notes</label><textarea></textarea></div>
-          <button class="btn btn-primary" type="button">Save Field</button>
-        </form>
+      <div class="content-grid fields-admin-grid">
+        <div class="panel">
+          <h2>Add Field</h2>
+          <div class="sub">Save a field once. It immediately becomes available in Practice and Match scheduling, and the public homepage Fields section reads from the same Supabase registry.</div>
+          <form class="form" id="fieldForm">
+            <div><label>Field / park name</label><input id="fieldName" required placeholder="East Roswell Park"></div>
+            <div><label>Address</label><input id="fieldAddress" required autocomplete="street-address" placeholder="9000 Fouts Road, Roswell, GA 30076"></div>
+            <div class="fieldrow">
+              <div><label>Field number / designation</label><input id="fieldNumber" placeholder="SC#2, Field 1, Upper Field..."></div>
+              <div><label>Surface</label><select id="fieldSurface"><option value="">Not specified</option><option value="Grass">Grass</option><option value="Turf">Turf</option><option value="Indoor">Indoor</option><option value="Other">Other</option></select></div>
+            </div>
+            <div><label>Parking / access notes</label><textarea id="fieldParkingNotes" rows="4" placeholder="Upper lot, gate code, best entrance, parking notes..."></textarea></div>
+            <button class="btn btn-primary" id="saveFieldBtn" type="submit">Save Field</button>
+            <div class="form-status" id="fieldFormStatus"></div>
+          </form>
+        </div>
+        <div class="panel">
+          <div class="fields-heading-row"><div><h2>Saved Fields <span class="variation-count" id="fieldCount">0</span></h2><div class="sub">Shared field registry used by the Captain Portal and public site.</div></div><button class="mini-btn" id="refreshFieldsBtn" type="button">Refresh</button></div>
+          <div class="fields-table-wrap"><table class="table fields-table"><thead><tr><th>Field</th><th>Address</th><th>Surface</th><th>Parking / Access</th></tr></thead><tbody id="fieldsTableBody"><tr><td colspan="4">Loading fields…</td></tr></tbody></table></div>
+        </div>
       </div>
     </section>
 
@@ -2212,7 +2234,7 @@
       .map(r=>({
         player_key:String(r.player_key || r.id || (r.jersey_number+"-"+r.full_name)),
         number:Number(r.jersey_number),
-        name:String(r.full_name||"Player")
+        name:String(r.display_name||String(r.full_name||"Player").trim().split(/\s+/)[0])
       }))
       .filter(p=>Number.isFinite(p.number) && p.name)
       .sort((a,b)=>a.number-b.number || a.name.localeCompare(b.name));
@@ -2420,8 +2442,8 @@ function showDashboard(user){
   document.getElementById("userAvatar").textContent = (fullName.trim()[0] || "C").toUpperCase();
   window.SKORLineup?.setCaptain(user.id || email || "captain");
   loadTeamRoster();
+  loadTeamFields().then(()=>loadScheduleManager());
   loadGameDayMatches();
-  loadScheduleManager();
 }
 async function captainIsApproved(user){
   if(!user?.email) return false;
@@ -2569,8 +2591,9 @@ function renderRosterTable(){
 async function loadTeamRoster(showMessage=false){
   const {data,error}=await sb
     .from("team_roster")
-    .select("id,player_key,full_name,email,phone,jersey_number,active,created_at")
-    .order("jersey_number",{ascending:true});
+    .select("id,player_key,full_name,email,phone,jersey_number,position,is_new,photo_url,sort_order,active,created_at")
+    .order("sort_order",{ascending:true})
+    .order("created_at",{ascending:true});
   if(error){
     console.error("Could not load team roster:",error);
     const body=document.getElementById("rosterTableBody");
@@ -2583,7 +2606,7 @@ async function loadTeamRoster(showMessage=false){
   ROSTER=active.map(p=>({
     player_key:p.player_key||p.id,
     number:Number(p.jersey_number),
-    name:p.full_name
+    name:String(p.full_name||"Player").trim().split(/\s+/)[0]
   }));
   renderRosterTable();
   refreshGameDayRosterOptions();
@@ -2620,7 +2643,7 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
     const {error}=await sb.from("team_roster").insert(payload);
     if(error)throw error;
     rosterForm.reset();
-    setRosterStatus(full_name+" added to the shared roster.",true);
+    setRosterStatus(full_name+" added. The public squad will pick it up automatically.",true);
     await loadTeamRoster(false);
   }catch(err){
     const msg=String(err?.message||err);
@@ -2631,6 +2654,49 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
     button.disabled=false;button.textContent="Add Player";
   }
 });
+
+let TEAM_FIELDS=[],TEAM_FIELDS_LOADED=false;
+const BUILTIN_PRACTICE_FIELDS=["Sweet Apple Park Field 1"];
+const BUILTIN_MATCH_FIELDS=["East Roswell Park SC#1","East Roswell Park SC#2","Groveway Community Park · Upper Field","Roswell Area Park MS#3"];
+function fieldDisplayLabel(field){const name=String(field?.name||"").trim(),num=String(field?.field_number||"").trim();return num?`${name} · ${num}`:name;}
+function fieldKey(value){return String(value||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
+function setFieldStatus(message,ok=true){const el=document.getElementById("fieldFormStatus");if(!el)return;el.textContent=message||"";el.className="form-status "+(ok?"ok":"err");}
+function renderFieldsTable(){
+  const body=document.getElementById("fieldsTableBody"),count=document.getElementById("fieldCount");
+  const rows=TEAM_FIELDS.filter(f=>f.active!==false);if(count)count.textContent=rows.length;if(!body)return;
+  if(!rows.length){body.innerHTML='<tr><td colspan="4">No saved Supabase fields yet.</td></tr>';return;}
+  body.innerHTML=rows.map(f=>`<tr><td><div class="field-name-main">${rosterEsc(f.name)}</div>${f.field_number?`<div class="field-designation">${rosterEsc(f.field_number)}</div>`:""}</td><td>${rosterEsc(f.address||"—")}</td><td>${rosterEsc(f.surface||"—")}</td><td class="field-notes-cell">${rosterEsc(f.parking_notes||"—")}</td></tr>`).join("");
+}
+function refreshLocationSelect(selectId,builtins){
+  const sel=document.getElementById(selectId);if(!sel)return;const current=sel.value;
+  const labels=[];const source=TEAM_FIELDS_LOADED?TEAM_FIELDS.filter(f=>f.active!==false).map(fieldDisplayLabel):builtins;source.forEach(v=>{if(v&&!labels.some(x=>fieldKey(x)===fieldKey(v)))labels.push(v);});
+  sel.innerHTML=labels.map(v=>`<option value="${rosterEsc(v)}">${rosterEsc(v)}</option>`).join("")+'<option value="other">Other</option>';
+  const exact=labels.find(v=>fieldKey(v)===fieldKey(current));sel.value=exact||"other";
+  if(!exact&&current&&current!=="other"){
+    const otherId=selectId==="practiceLocation"?"practiceOtherLocation":"scheduleOtherLocation";const other=document.getElementById(otherId);if(other)other.value=current;
+  }
+}
+function refreshFieldLocationDropdowns(){refreshLocationSelect("practiceLocation",BUILTIN_PRACTICE_FIELDS);refreshLocationSelect("scheduleLocation",BUILTIN_MATCH_FIELDS);if(typeof syncPracticeLocation==="function")syncPracticeLocation();if(typeof syncMatchOtherFields==="function")syncMatchOtherFields();}
+async function loadTeamFields(showMessage=false){
+  const {data,error}=await sb.from("team_fields").select("id,name,address,field_number,surface,parking_notes,active,sort_order,created_at").order("sort_order",{ascending:true}).order("name",{ascending:true});
+  if(error){console.error("Could not load team fields:",error);if(showMessage)setFieldStatus("Could not load fields: "+error.message,false);refreshFieldLocationDropdowns();return;}
+  TEAM_FIELDS=data||[];TEAM_FIELDS_LOADED=true;renderFieldsTable();refreshFieldLocationDropdowns();if(showMessage)setFieldStatus("Fields refreshed — "+TEAM_FIELDS.filter(f=>f.active!==false).length+" active.",true);
+}
+const fieldForm=document.getElementById("fieldForm"),refreshFieldsBtn=document.getElementById("refreshFieldsBtn");
+if(refreshFieldsBtn)refreshFieldsBtn.addEventListener("click",()=>loadTeamFields(true));
+if(fieldForm)fieldForm.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const name=document.getElementById("fieldName").value.trim(),address=document.getElementById("fieldAddress").value.trim(),field_number=document.getElementById("fieldNumber").value.trim(),surface=document.getElementById("fieldSurface").value,parking_notes=document.getElementById("fieldParkingNotes").value.trim();
+  if(!name||!address)return setFieldStatus("Field name and address are required.",false);
+  const btn=document.getElementById("saveFieldBtn");btn.disabled=true;btn.textContent="Saving…";
+  try{const {data:{user},error:userError}=await sb.auth.getUser();if(userError||!user)throw new Error(userError?.message||"Captain session not found.");
+    const existingMax=Math.max(0,...TEAM_FIELDS.map(f=>Number(f.sort_order)||0));
+    const payload={name,address,field_number:field_number||null,surface:surface||null,parking_notes:parking_notes||null,active:true,sort_order:existingMax+10,created_by:user.id};
+    const {error}=await sb.from("team_fields").insert(payload);if(error)throw error;
+    fieldForm.reset();setFieldStatus(fieldDisplayLabel(payload)+" saved. Schedule and public Fields now use this registry.",true);await loadTeamFields(false);
+  }catch(err){const msg=String(err?.message||err);setFieldStatus(msg.toLowerCase().includes("duplicate")?"That field/designation already exists.":"Could not save field: "+msg,false);}finally{btn.disabled=false;btn.textContent="Save Field";}
+});
+
 function parsePlayerChoice(value){
   if(!value)return null;
   const [kind,number,name]=value.split("|");
@@ -2823,13 +2889,13 @@ function renderPracticeManager(){
   practiceList.innerHTML=rows.length?rows.map(p=>`<div class="schedule-item"><div class="schedule-item-head"><div><h3>${scheduleEsc(p.title||"SKOR FC Practice")}</h3><p><strong>${scheduleEsc(displayScheduleDate(p.starts_at))}</strong></p><p>${scheduleEsc(p.location||"")}</p>${p.notes?`<p>${scheduleEsc(p.notes)}</p>`:""}</div><span class="schedule-badge ${p.published?"live":""}">${p.published?"PUBLISHED":"HIDDEN"}</span></div><div class="schedule-actions"><button class="btn btn-light" type="button" onclick="editPractice('${p.id}')">Edit</button><button class="btn btn-light" type="button" onclick="togglePractice('${p.id}',${!p.published})">${p.published?"Hide":"Publish"}</button><button class="btn btn-light" type="button" onclick="deletePractice('${p.id}')">Delete</button></div></div>`).join(""):'<div class="sub">No upcoming practices yet.</div>';
 }
 function resetPracticeForm(){practiceForm.reset();document.getElementById("practiceId").value="";document.getElementById("practiceTitle").value="SKOR FC Practice";document.getElementById("practiceSave").textContent="Publish Practice";document.getElementById("practiceCancelEdit").style.display="none";}
-window.editPractice=function(id){const p=schedulePractices.find(x=>x.id===id);if(!p)return;const t=localParts(p.starts_at);document.getElementById("practiceId").value=p.id;document.getElementById("practiceTitle").value=p.title||"SKOR FC Practice";document.getElementById("practiceDate").value=t.date;document.getElementById("practiceTime").value=t.time;const loc=p.location||"";if(loc==="Sweet Apple Park Field 1"){document.getElementById("practiceLocation").value=loc;document.getElementById("practiceOtherLocation").value="";}else{document.getElementById("practiceLocation").value="other";document.getElementById("practiceOtherLocation").value=loc;}syncPracticeLocation();document.getElementById("practiceNotes").value=p.notes||"";document.getElementById("practiceSave").textContent="Save Practice Changes";document.getElementById("practiceCancelEdit").style.display="inline-flex";practiceForm.scrollIntoView({behavior:"smooth",block:"start"});};
+window.editPractice=function(id){const p=schedulePractices.find(x=>x.id===id);if(!p)return;const t=localParts(p.starts_at);document.getElementById("practiceId").value=p.id;document.getElementById("practiceTitle").value=p.title||"SKOR FC Practice";document.getElementById("practiceDate").value=t.date;document.getElementById("practiceTime").value=t.time;setMatchDropdown("practiceLocation","practiceOtherLocationWrap","practiceOtherLocation",p.location||"");syncPracticeLocation();document.getElementById("practiceNotes").value=p.notes||"";document.getElementById("practiceSave").textContent="Save Practice Changes";document.getElementById("practiceCancelEdit").style.display="inline-flex";practiceForm.scrollIntoView({behavior:"smooth",block:"start"});};
 window.togglePractice=async function(id,published){const {error}=await sb.from("practices").update({published}).eq("id",id);if(error)return alert("Could not update practice: "+error.message);await loadScheduleManager();};
 window.deletePractice=async function(id){if(!confirm("Delete this practice?"))return;const {error}=await sb.from("practices").delete().eq("id",id);if(error)return alert("Could not delete practice: "+error.message);await loadScheduleManager();};
 document.getElementById("practiceCancelEdit").addEventListener("click",resetPracticeForm);
 function syncPracticeLocation(){const sel=document.getElementById("practiceLocation"),wrap=document.getElementById("practiceOtherLocationWrap"),other=document.getElementById("practiceOtherLocation");const custom=sel.value==="other";wrap.style.display=custom?"block":"none";other.required=custom;}
 document.getElementById("practiceLocation").addEventListener("change",syncPracticeLocation);syncPracticeLocation();
-practiceForm.addEventListener("submit",async e=>{e.preventDefault();const id=document.getElementById("practiceId").value;const title=document.getElementById("practiceTitle").value.trim()||"SKOR FC Practice",date=document.getElementById("practiceDate").value,time=document.getElementById("practiceTime").value,locationChoice=document.getElementById("practiceLocation").value,location=(locationChoice==="other"?document.getElementById("practiceOtherLocation").value.trim():locationChoice),notes=document.getElementById("practiceNotes").value.trim();if(!date||!time||!location)return alert("Add the practice date, start time and location.");const starts_at=localIso(date,time);const {data:{user}}=await sb.auth.getUser();const payload={title,starts_at,location,notes:notes||null,published:true};const result=id?await sb.from("practices").update(payload).eq("id",id):await sb.from("practices").insert({...payload,created_by:user?.id||null});if(result.error){setScheduleMessage("practiceStatus","Could not save practice: "+result.error.message,false);return;}setScheduleMessage("practiceStatus",id?"Practice updated and published.":"Practice published to the homepage.",true);resetPracticeForm();document.getElementById("practiceLocation").value="Sweet Apple Park Field 1";document.getElementById("practiceOtherLocation").value="";syncPracticeLocation();await loadScheduleManager();});
+practiceForm.addEventListener("submit",async e=>{e.preventDefault();const id=document.getElementById("practiceId").value;const title=document.getElementById("practiceTitle").value.trim()||"SKOR FC Practice",date=document.getElementById("practiceDate").value,time=document.getElementById("practiceTime").value,locationChoice=document.getElementById("practiceLocation").value,location=(locationChoice==="other"?document.getElementById("practiceOtherLocation").value.trim():locationChoice),notes=document.getElementById("practiceNotes").value.trim();if(!date||!time||!location)return alert("Add the practice date, start time and location.");const starts_at=localIso(date,time);const {data:{user}}=await sb.auth.getUser();const payload={title,starts_at,location,notes:notes||null,published:true};const result=id?await sb.from("practices").update(payload).eq("id",id):await sb.from("practices").insert({...payload,created_by:user?.id||null});if(result.error){setScheduleMessage("practiceStatus","Could not save practice: "+result.error.message,false);return;}setScheduleMessage("practiceStatus",id?"Practice updated and published.":"Practice published to the homepage.",true);resetPracticeForm();{const sel=document.getElementById("practiceLocation");const preferred=[...sel.options].find(o=>fieldKey(o.value).includes("sweet apple park"));sel.value=preferred?.value||sel.options[0]?.value||"other";}document.getElementById("practiceOtherLocation").value="";syncPracticeLocation();await loadScheduleManager();});
 
 function renderMatchManager(){
   const now=Date.now()-6*60*60*1000;
@@ -2978,7 +3044,7 @@ loadAnnouncements();
 })();
 
 
-// The independent v36 builder above is the only lineup engine.
+// The independent v37 builder above is the only lineup engine.
 
 </script>
 
