@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v28-freeform-production" />
-  <title>SKOR FC Admin | Lineups v28</title>
+  <meta name="skor-build" content="lineup-admin-v29-supabase-roster-production" />
+  <title>SKOR FC Admin | Lineups v29</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -773,6 +773,29 @@
       #lineups .soccer-pitch.freeform-mode::after{font-size:.56rem;left:8px;right:8px;top:8px;padding:4px 6px}
     }
 
+
+    /* =========================================================
+       SKOR FC v29 — Supabase-backed roster
+       ========================================================= */
+    .roster-admin-grid{grid-template-columns:minmax(320px,.8fr) minmax(0,1.4fr)}
+    .roster-form-grid{display:grid;grid-template-columns:1.5fr .6fr 1.2fr 1fr;gap:10px}
+    .roster-heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .roster-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .roster-table{width:100%;min-width:720px}
+    .roster-table td{vertical-align:middle}
+    .roster-contact{font-size:.76rem;color:var(--muted)}
+    @media(max-width:900px){
+      .roster-admin-grid{grid-template-columns:1fr}
+      .roster-form-grid{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:650px){
+      #roster .roster-form-grid{grid-template-columns:1fr!important}
+      #roster .roster-heading-row{align-items:center}
+      #roster .roster-table{min-width:650px}
+      #roster .panel{overflow:hidden}
+      #roster .roster-table-wrap{margin:0 -2px}
+    }
+
 </style>
 </head>
 <body>
@@ -806,7 +829,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v28</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v29</div>
   </aside>
 
   <main>
@@ -1068,24 +1091,60 @@
     </section>
 
     <section class="view" id="roster">
-      <div class="panel">
-        <h2>Roster</h2><div class="sub">Player management mockup.</div>
-        <table class="table">
-          <thead><tr><th>#</th><th>Name</th><th>Position</th><th>Role</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td>9</td><td>Player Name</td><td>Forward</td><td>Captain</td><td><span class="status">Active</span></td></tr>
-            <tr><td>15</td><td>Player Name</td><td>Midfield</td><td>Player</td><td><span class="status">Active</span></td></tr>
-            <tr><td>4</td><td>Player Name</td><td>Defender</td><td>Player</td><td><span class="status">Active</span></td></tr>
-          </tbody>
-        </table>
-        <button class="btn btn-primary" style="margin-top:14px">Add Player</button>
+      <div class="content-grid roster-admin-grid">
+        <div class="panel">
+          <h2>Add Player</h2>
+          <div class="sub">Players are stored in Supabase and automatically become available in Lineups, position depth, planned substitutions, Game Day, and Man of the Match.</div>
+          <form class="form" id="rosterForm">
+            <div class="roster-form-grid">
+              <div>
+                <label>Full name</label>
+                <input id="rosterFullName" required autocomplete="name" placeholder="Full player name">
+              </div>
+              <div>
+                <label>Jersey #</label>
+                <input id="rosterNumber" type="number" min="1" max="99" required inputmode="numeric" placeholder="11">
+              </div>
+              <div>
+                <label>Email</label>
+                <input id="rosterEmail" type="email" autocomplete="email" placeholder="player@example.com">
+              </div>
+              <div>
+                <label>Phone</label>
+                <input id="rosterPhone" type="tel" autocomplete="tel" placeholder="404-555-0100">
+              </div>
+            </div>
+            <button class="btn btn-primary" id="addRosterPlayerBtn" type="submit">Add Player</button>
+            <div class="form-status" id="rosterFormStatus"></div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="roster-heading-row">
+            <div>
+              <h2>Team Roster <span class="variation-count" id="rosterCount">0</span></h2>
+              <div class="sub">Shared roster for every approved captain. Active players feed the lineup and Game Day tools automatically.</div>
+            </div>
+            <button class="mini-btn" id="refreshRosterBtn" type="button">Refresh</button>
+          </div>
+          <div class="roster-table-wrap">
+            <table class="table roster-table">
+              <thead>
+                <tr><th>#</th><th>Full Name</th><th>Email</th><th>Phone</th><th>Status</th></tr>
+              </thead>
+              <tbody id="rosterTableBody">
+                <tr><td colspan="5">Loading roster…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V28</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V29</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -1187,14 +1246,14 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v28 - shared games + named Tinker boards + freeform custom */
+/* SKOR FC Lineup Builder v29 - shared Supabase roster + freeform custom */
 (function(){
-  const roster = [
-    {number:2,name:"Ivan"},{number:9,name:"Andres"},{number:17,name:"David"},{number:18,name:"Jason"},
-    {number:20,name:"Ayman"},{number:6,name:"Julio"},{number:7,name:"Tom"},{number:14,name:"Pedro"},
-    {number:16,name:"CJ"},{number:19,name:"Dez"},{number:8,name:"Adolpho"},{number:22,name:"Vignesh"},
-    {number:11,name:"Edward"},{number:1,name:"Todd"},{number:3,name:"Brad"},{number:21,name:"Andres"},
-    {number:12,name:"Koushyar"},{number:15,name:"Andrew"},{number:4,name:"Nick"}
+  let roster = [
+    {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
+    {player_key:"20-Ayman",number:20,name:"Ayman"},{player_key:"6-Julio",number:6,name:"Julio"},{player_key:"7-Tom",number:7,name:"Tom"},{player_key:"14-Pedro",number:14,name:"Pedro"},
+    {player_key:"16-CJ",number:16,name:"CJ"},{player_key:"19-Dez",number:19,name:"Dez"},{player_key:"8-Adolpho",number:8,name:"Adolpho"},{player_key:"22-Vignesh",number:22,name:"Vignesh"},
+    {player_key:"11-Edward",number:11,name:"Edward"},{player_key:"1-Todd",number:1,name:"Todd"},{player_key:"3-Brad",number:3,name:"Brad"},{player_key:"21-Andres",number:21,name:"Andres"},
+    {player_key:"12-Koushyar",number:12,name:"Koushyar"},{player_key:"15-Andrew",number:15,name:"Andrew"},{player_key:"4-Nick",number:4,name:"Nick"}
   ];
 
   const formations = {
@@ -1248,12 +1307,12 @@
     const depth={};
     depthPositions.forEach(pos=>{
       const raw=Array.isArray(value?.depth?.[pos.key])?value.depth[pos.key]:[];
-      depth[pos.key]=raw.filter(pid=>!!player(pid));
+      depth[pos.key]=raw.filter(Boolean);
     });
     const freeform={};
     if(value?.freeform && typeof value.freeform==="object"){
       Object.entries(value.freeform).forEach(([pid,pt])=>{
-        if(player(pid) && pt && Number.isFinite(+pt.x) && Number.isFinite(+pt.y)){
+        if(pid && pt && Number.isFinite(+pt.x) && Number.isFinite(+pt.y)){
           freeform[pid]={x:clamp(+pt.x,5,95),y:clamp(+pt.y,8,92)};
         }
       });
@@ -1262,14 +1321,14 @@
       formation,
       slots:(value?.slots&&typeof value.slots==="object")?value.slots:{},
       freeform,
-      bench:Array.isArray(value?.bench)?value.bench.filter(pid=>!!player(pid)):[],
+      bench:Array.isArray(value?.bench)?value.bench.filter(Boolean):[],
       depth,
       subs:normalizeSubs(value?.subs),
       labelMode:value?.labelMode==="numbers"?"numbers":"names"
     };
   }
 
-  function id(p){ return p.number+"-"+p.name; }
+  function id(p){ return p.player_key || p.id || (p.number+"-"+p.name); }
   function player(pid){ return roster.find(p=>id(p)===pid); }
   function esc(v){ return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s])); }
   function clone(v){ return JSON.parse(JSON.stringify(v)); }
@@ -1448,6 +1507,8 @@
   function renderPool(){
     const pool=document.getElementById("lineupPlayerPool");
     if(!pool)return;
+    const count=document.querySelector("#lineups .v19-lineup-count");
+    if(count)count.textContent=roster.length;
     const used=new Set([...allFieldPlayerIds(), ...state.bench]);
     pool.innerHTML=roster.map(p=>{
       const pid=id(p),active=selectedPlayer===pid;
@@ -1664,6 +1725,22 @@
       (gameOptions?'<optgroup label="Games">'+gameOptions+'</optgroup>':'');
     sel.value=[...sel.options].some(o=>o.value===current)?current:'tinker';
   }
+  function setRoster(rows){
+    const next=(rows||[])
+      .filter(r=>r && r.active!==false)
+      .map(r=>({
+        player_key:String(r.player_key || r.id || (r.jersey_number+"-"+r.full_name)),
+        number:Number(r.jersey_number),
+        name:String(r.full_name||"Player")
+      }))
+      .filter(p=>Number.isFinite(p.number) && p.name)
+      .sort((a,b)=>a.number-b.number || a.name.localeCompare(b.name));
+    if(!next.length)return;
+    roster=next;
+    renderAll();
+    markStatus("Roster synced from Supabase — "+roster.length+" active players available.");
+  }
+
   function setEvents(matches, authoritative=false){
     if(authoritative) eventMatches=new Map();
     (matches||[]).forEach(m=>{ if(m?.id) eventMatches.set(String(m.id),m); });
@@ -1781,9 +1858,10 @@
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v28 ready. Shared games, named Tinker boards, and Freeform / Custom layouts use Supabase.');
+  markStatus('Lineup Builder v29 ready. Roster, shared variations, named Tinker boards, and Freeform / Custom layouts use Supabase.');
 
   window.SKORLineup={
+    setRoster,
     setEvents,
     setCaptain,
     refreshVariations,
@@ -1828,6 +1906,7 @@ function showDashboard(user){
   document.getElementById("userEmail").textContent = email;
   document.getElementById("userAvatar").textContent = (fullName.trim()[0] || "C").toUpperCase();
   window.SKORLineup?.setCaptain(user.id || email || "captain");
+  loadTeamRoster();
   loadGameDayMatches();
   loadScheduleManager();
 }
@@ -1921,9 +2000,10 @@ function openView(id){
 document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>openView(btn.dataset.view)));
 
 
-const ROSTER=[
-  {number:2,name:"Ivan"},{number:9,name:"Andres"},{number:17,name:"David"},{number:18,name:"Jason"},{number:20,name:"Ayman"},{number:6,name:"Julio"},{number:7,name:"Tom"},{number:14,name:"Pedro"},{number:16,name:"CJ"},{number:19,name:"Dez"},{number:8,name:"Adolpho"},{number:22,name:"Vignesh"},{number:11,name:"Edward"},{number:1,name:"Todd"},{number:3,name:"Brad"},{number:21,name:"Andres"},{number:12,name:"Koushyar"},{number:15,name:"Andrew"},{number:4,name:"Nick"}
+let ROSTER=[
+  {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},{player_key:"20-Ayman",number:20,name:"Ayman"},{player_key:"6-Julio",number:6,name:"Julio"},{player_key:"7-Tom",number:7,name:"Tom"},{player_key:"14-Pedro",number:14,name:"Pedro"},{player_key:"16-CJ",number:16,name:"CJ"},{player_key:"19-Dez",number:19,name:"Dez"},{player_key:"8-Adolpho",number:8,name:"Adolpho"},{player_key:"22-Vignesh",number:22,name:"Vignesh"},{player_key:"11-Edward",number:11,name:"Edward"},{player_key:"1-Todd",number:1,name:"Todd"},{player_key:"3-Brad",number:3,name:"Brad"},{player_key:"21-Andres",number:21,name:"Andres"},{player_key:"12-Koushyar",number:12,name:"Koushyar"},{player_key:"15-Andrew",number:15,name:"Andrew"},{player_key:"4-Nick",number:4,name:"Nick"}
 ];
+let TEAM_ROSTER=[];
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
@@ -1935,8 +2015,109 @@ function rosterOptions(includeNone=false){
   const extras='<optgroup label="Unassigned / Guest Jerseys">'+EXTRA_JERSEY_NUMBERS.map(n=>`<option value="extra|${n}|">#${n} — Enter name</option>`).join("")+'</optgroup>';
   return first+roster+extras+'<option value="manual||">Other player / number — Enter manually</option>';
 }
+function refreshGameDayRosterOptions(){
+  const playerValueNow=eventPlayer.value,assistValueNow=eventAssist.value;
+  eventPlayer.innerHTML=rosterOptions(false);
+  eventAssist.innerHTML=rosterOptions(true);
+  if([...eventPlayer.options].some(o=>o.value===playerValueNow))eventPlayer.value=playerValueNow;
+  if([...eventAssist.options].some(o=>o.value===assistValueNow))eventAssist.value=assistValueNow;
+  const motm=document.getElementById("motmPlayer");
+  if(motm){
+    const current=motm.value;
+    motm.innerHTML=rosterOptions(false);
+    if([...motm.options].some(o=>o.value===current))motm.value=current;
+  }
+}
+function rosterEsc(v){return gdEsc(v);}
+function setRosterStatus(message,ok=true){
+  const el=document.getElementById("rosterFormStatus");
+  if(!el)return;
+  el.textContent=message||"";
+  el.className="form-status "+(ok?"ok":"err");
+}
+function renderRosterTable(){
+  const body=document.getElementById("rosterTableBody");
+  const count=document.getElementById("rosterCount");
+  if(count)count.textContent=TEAM_ROSTER.filter(p=>p.active!==false).length;
+  if(!body)return;
+  if(!TEAM_ROSTER.length){
+    body.innerHTML='<tr><td colspan="5">No players found.</td></tr>';
+    return;
+  }
+  body.innerHTML=TEAM_ROSTER.map(p=>`
+    <tr>
+      <td><strong>#${rosterEsc(p.jersey_number)}</strong></td>
+      <td><strong>${rosterEsc(p.full_name)}</strong></td>
+      <td>${p.email?rosterEsc(p.email):'<span class="roster-contact">—</span>'}</td>
+      <td>${p.phone?rosterEsc(p.phone):'<span class="roster-contact">—</span>'}</td>
+      <td><span class="status">${p.active===false?"Inactive":"Active"}</span></td>
+    </tr>`).join("");
+}
+async function loadTeamRoster(showMessage=false){
+  const {data,error}=await sb
+    .from("team_roster")
+    .select("id,player_key,full_name,email,phone,jersey_number,active,created_at")
+    .order("jersey_number",{ascending:true});
+  if(error){
+    console.error("Could not load team roster:",error);
+    const body=document.getElementById("rosterTableBody");
+    if(body)body.innerHTML='<tr><td colspan="5">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
+    if(showMessage)setRosterStatus("Could not load roster: "+error.message,false);
+    return;
+  }
+  TEAM_ROSTER=data||[];
+  const active=TEAM_ROSTER.filter(p=>p.active!==false);
+  ROSTER=active.map(p=>({
+    player_key:p.player_key||p.id,
+    number:Number(p.jersey_number),
+    name:p.full_name
+  }));
+  renderRosterTable();
+  refreshGameDayRosterOptions();
+  window.SKORLineup?.setRoster(TEAM_ROSTER);
+  if(showMessage)setRosterStatus("Roster refreshed — "+active.length+" active players.",true);
+}
+
 eventPlayer.innerHTML=rosterOptions(false);
 eventAssist.innerHTML=rosterOptions(true);
+const rosterForm=document.getElementById("rosterForm");
+const refreshRosterBtn=document.getElementById("refreshRosterBtn");
+if(refreshRosterBtn)refreshRosterBtn.addEventListener("click",()=>loadTeamRoster(true));
+if(rosterForm)rosterForm.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const full_name=document.getElementById("rosterFullName").value.trim();
+  const jersey_number=Number(document.getElementById("rosterNumber").value);
+  const email=document.getElementById("rosterEmail").value.trim().toLowerCase();
+  const phone=document.getElementById("rosterPhone").value.trim();
+  if(!full_name)return setRosterStatus("Enter the player's full name.",false);
+  if(!Number.isInteger(jersey_number)||jersey_number<1||jersey_number>99)return setRosterStatus("Jersey number must be between 1 and 99.",false);
+  const button=document.getElementById("addRosterPlayerBtn");
+  button.disabled=true;button.textContent="Adding…";
+  try{
+    const {data:{user},error:userError}=await sb.auth.getUser();
+    if(userError||!user)throw new Error(userError?.message||"Captain session not found.");
+    const payload={
+      full_name,
+      jersey_number,
+      email:email||null,
+      phone:phone||null,
+      active:true,
+      created_by:user.id
+    };
+    const {error}=await sb.from("team_roster").insert(payload);
+    if(error)throw error;
+    rosterForm.reset();
+    setRosterStatus(full_name+" added to the shared roster.",true);
+    await loadTeamRoster(false);
+  }catch(err){
+    const msg=String(err?.message||err);
+    setRosterStatus(msg.toLowerCase().includes("duplicate")
+      ?"That jersey number is already assigned to an active player."
+      :"Could not add player: "+msg,false);
+  }finally{
+    button.disabled=false;button.textContent="Add Player";
+  }
+});
 function parsePlayerChoice(value){
   if(!value)return null;
   const [kind,number,name]=value.split("|");
@@ -2284,7 +2465,7 @@ loadAnnouncements();
 })();
 
 
-// The independent v28 builder above is the only lineup engine.
+// The independent v29 builder above is the only lineup engine.
 
 </script>
 
