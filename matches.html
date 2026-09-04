@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SKOR FC | Match Center</title>
 <meta name="description" content="SKOR FC match center — upcoming fixtures, live match stats and past game summaries.">
+<meta name="skor-build" content="public-shared-data-v37">
 <style>
 :root{--bg:#07080a;--panel:#101216;--panel2:#15171b;--line:#2b2e33;--muted:#9ea2a8;--text:#f4f4f5;--maroon:#8f1836;--maroon2:#b51c43;--maroon3:#5e0c22;--max:1180px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}a{color:inherit}img{max-width:100%}.wrap{width:min(var(--max),calc(100% - 42px));margin:0 auto}.card{border:1px solid var(--line);background:linear-gradient(145deg,#14171b,#0c0e11);border-radius:16px;box-shadow:0 18px 45px rgba(0,0,0,.22)}
@@ -17,6 +18,8 @@
 .motm-card .label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#d06079;font-weight:900}
 .motm-card h3{margin:8px 0 6px;font-size:28px}
 .motm-card p{margin:0;color:#c7c9cc;line-height:1.55}
+
+.field-public-meta{display:block;margin-top:5px;color:#8f949b;font-size:10px}.field-directions{color:#d06079;text-decoration:none;font-weight:850}.field-directions:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -45,10 +48,16 @@ const FALLBACK_MATCHES=[
 {slug:"2026-10-25-latinos-fc",kickoff:"2026-10-25T19:00:00-04:00",status:"scheduled",home:"SKOR FC",away:"Latinos FC",location:"East Roswell Park SC#1",homeLogo:"assets/skor fc logo transparent.png",awayLogo:"assets/latinos-logo.png"},
 {slug:"2026-11-01-lone-wolves-united",kickoff:"2026-11-01T11:00:00-05:00",status:"scheduled",home:"Lone Wolves United",away:"SKOR FC",location:"East Roswell Park SC#1",homeLogo:"assets/lone-wolves-logo.jpg",awayLogo:"assets/skor fc logo transparent.png"}
 ];
-let matches=[...FALLBACK_MATCHES],events=[];
+let matches=[...FALLBACK_MATCHES],events=[],publicRoster=[],publicFields=[];
 function esc(v){return String(v||"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
+
+function publicName(name,rosterNumber){const found=publicRoster.find(p=>String(p.jersey_number)===String(rosterNumber||""));if(found)return found.display_name;const raw=String(name||"").trim();return raw?raw.split(/\s+/)[0]:"";}
+function locationKey(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
+function publicFieldLabel(f){return f?.field_number?`${f.name} · ${f.field_number}`:(f?.name||"");}
+function fieldForLocation(location){const key=locationKey(location);return publicFields.find(f=>locationKey(publicFieldLabel(f))===key)||null;}
+function fieldMetaHtml(location){const f=fieldForLocation(location);if(!f)return `<span><strong>${esc(location)}</strong></span>`;const href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(f.address||publicFieldLabel(f));return `<span><strong>${esc(location)}</strong><small class="field-public-meta">${esc(f.address||"")} · <a class="field-directions" href="${href}" target="_blank" rel="noopener">Directions</a></small></span>`;}
 function teamLogo(team){const t=(team||"").toLowerCase();if(t.includes("skor fc"))return"assets/skor fc logo transparent.png";if(t.includes("lone wolves"))return"assets/lone-wolves-logo.jpg";if(t.includes("ac me rollin"))return"assets/ac-me-rollin-logo.png";if(t==="ctm")return"assets/ctm-logo.png";if(t.includes("press & pray"))return"assets/press-pray-logo.png";if(t.includes("milliken"))return"assets/milliken-logo.png";if(t.includes("majestic"))return"assets/majestic-logo.png";if(t.includes("rovers"))return"assets/rovers-ruckus-logo.png";if(t.includes("concord"))return"assets/concord-logo.png";if(t.includes("latinos"))return"assets/latinos-logo.png";return"assets/skor fc logo transparent.png";}
-function normalize(r){return{id:r.id,slug:r.slug,kickoff:r.kickoff,arrival:r.arrival_at||r.arrival||"",kit:r.kit||"",status:r.status||"scheduled",home:r.home_team||r.home,away:r.away_team||r.away,location:r.location||"",homeLogo:r.home_logo||teamLogo(r.home_team||r.home),awayLogo:r.away_logo||teamLogo(r.away_team||r.away),man_of_match_name:r.man_of_match_player_name||"",man_of_match_number:r.man_of_match_player_number||"",man_of_match_reason:r.man_of_match_reason||""};}
+function normalize(r){return{id:r.id,slug:r.slug,kickoff:r.kickoff,arrival:r.arrival_at||r.arrival||"",kit:r.kit||"",status:r.status||"scheduled",home:r.home_team||r.home,away:r.away_team||r.away,location:r.location||"",homeLogo:r.home_logo||teamLogo(r.home_team||r.home),awayLogo:r.away_logo||teamLogo(r.away_team||r.away),man_of_match_name:r.man_of_match_player_name||"",man_of_match_number:r.man_of_match_player_number||"",man_of_match_roster_number:r.man_of_match_roster_player_number||"",man_of_match_reason:r.man_of_match_reason||""};}
 function fmtDate(d){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"long",month:"long",day:"numeric",year:"numeric"}).format(d)}
 function fmtTime(d){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"}).format(d)}
 function month(d){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short"}).format(d).toUpperCase()}
@@ -58,23 +67,40 @@ function score(m){let s=0,o=0;evFor(m).forEach(e=>{if(["skor_goal","opponent_own
 function statusText(s){return({scheduled:"Scheduled",first_half:"Live · 1st Half",halftime:"Halftime",second_half:"Live · 2nd Half",final:"Final"})[s]||"Scheduled"}
 function statusClass(s){return["first_half","halftime","second_half"].includes(s)?"live":s==="final"?"final":""}
 function isPast(m){return m.status==="final" || (m.status==="scheduled" && Date.now()>new Date(m.kickoff).getTime()+2*60*60*1000)}
-function labelPlayer(e){return e.player_name?`${esc(e.player_name)}${e.player_number?` <small>#${e.player_number}</small>`:""}`:"SKOR FC"}
-function goalEventHtml(e,m){let text="";if(e.event_type==="skor_goal"){text=`<strong>${labelPlayer(e)}</strong>`+(e.assist_player_name?`<small>Assist: ${esc(e.assist_player_name)}${e.assist_player_number?` #${e.assist_player_number}`:""}</small>`:`<small>Unassisted</small>`);}else if(e.event_type==="opponent_goal")text=`<strong>${esc(m.home==="SKOR FC"?m.away:m.home)} goal</strong>`;else if(e.event_type==="opponent_own_goal")text=`<strong>Opponent Own Goal</strong><small>Goal credited to SKOR FC</small>`;else if(e.event_type==="skor_own_goal")text=`<strong>SKOR Own Goal</strong><small>Goal credited to ${esc(m.home==="SKOR FC"?m.away:m.home)}</small>`;return `<div class="event"><div class="event-icon">⚽</div><div class="event-main">${text}</div></div>`;}
+function labelPlayer(e){const name=publicName(e.player_name,e.roster_player_number);return name?`${esc(name)}${e.player_number?` <small>#${e.player_number}</small>`:""}`:"SKOR FC"}
+function goalEventHtml(e,m){let text="";if(e.event_type==="skor_goal"){text=`<strong>${labelPlayer(e)}</strong>`+((e.assist_player_name||e.assist_roster_player_number)?`<small>Assist: ${esc(publicName(e.assist_player_name,e.assist_roster_player_number))}${e.assist_player_number?` #${e.assist_player_number}`:""}</small>`:`<small>Unassisted</small>`);}else if(e.event_type==="opponent_goal")text=`<strong>${esc(m.home==="SKOR FC"?m.away:m.home)} goal</strong>`;else if(e.event_type==="opponent_own_goal")text=`<strong>Opponent Own Goal</strong><small>Goal credited to SKOR FC</small>`;else if(e.event_type==="skor_own_goal")text=`<strong>SKOR Own Goal</strong><small>Goal credited to ${esc(m.home==="SKOR FC"?m.away:m.home)}</small>`;return `<div class="event"><div class="event-icon">⚽</div><div class="event-main">${text}</div></div>`;}
 function renderHalfEvents(m,half){const list=evFor(m).filter(e=>e.half===half && ["skor_goal","opponent_goal","opponent_own_goal","skor_own_goal"].includes(e.event_type));if(!list.length)return'<div class="empty">No goals recorded.</div>';return list.map(e=>goalEventHtml(e,m)).join("")}
-function cardPlayer(e,fallback){const name=e.player_name?esc(e.player_name):fallback;return `${name}${e.player_number!=null?` <small>#${e.player_number}</small>`:""}`}
+function cardPlayer(e,fallback){const publicPlayer=publicName(e.player_name,e.roster_player_number);const name=publicPlayer?esc(publicPlayer):fallback;return `${name}${e.player_number!=null?` <small>#${e.player_number}</small>`:""}`}
 function renderCardGroup(list,fallback,emptyText){if(!list.length)return`<div class="empty">${emptyText}</div>`;return list.map(e=>`<div class="event"><div class="event-icon">${["skor_yellow_card","opponent_yellow_card"].includes(e.event_type)?"🟨":"🟥"}</div><div class="event-main"><strong>${cardPlayer(e,fallback)}</strong><small>${e.half==="second"?"2nd Half":"1st Half"}</small></div></div>`).join("")}
 function renderCards(m){const all=evFor(m),skor=all.filter(e=>["skor_yellow_card","skor_red_card"].includes(e.event_type)),opp=all.filter(e=>["opponent_yellow_card","opponent_red_card"].includes(e.event_type)),oppName=m.home==="SKOR FC"?m.away:m.home;return `<div class="discipline-group"><h4>SKOR FC</h4>${renderCardGroup(skor,"SKOR Player","No SKOR FC cards recorded.")}</div><div class="discipline-group"><h4>${esc(oppName)}</h4>${renderCardGroup(opp,"Opponent Player","No opponent cards recorded.")}</div>`}
-function renderSelected(m){const box=document.getElementById("selectedMatch");if(!m){box.innerHTML='<div class="empty">Match not found.</div>';return;}const d=new Date(m.kickoff),sc=score(m),showScore=m.status!=="scheduled"||evFor(m).length>0;box.innerHTML=`<span class="status-pill ${statusClass(m.status)}">${statusText(m.status)}</span><div class="scoreboard"><div class="team"><img src="${m.homeLogo}" alt=""><h2>${esc(m.home)}</h2></div><div class="score">${showScore?`${sc.home} – ${sc.away}`:'<span class="vs">VS</span>'}</div><div class="team"><img src="${m.awayLogo}" alt=""><h2>${esc(m.away)}</h2></div></div><div class="match-meta"><span><strong>${fmtDate(d)}</strong></span><span><strong>${fmtTime(d)}</strong></span><span><strong>${esc(m.location)}</strong></span>${m.arrival?`<span>Arrival: <strong>${esc(m.arrival)}</strong></span>`:""}${m.kit?`<span>Kit: <strong>${esc(m.kit)}</strong></span>`:""}</div><div class="summary-grid"><div class="card panel"><h3>Goals & Assists</h3>${m.status==="scheduled"&&!evFor(m).length?'<div class="empty">Match stats will appear here when captains begin tracking the game.</div>':`<div class="half"><div class="half-title">1st Half</div>${renderHalfEvents(m,"first")}</div><div class="half"><div class="half-title">2nd Half</div>${renderHalfEvents(m,"second")}</div>`}</div><div class="card panel"><h3>Discipline</h3>${renderCards(m)}</div></div>`;}
+function renderSelected(m){const box=document.getElementById("selectedMatch");if(!m){box.innerHTML='<div class="empty">Match not found.</div>';return;}const d=new Date(m.kickoff),sc=score(m),showScore=m.status!=="scheduled"||evFor(m).length>0;box.innerHTML=`<span class="status-pill ${statusClass(m.status)}">${statusText(m.status)}</span><div class="scoreboard"><div class="team"><img src="${m.homeLogo}" alt=""><h2>${esc(m.home)}</h2></div><div class="score">${showScore?`${sc.home} – ${sc.away}`:'<span class="vs">VS</span>'}</div><div class="team"><img src="${m.awayLogo}" alt=""><h2>${esc(m.away)}</h2></div></div><div class="match-meta"><span><strong>${fmtDate(d)}</strong></span><span><strong>${fmtTime(d)}</strong></span>${fieldMetaHtml(m.location)}${m.arrival?`<span>Arrival: <strong>${esc(m.arrival)}</strong></span>`:""}${m.kit?`<span>Kit: <strong>${esc(m.kit)}</strong></span>`:""}</div><div class="summary-grid"><div class="card panel"><h3>Goals & Assists</h3>${m.status==="scheduled"&&!evFor(m).length?'<div class="empty">Match stats will appear here when captains begin tracking the game.</div>':`<div class="half"><div class="half-title">1st Half</div>${renderHalfEvents(m,"first")}</div><div class="half"><div class="half-title">2nd Half</div>${renderHalfEvents(m,"second")}</div>`}</div><div class="card panel"><h3>Discipline</h3>${renderCards(m)}</div></div>`;}
 function row(m,past=false){const d=new Date(m.kickoff),sc=score(m),show=past||m.status!=="scheduled"||evFor(m).length>0;return `<a class="match-row" href="matches.html?game=${encodeURIComponent(m.slug)}"><div class="datebox">${month(d)}<strong>${day(d)}</strong></div><div class="match-info"><h3>${esc(m.home)} vs ${esc(m.away)}</h3><p>${fmtTime(d)} · ${esc(m.location)} · ${statusText(m.status)}</p></div>${show?`<div class="row-result">${sc.home}–${sc.away}</div>`:`<div class="row-badges"><img src="${m.homeLogo}" alt=""><img src="${m.awayLogo}" alt=""></div>`}</a>`}
 function renderLists(){const up=matches.filter(m=>!isPast(m)).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));const past=matches.filter(isPast).sort((a,b)=>new Date(b.kickoff)-new Date(a.kickoff));document.getElementById("upcomingList").innerHTML=up.length?up.map(m=>row(m)).join(""):'<div class="empty" style="padding:22px">No upcoming matches scheduled.</div>';document.getElementById("pastList").innerHTML=past.length?past.map(m=>row(m,true)).join(""):'<div class="empty" style="padding:22px">No completed SKOR FC matches yet. Results will appear here after games are marked Final.</div>';const wanted=new URLSearchParams(location.search).get("game");const selected=matches.find(m=>m.slug===wanted)||up[0]||past[0];renderSelected(selected);renderManOfMatch(selected);}
-async function load(){if(!db){renderLists();return;}try{const {data,error}=await db.from("matches").select("id,slug,kickoff,arrival_at,status,home_team,away_team,location,home_logo,away_logo,published,man_of_match_player_name,man_of_match_player_number,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});if(error){console.error("Could not load matches:",error.message);}else if(data?.length){matches=data.map(normalize);const ids=matches.map(m=>m.id);const r=await db.from("match_events").select("id,match_id,event_type,player_name,player_number,assist_player_name,assist_player_number,half,sequence,created_at").in("match_id",ids).order("sequence",{ascending:true});if(r.error){console.error("Could not load match events:",r.error.message);}else{events=r.data||[];}}}catch(e){console.info("Using built-in match schedule fallback",e)}renderLists();}
+async function load(){
+  if(!db){renderLists();return;}
+  try{
+    const [rosterRes,fieldsRes,matchRes]=await Promise.all([
+      db.from("public_roster").select("display_name,jersey_number,sort_order").order("sort_order",{ascending:true}),
+      db.from("public_fields").select("id,name,address,field_number,surface,parking_notes,sort_order").order("sort_order",{ascending:true}),
+      db.from("matches").select("id,slug,kickoff,arrival_at,status,home_team,away_team,location,home_logo,away_logo,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true})
+    ]);
+    if(!rosterRes.error&&rosterRes.data)publicRoster=rosterRes.data;
+    if(!fieldsRes.error&&fieldsRes.data)publicFields=fieldsRes.data;
+    if(matchRes.error){console.error("Could not load matches:",matchRes.error.message);}else if(matchRes.data?.length){
+      matches=matchRes.data.map(normalize);const ids=matches.map(m=>m.id);
+      const r=await db.from("match_events").select("id,match_id,event_type,player_name,player_number,roster_player_number,assist_player_name,assist_player_number,assist_roster_player_number,half,sequence,created_at").in("match_id",ids).order("sequence",{ascending:true});
+      if(r.error)console.error("Could not load match events:",r.error.message);else events=r.data||[];
+    }
+  }catch(e){console.info("Using built-in match schedule fallback",e)}
+  renderLists();
+}
 load();setInterval(load,60000);
 
 // Public Man of the Match card stays hidden until a match record contains MOTM data.
 function renderManOfMatch(match){
   const card=document.getElementById('motmCard');
   if(!card) return;
-  const name=match?.man_of_match_name || '';
+  const name=publicName(match?.man_of_match_name,match?.man_of_match_roster_number) || '';
   const reason=match?.man_of_match_reason || '';
   const number=match?.man_of_match_number || '';
   if(!name || !reason){ card.style.display='none'; return; }
