@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v27-tinker-production" />
-  <title>SKOR FC Admin | Lineups v27</title>
+  <meta name="skor-build" content="lineup-admin-v28-freeform-production" />
+  <title>SKOR FC Admin | Lineups v28</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -729,6 +729,50 @@
       display:inline-block;margin-top:3px;font-size:.61rem;color:#6d7077;font-weight:800;
     }
 
+
+    /* v28 freeform custom layout + label controls */
+    .lineup-freeform-pill{
+      display:inline-flex;align-items:center;gap:6px;
+      margin-left:8px;padding:3px 8px;border-radius:999px;
+      background:#eef4ff;border:1px solid #c8d7fb;color:#27457a;
+      font-size:.64rem;font-weight:900;letter-spacing:.04em;
+    }
+    .soccer-pitch.freeform-mode{cursor:crosshair}
+    .soccer-pitch.freeform-mode::after{
+      content: attr(data-freeform-help);
+      position:absolute;left:12px;top:12px;right:12px;
+      padding:6px 8px;border-radius:10px;
+      background:rgba(255,255,255,.82);border:1px dashed rgba(128,26,61,.28);
+      color:#6d4d5a;font-size:.7rem;font-weight:800;line-height:1.25;
+      pointer-events:none;
+      opacity:0;
+      transition:opacity .18s ease;
+    }
+    .soccer-pitch.freeform-mode.empty::after{opacity:1}
+    .freeform-player{
+      position:absolute;transform:translate(-50%,-50%);
+      border:0;background:transparent;padding:0;margin:0;cursor:grab;z-index:6;
+    }
+    .freeform-player .player-peg{width:auto}
+    .freeform-player .peg-name{max-width:68px}
+    .freeform-player.mode-numbers .peg-name,
+    .formation-slot.mode-numbers .peg-name{display:none}
+    .freeform-player.mode-numbers .jersey,
+    .formation-slot.mode-numbers .jersey{margin-bottom:0}
+    .pitch-label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .pitch-mode-note{font-size:.74rem;color:var(--muted);font-weight:700}
+    @media (max-width:650px){
+      #lineups .lineup-toolbar{grid-template-columns:1fr 1fr!important}
+      #lineups .lineup-toolbar > div:nth-child(1),
+      #lineups .lineup-toolbar > div:nth-child(3),
+      #lineups .lineup-toolbar > div:nth-child(4),
+      #lineups .lineup-toolbar > button{grid-column:1/-1}
+      #lineups .freeform-player .player-peg{gap:1px}
+      #lineups .freeform-player .jersey{width:31px!important;height:28px!important;font-size:.62rem!important}
+      #lineups .freeform-player .peg-name{max-width:42px!important;font-size:.48rem!important}
+      #lineups .soccer-pitch.freeform-mode::after{font-size:.56rem;left:8px;right:8px;top:8px;padding:4px 6px}
+    }
+
 </style>
 </head>
 <body>
@@ -762,7 +806,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v27</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v28</div>
   </aside>
 
   <main>
@@ -1041,12 +1085,12 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V27</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V28</div>
           <h2>Matchday Lineup Builder</h2>
-          <div class="sub">Build the starting XI, drag players into positions, set the bench, save variations, and plan substitutions.</div>
+          <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
             <div><label>Game / Shared Tinker Board</label><select id="lineupEvent"><option value="tinker">Tinker / New Board</option></select></div>
-            <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option></select></div>
+            <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option><option>Freeform / Custom</option></select></div><div><label>Player Labels</label><select id="lineupLabelMode"><option value="names">Names + Numbers</option><option value="numbers">Numbers Only</option></select></div>
             <div><label>Variation name</label><input id="lineupVariationName" value="Balanced" placeholder="Balanced, Aggressive, Protect Lead..."></div>
             <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button>
           </div>
@@ -1068,7 +1112,7 @@
 
           <div class="lineup-side">
             <div class="mini-panel lineup-players-panel">
-              <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. Phone: tap a player, then tap a position.</div><div class="v19-help">All roster players are rendered here directly in the HTML. This panel does not depend on Supabase or Game Day loading.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Bench to bench the selected player.</div>
+              <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. In Freeform / Custom, drag or tap to place players anywhere. Phone: tap a player, then tap a position or the pitch.</div><div class="v19-help">All roster players are rendered here directly in the HTML. This panel does not depend on Supabase or Game Day loading.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Bench to bench the selected player.</div>
               <div class="player-pool" id="lineupPlayerPool"><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="2-Ivan" aria-label="#2 Ivan"><div class="player-peg compact"><div class="jersey">2</div><div class="peg-name">Ivan</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="9-Andres" aria-label="#9 Andres"><div class="player-peg compact"><div class="jersey">9</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="17-David" aria-label="#17 David"><div class="player-peg compact"><div class="jersey">17</div><div class="peg-name">David</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="18-Jason" aria-label="#18 Jason"><div class="player-peg compact"><div class="jersey">18</div><div class="peg-name">Jason</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="20-Ayman" aria-label="#20 Ayman"><div class="player-peg compact"><div class="jersey">20</div><div class="peg-name">Ayman</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="6-Julio" aria-label="#6 Julio"><div class="player-peg compact"><div class="jersey">6</div><div class="peg-name">Julio</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="7-Tom" aria-label="#7 Tom"><div class="player-peg compact"><div class="jersey">7</div><div class="peg-name">Tom</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="14-Pedro" aria-label="#14 Pedro"><div class="player-peg compact"><div class="jersey">14</div><div class="peg-name">Pedro</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="16-CJ" aria-label="#16 CJ"><div class="player-peg compact"><div class="jersey">16</div><div class="peg-name">CJ</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="19-Dez" aria-label="#19 Dez"><div class="player-peg compact"><div class="jersey">19</div><div class="peg-name">Dez</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="8-Adolpho" aria-label="#8 Adolpho"><div class="player-peg compact"><div class="jersey">8</div><div class="peg-name">Adolpho</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="22-Vignesh" aria-label="#22 Vignesh"><div class="player-peg compact"><div class="jersey">22</div><div class="peg-name">Vignesh</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="11-Edward" aria-label="#11 Edward"><div class="player-peg compact"><div class="jersey">11</div><div class="peg-name">Edward</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="1-Todd" aria-label="#1 Todd"><div class="player-peg compact"><div class="jersey">1</div><div class="peg-name">Todd</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="3-Brad" aria-label="#3 Brad"><div class="player-peg compact"><div class="jersey">3</div><div class="peg-name">Brad</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="21-Andres" aria-label="#21 Andres"><div class="player-peg compact"><div class="jersey">21</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="12-Koushyar" aria-label="#12 Koushyar"><div class="player-peg compact"><div class="jersey">12</div><div class="peg-name">Koushyar</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="15-Andrew" aria-label="#15 Andrew"><div class="player-peg compact"><div class="jersey">15</div><div class="peg-name">Andrew</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="4-Nick" aria-label="#4 Nick"><div class="player-peg compact"><div class="jersey">4</div><div class="peg-name">Nick</div></div></button></div>
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
             </div>
@@ -1143,7 +1187,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v27 - shared games + named Tinker boards */
+/* SKOR FC Lineup Builder v28 - shared games + named Tinker boards + freeform custom */
 (function(){
   const roster = [
     {number:2,name:"Ivan"},{number:9,name:"Andres"},{number:17,name:"David"},{number:18,name:"Jason"},
@@ -1159,6 +1203,7 @@
     "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
     "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
   };
+  const FREEFORM = "Freeform / Custom";
 
   const depthPositions = [
     {key:"GK",label:"Goalkeeper"},
@@ -1173,7 +1218,7 @@
     {key:"ST",label:"Striker"}
   ];
 
-  const DRAFT_PREFIX = "skorLineupDraftV26";
+  const DRAFT_PREFIX = "skorLineupDraftV28";
   let captainKey = "captain";
   let eventMatches = new Map();
   let selectedPlayer = null;
@@ -1183,11 +1228,10 @@
   let realtimeChannel = null;
   let state = blankState("4-2-3-1");
 
-  function blankSubs(){
-    return {first:{out:"",in:""},second:{out:"",in:""},halftime:[{out:"",in:""}]};
-  }
+  function isFreeform(formation){ return formation === FREEFORM; }
+  function blankSubs(){ return {first:{out:"",in:""},second:{out:"",in:""},halftime:[{out:"",in:""}]}; }
   function blankState(formation){
-    return {formation:formation||"4-2-3-1",slots:{},bench:[],depth:{},subs:blankSubs()};
+    return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),labelMode:"names"};
   }
   function normalizeSubs(value){
     return {
@@ -1199,18 +1243,29 @@
     };
   }
   function normalizeState(value){
-    const formation=(value?.formation&&formations[value.formation])?value.formation:"4-2-3-1";
+    const rawFormation=value?.formation;
+    const formation=(rawFormation===FREEFORM||formations[rawFormation])?rawFormation:"4-2-3-1";
     const depth={};
     depthPositions.forEach(pos=>{
       const raw=Array.isArray(value?.depth?.[pos.key])?value.depth[pos.key]:[];
       depth[pos.key]=raw.filter(pid=>!!player(pid));
     });
+    const freeform={};
+    if(value?.freeform && typeof value.freeform==="object"){
+      Object.entries(value.freeform).forEach(([pid,pt])=>{
+        if(player(pid) && pt && Number.isFinite(+pt.x) && Number.isFinite(+pt.y)){
+          freeform[pid]={x:clamp(+pt.x,5,95),y:clamp(+pt.y,8,92)};
+        }
+      });
+    }
     return {
       formation,
       slots:(value?.slots&&typeof value.slots==="object")?value.slots:{},
+      freeform,
       bench:Array.isArray(value?.bench)?value.bench.filter(pid=>!!player(pid)):[],
       depth,
-      subs:normalizeSubs(value?.subs)
+      subs:normalizeSubs(value?.subs),
+      labelMode:value?.labelMode==="numbers"?"numbers":"names"
     };
   }
 
@@ -1218,11 +1273,9 @@
   function player(pid){ return roster.find(p=>id(p)===pid); }
   function esc(v){ return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s])); }
   function clone(v){ return JSON.parse(JSON.stringify(v)); }
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
   function selectedEventValue(){ return document.getElementById("lineupEvent")?.value||"tinker"; }
-  function eventKey(){
-    const value=selectedEventValue();
-    return value.startsWith("variation:")?"tinker":value;
-  }
+  function eventKey(){ const value=selectedEventValue(); return value.startsWith("variation:")?"tinker":value; }
   function eventLabel(){
     const sel=document.getElementById("lineupEvent");
     const value=selectedEventValue();
@@ -1231,29 +1284,43 @@
   }
   function draftKey(){ return `${DRAFT_PREFIX}:${captainKey}:${eventKey()}`; }
   function sbClient(){ return window.SKORSupabase||null; }
-
+  function allFieldPlayerIds(){
+    return isFreeform(state.formation)
+      ? Object.keys(state.freeform||{})
+      : Object.values(state.slots||{}).filter(Boolean);
+  }
+  function removeFromField(pid){
+    Object.keys(state.slots||{}).forEach(k=>{ if(state.slots[k]===pid) delete state.slots[k]; });
+    if(state.freeform && state.freeform[pid]) delete state.freeform[pid];
+  }
+  function coordinatesFromEvent(evt, el){
+    const rect=el.getBoundingClientRect();
+    const x=clamp(((evt.clientX-rect.left)/rect.width)*100,5,95);
+    const y=clamp(((evt.clientY-rect.top)/rect.height)*100,8,92);
+    return {x,y};
+  }
+  function modeClass(){ return state.labelMode === "numbers" ? "mode-numbers" : "mode-names"; }
+  function peg(p,compact,onPitch=false){
+    const pitchAttr = onPitch ? ' data-pitch-peg="1"' : '';
+    return '<div class="player-peg'+(compact?' compact':'')+' '+modeClass()+'" draggable="true" data-v28-player="'+esc(id(p))+'"'+pitchAttr+'>'+
+      '<div class="jersey">'+esc(p.number)+'</div><div class="peg-name">'+esc(p.name)+'</div></div>';
+  }
   function markStatus(msg,ok=true){
     const el=document.getElementById("lineupStatus");
     if(el){el.textContent=msg;el.className="lineup-status "+(ok?"ok":"err");}
   }
-  function persistDraft(){
-    try{localStorage.setItem(draftKey(),JSON.stringify(state));}
-    catch(e){console.warn("Could not save lineup draft",e);}
-  }
+  function persistDraft(){ try{ localStorage.setItem(draftKey(), JSON.stringify(state)); }catch(e){ console.warn("Could not save lineup draft",e);} }
   function loadDraft(){
     try{
       const raw=localStorage.getItem(draftKey());
       state=raw?normalizeState(JSON.parse(raw)):blankState(document.getElementById("lineupFormation")?.value||"4-2-3-1");
-    }catch{
-      state=blankState(document.getElementById("lineupFormation")?.value||"4-2-3-1");
-    }
+    }catch{ state=blankState(document.getElementById("lineupFormation")?.value||"4-2-3-1"); }
     const formation=document.getElementById("lineupFormation");
-    if(formation)formation.value=state.formation;
+    const labels=document.getElementById("lineupLabelMode");
+    if(formation) formation.value=state.formation;
+    if(labels) labels.value=state.labelMode||"names";
   }
-  function formatStamp(iso){
-    try{return new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(iso));}
-    catch{return "";}
-  }
+  function formatStamp(iso){ try{return new Intl.DateTimeFormat("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(iso));} catch{return "";} }
   function formatMatch(m){
     let date="";
     try{date=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short",day:"numeric"}).format(new Date(m.kickoff));}
@@ -1264,22 +1331,20 @@
     if(!rec)return;
     state=normalizeState(clone(rec.state));
     const formation=document.getElementById("lineupFormation");
-    if(formation)formation.value=state.formation;
     const name=document.getElementById("lineupVariationName");
-    if(name)name.value=rec.name||"";
+    const labels=document.getElementById("lineupLabelMode");
+    if(formation) formation.value=state.formation;
+    if(labels) labels.value=state.labelMode||"names";
+    if(name) name.value=rec.name||"";
     selectedPlayer=null;
     persistDraft();
     renderAll();
     markStatus('Loaded shared variation "'+(rec.name||"Untitled")+'" by '+(rec.created_by_name||"Captain")+'.');
   }
-  function peg(p,compact){
-    return '<div class="player-peg'+(compact?' compact':'')+'" draggable="true" data-v26-player="'+esc(id(p))+'">'+
-      '<div class="jersey">'+esc(p.number)+'</div><div class="peg-name">'+esc(p.name)+'</div></div>';
-  }
 
   function assign(slot,pid){
     if(!pid)return;
-    Object.keys(state.slots).forEach(k=>{if(state.slots[k]===pid)delete state.slots[k];});
+    removeFromField(pid);
     state.bench=state.bench.filter(x=>x!==pid);
     state.slots[slot]=pid;
     selectedPlayer=null;
@@ -1287,50 +1352,111 @@
     renderCore();
     markStatus((player(pid)?.name||"Player")+" assigned to "+slot+". Unsaved changes are only on this device.");
   }
+  function placeFreeform(pid,x,y){
+    if(!pid)return;
+    removeFromField(pid);
+    state.bench=state.bench.filter(x2=>x2!==pid);
+    state.freeform[pid]={x:clamp(x,5,95),y:clamp(y,8,92)};
+    selectedPlayer=null;
+    persistDraft();
+    renderCore();
+    markStatus((player(pid)?.name||"Player")+" placed on the custom board. Unsaved changes are only on this device.");
+  }
+  function convertSlotsToFreeform(){
+    const next={};
+    (formations[state.formation]||[]).forEach(([label,x,y])=>{
+      const pid=state.slots[label];
+      if(pid) next[pid]={x,y};
+    });
+    state.freeform=next;
+    state.slots={};
+  }
 
   function renderPitch(){
     const pitch=document.getElementById("lineupPitch");
     if(!pitch)return;
-    pitch.querySelectorAll(".formation-slot").forEach(el=>el.remove());
-    (formations[state.formation]||formations["4-2-3-1"]).forEach(([label,x,y])=>{
-      const slot=document.createElement("button");
-      slot.type="button";
-      slot.className="formation-slot";
-      slot.dataset.v26Slot=label;
-      slot.style.left=x+"%";
-      slot.style.top=y+"%";
-      const p=player(state.slots[label]);
-      slot.innerHTML=p?peg(p,false):'<div class="slot-label">'+label+'</div>';
-      slot.addEventListener("click",()=>{
-        if(selectedPlayer){assign(label,selectedPlayer);return;}
-        if(p){
-          selectedPlayer=id(p);
+    pitch.querySelectorAll('.dynamic-pitch-item').forEach(el=>el.remove());
+    pitch.classList.toggle('freeform-mode', isFreeform(state.formation));
+    pitch.dataset.freeformHelp = 'Freeform custom board: drag players anywhere, or tap a player then tap the pitch.';
+    pitch.classList.toggle('empty', allFieldPlayerIds().length===0);
+
+    if(!pitch.dataset.v28Bound){
+      pitch.dataset.v28Bound='1';
+      pitch.addEventListener('dragover', e=>{ if(isFreeform(state.formation)){ e.preventDefault(); } });
+      pitch.addEventListener('drop', e=>{
+        if(!isFreeform(state.formation)) return;
+        e.preventDefault();
+        if(!draggedPlayer) return;
+        const pt=coordinatesFromEvent(e,pitch);
+        placeFreeform(draggedPlayer, pt.x, pt.y);
+      });
+      pitch.addEventListener('click', e=>{
+        if(!isFreeform(state.formation) || !selectedPlayer) return;
+        if(e.target.closest('.freeform-player')) return;
+        const pt=coordinatesFromEvent(e,pitch);
+        placeFreeform(selectedPlayer, pt.x, pt.y);
+      });
+    }
+
+    if(isFreeform(state.formation)){
+      Object.entries(state.freeform||{}).forEach(([pid,pt])=>{
+        const p=player(pid); if(!p) return;
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.className='freeform-player dynamic-pitch-item '+modeClass();
+        btn.style.left=pt.x+'%';
+        btn.style.top=pt.y+'%';
+        btn.dataset.v28Player=pid;
+        btn.innerHTML=peg(p,false,true);
+        btn.addEventListener('click', e=>{
+          e.stopPropagation();
+          selectedPlayer=pid;
           renderPool();
-          markStatus(p.name+" selected — tap another position or Bench.");
-        }
+          markStatus(p.name+' selected — tap another spot on the pitch or Bench.');
+        });
+        pitch.appendChild(btn);
       });
-      slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("dragover");});
-      slot.addEventListener("dragleave",()=>slot.classList.remove("dragover"));
-      slot.addEventListener("drop",e=>{
-        e.preventDefault();slot.classList.remove("dragover");
-        if(draggedPlayer)assign(label,draggedPlayer);
+    } else {
+      (formations[state.formation]||formations['4-2-3-1']).forEach(([label,x,y])=>{
+        const slot=document.createElement('button');
+        slot.type='button';
+        slot.className='formation-slot dynamic-pitch-item '+modeClass();
+        slot.dataset.v28Slot=label;
+        slot.style.left=x+'%';
+        slot.style.top=y+'%';
+        const p=player(state.slots[label]);
+        slot.innerHTML=p?peg(p,false,true):'<div class="slot-label">'+label+'</div>';
+        slot.addEventListener('click',()=>{
+          if(selectedPlayer){ assign(label,selectedPlayer); return; }
+          if(p){
+            selectedPlayer=id(p);
+            renderPool();
+            markStatus(p.name+' selected — tap another position or Bench.');
+          }
+        });
+        slot.addEventListener('dragover',e=>{e.preventDefault();slot.classList.add('dragover');});
+        slot.addEventListener('dragleave',()=>slot.classList.remove('dragover'));
+        slot.addEventListener('drop',e=>{
+          e.preventDefault(); slot.classList.remove('dragover');
+          if(draggedPlayer) assign(label,draggedPlayer);
+        });
+        pitch.appendChild(slot);
       });
-      pitch.appendChild(slot);
-    });
+    }
   }
 
   function renderPool(){
     const pool=document.getElementById("lineupPlayerPool");
     if(!pool)return;
-    const used=new Set([...Object.values(state.slots),...state.bench]);
+    const used=new Set([...allFieldPlayerIds(), ...state.bench]);
     pool.innerHTML=roster.map(p=>{
       const pid=id(p),active=selectedPlayer===pid;
-      return '<button type="button" class="player-card v19-card'+(used.has(pid)?' on-field':'')+(active?' v19-selected':'')+'" data-v26-select="'+esc(pid)+'">'+peg(p,true)+'</button>';
-    }).join("");
-    pool.querySelectorAll("[data-v26-select]").forEach(btn=>btn.addEventListener("click",()=>{
-      selectedPlayer=btn.dataset.v26Select;
+      return '<button type="button" class="player-card v19-card'+(used.has(pid)?' on-field':'')+(active?' v19-selected':'')+'" data-v28-select="'+esc(pid)+'">'+peg(p,true,false)+'</button>';
+    }).join('');
+    pool.querySelectorAll('[data-v28-select]').forEach(btn=>btn.addEventListener('click',()=>{
+      selectedPlayer=btn.dataset.v28Select;
       renderPool();
-      markStatus((player(selectedPlayer)?.name||"Player")+" selected — tap a position on the pitch.");
+      markStatus((player(selectedPlayer)?.name||"Player")+(isFreeform(state.formation)?' selected — tap the pitch to place him.':' selected — tap a position on the pitch.'));
     }));
   }
 
@@ -1339,44 +1465,42 @@
     if(!list)return;
     list.innerHTML=state.bench.length?state.bench.map(pid=>{
       const p=player(pid);
-      return p?'<div class="bench-player" draggable="true" data-v26-player="'+esc(pid)+'">#'+p.number+' '+esc(p.name)+'</div>':'';
-    }).join(""):'<span style="font-size:.8rem;color:var(--muted)">No bench players yet.</span>';
+      return p?'<div class="bench-player" draggable="true" data-v28-player="'+esc(pid)+'">#'+p.number+' '+esc(p.name)+'</div>':'';
+    }).join(''):'<span style="font-size:.8rem;color:var(--muted)">No bench players yet.</span>';
   }
 
   function bindDrags(){
-    document.querySelectorAll("[data-v26-player]").forEach(el=>{
-      el.addEventListener("dragstart",()=>{draggedPlayer=el.dataset.v26Player;});
-      el.addEventListener("dragend",()=>{draggedPlayer=null;});
+    document.querySelectorAll('[data-v28-player]').forEach(el=>{
+      el.addEventListener('dragstart',()=>{ draggedPlayer=el.dataset.v28Player; });
+      el.addEventListener('dragend',()=>{ draggedPlayer=null; });
     });
-    document.querySelectorAll(".bench-player[data-v26-player]").forEach(el=>{
-      el.addEventListener("click",e=>{
-        e.stopPropagation();
-        selectedPlayer=el.dataset.v26Player;
-        renderPool();
-        markStatus((player(selectedPlayer)?.name||"Player")+" selected from bench — tap a position.");
-      });
-    });
-    const bench=document.getElementById("lineupBench");
-    if(bench&&!bench.dataset.v26Bound){
-      bench.dataset.v26Bound="1";
-      bench.addEventListener("dragover",e=>{e.preventDefault();bench.classList.add("dragover");});
-      bench.addEventListener("dragleave",()=>bench.classList.remove("dragover"));
-      bench.addEventListener("drop",e=>{
-        e.preventDefault();bench.classList.remove("dragover");
-        if(!draggedPlayer)return;
-        Object.keys(state.slots).forEach(k=>{if(state.slots[k]===draggedPlayer)delete state.slots[k];});
-        if(!state.bench.includes(draggedPlayer))state.bench.push(draggedPlayer);
+    document.querySelectorAll('.bench-player[data-v28-player]').forEach(el=>el.addEventListener('click',e=>{
+      e.stopPropagation();
+      selectedPlayer=el.dataset.v28Player;
+      renderPool();
+      markStatus((player(selectedPlayer)?.name||"Player")+(isFreeform(state.formation)?' selected from bench — tap the pitch.':' selected from bench — tap a position.'));
+    }));
+    const bench=document.getElementById('lineupBench');
+    if(bench && !bench.dataset.v28Bound){
+      bench.dataset.v28Bound='1';
+      bench.addEventListener('dragover',e=>{ e.preventDefault(); bench.classList.add('dragover'); });
+      bench.addEventListener('dragleave',()=>bench.classList.remove('dragover'));
+      bench.addEventListener('drop',e=>{
+        e.preventDefault(); bench.classList.remove('dragover');
+        if(!draggedPlayer) return;
+        removeFromField(draggedPlayer);
+        if(!state.bench.includes(draggedPlayer)) state.bench.push(draggedPlayer);
         const moved=draggedPlayer;
-        selectedPlayer=null;persistDraft();renderCore();
-        markStatus((player(moved)?.name||"Player")+" moved to bench. Unsaved changes are only on this device.");
+        selectedPlayer=null; persistDraft(); renderCore();
+        markStatus((player(moved)?.name||"Player")+' moved to bench. Unsaved changes are only on this device.');
       });
-      bench.addEventListener("click",()=>{
-        if(!selectedPlayer)return;
+      bench.addEventListener('click',()=>{
+        if(!selectedPlayer) return;
         const pid=selectedPlayer;
-        Object.keys(state.slots).forEach(k=>{if(state.slots[k]===pid)delete state.slots[k];});
-        if(!state.bench.includes(pid))state.bench.push(pid);
-        selectedPlayer=null;persistDraft();renderCore();
-        markStatus((player(pid)?.name||"Player")+" moved to bench. Unsaved changes are only on this device.");
+        removeFromField(pid);
+        if(!state.bench.includes(pid)) state.bench.push(pid);
+        selectedPlayer=null; persistDraft(); renderCore();
+        markStatus((player(pid)?.name||"Player")+' moved to bench. Unsaved changes are only on this device.');
       });
     }
   }
@@ -1384,45 +1508,43 @@
   function depthOptions(selectedIds){
     const selected=new Set(selectedIds||[]);
     return '<option value="">+ Add player to this position</option>'+
-      roster.filter(p=>!selected.has(id(p))).map(p=>'<option value="'+esc(id(p))+'">#'+p.number+' '+esc(p.name)+'</option>').join("");
+      roster.filter(p=>!selected.has(id(p))).map(p=>'<option value="'+esc(id(p))+'">#'+p.number+' '+esc(p.name)+'</option>').join('');
   }
-
   function renderDepth(){
-    const grid=document.getElementById("lineupDepthGrid");
-    if(!grid)return;
-    depthPositions.forEach(pos=>{if(!Array.isArray(state.depth[pos.key]))state.depth[pos.key]=[];});
+    const grid=document.getElementById('lineupDepthGrid'); if(!grid)return;
+    depthPositions.forEach(pos=>{ if(!Array.isArray(state.depth[pos.key])) state.depth[pos.key]=[]; });
     grid.innerHTML=depthPositions.map(pos=>{
       const members=state.depth[pos.key];
       const chips=members.length?members.map((pid,index)=>{
-        const p=player(pid);if(!p)return "";
+        const p=player(pid); if(!p) return '';
         return '<button type="button" class="depth-chip selected" data-depth-remove="'+esc(pos.key)+'" data-depth-player="'+esc(pid)+'">'+
           '<span class="depth-rank">'+(index+1)+'.</span> #'+p.number+' '+esc(p.name)+' <span class="depth-remove">×</span></button>';
-      }).join(""):'<span class="depth-empty">No players assigned</span>';
+      }).join(''):'<span class="depth-empty">No players assigned</span>';
       return '<div class="depth-row"><div class="depth-pos">'+esc(pos.key)+'<span>'+esc(pos.label)+'</span></div>'+
         '<div class="depth-lane"><div class="depth-selected">'+chips+'</div>'+
         '<select class="depth-add" data-depth-add="'+esc(pos.key)+'">'+depthOptions(members)+'</select></div></div>';
-    }).join("");
+    }).join('');
 
-    grid.querySelectorAll("[data-depth-add]").forEach(sel=>sel.addEventListener("change",()=>{
+    grid.querySelectorAll('[data-depth-add]').forEach(sel=>sel.addEventListener('change',()=>{
       const pos=sel.dataset.depthAdd,pid=sel.value;
-      if(!pid)return;
-      if(!state.depth[pos].includes(pid))state.depth[pos].push(pid);
-      persistDraft();renderDepth();
-      markStatus((player(pid)?.name||"Player")+" added to "+pos+" depth. Save a variation to share it.");
+      if(!pid) return;
+      if(!state.depth[pos].includes(pid)) state.depth[pos].push(pid);
+      persistDraft(); renderDepth();
+      markStatus((player(pid)?.name||"Player")+' added to '+pos+' depth. Save a variation to share it.');
     }));
-    grid.querySelectorAll("[data-depth-remove]").forEach(btn=>btn.addEventListener("click",()=>{
+    grid.querySelectorAll('[data-depth-remove]').forEach(btn=>btn.addEventListener('click',()=>{
       const pos=btn.dataset.depthRemove,pid=btn.dataset.depthPlayer;
       state.depth[pos]=state.depth[pos].filter(x=>x!==pid);
-      persistDraft();renderDepth();
+      persistDraft(); renderDepth();
     }));
   }
 
   function playerOptions(selected){
     return '<option value="">Select player…</option>'+
-      roster.map(p=>'<option value="'+esc(id(p))+'"'+(id(p)===selected?' selected':'')+'>#'+p.number+' '+esc(p.name)+'</option>').join("");
+      roster.map(p=>'<option value="'+esc(id(p))+'"'+(id(p)===selected?' selected':'')+'>#'+p.number+' '+esc(p.name)+'</option>').join('');
   }
   function subRowHTML(record,phase,index=null,removable=false){
-    const suffix=index===null?phase:phase+"-"+index;
+    const suffix=index===null?phase:phase+'-'+index;
     return '<div class="sub-row" data-sub-row="'+esc(suffix)+'">'+
       '<select data-sub-out="'+esc(phase)+'"'+(index===null?'':' data-sub-index="'+index+'"')+'>'+playerOptions(record.out)+'</select>'+
       '<span class="sub-arrow">→</span>'+
@@ -1431,205 +1553,196 @@
       '</div>';
   }
   function renderSubPlan(){
-    const box=document.getElementById("lineupSubPlan");
-    if(!box)return;
+    const box=document.getElementById('lineupSubPlan'); if(!box)return;
     state.subs=normalizeSubs(state.subs);
     const labels='<div class="sub-labels"><span>Player Out</span><span>→</span><span>Player In</span><span></span></div>';
     box.innerHTML=
-      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">First Sub</div><div class="sub-phase-note">First planned change</div></div>'+labels+subRowHTML(state.subs.first,"first")+'</div>'+
-      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">Second Sub</div><div class="sub-phase-note">Second planned change</div></div>'+labels+subRowHTML(state.subs.second,"second")+'</div>'+
+      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">First Sub</div><div class="sub-phase-note">First planned change</div></div>'+labels+subRowHTML(state.subs.first,'first')+'</div>'+
+      '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">Second Sub</div><div class="sub-phase-note">Second planned change</div></div>'+labels+subRowHTML(state.subs.second,'second')+'</div>'+
       '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">Half-time Subs</div><div class="sub-phase-note">Add as many swaps as needed</div></div>'+labels+
-      state.subs.halftime.map((r,i)=>subRowHTML(r,"halftime",i,true)).join("")+'</div>';
-
-    box.querySelectorAll("[data-sub-out]").forEach(sel=>sel.addEventListener("change",()=>{
+      state.subs.halftime.map((r,i)=>subRowHTML(r,'halftime',i,true)).join('')+'</div>';
+    box.querySelectorAll('[data-sub-out]').forEach(sel=>sel.addEventListener('change',()=>{
       const phase=sel.dataset.subOut;
-      if(phase==="halftime")state.subs.halftime[+sel.dataset.subIndex].out=sel.value;
+      if(phase==='halftime') state.subs.halftime[+sel.dataset.subIndex].out=sel.value;
       else state.subs[phase].out=sel.value;
-      persistDraft();
-      markStatus("Sub plan changed. Save a variation to share it.");
+      persistDraft(); markStatus('Sub plan changed. Save a variation to share it.');
     }));
-    box.querySelectorAll("[data-sub-in]").forEach(sel=>sel.addEventListener("change",()=>{
+    box.querySelectorAll('[data-sub-in]').forEach(sel=>sel.addEventListener('change',()=>{
       const phase=sel.dataset.subIn;
-      if(phase==="halftime")state.subs.halftime[+sel.dataset.subIndex].in=sel.value;
+      if(phase==='halftime') state.subs.halftime[+sel.dataset.subIndex].in=sel.value;
       else state.subs[phase].in=sel.value;
-      persistDraft();
-      markStatus("Sub plan changed. Save a variation to share it.");
+      persistDraft(); markStatus('Sub plan changed. Save a variation to share it.');
     }));
-    box.querySelectorAll("[data-sub-remove]").forEach(btn=>btn.addEventListener("click",()=>{
+    box.querySelectorAll('[data-sub-remove]').forEach(btn=>btn.addEventListener('click',()=>{
       state.subs.halftime.splice(+btn.dataset.subRemove,1);
-      if(!state.subs.halftime.length)state.subs.halftime.push({out:"",in:""});
-      persistDraft();renderSubPlan();
+      if(!state.subs.halftime.length) state.subs.halftime.push({out:'',in:''});
+      persistDraft(); renderSubPlan();
     }));
   }
 
   function renderVariations(){
-    const box=document.getElementById("lineupVariationList");
-    const count=document.getElementById("lineupVariationCount");
-    if(!box)return;
-    if(count)count.textContent=sharedVariations.length;
+    const box=document.getElementById('lineupVariationList');
+    const count=document.getElementById('lineupVariationCount');
+    if(!box) return;
+    if(count) count.textContent=sharedVariations.length;
     box.innerHTML=sharedVariations.length?sharedVariations.map(v=>{
       const snapshot=normalizeState(v.state||{});
-      const starters=Object.keys(snapshot.slots||{}).length;
+      const starters=isFreeform(snapshot.formation)?Object.keys(snapshot.freeform||{}).length:Object.keys(snapshot.slots||{}).length;
       const bench=(snapshot.bench||[]).length;
-      const owner=v.created_by_name||"Captain";
+      const owner=v.created_by_name||'Captain';
       return '<div class="variation-item">'+
         '<button type="button" class="variation-load" data-load-variation="'+esc(v.id)+'"><strong>'+esc(v.name)+'</strong>'+
-        '<span class="variation-meta">'+esc(snapshot.formation)+' · '+starters+' starters · '+bench+' bench · '+esc(formatStamp(v.created_at))+'</span>'+
+        '<span class="variation-meta">'+esc(snapshot.formation)+' · '+starters+' on field · '+bench+' bench · '+esc(formatStamp(v.created_at))+'</span>'+
         '<span class="variation-owner">Saved by '+esc(owner)+'</span></button>'+
         '<button class="mini-btn variation-delete" type="button" data-delete-variation="'+esc(v.id)+'">Delete</button></div>';
-    }).join(""):'<div style="font-size:.82rem;color:var(--muted)">No shared variations for this game yet.</div>';
+    }).join(''):'<div style="font-size:.82rem;color:var(--muted)">No shared variations for this game yet.</div>';
 
-    box.querySelectorAll("[data-load-variation]").forEach(btn=>btn.addEventListener("click",()=>{
+    box.querySelectorAll('[data-load-variation]').forEach(btn=>btn.addEventListener('click',()=>{
       const rec=sharedVariations.find(v=>String(v.id)===String(btn.dataset.loadVariation));
       loadVariationRecord(rec);
     }));
-
-    box.querySelectorAll("[data-delete-variation]").forEach(btn=>btn.addEventListener("click",async()=>{
+    box.querySelectorAll('[data-delete-variation]').forEach(btn=>btn.addEventListener('click',async()=>{
       const rec=sharedVariations.find(v=>String(v.id)===String(btn.dataset.deleteVariation));
-      if(!rec)return;
-      if(!confirm('Delete shared variation "'+rec.name+'"? This removes it for every captain.'))return;
-      const sb=sbClient();
-      if(!sb){markStatus("Supabase is not connected.",false);return;}
-      const {error}=await sb.from("lineup_variations").delete().eq("id",rec.id);
-      if(error){markStatus("Could not delete shared variation: "+error.message,false);return;}
+      if(!rec) return;
+      if(!confirm('Delete shared variation "'+rec.name+'"? This removes it for every captain.')) return;
+      const sb=sbClient(); if(!sb){ markStatus('Supabase is not connected.',false); return; }
+      const {error}=await sb.from('lineup_variations').delete().eq('id',rec.id);
+      if(error){ markStatus('Could not delete shared variation: '+error.message,false); return; }
       await refreshVariations(false);
+      if(eventKey()==='tinker') await refreshTinkerVariations();
       markStatus('Deleted shared variation "'+rec.name+'".');
     }));
   }
 
   async function refreshTinkerVariations(){
-    const sb=sbClient();
-    if(!sb){sharedTinkerVariations=[];renderEventOptions();return;}
-    const {data,error}=await sb.from("lineup_variations")
-      .select("id,name,state,created_by_name,created_at")
-      .eq("event_key","tinker")
-      .order("created_at",{ascending:false});
-    if(error){
-      console.warn("Could not load shared Tinker boards:",error.message);
-      return;
-    }
+    const sb=sbClient(); if(!sb){ sharedTinkerVariations=[]; renderEventOptions(); return; }
+    const {data,error}=await sb.from('lineup_variations')
+      .select('id,name,state,created_by_name,created_at')
+      .eq('event_key','tinker')
+      .order('created_at',{ascending:false});
+    if(error){ console.warn('Could not load shared Tinker boards:', error.message); return; }
     sharedTinkerVariations=data||[];
     renderEventOptions();
   }
-
   async function refreshVariations(showMessage=true){
     const sb=sbClient();
-    if(!sb){
-      sharedVariations=[];
-      renderVariations();
-      if(showMessage)markStatus("Supabase is not connected yet.",false);
-      return;
-    }
-    const {data,error}=await sb.from("lineup_variations")
-      .select("id,event_key,event_label,name,state,created_by,created_by_name,created_by_email,created_at,updated_at")
-      .eq("event_key",eventKey())
-      .order("created_at",{ascending:false});
-    if(error){
-      sharedVariations=[];
-      renderVariations();
-      if(showMessage)markStatus("Shared variations unavailable: "+error.message,false);
-      return;
-    }
+    if(!sb){ sharedVariations=[]; renderVariations(); if(showMessage) markStatus('Supabase is not connected yet.',false); return; }
+    const {data,error}=await sb.from('lineup_variations')
+      .select('id,event_key,event_label,name,state,created_by,created_by_name,created_by_email,created_at,updated_at')
+      .eq('event_key',eventKey())
+      .order('created_at',{ascending:false});
+    if(error){ sharedVariations=[]; renderVariations(); if(showMessage) markStatus('Shared variations unavailable: '+error.message,false); return; }
     sharedVariations=data||[];
-    if(eventKey()==="tinker"){
+    if(eventKey()==='tinker'){
       sharedTinkerVariations=sharedVariations.slice();
       renderEventOptions();
     }
     renderVariations();
-    if(showMessage)markStatus(sharedVariations.length+" shared variation"+(sharedVariations.length===1?"":"s")+" loaded for "+eventLabel()+".");
+    if(showMessage) markStatus(sharedVariations.length+' shared variation'+(sharedVariations.length===1?'':'s')+' loaded for '+eventLabel()+'.');
   }
-
   function ensureRealtime(){
-    const sb=sbClient();
-    if(!sb||realtimeChannel)return;
-    realtimeChannel=sb.channel("skor-lineup-variations-shared")
-      .on("postgres_changes",{event:"*",schema:"public",table:"lineup_variations"},()=>{
+    const sb=sbClient(); if(!sb||realtimeChannel) return;
+    realtimeChannel=sb.channel('skor-lineup-variations-shared')
+      .on('postgres_changes',{event:'*',schema:'public',table:'lineup_variations'},()=>{
         refreshTinkerVariations();
         refreshVariations(false);
       })
       .subscribe();
   }
 
-  function renderCore(){renderPitch();renderPool();renderBench();bindDrags();}
-  function renderAll(){renderCore();renderDepth();renderSubPlan();renderVariations();}
-
+  function renderCore(){ renderPitch(); renderPool(); renderBench(); bindDrags(); }
+  function renderAll(){ renderCore(); renderDepth(); renderSubPlan(); renderVariations(); }
   function renderEventOptions(){
-    const sel=document.getElementById("lineupEvent");
-    if(!sel)return;
-    const current=sel.value||"tinker";
+    const sel=document.getElementById('lineupEvent'); if(!sel) return;
+    const current=sel.value||'tinker';
     const matches=[...eventMatches.values()].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
     const tinkerOptions=sharedTinkerVariations.map(v=>
-      '<option value="variation:'+esc(String(v.id))+'">Tinker — '+esc(v.name)+' · '+esc(v.created_by_name||"Captain")+'</option>'
-    ).join("");
-    const gameOptions=matches.map(m=>
-      '<option value="'+esc(String(m.id))+'">'+esc(formatMatch(m))+'</option>'
-    ).join("");
-    sel.innerHTML=
-      '<optgroup label="Tinker">'+
-        '<option value="tinker">Tinker / New Board</option>'+
-        tinkerOptions+
-      '</optgroup>'+
+      '<option value="variation:'+esc(String(v.id))+'">Tinker — '+esc(v.name)+' · '+esc(v.created_by_name||'Captain')+'</option>'
+    ).join('');
+    const gameOptions=matches.map(m=>'<option value="'+esc(String(m.id))+'">'+esc(formatMatch(m))+'</option>').join('');
+    sel.innerHTML='<optgroup label="Tinker"><option value="tinker">Tinker / New Board</option>'+tinkerOptions+'</optgroup>'+
       (gameOptions?'<optgroup label="Games">'+gameOptions+'</optgroup>':'');
-    sel.value=[...sel.options].some(o=>o.value===current)?current:"tinker";
+    sel.value=[...sel.options].some(o=>o.value===current)?current:'tinker';
   }
-
-  function setEvents(matches,authoritative=false){
-    if(authoritative)eventMatches=new Map();
-    (matches||[]).forEach(m=>{if(m?.id)eventMatches.set(String(m.id),m);});
+  function setEvents(matches, authoritative=false){
+    if(authoritative) eventMatches=new Map();
+    (matches||[]).forEach(m=>{ if(m?.id) eventMatches.set(String(m.id),m); });
     renderEventOptions();
     refreshTinkerVariations();
     refreshVariations(false);
   }
   function setCaptain(value){
-    captainKey=String(value||"captain").replace(/[^a-zA-Z0-9@._-]/g,"_");
-    loadDraft();selectedPlayer=null;renderAll();
+    captainKey=String(value||'captain').replace(/[^a-zA-Z0-9@._-]/g,'_');
+    loadDraft(); selectedPlayer=null; renderAll();
     ensureRealtime();
     refreshTinkerVariations();
     refreshVariations(false);
   }
 
-  const formation=document.getElementById("lineupFormation");
-  const eventSel=document.getElementById("lineupEvent");
-  const saveBtn=document.getElementById("saveLineupVariation");
-  const clearBtn=document.getElementById("clearLineupBtn");
-  const addSubBtn=document.getElementById("addSubPlanBtn");
-  const refreshBtn=document.getElementById("refreshLineupVariations");
+  const formation=document.getElementById('lineupFormation');
+  const eventSel=document.getElementById('lineupEvent');
+  const labelMode=document.getElementById('lineupLabelMode');
+  const saveBtn=document.getElementById('saveLineupVariation');
+  const clearBtn=document.getElementById('clearLineupBtn');
+  const addSubBtn=document.getElementById('addSubPlanBtn');
+  const refreshBtn=document.getElementById('refreshLineupVariations');
 
-  if(formation)formation.addEventListener("change",()=>{
-    state.formation=formation.value;
-    state.slots={};selectedPlayer=null;
-    persistDraft();renderCore();
-    markStatus("Formation changed to "+state.formation+". Starting XI cleared; bench, depth and sub plan kept.");
+  if(formation) formation.addEventListener('change',()=>{
+    const next=formation.value;
+    const prev=state.formation;
+    if(next===prev) return;
+    if(isFreeform(next) && !isFreeform(prev)){
+      convertSlotsToFreeform();
+      state.formation=next;
+      persistDraft(); renderCore();
+      markStatus('Switched to Freeform / Custom. Your current on-field players were converted into a movable tactical board.');
+      return;
+    }
+    state.formation=next;
+    if(isFreeform(prev) && !isFreeform(next)){
+      state.freeform={};
+      state.slots={};
+      selectedPlayer=null;
+      persistDraft(); renderCore();
+      markStatus('Switched back to '+next+'. Starting XI was cleared because the custom board has no fixed positions.');
+      return;
+    }
+    state.slots={};
+    selectedPlayer=null;
+    persistDraft(); renderCore();
+    markStatus('Formation changed to '+state.formation+'. Starting XI cleared; bench, depth and sub plan kept.');
   });
 
-  if(eventSel)eventSel.addEventListener("change",async()=>{
+  if(labelMode) labelMode.addEventListener('change',()=>{
+    state.labelMode = labelMode.value === 'numbers' ? 'numbers' : 'names';
+    persistDraft(); renderCore();
+    markStatus(state.labelMode==='numbers' ? 'Player display set to numbers only.' : 'Player display set to names + numbers.');
+  });
+
+  if(eventSel) eventSel.addEventListener('change', async()=>{
     const selected=selectedEventValue();
-    if(selected.startsWith("variation:")){
-      const variationId=selected.slice("variation:".length);
+    if(selected.startsWith('variation:')){
+      const variationId=selected.slice('variation:'.length);
       let rec=sharedTinkerVariations.find(v=>String(v.id)===variationId);
-      if(!rec){
-        await refreshTinkerVariations();
-        rec=sharedTinkerVariations.find(v=>String(v.id)===variationId);
-      }
+      if(!rec){ await refreshTinkerVariations(); rec=sharedTinkerVariations.find(v=>String(v.id)===variationId); }
       sharedVariations=sharedTinkerVariations.slice();
       loadVariationRecord(rec);
       renderVariations();
       return;
     }
-    loadDraft();selectedPlayer=null;sharedVariations=[];renderAll();
+    loadDraft(); selectedPlayer=null; sharedVariations=[]; renderAll();
     await refreshVariations(true);
   });
 
-  if(saveBtn)saveBtn.addEventListener("click",async()=>{
-    const sb=sbClient();
-    if(!sb){markStatus("Supabase is not connected.",false);return;}
-    const name=document.getElementById("lineupVariationName").value.trim()||"Untitled";
+  if(saveBtn) saveBtn.addEventListener('click', async()=>{
+    const sb=sbClient(); if(!sb){ markStatus('Supabase is not connected.',false); return; }
+    const name=document.getElementById('lineupVariationName').value.trim()||'Untitled';
     const originalText=saveBtn.textContent;
-    saveBtn.disabled=true;saveBtn.textContent="Saving…";
+    saveBtn.disabled=true; saveBtn.textContent='Saving…';
     try{
       const {data:{user},error:userError}=await sb.auth.getUser();
-      if(userError||!user)throw new Error(userError?.message||"Captain session not found.");
-      const fullName=user.user_metadata?.full_name||user.user_metadata?.name||user.email||"Captain";
+      if(userError||!user) throw new Error(userError?.message||'Captain session not found.');
+      const fullName=user.user_metadata?.full_name || user.user_metadata?.name || user.email || 'Captain';
       const payload={
         event_key:eventKey(),
         event_label:eventLabel(),
@@ -1639,46 +1752,43 @@
         created_by_name:fullName,
         created_by_email:user.email||null
       };
-      const {error}=await sb.from("lineup_variations").insert(payload);
-      if(error)throw error;
+      const {error}=await sb.from('lineup_variations').insert(payload);
+      if(error) throw error;
       persistDraft();
       await refreshVariations(false);
-      if(eventKey()==="tinker")await refreshTinkerVariations();
+      if(eventKey()==='tinker') await refreshTinkerVariations();
       markStatus('Saved shared variation "'+name+'". Every captain can now see it.');
     }catch(err){
-      markStatus("Could not save shared variation: "+(err?.message||err),false);
+      markStatus('Could not save shared variation: '+(err?.message||err),false);
     }finally{
-      saveBtn.disabled=false;saveBtn.textContent=originalText;
+      saveBtn.disabled=false; saveBtn.textContent=originalText;
     }
   });
-
-  if(refreshBtn)refreshBtn.addEventListener("click",()=>refreshVariations(true));
-
-  if(clearBtn)clearBtn.addEventListener("click",()=>{
-    if(!confirm("Clear the starting XI and bench?"))return;
-    state.slots={};state.bench=[];selectedPlayer=null;
-    persistDraft();renderCore();
-    markStatus("Pitch and bench cleared. Depth chart and sub plan were kept.");
+  if(refreshBtn) refreshBtn.addEventListener('click',()=>refreshVariations(true));
+  if(clearBtn) clearBtn.addEventListener('click',()=>{
+    if(!confirm('Clear the starting XI / custom board and bench?')) return;
+    state.slots={}; state.freeform={}; state.bench=[]; selectedPlayer=null;
+    persistDraft(); renderCore();
+    markStatus('Pitch/custom board and bench cleared. Depth chart and sub plan were kept.');
   });
-
-  if(addSubBtn)addSubBtn.addEventListener("click",()=>{
+  if(addSubBtn) addSubBtn.addEventListener('click',()=>{
     state.subs=normalizeSubs(state.subs);
-    state.subs.halftime.push({out:"",in:""});
-    persistDraft();renderSubPlan();
-    markStatus("Half-time substitution added. Save a variation to share the plan.");
+    state.subs.halftime.push({out:'',in:''});
+    persistDraft(); renderSubPlan();
+    markStatus('Half-time substitution added. Save a variation to share the plan.');
   });
 
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Lineup Builder v27 ready. Shared games and named Tinker boards use Supabase.");
+  markStatus('Lineup Builder v28 ready. Shared games, named Tinker boards, and Freeform / Custom layouts use Supabase.');
 
   window.SKORLineup={
     setEvents,
     setCaptain,
     refreshVariations,
     getState:()=>clone(state),
-    reload:()=>{loadDraft();renderAll();refreshVariations(false);}
+    reload:()=>{ loadDraft(); renderAll(); refreshVariations(false); }
   };
 })();
 </script>
@@ -2174,7 +2284,7 @@ loadAnnouncements();
 })();
 
 
-// The independent v27 builder above is the only lineup engine.
+// The independent v28 builder above is the only lineup engine.
 
 </script>
 
