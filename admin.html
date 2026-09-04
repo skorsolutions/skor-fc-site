@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v23-production" />
-  <title>SKOR FC Admin | Lineups v23</title>
+  <meta name="skor-build" content="lineup-admin-v24-mobile-production" />
+  <title>SKOR FC Admin | Lineups v24</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -258,6 +258,371 @@
     .v19-help{margin:8px 0 12px;padding:10px 12px;background:#f7f5f3;border:1px solid var(--line);border-radius:10px;font-size:.78rem;color:var(--muted)}
     .v19-selected{outline:3px solid rgba(116,31,53,.28);border-color:var(--maroon)!important}
 
+
+    /* =========================================================
+       SKOR FC ADMIN v24 — PHONE UI
+       Desktop remains unchanged. These rules only apply to phones.
+       ========================================================= */
+    .mobile-lineup-tip{display:none}
+
+    @media (max-width:650px){
+      html,body{width:100%;max-width:100%;overflow-x:hidden}
+      body{padding-bottom:78px;background:#f3f2f0}
+      .app{display:grid;grid-template-columns:1fr!important;min-height:100vh}
+      main{width:100%;min-width:0;padding:12px 10px 90px!important}
+
+      /* Fixed bottom captain navigation */
+      aside{
+        position:fixed!important;
+        left:0;right:0;bottom:0;top:auto;
+        width:100%;height:72px!important;
+        z-index:1200;
+        padding:0!important;
+        background:#0f1013;
+        border-top:1px solid #2b2c31;
+        box-shadow:0 -8px 24px rgba(0,0,0,.18);
+      }
+      aside .brand,aside .aside-bottom{display:none!important}
+      .nav{
+        margin:0!important;
+        height:100%;
+        display:flex!important;
+        align-items:stretch;
+        gap:2px;
+        padding:5px 6px;
+        overflow-x:auto;
+        overflow-y:hidden;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+      }
+      .nav::-webkit-scrollbar{display:none}
+      .nav button{
+        flex:0 0 68px;
+        min-width:68px;
+        height:60px;
+        padding:6px 3px!important;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        gap:3px;
+        text-align:center!important;
+        border-radius:10px!important;
+        font-size:17px;
+        line-height:1;
+      }
+      .nav button span{
+        display:block!important;
+        font-size:9px;
+        line-height:1.05;
+        font-weight:800;
+        white-space:nowrap;
+      }
+      .nav button.active{
+        background:#292a2f!important;
+        color:#fff;
+        box-shadow:inset 0 3px 0 var(--maroon)!important;
+      }
+
+      /* Header */
+      .top{margin-bottom:10px;gap:8px;align-items:center!important}
+      .top h1{font-size:1.35rem;line-height:1.08}
+      .top p{font-size:.75rem;line-height:1.3;margin-top:3px}
+      .user{gap:5px}
+      .user .name{display:none!important}
+      .avatar{width:32px;height:32px;font-size:.78rem}
+      .logout-btn{min-height:36px;padding:6px 8px;font-size:.7rem}
+
+      /* Generic mobile cards/forms */
+      .panel,.metric{border-radius:13px}
+      .panel{padding:13px;min-width:0;max-width:100%}
+      .panel h2{font-size:1.02rem}
+      .panel .sub{font-size:.78rem;line-height:1.35;margin-bottom:11px}
+      .grid{grid-template-columns:1fr 1fr!important;gap:7px}
+      .metric{padding:11px}
+      .metric span{font-size:.61rem;letter-spacing:.06em}
+      .metric strong{font-size:1.25rem;margin-top:3px}
+      .content-grid{grid-template-columns:1fr!important;gap:9px;margin-top:9px}
+      .actions{grid-template-columns:1fr!important;gap:6px}
+      .action{padding:11px;min-height:44px}
+      .schedule-grid,.motm-grid{grid-template-columns:1fr!important}
+      .form{max-width:none;gap:9px}
+      input,select,textarea{
+        min-height:44px;
+        padding:9px 10px;
+        font-size:16px; /* prevents iPhone form zoom */
+      }
+      textarea{min-height:86px}
+      .btn,.google-btn{min-height:43px}
+      .table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .table th,.table td{white-space:nowrap;padding:10px 8px;font-size:.8rem}
+      .announcement-item{padding:11px}
+      .schedule-item{padding:11px}
+      .schedule-actions{gap:5px}
+      .notice,.backend-warning,.backend-ok{font-size:.76rem;padding:10px}
+
+      /* ---------------- GAME DAY: sideline/one-thumb UI ---------------- */
+      #gameday .gameday-shell{
+        display:flex;
+        flex-direction:column;
+        gap:9px;
+      }
+      #gameday .gameday-controls-panel{order:0;padding:10px 12px}
+      #gameday .gameday-controls-panel h2{display:none}
+      #gameday .gameday-controls-panel .sub{display:none}
+      #gameday .gameday-controls-panel .fieldrow{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr) 104px!important;
+        gap:7px;
+        margin-top:8px!important;
+      }
+      #gameday .gameday-controls-panel label{
+        font-size:.68rem;
+        display:block;
+        margin-bottom:3px;
+      }
+      #gameday .gameday-controls-panel select{min-height:40px;font-size:14px;padding:7px 8px}
+
+      #gameday .gameday-score-panel{
+        order:1;
+        position:sticky;
+        top:4px;
+        z-index:40;
+        padding:11px!important;
+        gap:9px;
+        border-radius:14px;
+        box-shadow:0 8px 24px rgba(0,0,0,.22);
+      }
+      #gameday .scoreboard-top{grid-template-columns:1fr auto 1fr!important;gap:5px}
+      #gameday .score-team{font-size:.73rem;line-height:1.15}
+      #gameday .score-team small{font-size:.58rem;margin-top:2px}
+      #gameday .score-numbers{font-size:2.25rem;line-height:1}
+      #gameday .status-controls{
+        display:flex;
+        flex-wrap:nowrap;
+        justify-content:flex-start!important;
+        gap:5px;
+        overflow-x:auto;
+        padding-bottom:2px;
+        -webkit-overflow-scrolling:touch;
+        scrollbar-width:none;
+      }
+      #gameday .status-controls::-webkit-scrollbar{display:none}
+      #gameday .status-btn{
+        flex:0 0 auto;
+        min-height:35px;
+        padding:6px 8px;
+        font-size:.62rem;
+        white-space:nowrap;
+      }
+
+      #gameday .gameday-events-panel{order:2;padding:12px}
+      #gameday .gameday-events-panel > .sub{display:none}
+      #gameday .event-buttons{
+        display:grid!important;
+        grid-template-columns:1fr 1fr!important;
+        gap:7px;
+      }
+      #gameday .event-group-label{
+        grid-column:1/-1;
+        margin:5px 0 0;
+        font-size:.63rem;
+      }
+      #gameday .event-btn{
+        min-height:58px;
+        padding:9px 8px;
+        border-radius:11px;
+        font-size:.77rem;
+        line-height:1.15;
+      }
+      #gameday .event-btn span{
+        margin-top:3px;
+        font-size:.61rem;
+        line-height:1.15;
+      }
+      #gameday .event-btn[data-event="skor_goal"],
+      #gameday .event-btn[data-event="opponent_goal"]{
+        min-height:68px;
+        font-size:.84rem;
+      }
+
+      /* Event entry becomes a bottom sheet */
+      #gameday .event-editor.open{
+        position:fixed;
+        left:8px;right:8px;
+        bottom:78px;
+        z-index:1300;
+        max-height:72vh;
+        overflow-y:auto;
+        padding:14px;
+        margin:0;
+        border-radius:16px;
+        background:#fff;
+        box-shadow:0 -8px 38px rgba(0,0,0,.35);
+      }
+      #gameday .event-editor .form{gap:9px}
+      #gameday .event-editor .fieldrow{grid-template-columns:1fr!important}
+      #gameday .event-editor .form > div:last-child{
+        display:grid!important;
+        grid-template-columns:1fr 1fr;
+        gap:7px!important;
+      }
+      #gameday #saveMatchEvent,#gameday #cancelMatchEvent{width:100%}
+
+      #gameday .gameday-log-panel{order:3}
+      #gameday .event-log{gap:6px}
+      #gameday .event-log-item{grid-template-columns:1fr!important;padding:9px}
+      #gameday .event-actions{justify-content:flex-start}
+      #gameday .motm-panel{order:4;margin-top:0}
+
+      /* ---------------- LINEUPS: pitch + player rail together ---------------- */
+      #lineups .lineup-shell{gap:9px}
+      #lineups .lineup-toolbar{
+        display:grid!important;
+        grid-template-columns:1fr 1fr!important;
+        gap:7px;
+      }
+      #lineups .lineup-toolbar > div:first-child,
+      #lineups .lineup-toolbar > div:nth-child(3),
+      #lineups .lineup-toolbar > button{
+        grid-column:1/-1;
+      }
+      #lineups .lineup-toolbar label{font-size:.68rem}
+      #lineups .lineup-toolbar input,#lineups .lineup-toolbar select{min-height:40px;font-size:14px}
+      #lineups .lineup-status{font-size:.7rem;min-height:16px}
+
+      #lineups .lineup-workspace{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr) 112px!important;
+        gap:7px!important;
+        align-items:start;
+      }
+      #lineups .lineup-pitch-column{
+        grid-column:1;
+        grid-row:1;
+        min-width:0;
+      }
+      #lineups .lineup-side{display:contents!important}
+      #lineups .lineup-players-panel{
+        grid-column:2;
+        grid-row:1;
+        align-self:start;
+        padding:7px!important;
+        border-radius:12px;
+        position:sticky;
+        top:6px;
+        max-height:72vh;
+        overflow-y:auto;
+      }
+      #lineups .lineup-players-panel h3{
+        font-size:.75rem;
+        margin-bottom:4px;
+      }
+      #lineups .lineup-players-panel .sub,
+      #lineups .lineup-players-panel .v19-help{display:none}
+      #lineups .mobile-lineup-tip{
+        display:block;
+        margin:0 0 6px;
+        padding:6px;
+        border-radius:8px;
+        background:#f5e8ec;
+        border:1px solid #dfbcc7;
+        color:var(--maroon-dark);
+        font-size:.55rem;
+        line-height:1.2;
+        font-weight:850;
+      }
+      #lineups .v19-lineup-count{
+        padding:2px 4px;
+        font-size:.52rem;
+        margin-left:2px;
+      }
+      #lineups .player-pool{
+        display:grid!important;
+        grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        gap:3px!important;
+        max-height:none!important;
+        overflow:visible!important;
+        padding:0!important;
+      }
+      #lineups .player-card{
+        min-width:0;
+        padding:4px 0!important;
+        border-radius:7px;
+        touch-action:manipulation;
+      }
+      #lineups .player-peg,#lineups .player-peg.compact{width:31px!important;gap:1px}
+      #lineups .jersey{
+        width:27px!important;
+        height:24px!important;
+        font-size:.55rem!important;
+      }
+      #lineups .jersey:before{width:8px;height:4px;top:1px}
+      #lineups .peg-name{
+        max-width:33px!important;
+        font-size:.43rem!important;
+        line-height:1!important;
+      }
+      #lineups .lineup-players-panel #clearLineupBtn{
+        min-height:30px;
+        margin-top:5px!important;
+        padding:4px!important;
+        font-size:.57rem;
+      }
+
+      #lineups .pitch-wrap{padding:5px;border-radius:12px}
+      #lineups .soccer-pitch{width:100%;max-height:none}
+      #lineups .formation-slot{
+        width:45px!important;
+        min-height:43px!important;
+        border-radius:9px;
+        border-width:1px;
+      }
+      #lineups .formation-slot .player-peg{width:39px!important}
+      #lineups .formation-slot .jersey{width:31px!important;height:28px!important;font-size:.62rem!important}
+      #lineups .formation-slot .peg-name{max-width:42px!important;font-size:.48rem!important}
+      #lineups .slot-label{font-size:.48rem!important}
+      #lineups .bench-zone{min-height:68px;padding:7px;margin-top:6px}
+      #lineups .bench-list{gap:4px;margin-top:4px}
+      #lineups .bench-player{padding:5px 6px;font-size:.58rem}
+      #lineups .lineup-pitch-column > .panel{padding:9px!important;margin-top:7px!important}
+      #lineups .lineup-pitch-column > .panel h2{font-size:.85rem}
+      #lineups .lineup-pitch-column > .panel .sub{display:none}
+      #lineups .lineup-variations-panel{
+        grid-column:1/-1;
+        grid-row:2;
+        padding:10px!important;
+      }
+      #lineups .lineup-variations-panel .sub{margin-bottom:6px}
+      #lineups .variation-list{gap:5px}
+
+      #lineups > .lineup-shell > .panel:nth-of-type(2),
+      #lineups > .lineup-shell > .panel:nth-of-type(3){
+        padding:11px;
+      }
+      #lineups .depth-row{grid-template-columns:54px 1fr;gap:5px;padding-top:7px}
+      #lineups .depth-chip{padding:4px 5px;font-size:.58rem}
+      #lineups .sub-row{
+        grid-template-columns:48px 1fr 12px 1fr auto;
+        gap:3px;
+      }
+      #lineups .sub-row select{padding:5px;font-size:.66rem;min-height:34px}
+
+      /* Auth */
+      .auth-gate{padding:14px}
+      .auth-card{padding:22px 17px;border-radius:18px}
+      .auth-logo{width:72px;height:72px}
+      .auth-card h1{font-size:1.55rem}
+    }
+
+    /* Small tablets: avoid overly wide desktop controls */
+    @media (min-width:651px) and (max-width:900px){
+      main{padding:20px}
+      .lineup-workspace{grid-template-columns:minmax(0,1fr) 280px}
+      .player-pool{grid-template-columns:repeat(3,1fr)}
+      .schedule-grid{grid-template-columns:1fr}
+    }
+
 </style>
 </head>
 <body>
@@ -291,7 +656,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v23</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v24</div>
   </aside>
 
   <main>
@@ -354,7 +719,7 @@
 
     <section class="view" id="gameday">
       <div class="gameday-shell">
-        <div class="panel">
+        <div class="panel gameday-controls-panel">
           <h2>Game Day Stats</h2>
           <div class="sub">Track the score, goals, assists and cards from the sideline. No match minute required — events are recorded in order and by half.</div>
           <div id="gameDayBackend" class="backend-warning">Checking the match stats database…</div>
@@ -364,7 +729,7 @@
           </div>
         </div>
 
-        <div class="scoreboard-admin">
+        <div class="scoreboard-admin gameday-score-panel">
           <div class="scoreboard-top">
             <div class="score-team" id="gameDayHome">Home<small id="gameDayHomeRole"></small></div>
             <div class="score-numbers" id="gameDayScore">0 – 0</div>
@@ -379,7 +744,7 @@
           </div>
         </div>
 
-        <div class="panel">
+        <div class="panel gameday-events-panel">
           <h2>Record Event</h2>
           <div class="sub">Score changes are generated from the events below, so correcting an event also corrects the score.</div>
           <div class="event-buttons">
@@ -438,7 +803,7 @@
           </div>
         </div>
 
-        <div class="panel">
+        <div class="panel gameday-log-panel">
           <h2>Event Log</h2>
           <div class="sub">Recorded in match order. Use Edit or Delete to correct a sideline entry.</div>
           <div class="event-log" id="gameDayEventLog"><div style="color:var(--muted);font-size:.9rem">No events loaded.</div></div>
@@ -570,7 +935,7 @@
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V23</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V24</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, set the bench, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -583,7 +948,7 @@
         </div>
 
         <div class="lineup-workspace">
-          <div>
+          <div class="lineup-pitch-column">
             <div class="pitch-wrap">
               <div class="soccer-pitch" id="lineupPitch">
                 <div class="pitch-box top"></div><div class="six-box top"></div><div class="pitch-box bottom"></div><div class="six-box bottom"></div>
@@ -596,13 +961,13 @@
           </div>
 
           <div class="lineup-side">
-            <div class="mini-panel">
-              <h3>Players <span class="v19-lineup-count">19 available</span></h3><div class="sub">Drag a jersey onto the pitch. You can also click a player, then click a position.</div><div class="v19-help">All roster players are rendered here directly in the HTML. This panel does not depend on Supabase or Game Day loading.</div>
+            <div class="mini-panel lineup-players-panel">
+              <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. Phone: tap a player, then tap a position.</div><div class="v19-help">All roster players are rendered here directly in the HTML. This panel does not depend on Supabase or Game Day loading.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Bench to bench the selected player.</div>
               <div class="player-pool" id="lineupPlayerPool"><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="2-Ivan" aria-label="#2 Ivan"><div class="player-peg compact"><div class="jersey">2</div><div class="peg-name">Ivan</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="9-Andres" aria-label="#9 Andres"><div class="player-peg compact"><div class="jersey">9</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="17-David" aria-label="#17 David"><div class="player-peg compact"><div class="jersey">17</div><div class="peg-name">David</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="18-Jason" aria-label="#18 Jason"><div class="player-peg compact"><div class="jersey">18</div><div class="peg-name">Jason</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="20-Ayman" aria-label="#20 Ayman"><div class="player-peg compact"><div class="jersey">20</div><div class="peg-name">Ayman</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="6-Julio" aria-label="#6 Julio"><div class="player-peg compact"><div class="jersey">6</div><div class="peg-name">Julio</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="7-Tom" aria-label="#7 Tom"><div class="player-peg compact"><div class="jersey">7</div><div class="peg-name">Tom</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="14-Pedro" aria-label="#14 Pedro"><div class="player-peg compact"><div class="jersey">14</div><div class="peg-name">Pedro</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="16-CJ" aria-label="#16 CJ"><div class="player-peg compact"><div class="jersey">16</div><div class="peg-name">CJ</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="19-Dez" aria-label="#19 Dez"><div class="player-peg compact"><div class="jersey">19</div><div class="peg-name">Dez</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="8-Adolpho" aria-label="#8 Adolpho"><div class="player-peg compact"><div class="jersey">8</div><div class="peg-name">Adolpho</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="22-Vignesh" aria-label="#22 Vignesh"><div class="player-peg compact"><div class="jersey">22</div><div class="peg-name">Vignesh</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="11-Edward" aria-label="#11 Edward"><div class="player-peg compact"><div class="jersey">11</div><div class="peg-name">Edward</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="1-Todd" aria-label="#1 Todd"><div class="player-peg compact"><div class="jersey">1</div><div class="peg-name">Todd</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="3-Brad" aria-label="#3 Brad"><div class="player-peg compact"><div class="jersey">3</div><div class="peg-name">Brad</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="21-Andres" aria-label="#21 Andres"><div class="player-peg compact"><div class="jersey">21</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="12-Koushyar" aria-label="#12 Koushyar"><div class="player-peg compact"><div class="jersey">12</div><div class="peg-name">Koushyar</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="15-Andrew" aria-label="#15 Andrew"><div class="player-peg compact"><div class="jersey">15</div><div class="peg-name">Andrew</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="4-Nick" aria-label="#4 Nick"><div class="player-peg compact"><div class="jersey">4</div><div class="peg-name">Nick</div></div></button></div>
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
             </div>
 
-            <div class="mini-panel">
+            <div class="mini-panel lineup-variations-panel">
               <h3>Saved Variations</h3><div class="sub">Different tactical versions for the selected event.</div>
               <div class="variation-list" id="lineupVariationList"></div>
             </div>
@@ -724,7 +1089,14 @@
       slot.style.top=y+"%";
       const p=player(state.slots[label]);
       slot.innerHTML=p ? peg(p,false) : '<div class="slot-label">'+label+'</div>';
-      slot.addEventListener("click",()=>{ if(selectedPlayer) assign(label,selectedPlayer); });
+      slot.addEventListener("click",()=>{
+        if(selectedPlayer){ assign(label,selectedPlayer); return; }
+        if(p){
+          selectedPlayer=id(p);
+          renderPool();
+          markStatus(p.name+" selected — tap another position or tap Bench.");
+        }
+      });
       slot.addEventListener("dragover",e=>{e.preventDefault();slot.classList.add("dragover");});
       slot.addEventListener("dragleave",()=>slot.classList.remove("dragover"));
       slot.addEventListener("drop",e=>{e.preventDefault();slot.classList.remove("dragover");if(draggedPlayer)assign(label,draggedPlayer);});
@@ -757,6 +1129,14 @@
       el.addEventListener("dragstart",()=>{draggedPlayer=el.dataset.v19Player;});
       el.addEventListener("dragend",()=>{draggedPlayer=null;});
     });
+    document.querySelectorAll(".bench-player[data-v19-player]").forEach(el=>{
+      el.addEventListener("click",e=>{
+        e.stopPropagation();
+        selectedPlayer=el.dataset.v19Player;
+        renderPool();
+        markStatus((player(selectedPlayer)?.name||"Player")+" selected from bench — tap a position.");
+      });
+    });
     const bench=document.getElementById("lineupBench");
     if(bench && !bench.dataset.v19Bound){
       bench.dataset.v19Bound="1";
@@ -768,6 +1148,15 @@
         Object.keys(state.slots).forEach(k=>{if(state.slots[k]===draggedPlayer)delete state.slots[k];});
         if(!state.bench.includes(draggedPlayer)) state.bench.push(draggedPlayer);
         selectedPlayer=null; render(); markStatus((player(draggedPlayer)?.name||"Player")+" moved to bench.");
+      });
+      bench.addEventListener("click",()=>{
+        if(!selectedPlayer) return;
+        const pid=selectedPlayer;
+        Object.keys(state.slots).forEach(k=>{if(state.slots[k]===pid)delete state.slots[k];});
+        if(!state.bench.includes(pid)) state.bench.push(pid);
+        selectedPlayer=null;
+        render();
+        markStatus((player(pid)?.name||"Player")+" moved to bench.");
       });
     }
   }
@@ -788,7 +1177,7 @@
   if(clear) clear.addEventListener("click",()=>{state.slots={};state.bench=[];selectedPlayer=null;render();markStatus("Pitch and bench cleared.");});
 
   render();
-  markStatus("Lineup Builder v23 ready — 19 players loaded.");
+  markStatus("Lineup Builder v24 ready — 19 players loaded.");
 })();
 </script>
 
