@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v42-crowd-quick-launch-production" />
-  <title>SKOR FC Admin | Crowd Scoring v42</title>
+  <meta name="skor-build" content="lineup-admin-v45-centered-score-impact-production" />
+  <title>SKOR FC Admin | Crowd Scoring v45</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -978,7 +978,7 @@
 
 
     /* =========================================================
-       SKOR FC v42 — Crowd Scoring + adaptive consensus + quick launch
+       SKOR FC v44 — score-impact controls + player-focused gameplan export
        ========================================================= */
     .crowd-admin-panel{border-color:#dacbd0;background:linear-gradient(145deg,#fff,#fbf7f8)}
     .crowd-admin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
@@ -1010,6 +1010,138 @@
     .crowd-consensus-badge{display:inline-flex;padding:6px 9px;border-radius:999px;background:#eef3f0;color:#356653;border:1px solid #cfdfd7;font-size:.68rem;font-weight:900;white-space:nowrap}
     .crowd-person.inactive{opacity:.48}
     @media(max-width:650px){.crowd-head-badges{justify-content:flex-start}}
+
+
+    /* =========================================================
+       SKOR FC v43 — clearer Game Day goal actions
+       ========================================================= */
+    #gameday .event-btn[data-event="skor_goal"]{
+      background:#e2f4e6;
+      border-color:#9bc9a5;
+      border-left:5px solid #4f9562;
+      color:#173d22;
+    }
+    #gameday .event-btn[data-event="skor_goal"] span{color:#497157}
+    #gameday .event-btn[data-event="opponent_goal"]{
+      background:#f4dfe3;
+      border-color:#d8a8b2;
+      border-left:5px solid #a33a50;
+      color:#611a2b;
+    }
+    #gameday .event-btn[data-event="opponent_goal"] span{color:#85505d}
+    @media (hover:hover) and (pointer:fine){
+      #gameday .event-btn[data-event="skor_goal"]:hover{background:#d7efdd;border-color:#7eb88c}
+      #gameday .event-btn[data-event="opponent_goal"]:hover{background:#efd2d8;border-color:#c58c99}
+    }
+
+
+    /* =========================================================
+       SKOR FC v44 — score impact controls
+       ========================================================= */
+    #gameday .event-btn.score-effect{
+      display:grid;
+      grid-template-columns:54px minmax(0,1fr);
+      align-items:center;
+      gap:11px;
+      min-height:88px;
+      padding:11px 14px;
+      text-align:left;
+      border-left-width:5px;
+    }
+    #gameday .event-btn.score-effect .score-impact{
+      display:grid;
+      place-items:center;
+      width:52px;
+      height:52px;
+      margin:0;
+      border-radius:14px;
+      font-size:46px;
+      line-height:1;
+      font-weight:950;
+      letter-spacing:-.08em;
+    }
+    #gameday .event-btn.score-effect .score-copy{
+      display:block;
+      margin:0;
+      min-width:0;
+      color:inherit;
+      font-size:inherit;
+      font-weight:inherit;
+    }
+    #gameday .event-btn.score-effect .score-copy b{
+      display:block;
+      font-size:.94rem;
+      line-height:1.1;
+      font-weight:950;
+    }
+    #gameday .event-btn.score-effect .score-copy small{
+      display:block;
+      margin-top:5px;
+      font-size:.70rem;
+      line-height:1.15;
+      font-weight:650;
+    }
+    #gameday .event-btn.score-positive{
+      background:#e2f4e6;
+      border-color:#9bc9a5;
+      border-left-color:#4f9562;
+      color:#173d22;
+    }
+    #gameday .event-btn.score-positive .score-impact{
+      background:#c7e8cf;
+      color:#276c39;
+    }
+    #gameday .event-btn.score-positive .score-copy small{color:#497157}
+    #gameday .event-btn.score-negative{
+      background:#f4dfe3;
+      border-color:#d8a8b2;
+      border-left-color:#a33a50;
+      color:#611a2b;
+    }
+    #gameday .event-btn.score-negative .score-impact{
+      background:#e9bec7;
+      color:#8c233b;
+    }
+    #gameday .event-btn.score-negative .score-copy small{color:#85505d}
+    @media(max-width:760px){
+      #gameday .event-btn.score-effect{
+        grid-template-columns:46px minmax(0,1fr);
+        min-height:80px;
+        padding:9px 10px;
+        gap:8px;
+      }
+      #gameday .event-btn.score-effect .score-impact{
+        width:44px;height:44px;border-radius:12px;font-size:39px;
+      }
+      #gameday .event-btn.score-effect .score-copy b{font-size:.79rem}
+      #gameday .event-btn.score-effect .score-copy small{font-size:.60rem}
+    }
+
+
+    /* SKOR FC v45 — optical centering for + / − score-impact glyphs */
+    #gameday .event-btn.score-effect .score-impact{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0;
+      text-align:center;
+      font-family:Arial, Helvetica, sans-serif;
+      font-variant-numeric:lining-nums;
+      line-height:1;
+      overflow:hidden;
+    }
+    #gameday .event-btn.score-effect .score-impact::before{
+      content:"";
+      display:block;
+      width:0;
+      height:0;
+    }
+    #gameday .event-btn.score-positive .score-impact{
+      padding-bottom:2px;
+    }
+    #gameday .event-btn.score-negative .score-impact{
+      padding-bottom:5px;
+    }
 
 </style>
 </head>
@@ -1044,7 +1176,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v42</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v45</div>
   </aside>
 
   <main>
@@ -1200,10 +1332,10 @@
           <div class="sub">Score changes are generated from the events below, so correcting an event also corrects the score.</div>
           <div class="event-buttons">
             <div class="event-group-label">Goals</div>
-            <button class="event-btn goal" type="button" data-event="skor_goal">⚽ SKOR Goal<span>Choose scorer + assist</span></button>
-            <button class="event-btn goal" type="button" data-event="opponent_goal">⚽ Opponent Goal<span>Opponent score +1</span></button>
-            <button class="event-btn own" type="button" data-event="opponent_own_goal">↩ Opponent Own Goal<span>SKOR score +1</span></button>
-            <button class="event-btn own" type="button" data-event="skor_own_goal">↪ SKOR Own Goal<span>Opponent score +1</span></button>
+            <button class="event-btn goal score-effect score-positive" type="button" data-event="skor_goal"><span class="score-impact" aria-hidden="true">+</span><span class="score-copy"><b>SKOR Goal</b><small>Choose scorer + assist</small></span></button>
+            <button class="event-btn goal score-effect score-negative" type="button" data-event="opponent_goal"><span class="score-impact" aria-hidden="true">−</span><span class="score-copy"><b>Opponent Goal</b><small>Opponent score +1</small></span></button>
+            <button class="event-btn own score-effect score-positive" type="button" data-event="opponent_own_goal"><span class="score-impact" aria-hidden="true">+</span><span class="score-copy"><b>Opponent Own Goal</b><small>SKOR score +1</small></span></button>
+            <button class="event-btn own score-effect score-negative" type="button" data-event="skor_own_goal"><span class="score-impact" aria-hidden="true">−</span><span class="score-copy"><b>SKOR Own Goal</b><small>Opponent score +1</small></span></button>
             <div class="event-group-label">SKOR FC Cards</div>
             <button class="event-btn card-yellow" type="button" data-event="skor_yellow_card">🟨 SKOR Yellow Card<span>Choose SKOR player</span></button>
             <button class="event-btn card-red" type="button" data-event="skor_red_card">🟥 SKOR Red Card<span>Choose SKOR player</span></button>
@@ -1563,7 +1695,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v42 - crowd quick launch + adaptive consensus + captain/viewer roles */
+/* SKOR FC Lineup Builder v45 - centered score-impact controls + player-focused export + adaptive consensus */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -1828,7 +1960,7 @@
     return raw.replace(/[^a-z0-9\- _]/gi,"").replace(/\s+/g,"_")+"."+ext;
   }
   function buildGameplanSvg(){
-    const W=1080,H=1800;
+    const W=1080,H=1920;
     const previewTitle=(document.getElementById("lineupVariationName")?.value||"Untitled Variation").trim()||"Untitled Variation";
     const eventTitle=eventLabel()||"Tinker / No Game";
     const starters=fieldEntries();
@@ -1837,9 +1969,20 @@
     const substituteCount=(state.bench||[]).length;
     const captain=player(state.captainId);
     const captainText=captain?("#"+captain.number+" "+captain.name):"Not selected";
-    const pitchX=70,pitchY=212,pitchW=940,pitchH=630;
+    const pitchX=70,pitchY=212,pitchW=940,pitchH=790;
     const showNames=(state.labelMode||"names")!=="numbers";
     const hasFieldPlayers=starters.length>0;
+    const standardFormation=!isFreeform(state.formation);
+    const exportXs=starters.map(e=>Number(e.x)).filter(Number.isFinite);
+    const exportYs=starters.map(e=>Number(e.y)).filter(Number.isFinite);
+    const exportMinX=exportXs.length?Math.min(...exportXs):0;
+    const exportMaxX=exportXs.length?Math.max(...exportXs):100;
+    const exportMinY=exportYs.length?Math.min(...exportYs):0;
+    const exportMaxY=exportYs.length?Math.max(...exportYs):100;
+    function exportCoord(value,min,max,outMin,outMax){
+      if(!standardFormation||!Number.isFinite(value)||max-min<1)return value;
+      return outMin+((value-min)/(max-min))*(outMax-outMin);
+    }
 
     const subsByPosition = depthPositions.map(pos=>{
       const names=(state?.depth?.[pos.key]||[])
@@ -1862,41 +2005,43 @@
     `;
 
     const pitch = `
-      <rect x="50" y="178" width="980" height="698" rx="24" ry="24" fill="#f8faf9" stroke="#d8dbe1"/>
+      <rect x="50" y="178" width="980" height="860" rx="24" ry="24" fill="#f8faf9" stroke="#d8dbe1"/>
       <text x="74" y="204" font-size="26" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Starting Lineup</text>
       <rect x="${pitchX}" y="${pitchY}" width="${pitchW}" height="${pitchH}" rx="34" ry="34" fill="#2f8b43"/>
       <rect x="${pitchX+12}" y="${pitchY+12}" width="${pitchW-24}" height="${pitchH-24}" rx="28" ry="28" fill="none" stroke="#d6f0da" stroke-width="4"/>
       <line x1="${pitchX}" y1="${pitchY + pitchH/2}" x2="${pitchX+pitchW}" y2="${pitchY + pitchH/2}" stroke="#d6f0da" stroke-width="4"/>
       <circle cx="${pitchX + pitchW/2}" cy="${pitchY + pitchH/2}" r="88" fill="none" stroke="#d6f0da" stroke-width="4"/>
       <circle cx="${pitchX + pitchW/2}" cy="${pitchY + pitchH/2}" r="4" fill="#d6f0da"/>
-      <rect x="${pitchX + pitchW*0.25}" y="${pitchY}" width="${pitchW*0.5}" height="92" fill="none" stroke="#d6f0da" stroke-width="4"/>
-      <rect x="${pitchX + pitchW*0.37}" y="${pitchY}" width="${pitchW*0.26}" height="36" fill="none" stroke="#d6f0da" stroke-width="4"/>
-      <rect x="${pitchX + pitchW*0.25}" y="${pitchY+pitchH-92}" width="${pitchW*0.5}" height="92" fill="none" stroke="#d6f0da" stroke-width="4"/>
-      <rect x="${pitchX + pitchW*0.37}" y="${pitchY+pitchH-36}" width="${pitchW*0.26}" height="36" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*0.25}" y="${pitchY}" width="${pitchW*0.5}" height="116" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*0.37}" y="${pitchY}" width="${pitchW*0.26}" height="46" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*0.25}" y="${pitchY+pitchH-116}" width="${pitchW*0.5}" height="116" fill="none" stroke="#d6f0da" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*0.37}" y="${pitchY+pitchH-46}" width="${pitchW*0.26}" height="46" fill="none" stroke="#d6f0da" stroke-width="4"/>
       ${!hasFieldPlayers ? `<text x="${pitchX + pitchW/2}" y="${pitchY + pitchH/2}" text-anchor="middle" font-size="30" font-weight="800" fill="#edf7ef" font-family="Arial, Helvetica, sans-serif">No lineup placed yet</text>` : ""}
     `;
 
     const markerSvg = starters.map(entry=>{
       const p=player(entry.pid);
       if(!p) return "";
-      const x=pitchX + (entry.x/100)*pitchW;
-      const y=pitchY + (entry.y/100)*pitchH;
-      const role = !isFreeform(state.formation) && entry.label ? `<text x="${x}" y="${y-36}" text-anchor="middle" font-size="16" font-weight="900" fill="#e8f3ea" font-family="Arial, Helvetica, sans-serif">${esc(entry.label)}</text>` : "";
-      const name = showNames ? `<text x="${x}" y="${y+40}" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}</text>` : "";
+      const exportXPct=exportCoord(Number(entry.x),exportMinX,exportMaxX,10,90);
+      const exportYPct=exportCoord(Number(entry.y),exportMinY,exportMaxY,12,88);
+      const x=pitchX + (exportXPct/100)*pitchW;
+      const y=pitchY + (exportYPct/100)*pitchH;
+      const role = !isFreeform(state.formation) && entry.label ? `<text x="${x}" y="${y-61}" text-anchor="middle" font-size="21" font-weight="900" fill="#e8f3ea" font-family="Arial, Helvetica, sans-serif">${esc(entry.label)}</text>` : "";
+      const name = showNames ? `<text x="${x}" y="${y+69}" text-anchor="middle" font-size="27" font-weight="850" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}</text>` : "";
       const captainBadge = state.captainId===entry.pid ? `
-        <circle cx="${x+23}" cy="${y-22}" r="13" fill="#ffffff" stroke="#801A3D" stroke-width="3"/>
-        <text x="${x+23}" y="${y-17}" text-anchor="middle" font-size="14" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">C</text>
+        <circle cx="${x+39}" cy="${y-38}" r="20" fill="#ffffff" stroke="#801A3D" stroke-width="4"/>
+        <text x="${x+39}" y="${y-31}" text-anchor="middle" font-size="20" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">C</text>
       ` : "";
       return `
         ${role}
-        <circle cx="${x}" cy="${y}" r="24" fill="#801A3D" stroke="#ffffff" stroke-width="4"/>
-        <text x="${x}" y="${y+8}" text-anchor="middle" font-size="22" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(p.number)}</text>
+        <circle cx="${x}" cy="${y}" r="44" fill="#801A3D" stroke="#ffffff" stroke-width="5"/>
+        <text x="${x}" y="${y+13}" text-anchor="middle" font-size="37" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(p.number)}</text>
         ${captainBadge}
         ${name}
       `;
     }).join("");
 
-    const subsCardX=50, subsCardY=908, subsCardW=612, subsCardH=440;
+    const subsCardX=50, subsCardY=1064, subsCardW=612, subsCardH=360;
     const subsRows = subsByPosition.length ? subsByPosition.map((row, idx)=>{
       const rowY = subsCardY + 102 + idx*32;
       const names = row.names.join(", ");
@@ -1907,36 +2052,36 @@
       `;
     }).join("") : `<text x="${subsCardX+24}" y="${subsCardY+112}" font-size="24" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No substitute coverage assigned.</text>`;
 
-    const planCardX=686, planCardY=908, planCardW=344, planCardH=720;
+    const planCardX=686, planCardY=1064, planCardW=344, planCardH=560;
     const renderPlanRows=(rows,startY,labelColor)=>{
       return rows.slice(0,4).map((entry, idx)=>{
-        const top = startY + idx*74;
+        const top = startY + idx*54;
         const outText = prettyPlayers(entry.out, true);
         const inText = prettyPlayers(entry.in, true);
         return `
-          <text x="${planCardX+32}" y="${top}" font-size="16" font-weight="900" fill="${labelColor}" font-family="Arial, Helvetica, sans-serif">${idx+1}${idx===0?'st':idx===1?'nd':idx===2?'rd':'th'}</text>
-          ${svgTextBlock('Out: '+outText, planCardX+68, top-2, 24, 16, 2, 'font-size="14" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
-          ${svgTextBlock('In: '+inText, planCardX+68, top+28, 24, 16, 2, 'font-size="14" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+          <text x="${planCardX+32}" y="${top}" font-size="15" font-weight="900" fill="${labelColor}" font-family="Arial, Helvetica, sans-serif">${idx+1}${idx===0?'st':idx===1?'nd':idx===2?'rd':'th'}</text>
+          ${svgTextBlock('Out: '+outText, planCardX+68, top-2, 25, 15, 1, 'font-size="13" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+          ${svgTextBlock('In: '+inText, planCardX+68, top+23, 25, 15, 1, 'font-size="13" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
         `;
       }).join("");
     };
 
-    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1030, '#801A3D') : `<text x="${planCardX+24}" y="1020" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
-    const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1326, '#234b74') : `<text x="${planCardX+24}" y="1326" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
-    const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1312" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
-    const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1618" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
+    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1176, '#801A3D') : `<text x="${planCardX+24}" y="1176" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
+    const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1398, '#234b74') : `<text x="${planCardX+24}" y="1398" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
+    const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1372" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
+    const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1603" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
 
-    const messageY=1640;
+    const messageY=1648;
     const quoteBlock = state.quote ? `
       <rect x="50" y="${messageY}" width="980" height="76" rx="20" ry="20" fill="#801A3D"/>
       ${svgTextBlock('“'+state.quote+'”',74,messageY+46,78,24,2,'font-size="24" font-style="italic" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif"')}
     ` : "";
 
-    const notesY=state.quote ? 1732 : 1640;
+    const notesY=state.quote ? 1740 : 1648;
     const notesBlock = state.notes ? `
-      <rect x="50" y="${notesY}" width="980" height="${state.quote?92:168}" rx="20" ry="20" fill="#f7f8fa" stroke="#dfe2e7"/>
+      <rect x="50" y="${notesY}" width="980" height="${state.quote?144:236}" rx="20" ry="20" fill="#f7f8fa" stroke="#dfe2e7"/>
       <text x="74" y="${notesY+31}" font-size="18" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">GAMEPLAN NOTES</text>
-      ${svgTextBlock(state.notes,74,notesY+58,92,22,state.quote?2:5,'font-size="18" font-weight="800" fill="#374151" font-family="Arial, Helvetica, sans-serif"')}
+      ${svgTextBlock(state.notes,74,notesY+58,92,22,state.quote?4:8,'font-size="18" font-weight="800" fill="#374151" font-family="Arial, Helvetica, sans-serif"')}
     ` : "";
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
@@ -1951,10 +2096,10 @@
 
       <rect x="${planCardX}" y="${planCardY}" width="${planCardW}" height="${planCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
       <text x="${planCardX+24}" y="${planCardY+48}" font-size="28" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Subs</text>
-      <text x="${planCardX+24}" y="995" font-size="17" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
+      <text x="${planCardX+24}" y="1147" font-size="17" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
       ${firstHalfRows}
       ${firstHalfExtra}
-      <text x="${planCardX+24}" y="1294" font-size="17" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
+      <text x="${planCardX+24}" y="1369" font-size="17" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
       ${secondHalfRows}
       ${secondHalfExtra}
 
@@ -1977,7 +2122,7 @@
       const img=new Image();
       img.onload=()=>{
         const canvas=document.createElement("canvas");
-        canvas.width=1080; canvas.height=1800;
+        canvas.width=1080; canvas.height=1920;
         const ctx=canvas.getContext("2d");
         if(ext==="jpg"){
           ctx.fillStyle="#ffffff";
@@ -3003,7 +3148,7 @@ function renderGameDay(){
 }
 
 // =========================================================
-// SKOR FC v42 — Crowd Scoring captain control plane + adaptive consensus + dashboard quick launch
+// SKOR FC v44 — score-impact controls + player-focused gameplan export + adaptive consensus
 // =========================================================
 let crowdSession=null,crowdInvite=null,crowdParticipants=[],crowdSummaryTimer=null;
 const crowdStartBtn=document.getElementById("crowdStartBtn"),crowdGenerateQrBtn=document.getElementById("crowdGenerateQrBtn"),crowdMotmToggle=document.getElementById("crowdMotmToggle"),crowdCloseBtn=document.getElementById("crowdCloseBtn"),crowdSessionBadge=document.getElementById("crowdSessionBadge"),crowdAdminStatus=document.getElementById("crowdAdminStatus"),crowdQrCard=document.getElementById("crowdQrCard"),crowdQrCode=document.getElementById("crowdQrCode"),crowdJoinLink=document.getElementById("crowdJoinLink"),crowdCopyLinkBtn=document.getElementById("crowdCopyLinkBtn"),crowdOpenPageLink=document.getElementById("crowdOpenPageLink"),crowdParticipantList=document.getElementById("crowdParticipantList");
