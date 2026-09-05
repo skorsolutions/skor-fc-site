@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v47-new-player-tag-management-production" />
-  <title>SKOR FC Admin | Crowd Scoring v47</title>
+  <meta name="skor-build" content="lineup-admin-v48-player-profile-editing-preferred-name-production" />
+  <title>SKOR FC Admin | Crowd Scoring v48</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -1187,6 +1187,15 @@
     .roster-new-state.off{background:#eef0f2;color:#6b7078}
     .roster-new-toggle{font-size:.64rem;padding:6px 8px}
 
+
+    /* SKOR FC v48 — complete player profile editing */
+    .roster-bio-field{grid-column:1/-1}
+    .roster-bio-field textarea{min-height:92px;resize:vertical}
+    .roster-bio-help{margin-top:5px;color:var(--muted);font-size:.68rem}
+    .roster-form-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .roster-name-cell small{display:block;max-width:260px;margin-top:5px;color:var(--muted);font-size:.68rem;font-weight:500;line-height:1.3;white-space:normal}
+    .roster-action-cell{white-space:nowrap}
+
 </style>
 </head>
 <body>
@@ -1220,7 +1229,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v47</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v48</div>
   </aside>
 
   <main>
@@ -1547,13 +1556,20 @@
     <section class="view" id="roster">
       <div class="content-grid roster-admin-grid">
         <div class="panel">
-          <h2>Add Player</h2>
-          <div class="sub">Players are stored in Supabase and automatically become available in Lineups, Game Day, the homepage squad, players page, stats and Man of the Match. The public site displays first names only; email and phone remain captain-only.</div>
+          <h2 id="rosterFormTitle">Add Player</h2>
+          <div class="sub">Add or edit the player profile once here. Number, position, description, New Player tag and public profile details flow to the homepage squad and Meet the Squad page. Players also remain available throughout Lineups and Game Day.</div>
           <form class="form" id="rosterForm">
+            <input type="hidden" id="rosterEditId">
             <div class="roster-form-grid">
               <div>
                 <label>Full name</label>
-                <input id="rosterFullName" required autocomplete="name" placeholder="Full player name">
+                <input id="rosterFullName" required autocomplete="name" placeholder="Edward Levin">
+                <div class="roster-bio-help">Captain/private roster name.</div>
+              </div>
+              <div>
+                <label>Public / Preferred Name</label>
+                <input id="rosterPreferredName" maxlength="60" placeholder="Eddy">
+                <div class="roster-bio-help">Shown to teammates and fans. Leave blank to use the first name from Full name.</div>
               </div>
               <div>
                 <label>Jersey #</label>
@@ -1592,8 +1608,16 @@
                 <label>Phone</label>
                 <input id="rosterPhone" type="tel" autocomplete="tel" placeholder="404-555-0100">
               </div>
+              <div class="roster-bio-field">
+                <label>Description / Bio</label>
+                <textarea id="rosterBio" rows="4" maxlength="400" placeholder="Short player description shown on the squad pages. Example: Versatile midfielder with strong positioning and a high work rate."></textarea>
+                <div class="roster-bio-help">Public field. Leave blank to show “Bio pending.”</div>
+              </div>
             </div>
-            <button class="btn btn-primary" id="addRosterPlayerBtn" type="submit">Add Player</button>
+            <div class="roster-form-actions">
+              <button class="btn btn-primary" id="addRosterPlayerBtn" type="submit">Add Player</button>
+              <button class="btn btn-light" id="cancelRosterEditBtn" type="button" style="display:none">Cancel Edit</button>
+            </div>
             <div class="form-status" id="rosterFormStatus"></div>
           </form>
         </div>
@@ -1609,10 +1633,10 @@
           <div class="roster-table-wrap">
             <table class="table roster-table">
               <thead>
-                <tr><th>#</th><th>Full Name</th><th>Position</th><th>New Player</th><th>Email</th><th>Phone</th><th>Status</th></tr>
+                <tr><th>#</th><th>Player</th><th>Position</th><th>New Player</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
               </thead>
               <tbody id="rosterTableBody">
-                <tr><td colspan="7">Loading roster…</td></tr>
+                <tr><td colspan="8">Loading roster…</td></tr>
               </tbody>
             </table>
           </div>
@@ -1764,7 +1788,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v47 - new-player tag management + roster validation + live roster feeds */
+/* SKOR FC Lineup Builder v48 - player profile editing + preferred names + live roster feeds */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -2579,7 +2603,7 @@
       .map(r=>({
         player_key:String(r.player_key || r.id || (r.jersey_number+"-"+r.full_name)),
         number:Number(r.jersey_number),
-        name:String(r.display_name||String(r.full_name||"Player").trim().split(/\s+/)[0])
+        name:String(r.preferred_name||r.display_name||String(r.full_name||"Player").trim().split(/\s+/)[0])
       }))
       .filter(p=>Number.isFinite(p.number) && p.name)
       .sort((a,b)=>a.number-b.number || a.name.localeCompare(b.name));
@@ -2949,10 +2973,10 @@ function setJerseyNumberStatus(message,state=""){
   input.classList.toggle("jersey-available",state==="available");
   input.classList.toggle("jersey-taken",state==="taken");
 }
-function localJerseyOwner(number){
-  return TEAM_ROSTER.find(p=>p.active!==false&&Number(p.jersey_number)===Number(number))||null;
+function localJerseyOwner(number,excludeId=null){
+  return TEAM_ROSTER.find(p=>p.active!==false&&Number(p.jersey_number)===Number(number)&&String(p.id)!==String(excludeId||""))||null;
 }
-async function checkJerseyNumberAvailability(number,{quiet=false}={}){
+async function checkJerseyNumberAvailability(number,{quiet=false,excludeId=null}={}){
   const input=document.getElementById("rosterNumber");
   const n=Number(number);
   if(!Number.isInteger(n)||n<1||n>99){
@@ -2960,16 +2984,18 @@ async function checkJerseyNumberAvailability(number,{quiet=false}={}){
     if(input)input.setCustomValidity("Jersey number must be between 1 and 99.");
     return {available:false,owner:null};
   }
-  const local=localJerseyOwner(n);
+  const local=localJerseyOwner(n,excludeId);
   if(local){
     const msg=`#${n} is already assigned to ${local.full_name}.`;
     if(!quiet)setJerseyNumberStatus(msg,"taken");
     if(input)input.setCustomValidity(msg);
     return {available:false,owner:local};
   }
-  const {data,error}=await sb.from("team_roster")
+  let numberQuery=sb.from("team_roster")
     .select("id,full_name,jersey_number,active")
-    .eq("jersey_number",n).eq("active",true).maybeSingle();
+    .eq("jersey_number",n).eq("active",true);
+  if(excludeId)numberQuery=numberQuery.neq("id",excludeId);
+  const {data,error}=await numberQuery.maybeSingle();
   if(error){
     console.warn("Could not verify jersey number:",error);
     if(!quiet)setJerseyNumberStatus("Could not verify this number yet; it will be checked again when you add the player.");
@@ -2992,13 +3018,13 @@ function renderRosterTable(){
   if(count)count.textContent=TEAM_ROSTER.filter(p=>p.active!==false).length;
   if(!body)return;
   if(!TEAM_ROSTER.length){
-    body.innerHTML='<tr><td colspan="7">No players found.</td></tr>';
+    body.innerHTML='<tr><td colspan="8">No players found.</td></tr>';
     return;
   }
   body.innerHTML=TEAM_ROSTER.map(p=>`
     <tr>
       <td><strong>#${rosterEsc(p.jersey_number)}</strong></td>
-      <td><strong>${rosterEsc(p.full_name)}</strong></td>
+      <td class="roster-name-cell"><strong>${rosterEsc(p.full_name)}</strong><small><b>Public:</b> ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</small><small>${rosterEsc(p.bio||"Bio pending.")}</small></td>
       <td>${rosterEsc(p.position||"Player")}</td>
       <td class="roster-new-cell">
         <span class="roster-new-state ${p.is_new?"on":"off"}">${p.is_new?"New Player":"Established"}</span>
@@ -3007,6 +3033,7 @@ function renderRosterTable(){
       <td>${p.email?rosterEsc(p.email):'<span class="roster-contact">—</span>'}</td>
       <td>${p.phone?rosterEsc(p.phone):'<span class="roster-contact">—</span>'}</td>
       <td><span class="status">${p.active===false?"Inactive":"Active"}</span></td>
+      <td class="roster-action-cell"><button class="mini-btn" type="button" onclick="editRosterPlayer('${rosterEsc(p.id)}')">Edit</button></td>
     </tr>`).join("");
 }
 window.toggleRosterNewPlayer=async function(id,isNew){
@@ -3019,6 +3046,48 @@ window.toggleRosterNewPlayer=async function(id,isNew){
   if(error){setRosterStatus(`Could not ${action} ${player.full_name}: ${error.message}`,false);return;}
   setRosterStatus(`${player.full_name} ${isNew?"is now marked as a New Player.":"is no longer marked as a New Player."} The public squad pages update from the shared roster automatically.`,true);
   await loadTeamRoster(false);
+};
+
+
+function resetRosterForm({keepMessage=false}={}){
+  const form=document.getElementById("rosterForm");
+  if(form)form.reset();
+  const editId=document.getElementById("rosterEditId");
+  if(editId)editId.value="";
+  const title=document.getElementById("rosterFormTitle");
+  if(title)title.textContent="Add Player";
+  const saveBtn=document.getElementById("addRosterPlayerBtn");
+  if(saveBtn)saveBtn.textContent="Add Player";
+  const cancelBtn=document.getElementById("cancelRosterEditBtn");
+  if(cancelBtn)cancelBtn.style.display="none";
+  const newPlayerBox=document.getElementById("rosterIsNew");
+  if(newPlayerBox)newPlayerBox.checked=true;
+  const numberInput=document.getElementById("rosterNumber");
+  if(numberInput)numberInput.setCustomValidity("");
+  setJerseyNumberStatus("Choose any number from 1–99.");
+  if(!keepMessage)setRosterStatus("",true);
+}
+window.editRosterPlayer=function(id){
+  if(!portalCanWrite()){viewerBlocked("edit roster players");return;}
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  document.getElementById("rosterEditId").value=p.id;
+  document.getElementById("rosterFullName").value=p.full_name||"";
+  document.getElementById("rosterPreferredName").value=p.preferred_name||"";
+  document.getElementById("rosterNumber").value=p.jersey_number??"";
+  document.getElementById("rosterPosition").value=p.position||"";
+  document.getElementById("rosterBio").value=p.bio||"";
+  document.getElementById("rosterEmail").value=p.email||"";
+  document.getElementById("rosterPhone").value=p.phone||"";
+  document.getElementById("rosterIsNew").checked=!!p.is_new;
+  document.getElementById("rosterFormTitle").textContent=`Edit ${p.full_name}`;
+  document.getElementById("addRosterPlayerBtn").textContent="Save Player";
+  document.getElementById("cancelRosterEditBtn").style.display="inline-flex";
+  const numberInput=document.getElementById("rosterNumber");
+  if(numberInput)numberInput.setCustomValidity("");
+  setJerseyNumberStatus(`#${p.jersey_number} is this player's current number.`,"available");
+  setRosterStatus("Editing player profile. Save Player will update every public roster view.",true);
+  document.getElementById("rosterForm")?.scrollIntoView({behavior:"smooth",block:"start"});
 };
 
 function dashboardDateTime(value){
@@ -3095,13 +3164,13 @@ function updateDashboardAnnouncement(items){
 async function loadTeamRoster(showMessage=false){
   const {data,error}=await sb
     .from("team_roster")
-    .select("id,player_key,full_name,email,phone,jersey_number,position,is_new,photo_url,sort_order,active,created_at")
+    .select("id,player_key,full_name,preferred_name,email,phone,jersey_number,position,bio,is_new,photo_url,sort_order,active,created_at")
     .order("sort_order",{ascending:true})
     .order("created_at",{ascending:true});
   if(error){
     console.error("Could not load team roster:",error);
     const body=document.getElementById("rosterTableBody");
-    if(body)body.innerHTML='<tr><td colspan="7">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
+    if(body)body.innerHTML='<tr><td colspan="8">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
     if(showMessage)setRosterStatus("Could not load roster: "+error.message,false);
     return;
   }
@@ -3110,7 +3179,7 @@ async function loadTeamRoster(showMessage=false){
   ROSTER=active.map(p=>({
     player_key:p.player_key||p.id,
     number:Number(p.jersey_number),
-    name:String(p.full_name||"Player").trim().split(/\s+/)[0]
+    name:String(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])
   }));
   renderRosterTable();
   updateDashboardRoster();
@@ -3124,67 +3193,78 @@ eventAssist.innerHTML=rosterOptions(true);
 const rosterForm=document.getElementById("rosterForm");
 const refreshRosterBtn=document.getElementById("refreshRosterBtn");
 const rosterNumberInput=document.getElementById("rosterNumber");
+const cancelRosterEditBtn=document.getElementById("cancelRosterEditBtn");
+if(cancelRosterEditBtn)cancelRosterEditBtn.addEventListener("click",()=>resetRosterForm());
 let jerseyCheckTimer=null;
 if(rosterNumberInput){
   const validateChosenNumber=()=>{
     clearTimeout(jerseyCheckTimer);
     const raw=rosterNumberInput.value.trim();
     if(!raw){rosterNumberInput.setCustomValidity("");setJerseyNumberStatus("Choose any number from 1–99.");return;}
-    jerseyCheckTimer=setTimeout(()=>checkJerseyNumberAvailability(raw),180);
+    const excludeId=document.getElementById("rosterEditId")?.value||null;
+    jerseyCheckTimer=setTimeout(()=>checkJerseyNumberAvailability(raw,{excludeId}),180);
   };
   rosterNumberInput.addEventListener("input",validateChosenNumber);
   rosterNumberInput.addEventListener("change",validateChosenNumber);
-  rosterNumberInput.addEventListener("blur",()=>{if(rosterNumberInput.value.trim())checkJerseyNumberAvailability(rosterNumberInput.value);});
+  rosterNumberInput.addEventListener("blur",()=>{if(rosterNumberInput.value.trim())checkJerseyNumberAvailability(rosterNumberInput.value,{excludeId:document.getElementById("rosterEditId")?.value||null});});
 }
 if(refreshRosterBtn)refreshRosterBtn.addEventListener("click",()=>loadTeamRoster(true));
 if(rosterForm)rosterForm.addEventListener("submit",async e=>{
   e.preventDefault();
   if(!portalCanWrite()){viewerBlocked("add roster players");return;}
+  const editId=document.getElementById("rosterEditId")?.value||"";
   const full_name=document.getElementById("rosterFullName").value.trim();
+  const preferred_name=document.getElementById("rosterPreferredName").value.trim();
   const jersey_number=Number(document.getElementById("rosterNumber").value);
   const position=document.getElementById("rosterPosition").value.trim();
+  const bio=document.getElementById("rosterBio").value.trim();
   const is_new=document.getElementById("rosterIsNew")?.checked!==false;
   const email=document.getElementById("rosterEmail").value.trim().toLowerCase();
   const phone=document.getElementById("rosterPhone").value.trim();
   if(!full_name)return setRosterStatus("Enter the player's full name.",false);
   if(!Number.isInteger(jersey_number)||jersey_number<1||jersey_number>99)return setRosterStatus("Jersey number must be between 1 and 99.",false);
   if(!position)return setRosterStatus("Choose the player's position.",false);
-  const availability=await checkJerseyNumberAvailability(jersey_number);
+  const availability=await checkJerseyNumberAvailability(jersey_number,{excludeId:editId||null});
   if(!availability.available){
     const owner=availability.owner?.full_name||"another active player";
     return setRosterStatus(`#${jersey_number} is already assigned to ${owner}. Choose another number.`,false);
   }
   const button=document.getElementById("addRosterPlayerBtn");
-  button.disabled=true;button.textContent="Adding…";
+  button.disabled=true;button.textContent=editId?"Saving…":"Adding…";
   try{
     const {data:{user},error:userError}=await sb.auth.getUser();
     if(userError||!user)throw new Error(userError?.message||"Captain session not found.");
     const payload={
       full_name,
+      preferred_name:preferred_name||null,
       jersey_number,
       position,
+      bio:bio||null,
       email:email||null,
       phone:phone||null,
-      active:true,
-      is_new,
-      created_by:user.id
+      is_new
     };
-    const {error}=await sb.from("team_roster").insert(payload);
-    if(error)throw error;
-    rosterForm.reset();
-    const newPlayerBox=document.getElementById("rosterIsNew");
-    if(newPlayerBox)newPlayerBox.checked=true;
-    if(rosterNumberInput)rosterNumberInput.setCustomValidity("");
-    setJerseyNumberStatus("Choose any number from 1–99.");
-    setRosterStatus(`${full_name} (#${jersey_number}, ${position}) added${is_new?" with the NEW PLAYER tag":""}. They now feed the squad pages, Lineups, Captain Game Day scorer/assist/MOTM, cards, and Crowd Game Day.`,true);
+    if(editId){
+      const {error}=await sb.from("team_roster").update(payload).eq("id",editId);
+      if(error)throw error;
+      resetRosterForm({keepMessage:true});
+      setRosterStatus(`${full_name} updated. Public name "${preferred_name||full_name.split(/\s+/)[0]}" now flows to the homepage, Meet the Squad, Lineups and all Game Day player selections.`,true);
+    }else{
+      const {error}=await sb.from("team_roster").insert({...payload,active:true,created_by:user.id});
+      if(error)throw error;
+      resetRosterForm({keepMessage:true});
+      setRosterStatus(`${full_name} (#${jersey_number}, ${position}) added${is_new?" with the NEW PLAYER tag":""}. Public name "${preferred_name||full_name.split(/\s+/)[0]}" is now used across the squad pages, Lineups and Game Day.`,true);
+    }
     await loadTeamRoster(false);
   }catch(err){
     const msg=String(err?.message||err);
     setRosterStatus(msg.toLowerCase().includes("duplicate")
       ?"That jersey number is already assigned to an active player."
-      :"Could not add player: "+msg,false);
+      :"Could not save player: "+msg,false);
   }finally{
-    button.disabled=false;button.textContent="Add Player";
+    button.disabled=false;
+    const stillEditing=document.getElementById("rosterEditId")?.value;
+    button.textContent=stillEditing?"Save Player":"Add Player";
   }
 });
 
