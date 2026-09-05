@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="public-home-v47-brighter-player-numbers">
+<meta name="skor-build" content="public-home-v48-player-position-bio-preferred-name">
 <title>SKOR FC | Over 30 Soccer in Roswell, Georgia</title>
 <meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, match results, season stats, practices, and club updates.">
 <meta name="skor-build" content="public-shared-data-v37">
@@ -163,6 +163,7 @@ img{max-width:100%}
 .player-no{color:#d35b75;font-size:10px;font-weight:950}
 .player-info h3{margin:2px 0 4px;font-size:20px}
 .player-pos{font-size:9px;color:#b2b5ba;text-transform:uppercase;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-bio{margin-top:7px;color:#858990;font-size:8px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:22px}
 
 /* Kits + Join */
 .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -481,27 +482,27 @@ img{max-width:100%}
       <div class="squad-grid" id="homeSquadGrid">
         <a class="player-card" href="players.html">
           <div class="player-photo"><span class="new-badge">NEW</span><div class="player-num-bg">2</div><div class="player-avatar">I</div></div>
-          <div class="player-info"><div class="player-no">#2</div><h3>Ivan</h3><div class="player-pos">Defence</div></div>
+          <div class="player-info"><div class="player-no">#2</div><h3>Ivan</h3><div class="player-pos">Defence</div><div class="player-bio">Bio pending.</div></div>
         </a>
         <a class="player-card" href="players.html">
           <div class="player-photo"><span class="new-badge">NEW</span><div class="player-num-bg">9</div><div class="player-avatar">A</div></div>
-          <div class="player-info"><div class="player-no">#9</div><h3>Andres</h3><div class="player-pos">Midfield / Forward</div></div>
+          <div class="player-info"><div class="player-no">#9</div><h3>Andres</h3><div class="player-pos">Midfield / Forward</div><div class="player-bio">Bio pending.</div></div>
         </a>
         <a class="player-card" href="players.html">
           <div class="player-photo"><span class="new-badge">NEW</span><div class="player-num-bg">17</div><div class="player-avatar">D</div></div>
-          <div class="player-info"><div class="player-no">#17</div><h3>David</h3><div class="player-pos">Midfield</div></div>
+          <div class="player-info"><div class="player-no">#17</div><h3>David</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
         </a>
         <a class="player-card" href="players.html">
           <div class="player-photo"><div class="player-num-bg">18</div><div class="player-avatar">J</div></div>
-          <div class="player-info"><div class="player-no">#18</div><h3>Jason</h3><div class="player-pos">Midfield</div></div>
+          <div class="player-info"><div class="player-no">#18</div><h3>Jason</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
         </a>
         <a class="player-card" href="players.html">
           <div class="player-photo"><div class="player-num-bg">20</div><div class="player-avatar">A</div></div>
-          <div class="player-info"><div class="player-no">#20</div><h3>Ayman</h3><div class="player-pos">Midfield</div></div>
+          <div class="player-info"><div class="player-no">#20</div><h3>Ayman</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
         </a>
         <a class="player-card" href="players.html">
           <div class="player-photo"><div class="player-num-bg">6</div><div class="player-avatar">J</div></div>
-          <div class="player-info"><div class="player-no">#6</div><h3>Julio</h3><div class="player-pos">Midfield</div></div>
+          <div class="player-info"><div class="player-no">#6</div><h3>Julio</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
         </a>
       </div>
     </div>
@@ -590,21 +591,21 @@ const publicDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE
 
 let PUBLIC_FIELDS_HOME=[],PUBLIC_ROSTER_HOME=[];
 const HOME_FALLBACK_ROSTER=[
-  {player_key:"2-Ivan",display_name:"Ivan",jersey_number:2,position:"Defence",is_new:true},
-  {player_key:"9-Andres",display_name:"Andres",jersey_number:9,position:"Midfield / Forward",is_new:true},
-  {player_key:"17-David",display_name:"David",jersey_number:17,position:"Midfield",is_new:true},
-  {player_key:"18-Jason",display_name:"Jason",jersey_number:18,position:"Midfield",is_new:false},
-  {player_key:"20-Ayman",display_name:"Ayman",jersey_number:20,position:"Midfield",is_new:false},
-  {player_key:"6-Julio",display_name:"Julio",jersey_number:6,position:"Midfield",is_new:false}
+  {player_key:"2-Ivan",display_name:"Ivan",jersey_number:2,position:"Defence",bio:"Bio pending.",is_new:true},
+  {player_key:"9-Andres",display_name:"Andres",jersey_number:9,position:"Midfield / Forward",bio:"Bio pending.",is_new:true},
+  {player_key:"17-David",display_name:"David",jersey_number:17,position:"Midfield",bio:"Bio pending.",is_new:true},
+  {player_key:"18-Jason",display_name:"Jason",jersey_number:18,position:"Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"20-Ayman",display_name:"Ayman",jersey_number:20,position:"Midfield",bio:"Bio pending.",is_new:false},
+  {player_key:"6-Julio",display_name:"Julio",jersey_number:6,position:"Midfield",bio:"Bio pending.",is_new:false}
 ];
 function publicEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
 function firstInitial(v){return String(v||"?").trim().charAt(0).toUpperCase()||"?";}
 function renderHomeRoster(rows){
   const grid=document.getElementById("homeSquadGrid");if(!grid)return;const list=(rows||[]).slice(0,6);if(!list.length)return;
-  grid.innerHTML=list.map(p=>`<a class="player-card" href="players.html"><div class="player-photo">${p.is_new?'<span class="new-badge">NEW</span>':''}<div class="player-num-bg">${publicEsc(p.jersey_number)}</div>${p.photo_url?`<img class="public-player-photo" src="${publicEsc(p.photo_url)}" alt="${publicEsc(p.display_name)}">`:''}<div class="player-avatar">${publicEsc(firstInitial(p.display_name))}</div></div><div class="player-info"><div class="player-no">#${publicEsc(p.jersey_number)}</div><h3>${publicEsc(p.display_name)}</h3><div class="player-pos">${publicEsc(p.position||"Player")}</div></div></a>`).join("");
+  grid.innerHTML=list.map(p=>`<a class="player-card" href="players.html"><div class="player-photo">${p.is_new?'<span class="new-badge">NEW</span>':''}<div class="player-num-bg">${publicEsc(p.jersey_number)}</div>${p.photo_url?`<img class="public-player-photo" src="${publicEsc(p.photo_url)}" alt="${publicEsc(p.display_name)}">`:''}<div class="player-avatar">${publicEsc(firstInitial(p.display_name))}</div></div><div class="player-info"><div class="player-no">#${publicEsc(p.jersey_number)}</div><h3>${publicEsc(p.display_name)}</h3><div class="player-pos">${publicEsc(p.position||"Player")}</div><div class="player-bio">${publicEsc(p.bio||"Bio pending.")}</div></div></a>`).join("");
 }
 async function loadPublicRosterHome(){
-  try{const {data,error}=await publicDb.from("public_roster").select("player_key,display_name,jersey_number,position,is_new,photo_url,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(error)throw error;if(data){PUBLIC_ROSTER_HOME=data;if(data.length)renderHomeRoster(data);}}catch(err){console.info("Public roster fallback:",err?.message||err);}
+  try{const {data,error}=await publicDb.from("public_roster").select("player_key,display_name,jersey_number,position,bio,is_new,photo_url,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(error)throw error;if(data){PUBLIC_ROSTER_HOME=data;if(data.length)renderHomeRoster(data);}}catch(err){console.info("Public roster fallback:",err?.message||err);}
 }
 function homePublicName(name,rosterNumber){const found=PUBLIC_ROSTER_HOME.find(p=>String(p.jersey_number)===String(rosterNumber||""));if(found)return found.display_name;const raw=String(name||"").trim();return raw?raw.split(/\s+/)[0]:"";}
 function publicFieldLabel(f){return f.field_number?`${f.name} · ${f.field_number}`:f.name;}
