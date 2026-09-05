@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v46-roster-position-jersey-validation-production" />
-  <title>SKOR FC Admin | Crowd Scoring v46</title>
+  <meta name="skor-build" content="lineup-admin-v47-new-player-tag-management-production" />
+  <title>SKOR FC Admin | Crowd Scoring v47</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -1151,6 +1151,42 @@
     #rosterNumber.jersey-available{border-color:#72aa91;box-shadow:0 0 0 3px rgba(78,135,120,.08)}
     #rosterNumber.jersey-taken{border-color:#b64d64;box-shadow:0 0 0 3px rgba(154,37,63,.08)}
 
+
+    /* =========================================================
+       SKOR FC v47 — New Player tag management
+       ========================================================= */
+    .new-player-control{align-self:end}
+    .new-player-check{
+      min-height:48px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+    }
+    .new-player-check input{width:18px;height:18px;accent-color:var(--maroon);flex:0 0 auto}
+    .new-player-check span{display:block}
+    .new-player-check strong{display:block;font-size:.78rem;line-height:1.15}
+    .new-player-check small{display:block;margin-top:3px;color:var(--muted);font-size:.66rem;line-height:1.2}
+    .roster-new-cell{min-width:145px}
+    .roster-new-state{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 7px;
+      border-radius:999px;
+      font-size:.62rem;
+      font-weight:900;
+      letter-spacing:.05em;
+      text-transform:uppercase;
+      margin-right:6px;
+    }
+    .roster-new-state.on{background:#f4dce4;color:#8a1737}
+    .roster-new-state.off{background:#eef0f2;color:#6b7078}
+    .roster-new-toggle{font-size:.64rem;padding:6px 8px}
+
 </style>
 </head>
 <body>
@@ -1184,7 +1220,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v46</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v47</div>
   </aside>
 
   <main>
@@ -1538,6 +1574,16 @@
                   <option value="Forward / Midfield">Forward / Midfield</option>
                 </select>
               </div>
+              <div class="new-player-control">
+                <label>Roster Tag</label>
+                <label class="new-player-check" for="rosterIsNew">
+                  <input id="rosterIsNew" type="checkbox" checked>
+                  <span>
+                    <strong>Mark as New Player</strong>
+                    <small>Shows the NEW PLAYER badge on the public squad.</small>
+                  </span>
+                </label>
+              </div>
               <div>
                 <label>Email</label>
                 <input id="rosterEmail" type="email" autocomplete="email" placeholder="player@example.com">
@@ -1563,10 +1609,10 @@
           <div class="roster-table-wrap">
             <table class="table roster-table">
               <thead>
-                <tr><th>#</th><th>Full Name</th><th>Position</th><th>Email</th><th>Phone</th><th>Status</th></tr>
+                <tr><th>#</th><th>Full Name</th><th>Position</th><th>New Player</th><th>Email</th><th>Phone</th><th>Status</th></tr>
               </thead>
               <tbody id="rosterTableBody">
-                <tr><td colspan="6">Loading roster…</td></tr>
+                <tr><td colspan="7">Loading roster…</td></tr>
               </tbody>
             </table>
           </div>
@@ -1718,7 +1764,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v46 - roster validation + live roster feeds + centered score-impact controls */
+/* SKOR FC Lineup Builder v47 - new-player tag management + roster validation + live roster feeds */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -2946,7 +2992,7 @@ function renderRosterTable(){
   if(count)count.textContent=TEAM_ROSTER.filter(p=>p.active!==false).length;
   if(!body)return;
   if(!TEAM_ROSTER.length){
-    body.innerHTML='<tr><td colspan="6">No players found.</td></tr>';
+    body.innerHTML='<tr><td colspan="7">No players found.</td></tr>';
     return;
   }
   body.innerHTML=TEAM_ROSTER.map(p=>`
@@ -2954,11 +3000,27 @@ function renderRosterTable(){
       <td><strong>#${rosterEsc(p.jersey_number)}</strong></td>
       <td><strong>${rosterEsc(p.full_name)}</strong></td>
       <td>${rosterEsc(p.position||"Player")}</td>
+      <td class="roster-new-cell">
+        <span class="roster-new-state ${p.is_new?"on":"off"}">${p.is_new?"New Player":"Established"}</span>
+        <button class="mini-btn roster-new-toggle" type="button" onclick="toggleRosterNewPlayer('${rosterEsc(p.id)}',${p.is_new?"false":"true"})">${p.is_new?"Remove tag":"Mark New"}</button>
+      </td>
       <td>${p.email?rosterEsc(p.email):'<span class="roster-contact">—</span>'}</td>
       <td>${p.phone?rosterEsc(p.phone):'<span class="roster-contact">—</span>'}</td>
       <td><span class="status">${p.active===false?"Inactive":"Active"}</span></td>
     </tr>`).join("");
 }
+window.toggleRosterNewPlayer=async function(id,isNew){
+  if(!portalCanWrite()){viewerBlocked(isNew?"mark players as new":"remove New Player tags");return;}
+  const player=TEAM_ROSTER.find(p=>String(p.id)===String(id));
+  if(!player)return;
+  const action=isNew?"add the NEW PLAYER tag to":"remove the NEW PLAYER tag from";
+  if(!confirm(`${isNew?"Mark":"Remove"} ${player.full_name} ${isNew?"as a New Player?":"from New Player status?"}`))return;
+  const {error}=await sb.from("team_roster").update({is_new:!!isNew}).eq("id",id);
+  if(error){setRosterStatus(`Could not ${action} ${player.full_name}: ${error.message}`,false);return;}
+  setRosterStatus(`${player.full_name} ${isNew?"is now marked as a New Player.":"is no longer marked as a New Player."} The public squad pages update from the shared roster automatically.`,true);
+  await loadTeamRoster(false);
+};
+
 function dashboardDateTime(value){
   if(!value)return "—";
   const d=new Date(value);
@@ -3039,7 +3101,7 @@ async function loadTeamRoster(showMessage=false){
   if(error){
     console.error("Could not load team roster:",error);
     const body=document.getElementById("rosterTableBody");
-    if(body)body.innerHTML='<tr><td colspan="6">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
+    if(body)body.innerHTML='<tr><td colspan="7">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
     if(showMessage)setRosterStatus("Could not load roster: "+error.message,false);
     return;
   }
@@ -3081,6 +3143,7 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
   const full_name=document.getElementById("rosterFullName").value.trim();
   const jersey_number=Number(document.getElementById("rosterNumber").value);
   const position=document.getElementById("rosterPosition").value.trim();
+  const is_new=document.getElementById("rosterIsNew")?.checked!==false;
   const email=document.getElementById("rosterEmail").value.trim().toLowerCase();
   const phone=document.getElementById("rosterPhone").value.trim();
   if(!full_name)return setRosterStatus("Enter the player's full name.",false);
@@ -3103,15 +3166,17 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
       email:email||null,
       phone:phone||null,
       active:true,
-      is_new:true,
+      is_new,
       created_by:user.id
     };
     const {error}=await sb.from("team_roster").insert(payload);
     if(error)throw error;
     rosterForm.reset();
+    const newPlayerBox=document.getElementById("rosterIsNew");
+    if(newPlayerBox)newPlayerBox.checked=true;
     if(rosterNumberInput)rosterNumberInput.setCustomValidity("");
     setJerseyNumberStatus("Choose any number from 1–99.");
-    setRosterStatus(`${full_name} (#${jersey_number}, ${position}) added. They now feed the squad pages, Lineups, Captain Game Day scorer/assist/MOTM, and Crowd Game Day.`,true);
+    setRosterStatus(`${full_name} (#${jersey_number}, ${position}) added${is_new?" with the NEW PLAYER tag":""}. They now feed the squad pages, Lineups, Captain Game Day scorer/assist/MOTM, cards, and Crowd Game Day.`,true);
     await loadTeamRoster(false);
   }catch(err){
     const msg=String(err?.message||err);
