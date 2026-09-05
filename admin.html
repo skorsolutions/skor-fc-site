@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v45-centered-score-impact-production" />
-  <title>SKOR FC Admin | Crowd Scoring v45</title>
+  <meta name="skor-build" content="lineup-admin-v46-roster-position-jersey-validation-production" />
+  <title>SKOR FC Admin | Crowd Scoring v46</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -1143,6 +1143,14 @@
       padding-bottom:5px;
     }
 
+
+    /* SKOR FC v46 — roster position + jersey availability */
+    .jersey-number-status{margin-top:6px;min-height:18px;font-size:.72rem;line-height:1.3;font-weight:750;color:var(--muted)}
+    .jersey-number-status.available{color:#2d6759}
+    .jersey-number-status.taken{color:#9a253f}
+    #rosterNumber.jersey-available{border-color:#72aa91;box-shadow:0 0 0 3px rgba(78,135,120,.08)}
+    #rosterNumber.jersey-taken{border-color:#b64d64;box-shadow:0 0 0 3px rgba(154,37,63,.08)}
+
 </style>
 </head>
 <body>
@@ -1176,7 +1184,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v45</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v46</div>
   </aside>
 
   <main>
@@ -1513,7 +1521,22 @@
               </div>
               <div>
                 <label>Jersey #</label>
-                <input id="rosterNumber" type="number" min="1" max="99" required inputmode="numeric" placeholder="11">
+                <input id="rosterNumber" type="number" min="1" max="99" required inputmode="numeric" placeholder="11" aria-describedby="rosterNumberStatus">
+                <div class="jersey-number-status" id="rosterNumberStatus">Choose any number from 1–99.</div>
+              </div>
+              <div>
+                <label>Position</label>
+                <select id="rosterPosition" required>
+                  <option value="">Select position…</option>
+                  <option value="Keeper">Keeper</option>
+                  <option value="Defence">Defence</option>
+                  <option value="Midfield">Midfield</option>
+                  <option value="Forward">Forward</option>
+                  <option value="Defence / Midfield">Defence / Midfield</option>
+                  <option value="Midfield / Defence">Midfield / Defence</option>
+                  <option value="Midfield / Forward">Midfield / Forward</option>
+                  <option value="Forward / Midfield">Forward / Midfield</option>
+                </select>
               </div>
               <div>
                 <label>Email</label>
@@ -1540,10 +1563,10 @@
           <div class="roster-table-wrap">
             <table class="table roster-table">
               <thead>
-                <tr><th>#</th><th>Full Name</th><th>Email</th><th>Phone</th><th>Status</th></tr>
+                <tr><th>#</th><th>Full Name</th><th>Position</th><th>Email</th><th>Phone</th><th>Status</th></tr>
               </thead>
               <tbody id="rosterTableBody">
-                <tr><td colspan="5">Loading roster…</td></tr>
+                <tr><td colspan="6">Loading roster…</td></tr>
               </tbody>
             </table>
           </div>
@@ -1695,7 +1718,7 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v45 - centered score-impact controls + player-focused export + adaptive consensus */
+/* SKOR FC Lineup Builder v46 - roster validation + live roster feeds + centered score-impact controls */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -2846,7 +2869,9 @@ function playerValue(p){return `roster|${p.number}|${p.name}`;}
 function rosterOptions(includeNone=false){
   const first=includeNone?'<option value="">Unassisted / No assist</option>':'<option value="">Select player…</option>';
   const roster='<optgroup label="Roster">'+ROSTER.map(p=>`<option value="${gdEsc(playerValue(p))}">#${p.number} ${gdEsc(p.name)}</option>`).join("")+'</optgroup>';
-  const extras='<optgroup label="Unassigned / Guest Jerseys">'+EXTRA_JERSEY_NUMBERS.map(n=>`<option value="extra|${n}|">#${n} — Enter name</option>`).join("")+'</optgroup>';
+  const assigned=new Set(ROSTER.map(p=>Number(p.number)));
+  const availableExtras=EXTRA_JERSEY_NUMBERS.filter(n=>!assigned.has(Number(n)));
+  const extras=availableExtras.length?'<optgroup label="Unassigned / Guest Jerseys">'+availableExtras.map(n=>`<option value="extra|${n}|">#${n} — Enter name</option>`).join("")+'</optgroup>':'';
   return first+roster+extras+'<option value="manual||">Other player / number — Enter manually</option>';
 }
 function refreshGameDayRosterOptions(){
@@ -2869,19 +2894,66 @@ function setRosterStatus(message,ok=true){
   el.textContent=message||"";
   el.className="form-status "+(ok?"ok":"err");
 }
+function setJerseyNumberStatus(message,state=""){
+  const input=document.getElementById("rosterNumber");
+  const status=document.getElementById("rosterNumberStatus");
+  if(!input||!status)return;
+  status.textContent=message||"Choose any number from 1–99.";
+  status.className="jersey-number-status"+(state?" "+state:"");
+  input.classList.toggle("jersey-available",state==="available");
+  input.classList.toggle("jersey-taken",state==="taken");
+}
+function localJerseyOwner(number){
+  return TEAM_ROSTER.find(p=>p.active!==false&&Number(p.jersey_number)===Number(number))||null;
+}
+async function checkJerseyNumberAvailability(number,{quiet=false}={}){
+  const input=document.getElementById("rosterNumber");
+  const n=Number(number);
+  if(!Number.isInteger(n)||n<1||n>99){
+    if(!quiet)setJerseyNumberStatus("Choose a jersey number from 1–99.","taken");
+    if(input)input.setCustomValidity("Jersey number must be between 1 and 99.");
+    return {available:false,owner:null};
+  }
+  const local=localJerseyOwner(n);
+  if(local){
+    const msg=`#${n} is already assigned to ${local.full_name}.`;
+    if(!quiet)setJerseyNumberStatus(msg,"taken");
+    if(input)input.setCustomValidity(msg);
+    return {available:false,owner:local};
+  }
+  const {data,error}=await sb.from("team_roster")
+    .select("id,full_name,jersey_number,active")
+    .eq("jersey_number",n).eq("active",true).maybeSingle();
+  if(error){
+    console.warn("Could not verify jersey number:",error);
+    if(!quiet)setJerseyNumberStatus("Could not verify this number yet; it will be checked again when you add the player.");
+    if(input)input.setCustomValidity("");
+    return {available:true,owner:null,unverified:true};
+  }
+  if(data){
+    const msg=`#${n} is already assigned to ${data.full_name}.`;
+    if(!quiet)setJerseyNumberStatus(msg,"taken");
+    if(input)input.setCustomValidity(msg);
+    return {available:false,owner:data};
+  }
+  if(!quiet)setJerseyNumberStatus(`#${n} is available.`,"available");
+  if(input)input.setCustomValidity("");
+  return {available:true,owner:null};
+}
 function renderRosterTable(){
   const body=document.getElementById("rosterTableBody");
   const count=document.getElementById("rosterCount");
   if(count)count.textContent=TEAM_ROSTER.filter(p=>p.active!==false).length;
   if(!body)return;
   if(!TEAM_ROSTER.length){
-    body.innerHTML='<tr><td colspan="5">No players found.</td></tr>';
+    body.innerHTML='<tr><td colspan="6">No players found.</td></tr>';
     return;
   }
   body.innerHTML=TEAM_ROSTER.map(p=>`
     <tr>
       <td><strong>#${rosterEsc(p.jersey_number)}</strong></td>
       <td><strong>${rosterEsc(p.full_name)}</strong></td>
+      <td>${rosterEsc(p.position||"Player")}</td>
       <td>${p.email?rosterEsc(p.email):'<span class="roster-contact">—</span>'}</td>
       <td>${p.phone?rosterEsc(p.phone):'<span class="roster-contact">—</span>'}</td>
       <td><span class="status">${p.active===false?"Inactive":"Active"}</span></td>
@@ -2967,7 +3039,7 @@ async function loadTeamRoster(showMessage=false){
   if(error){
     console.error("Could not load team roster:",error);
     const body=document.getElementById("rosterTableBody");
-    if(body)body.innerHTML='<tr><td colspan="5">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
+    if(body)body.innerHTML='<tr><td colspan="6">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
     if(showMessage)setRosterStatus("Could not load roster: "+error.message,false);
     return;
   }
@@ -2989,16 +3061,36 @@ eventPlayer.innerHTML=rosterOptions(false);
 eventAssist.innerHTML=rosterOptions(true);
 const rosterForm=document.getElementById("rosterForm");
 const refreshRosterBtn=document.getElementById("refreshRosterBtn");
+const rosterNumberInput=document.getElementById("rosterNumber");
+let jerseyCheckTimer=null;
+if(rosterNumberInput){
+  const validateChosenNumber=()=>{
+    clearTimeout(jerseyCheckTimer);
+    const raw=rosterNumberInput.value.trim();
+    if(!raw){rosterNumberInput.setCustomValidity("");setJerseyNumberStatus("Choose any number from 1–99.");return;}
+    jerseyCheckTimer=setTimeout(()=>checkJerseyNumberAvailability(raw),180);
+  };
+  rosterNumberInput.addEventListener("input",validateChosenNumber);
+  rosterNumberInput.addEventListener("change",validateChosenNumber);
+  rosterNumberInput.addEventListener("blur",()=>{if(rosterNumberInput.value.trim())checkJerseyNumberAvailability(rosterNumberInput.value);});
+}
 if(refreshRosterBtn)refreshRosterBtn.addEventListener("click",()=>loadTeamRoster(true));
 if(rosterForm)rosterForm.addEventListener("submit",async e=>{
   e.preventDefault();
   if(!portalCanWrite()){viewerBlocked("add roster players");return;}
   const full_name=document.getElementById("rosterFullName").value.trim();
   const jersey_number=Number(document.getElementById("rosterNumber").value);
+  const position=document.getElementById("rosterPosition").value.trim();
   const email=document.getElementById("rosterEmail").value.trim().toLowerCase();
   const phone=document.getElementById("rosterPhone").value.trim();
   if(!full_name)return setRosterStatus("Enter the player's full name.",false);
   if(!Number.isInteger(jersey_number)||jersey_number<1||jersey_number>99)return setRosterStatus("Jersey number must be between 1 and 99.",false);
+  if(!position)return setRosterStatus("Choose the player's position.",false);
+  const availability=await checkJerseyNumberAvailability(jersey_number);
+  if(!availability.available){
+    const owner=availability.owner?.full_name||"another active player";
+    return setRosterStatus(`#${jersey_number} is already assigned to ${owner}. Choose another number.`,false);
+  }
   const button=document.getElementById("addRosterPlayerBtn");
   button.disabled=true;button.textContent="Adding…";
   try{
@@ -3007,15 +3099,19 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
     const payload={
       full_name,
       jersey_number,
+      position,
       email:email||null,
       phone:phone||null,
       active:true,
+      is_new:true,
       created_by:user.id
     };
     const {error}=await sb.from("team_roster").insert(payload);
     if(error)throw error;
     rosterForm.reset();
-    setRosterStatus(full_name+" added. The public squad will pick it up automatically.",true);
+    if(rosterNumberInput)rosterNumberInput.setCustomValidity("");
+    setJerseyNumberStatus("Choose any number from 1–99.");
+    setRosterStatus(`${full_name} (#${jersey_number}, ${position}) added. They now feed the squad pages, Lineups, Captain Game Day scorer/assist/MOTM, and Crowd Game Day.`,true);
     await loadTeamRoster(false);
   }catch(err){
     const msg=String(err?.message||err);
