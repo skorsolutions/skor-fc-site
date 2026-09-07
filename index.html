@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="public-home-v48-player-position-bio-preferred-name">
+<meta name="skor-build" content="public-home-v50.3-clean-squad-player-portal-links">
 <title>SKOR FC | Over 30 Soccer in Roswell, Georgia</title>
 <meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, match results, season stats, practices, and club updates.">
 <meta name="skor-build" content="public-shared-data-v37">
@@ -378,11 +378,12 @@ img{max-width:100%}
     <nav class="nav-links" id="navLinks">
       <a href="#top">Home</a>
       <a href="#schedule">Schedule</a>
-      <a href="players.html">Squad</a>
+      <a href="squad.html">Squad</a>
       <a href="#fields">Fields</a>
       <a href="https://forms.gle/e6Y5pwihkSP3h46V8" target="_blank" rel="noopener">Join SKOR FC</a>
       <a href="#sponsors">Sponsors</a>
       <a href="#about">About</a>
+      <a class="login-btn" href="player-portal.html">Player Login</a>
       <a class="login-btn" href="admin.html">Captain Login</a>
     </nav>
     <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false" onclick="const n=document.getElementById('navLinks');n.classList.toggle('open');this.setAttribute('aria-expanded',n.classList.contains('open'))">
@@ -403,7 +404,7 @@ img{max-width:100%}
         <p>SKOR FC is an Over 30 competitive soccer team built around good football, good people, and the unreasonable belief that our legs still work like they did ten years ago.</p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="#schedule">View Schedule</a>
-          <a class="btn btn-secondary" href="players.html">Meet the Squad</a>
+          <a class="btn btn-secondary" href="squad.html">Meet the Squad</a>
         </div>
       </div>
     </div>
@@ -477,30 +478,30 @@ img{max-width:100%}
     <div class="wrap">
       <div class="section-title">
         <div><div class="eyebrow">2026 Roster</div><h2>The Squad</h2></div>
-        <a class="section-link" href="players.html">Meet the whole team →</a>
+        <a class="section-link" href="squad.html">Meet the whole team →</a>
       </div>
       <div class="squad-grid" id="homeSquadGrid">
-        <a class="player-card" href="players.html">
+        <a class="player-card" href="squad.html">
           <div class="player-photo"><span class="new-badge">NEW</span><div class="player-num-bg">2</div><div class="player-avatar">I</div></div>
           <div class="player-info"><div class="player-no">#2</div><h3>Ivan</h3><div class="player-pos">Defence</div><div class="player-bio">Bio pending.</div></div>
         </a>
-        <a class="player-card" href="players.html">
+        <a class="player-card" href="squad.html">
           <div class="player-photo"><span class="new-badge">NEW</span><div class="player-num-bg">9</div><div class="player-avatar">A</div></div>
           <div class="player-info"><div class="player-no">#9</div><h3>Andres</h3><div class="player-pos">Midfield / Forward</div><div class="player-bio">Bio pending.</div></div>
         </a>
-        <a class="player-card" href="players.html">
+        <a class="player-card" href="squad.html">
           <div class="player-photo"><span class="new-badge">NEW</span><div class="player-num-bg">17</div><div class="player-avatar">D</div></div>
-          <div class="player-info"><div class="player-no">#17</div><h3>David</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
+          <div class="player-info"><div class="player-no">#17</div><h3>Joshua</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
         </a>
-        <a class="player-card" href="players.html">
+        <a class="player-card" href="squad.html">
           <div class="player-photo"><div class="player-num-bg">18</div><div class="player-avatar">J</div></div>
           <div class="player-info"><div class="player-no">#18</div><h3>Jason</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
         </a>
-        <a class="player-card" href="players.html">
+        <a class="player-card" href="squad.html">
           <div class="player-photo"><div class="player-num-bg">20</div><div class="player-avatar">A</div></div>
           <div class="player-info"><div class="player-no">#20</div><h3>Ayman</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
         </a>
-        <a class="player-card" href="players.html">
+        <a class="player-card" href="squad.html">
           <div class="player-photo"><div class="player-num-bg">6</div><div class="player-avatar">J</div></div>
           <div class="player-info"><div class="player-no">#6</div><h3>Julio</h3><div class="player-pos">Midfield</div><div class="player-bio">Bio pending.</div></div>
         </a>
@@ -593,7 +594,7 @@ let PUBLIC_FIELDS_HOME=[],PUBLIC_ROSTER_HOME=[];
 const HOME_FALLBACK_ROSTER=[
   {player_key:"2-Ivan",display_name:"Ivan",jersey_number:2,position:"Defence",bio:"Bio pending.",is_new:true},
   {player_key:"9-Andres",display_name:"Andres",jersey_number:9,position:"Midfield / Forward",bio:"Bio pending.",is_new:true},
-  {player_key:"17-David",display_name:"David",jersey_number:17,position:"Midfield",bio:"Bio pending.",is_new:true},
+  {player_key:"17-David",display_name:"Joshua",jersey_number:17,position:"Midfield",bio:"Bio pending.",is_new:true},
   {player_key:"18-Jason",display_name:"Jason",jersey_number:18,position:"Midfield",bio:"Bio pending.",is_new:false},
   {player_key:"20-Ayman",display_name:"Ayman",jersey_number:20,position:"Midfield",bio:"Bio pending.",is_new:false},
   {player_key:"6-Julio",display_name:"Julio",jersey_number:6,position:"Midfield",bio:"Bio pending.",is_new:false}
@@ -602,7 +603,7 @@ function publicEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","
 function firstInitial(v){return String(v||"?").trim().charAt(0).toUpperCase()||"?";}
 function renderHomeRoster(rows){
   const grid=document.getElementById("homeSquadGrid");if(!grid)return;const list=(rows||[]).slice(0,6);if(!list.length)return;
-  grid.innerHTML=list.map(p=>`<a class="player-card" href="players.html"><div class="player-photo">${p.is_new?'<span class="new-badge">NEW</span>':''}<div class="player-num-bg">${publicEsc(p.jersey_number)}</div>${p.photo_url?`<img class="public-player-photo" src="${publicEsc(p.photo_url)}" alt="${publicEsc(p.display_name)}">`:''}<div class="player-avatar">${publicEsc(firstInitial(p.display_name))}</div></div><div class="player-info"><div class="player-no">#${publicEsc(p.jersey_number)}</div><h3>${publicEsc(p.display_name)}</h3><div class="player-pos">${publicEsc(p.position||"Player")}</div><div class="player-bio">${publicEsc(p.bio||"Bio pending.")}</div></div></a>`).join("");
+  grid.innerHTML=list.map(p=>`<a class="player-card" href="squad.html"><div class="player-photo">${p.is_new?'<span class="new-badge">NEW</span>':''}<div class="player-num-bg">${publicEsc(p.jersey_number)}</div>${p.photo_url?`<img class="public-player-photo" src="${publicEsc(p.photo_url)}" alt="${publicEsc(p.display_name)}">`:''}<div class="player-avatar">${publicEsc(firstInitial(p.display_name))}</div></div><div class="player-info"><div class="player-no">#${publicEsc(p.jersey_number)}</div><h3>${publicEsc(p.display_name)}</h3><div class="player-pos">${publicEsc(p.position||"Player")}</div><div class="player-bio">${publicEsc(p.bio||"Bio pending.")}</div></div></a>`).join("");
 }
 async function loadPublicRosterHome(){
   try{const {data,error}=await publicDb.from("public_roster").select("player_key,display_name,jersey_number,position,bio,is_new,photo_url,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(error)throw error;if(data){PUBLIC_ROSTER_HOME=data;if(data.length)renderHomeRoster(data);}}catch(err){console.info("Public roster fallback:",err?.message||err);}
