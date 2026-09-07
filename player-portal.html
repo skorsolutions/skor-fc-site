@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v50.3.2-stable-auth-flow">
+<meta name="skor-build" content="player-portal-v50.3.3-navigation-role-aware">
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <style>
@@ -67,7 +67,11 @@
         <h1 id="playerDisplayName">Player</h1>
         <div class="player-meta"><span class="pill" id="playerNumber">#--</span><span class="pill" id="playerPosition">Player</span><span class="pill new hidden" id="newPlayerBadge">New Player</span></div>
         <div class="bio" id="playerBio">Bio pending.</div>
-        <div class="hero-actions"><button class="btn secondary" id="editProfileBtn" type="button">Edit My Profile</button></div>
+        <div class="hero-actions">
+          <button class="btn secondary" id="editProfileBtn" type="button">Edit My Profile</button>
+          <button class="btn ghost" id="homepageBtn" type="button">Homepage</button>
+          <button class="btn primary hidden" id="captainPortalBtn" type="button">Captain Portal</button>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -184,6 +188,7 @@ async function authorizePlayer(session=null){
 
     portalAuthorized=true;
     $('logoutBtn').classList.remove('hidden');
+    syncCaptainPortalButton();
     showAuthLoading('Loading your SKOR stats, schedule and match activity…');
     await loadPortal();
     show('portalScreen');
@@ -194,6 +199,20 @@ async function authorizePlayer(session=null){
     show('deniedScreen');
   }finally{
     authInFlight=false;
+  }
+}
+async function syncCaptainPortalButton(){
+  const btn=$('captainPortalBtn');
+  btn.classList.add('hidden');
+  try{
+    const {data,error}=await db.rpc('is_skor_captain');
+    if(error){
+      console.warn('Captain role check failed',error);
+      return;
+    }
+    if(data===true)btn.classList.remove('hidden');
+  }catch(err){
+    console.warn('Captain role check failed',err);
   }
 }
 $('googleBtn').addEventListener('click',async()=>{
@@ -213,6 +232,8 @@ $('emailLoginBtn').addEventListener('click',async()=>{const email=$('playerEmail
 $('verifyEmailCodeBtn').addEventListener('click',async()=>{const email=($('playerEmail').value.trim().toLowerCase()||sessionStorage.getItem('skorPlayerAuthEmail')||'');const token=$('playerEmailCode').value.trim();if(!email||!token)return status('loginStatus','Enter the email address and one-time code.',true);status('loginStatus','Verifying…');const {error}=await db.auth.verifyOtp({email,token,type:'email'});if(error)status('loginStatus',error.message,true);});
 async function logout(){portalAuthorized=false;user=null;await db.auth.signOut();sessionStorage.removeItem('skorPlayerAuthEmail');location.href='player-portal.html';}
 $('logoutBtn').addEventListener('click',logout);$('deniedLogoutBtn').addEventListener('click',logout);
+$('homepageBtn').addEventListener('click',()=>{location.href='index.html';});
+$('captainPortalBtn').addEventListener('click',()=>{location.href='admin.html';});
 db.auth.onAuthStateChange((event,s)=>{
   if(event==='SIGNED_OUT'){
     user=null;
