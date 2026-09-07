@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v48-player-profile-editing-preferred-name-production" />
-  <title>SKOR FC Admin | Crowd Scoring v48</title>
+  <meta name="skor-build" content="lineup-admin-v50.2-multi-role-superadmin-production" />
+  <title>SKOR FC Admin | Multi-Role + Super Admin v50.2</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -1196,6 +1196,36 @@
     .roster-name-cell small{display:block;max-width:260px;margin-top:5px;color:var(--muted);font-size:.68rem;font-weight:500;line-height:1.3;white-space:normal}
     .roster-action-cell{white-space:nowrap}
 
+
+
+/* =========================================================
+   SKOR FC v50.2 — Player Portal access + player engagement
+   ========================================================= */
+.portal-login-check{align-self:end}
+.portal-access-cell{min-width:185px}
+.portal-state{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:.61rem;font-weight:950;letter-spacing:.05em;text-transform:uppercase;margin:0 5px 5px 0}
+.portal-state.claimed{background:#e3f1e9;color:#286049}.portal-state.ready{background:#e8edf4;color:#3d5877}.portal-state.disabled{background:#f0f0f1;color:#666}.portal-state.noemail{background:#f7e9df;color:#85512e}
+.portal-meta{display:block;color:var(--muted);font-size:.62rem;line-height:1.3;margin:2px 0 6px}
+.portal-actions{display:flex;gap:5px;flex-wrap:wrap}
+.player-engagement-panel{border-color:#dacbd0;background:linear-gradient(145deg,#fff,#fbf8f9)}
+.engagement-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.engagement-stat{border:1px solid var(--line);border-radius:11px;padding:10px;text-align:center;background:#fff}.engagement-stat strong{font-size:1.2rem;display:block}.engagement-stat span{display:block;color:var(--muted);font-size:.62rem;font-weight:900;text-transform:uppercase;margin-top:3px}
+.engagement-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.engagement-list{display:grid;gap:7px}.engagement-item{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px;font-size:.75rem;line-height:1.4}.engagement-item small{display:block;color:var(--muted);margin-top:4px}.feedback-private{border-left:4px solid var(--maroon)}.feedback-team{border-left:4px solid #557b67}.reaction-bars{display:grid;gap:5px}.reaction-line{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:5px 0;font-size:.72rem}
+body.viewer-mode .player-engagement-panel{display:none!important}
+@media(max-width:800px){.engagement-grid{grid-template-columns:repeat(2,1fr)}.engagement-columns{grid-template-columns:1fr}}
+
+
+/* SKOR FC v50.2 — multi-role + Super Admin controls */
+.portal-role-badge.super-admin{background:#16181d;color:#fff;border-color:#292d34;box-shadow:0 0 0 2px rgba(122,25,55,.12)}
+.captain-access-cell{min-width:145px}
+.captain-role-state{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:.62rem;font-weight:950;letter-spacing:.05em;text-transform:uppercase}
+.captain-role-state.player{background:#eef0f2;color:#676c73}
+.captain-role-state.viewer{background:#f4e8ec;color:#761a37}
+.captain-role-state.captain{background:#e5f1eb;color:#315f4a}
+.captain-role-state.super-admin{background:#17191e;color:#fff}
+.captain-role-meta{display:block;margin-top:5px;color:var(--muted);font-size:.64rem;line-height:1.25}
+.captain-role-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+
 </style>
 </head>
 <body>
@@ -1229,7 +1259,7 @@
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v48</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v50.2</div>
   </aside>
 
   <main>
@@ -1475,6 +1505,28 @@
           </div>
           <div class="motm-preview" id="motmPreview" style="display:none"></div>
         </div>
+
+        <div class="panel player-engagement-panel" id="playerEngagementPanel">
+          <h2>Player Portal Feedback</h2>
+          <div class="sub">Private captain view of player availability, match reactions and comments submitted from each player’s personal portal.</div>
+          <div class="engagement-grid">
+            <div class="engagement-stat"><strong id="engGoing">0</strong><span>Going</span></div>
+            <div class="engagement-stat"><strong id="engMaybe">0</strong><span>Maybe</span></div>
+            <div class="engagement-stat"><strong id="engOut">0</strong><span>Out</span></div>
+            <div class="engagement-stat"><strong id="engResponses">0</strong><span>Reactions</span></div>
+          </div>
+          <div class="engagement-columns">
+            <div>
+              <h3 style="margin:0 0 8px">Player Feedback</h3>
+              <div class="engagement-list" id="playerFeedbackList"><div class="sub">No feedback submitted yet.</div></div>
+            </div>
+            <div>
+              <h3 style="margin:0 0 8px">Reactions & Availability</h3>
+              <div class="reaction-bars" id="playerReactionSummary"><div class="sub">No reactions submitted yet.</div></div>
+              <div class="engagement-list" id="playerAvailabilityList" style="margin-top:10px"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1604,6 +1656,13 @@
                 <label>Email</label>
                 <input id="rosterEmail" type="email" autocomplete="email" placeholder="player@example.com">
               </div>
+              <div class="portal-login-check">
+                <label>Player Portal</label>
+                <label class="new-player-check" for="rosterPortalEnabled">
+                  <input id="rosterPortalEnabled" type="checkbox" checked>
+                  <span><strong>Enable Player Login</strong><small>Creates/maintains portal authorization when an email is present.</small></span>
+                </label>
+              </div>
               <div>
                 <label>Phone</label>
                 <input id="rosterPhone" type="tel" autocomplete="tel" placeholder="404-555-0100">
@@ -1633,10 +1692,10 @@
           <div class="roster-table-wrap">
             <table class="table roster-table">
               <thead>
-                <tr><th>#</th><th>Player</th><th>Position</th><th>New Player</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>#</th><th>Player</th><th>Position</th><th>New Player</th><th>Email</th><th>Player Portal</th><th>Captain Access</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
               </thead>
               <tbody id="rosterTableBody">
-                <tr><td colspan="8">Loading roster…</td></tr>
+                <tr><td colspan="10">Loading roster…</td></tr>
               </tbody>
             </table>
           </div>
@@ -1676,7 +1735,7 @@
           <div class="lineup-side">
             <div class="mini-panel lineup-players-panel">
               <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. In Freeform / Custom, drag or tap to place players anywhere. Phone: tap a player, then tap a position or the pitch.</div><div class="v19-help">All active roster players sync from Supabase. Add a player in Roster and they will appear here automatically.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Substitutes to move the selected player there.</div>
-              <div class="player-pool" id="lineupPlayerPool"><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="2-Ivan" aria-label="#2 Ivan"><div class="player-peg compact"><div class="jersey">2</div><div class="peg-name">Ivan</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="9-Andres" aria-label="#9 Andres"><div class="player-peg compact"><div class="jersey">9</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="17-David" aria-label="#17 David"><div class="player-peg compact"><div class="jersey">17</div><div class="peg-name">David</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="18-Jason" aria-label="#18 Jason"><div class="player-peg compact"><div class="jersey">18</div><div class="peg-name">Jason</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="20-Ayman" aria-label="#20 Ayman"><div class="player-peg compact"><div class="jersey">20</div><div class="peg-name">Ayman</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="6-Julio" aria-label="#6 Julio"><div class="player-peg compact"><div class="jersey">6</div><div class="peg-name">Julio</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="7-Tom" aria-label="#7 Tom"><div class="player-peg compact"><div class="jersey">7</div><div class="peg-name">Tom</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="14-Pedro" aria-label="#14 Pedro"><div class="player-peg compact"><div class="jersey">14</div><div class="peg-name">Pedro</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="16-CJ" aria-label="#16 CJ"><div class="player-peg compact"><div class="jersey">16</div><div class="peg-name">CJ</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="19-Dez" aria-label="#19 Dez"><div class="player-peg compact"><div class="jersey">19</div><div class="peg-name">Dez</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="8-Adolpho" aria-label="#8 Adolpho"><div class="player-peg compact"><div class="jersey">8</div><div class="peg-name">Adolpho</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="22-Vignesh" aria-label="#22 Vignesh"><div class="player-peg compact"><div class="jersey">22</div><div class="peg-name">Vignesh</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="11-Edward" aria-label="#11 Edward"><div class="player-peg compact"><div class="jersey">11</div><div class="peg-name">Edward</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="1-Todd" aria-label="#1 Todd"><div class="player-peg compact"><div class="jersey">1</div><div class="peg-name">Todd</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="3-Brad" aria-label="#3 Brad"><div class="player-peg compact"><div class="jersey">3</div><div class="peg-name">Brad</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="21-Andres" aria-label="#21 Andres"><div class="player-peg compact"><div class="jersey">21</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="12-Koushyar" aria-label="#12 Koushyar"><div class="player-peg compact"><div class="jersey">12</div><div class="peg-name">Koushyar</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="15-Andrew" aria-label="#15 Andrew"><div class="player-peg compact"><div class="jersey">15</div><div class="peg-name">Andrew</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="4-Nick" aria-label="#4 Nick"><div class="player-peg compact"><div class="jersey">4</div><div class="peg-name">Nick</div></div></button></div>
+              <div class="player-pool" id="lineupPlayerPool"><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="2-Ivan" aria-label="#2 Ivan"><div class="player-peg compact"><div class="jersey">2</div><div class="peg-name">Ivan</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="9-Andres" aria-label="#9 Andres"><div class="player-peg compact"><div class="jersey">9</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="17-David" aria-label="#17 Joshua"><div class="player-peg compact"><div class="jersey">17</div><div class="peg-name">Joshua</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="18-Jason" aria-label="#18 Jason"><div class="player-peg compact"><div class="jersey">18</div><div class="peg-name">Jason</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="20-Ayman" aria-label="#20 Ayman"><div class="player-peg compact"><div class="jersey">20</div><div class="peg-name">Ayman</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="6-Julio" aria-label="#6 Julio"><div class="player-peg compact"><div class="jersey">6</div><div class="peg-name">Julio</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="7-Tom" aria-label="#7 Tom"><div class="player-peg compact"><div class="jersey">7</div><div class="peg-name">Tom</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="14-Pedro" aria-label="#14 Pedro"><div class="player-peg compact"><div class="jersey">14</div><div class="peg-name">Pedro</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="16-CJ" aria-label="#16 CJ"><div class="player-peg compact"><div class="jersey">16</div><div class="peg-name">CJ</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="19-Dez" aria-label="#19 Dez"><div class="player-peg compact"><div class="jersey">19</div><div class="peg-name">Dez</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="8-Adolpho" aria-label="#8 Adolpho"><div class="player-peg compact"><div class="jersey">8</div><div class="peg-name">Adolpho</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="22-Vignesh" aria-label="#22 Vignesh"><div class="player-peg compact"><div class="jersey">22</div><div class="peg-name">Vignesh</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="11-Edward" aria-label="#11 Eddy"><div class="player-peg compact"><div class="jersey">11</div><div class="peg-name">Eddy</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="1-Todd" aria-label="#1 Todd"><div class="player-peg compact"><div class="jersey">1</div><div class="peg-name">Todd</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="3-Brad" aria-label="#3 Brad"><div class="player-peg compact"><div class="jersey">3</div><div class="peg-name">Brad</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="21-Andres" aria-label="#21 Andres"><div class="player-peg compact"><div class="jersey">21</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="12-Koushyar" aria-label="#12 Koushyar"><div class="player-peg compact"><div class="jersey">12</div><div class="peg-name">Koushyar</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="15-Andrew" aria-label="#15 Andrew"><div class="player-peg compact"><div class="jersey">15</div><div class="peg-name">Andrew</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="4-Nick" aria-label="#4 Nick"><div class="player-peg compact"><div class="jersey">4</div><div class="peg-name">Nick</div></div></button></div>
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
             </div>
 
@@ -1788,13 +1847,13 @@
 
 
 <script>
-/* SKOR FC Lineup Builder v48 - player profile editing + preferred names + live roster feeds */
+/* SKOR FC Lineup Builder v50.2 - multi-role player/captain auth + super admin controls */
 (function(){
   let roster = [
-    {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},
+    {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"Joshua"},{player_key:"18-Jason",number:18,name:"Jason"},
     {player_key:"20-Ayman",number:20,name:"Ayman"},{player_key:"6-Julio",number:6,name:"Julio"},{player_key:"7-Tom",number:7,name:"Tom"},{player_key:"14-Pedro",number:14,name:"Pedro"},
     {player_key:"16-CJ",number:16,name:"CJ"},{player_key:"19-Dez",number:19,name:"Dez"},{player_key:"8-Adolpho",number:8,name:"Adolpho"},{player_key:"22-Vignesh",number:22,name:"Vignesh"},
-    {player_key:"11-Edward",number:11,name:"Edward"},{player_key:"1-Todd",number:1,name:"Todd"},{player_key:"3-Brad",number:3,name:"Brad"},{player_key:"21-Andres",number:21,name:"Andres"},
+    {player_key:"11-Edward",number:11,name:"Eddy"},{player_key:"1-Todd",number:1,name:"Todd"},{player_key:"3-Brad",number:3,name:"Brad"},{player_key:"21-Andres",number:21,name:"Andres"},
     {player_key:"12-Koushyar",number:12,name:"Koushyar"},{player_key:"15-Andrew",number:15,name:"Andrew"},{player_key:"4-Nick",number:4,name:"Nick"}
   ];
 
@@ -2792,15 +2851,22 @@ const authError = document.getElementById("authError");
 const logoutBtn = document.getElementById("logoutBtn");
 
 let PORTAL_ACCESS={role:"viewer",display_name:""};
-window.SKORPortalCanWrite=()=>PORTAL_ACCESS.role==="captain";
-function portalCanWrite(){return PORTAL_ACCESS.role==="captain";}
+window.SKORPortalCanWrite=()=>["captain","super_admin"].includes(PORTAL_ACCESS.role);
+window.SKORPortalIsSuperAdmin=()=>PORTAL_ACCESS.role==="super_admin";
+function portalCanWrite(){return ["captain","super_admin"].includes(PORTAL_ACCESS.role);}
+function portalIsSuperAdmin(){return PORTAL_ACCESS.role==="super_admin";}
 function viewerBlocked(action="make changes"){if(portalCanWrite())return false;alert("View-only access: you cannot "+action+".");return true;}
 window.SKORViewerBlocked=viewerBlocked;
 function applyPortalRoleUI(){
   const viewer=PORTAL_ACCESS.role==="viewer";
+  const superAdmin=PORTAL_ACCESS.role==="super_admin";
   document.body.classList.toggle("viewer-mode",viewer);
   const badge=document.getElementById("portalRoleBadge");
-  if(badge){badge.textContent=viewer?"VIEW ONLY":"CAPTAIN";badge.classList.toggle("viewer",viewer);}
+  if(badge){
+    badge.textContent=superAdmin?"SUPER ADMIN":viewer?"VIEW ONLY":"CAPTAIN";
+    badge.classList.toggle("viewer",viewer);
+    badge.classList.toggle("super-admin",superAdmin);
+  }
   ["lineupFormation","lineupVariationName","lineupCaptain","gameplanQuote","gameplanNotes","motmPlayer","motmReason","motmManualName","motmManualNumber","motmMatchNumber"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=viewer;});
 }
 
@@ -2819,7 +2885,8 @@ function showLogin(){
 function showDashboard(user,access){
   authGate.style.display = "none";
   adminApp.style.display = "grid";
-  PORTAL_ACCESS={role:access?.role==="viewer"?"viewer":"captain",display_name:access?.display_name||""};
+  const rawRole=access?.role||"viewer";
+  PORTAL_ACCESS={role:rawRole==="super_admin"?"super_admin":rawRole==="viewer"?"viewer":"captain",display_name:access?.display_name||""};
   const email = user.email || "";
   const fullName = PORTAL_ACCESS.display_name || user.user_metadata?.full_name || user.user_metadata?.name || (PORTAL_ACCESS.role==="viewer"?"Viewer":"Captain");
   document.getElementById("userName").textContent = fullName;
@@ -2840,7 +2907,8 @@ async function captainIsApproved(user){
   }
   if(result.error){console.error("Portal authorization check failed:", result.error);showAuthError("Portal authorization is not configured yet. Check captain_allowlist and the role column in Supabase.");return null;}
   if(!result.data)return null;
-  return {...result.data,role:result.data.role==="viewer"?"viewer":"captain"};
+  const role=result.data.role==="super_admin"?"super_admin":result.data.role==="viewer"?"viewer":"captain";
+  return {...result.data,role};
 }
 async function handleSession(session){
   clearAuthError();
@@ -2851,9 +2919,8 @@ async function handleSession(session){
 
   const access = await captainIsApproved(session.user);
   if(!access){
-    await sb.auth.signOut();
     showLogin();
-    showAuthError("This Google account is not approved for SKOR FC portal access.");
+    showAuthError("Captain access is not enabled for this account. Your Player Portal login remains active.");
     return;
   }
 
@@ -2928,9 +2995,11 @@ document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("clic
 
 
 let ROSTER=[
-  {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"David"},{player_key:"18-Jason",number:18,name:"Jason"},{player_key:"20-Ayman",number:20,name:"Ayman"},{player_key:"6-Julio",number:6,name:"Julio"},{player_key:"7-Tom",number:7,name:"Tom"},{player_key:"14-Pedro",number:14,name:"Pedro"},{player_key:"16-CJ",number:16,name:"CJ"},{player_key:"19-Dez",number:19,name:"Dez"},{player_key:"8-Adolpho",number:8,name:"Adolpho"},{player_key:"22-Vignesh",number:22,name:"Vignesh"},{player_key:"11-Edward",number:11,name:"Edward"},{player_key:"1-Todd",number:1,name:"Todd"},{player_key:"3-Brad",number:3,name:"Brad"},{player_key:"21-Andres",number:21,name:"Andres"},{player_key:"12-Koushyar",number:12,name:"Koushyar"},{player_key:"15-Andrew",number:15,name:"Andrew"},{player_key:"4-Nick",number:4,name:"Nick"}
+  {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"Joshua"},{player_key:"18-Jason",number:18,name:"Jason"},{player_key:"20-Ayman",number:20,name:"Ayman"},{player_key:"6-Julio",number:6,name:"Julio"},{player_key:"7-Tom",number:7,name:"Tom"},{player_key:"14-Pedro",number:14,name:"Pedro"},{player_key:"16-CJ",number:16,name:"CJ"},{player_key:"19-Dez",number:19,name:"Dez"},{player_key:"8-Adolpho",number:8,name:"Adolpho"},{player_key:"22-Vignesh",number:22,name:"Vignesh"},{player_key:"11-Edward",number:11,name:"Eddy"},{player_key:"1-Todd",number:1,name:"Todd"},{player_key:"3-Brad",number:3,name:"Brad"},{player_key:"21-Andres",number:21,name:"Andres"},{player_key:"12-Koushyar",number:12,name:"Koushyar"},{player_key:"15-Andrew",number:15,name:"Andrew"},{player_key:"4-Nick",number:4,name:"Nick"}
 ];
 let TEAM_ROSTER=[];
+let TEAM_PLAYER_ACCESS=[];
+let TEAM_CAPTAIN_ACCESS=[];
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
@@ -3012,13 +3081,76 @@ async function checkJerseyNumberAvailability(number,{quiet=false,excludeId=null}
   if(input)input.setCustomValidity("");
   return {available:true,owner:null};
 }
+
+function playerAccessFor(id){return TEAM_PLAYER_ACCESS.find(a=>String(a.roster_player_id)===String(id))||null;}
+function captainAccessForPlayer(p){
+  const email=String(p?.email||"").trim().toLowerCase();
+  if(!email)return null;
+  return TEAM_CAPTAIN_ACCESS.find(a=>String(a.email||"").trim().toLowerCase()===email)||null;
+}
+function renderCaptainAccess(p){
+  if(!portalCanWrite())return '<span class="captain-role-state player">Restricted</span>';
+  if(!p.email)return '<span class="captain-role-state player">No Email</span><span class="captain-role-meta">An email is required before captain access can be granted.</span>';
+  const a=captainAccessForPlayer(p);
+  const active=!!a?.active;
+  const role=active?(a?.role||"captain"):"player";
+  if(role==="super_admin")return '<span class="captain-role-state super-admin">Super Admin</span><span class="captain-role-meta">Protected. Super Admin access cannot be removed here.</span>';
+  if(role==="captain")return `<span class="captain-role-state captain">Captain</span>${portalIsSuperAdmin()?`<div class="captain-role-actions"><button class="mini-btn" type="button" onclick="removeRosterPlayerCaptain('${rosterEsc(p.id)}')">Remove Captain</button></div>`:'<span class="captain-role-meta">Only a Super Admin can change captain access.</span>'}`;
+  if(role==="viewer")return `<span class="captain-role-state viewer">View Only</span>${portalIsSuperAdmin()?`<div class="captain-role-actions"><button class="mini-btn" type="button" onclick="promoteRosterPlayerToCaptain('${rosterEsc(p.id)}')">Promote to Captain</button></div>`:'<span class="captain-role-meta">Only a Super Admin can change captain access.</span>'}`;
+  return `<span class="captain-role-state player">Player Only</span>${portalIsSuperAdmin()?`<div class="captain-role-actions"><button class="mini-btn" type="button" onclick="promoteRosterPlayerToCaptain('${rosterEsc(p.id)}')">Promote to Captain</button></div>`:'<span class="captain-role-meta">Only a Super Admin can grant captain access.</span>'}`;
+}
+window.promoteRosterPlayerToCaptain=async function(id){
+  if(!portalIsSuperAdmin())return alert('Super Admin access is required to promote a player to Captain.');
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!p.email)return setRosterStatus('Add an email before promoting this player to Captain.',false);
+  if(!confirm(`Promote ${p.full_name} to Captain? They will keep their Player Portal and gain Captain Portal access using the same email.`))return;
+  const {error}=await sb.rpc('superadmin_promote_player_to_captain',{p_roster_player_id:id});
+  if(error)return setRosterStatus('Could not promote player: '+error.message,false);
+  setRosterStatus(`${p.full_name} is now a Captain. Their Player Portal remains unchanged.`,true);
+  await loadTeamRoster(false);
+};
+window.removeRosterPlayerCaptain=async function(id){
+  if(!portalIsSuperAdmin())return alert('Super Admin access is required to remove Captain access.');
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!confirm(`Remove Captain access from ${p.full_name}? Their Player Portal will remain active.`))return;
+  const {error}=await sb.rpc('superadmin_remove_player_captain',{p_roster_player_id:id});
+  if(error)return setRosterStatus('Could not remove Captain access: '+error.message,false);
+  setRosterStatus(`${p.full_name} is now Player-only. Their Player Portal remains active.`,true);
+  await loadTeamRoster(false);
+};
+function renderPlayerPortalAccess(p){
+  if(!portalCanWrite())return '<span class="portal-meta">Captain only</span>';
+  if(!p.email)return '<span class="portal-state noemail">No Email</span><span class="portal-meta">Add an email before portal login can activate.</span>';
+  if(p.portal_enabled===false)return `<span class="portal-state disabled">Disabled</span><div class="portal-actions"><button class="mini-btn" type="button" onclick="togglePlayerPortal('${rosterEsc(p.id)}',true)">Enable</button></div>`;
+  const a=playerAccessFor(p.id);
+  const claimed=!!a?.auth_user_id;
+  return `<span class="portal-state ${claimed?'claimed':'ready'}">${claimed?'Claimed':'Ready'}</span><span class="portal-meta">${claimed?'Account locked to one authenticated user.':'Waiting for first player login.'}</span><div class="portal-actions">${claimed?`<button class="mini-btn" type="button" onclick="resetPlayerPortalLogin('${rosterEsc(p.id)}')">Reset Login</button>`:''}<button class="mini-btn" type="button" onclick="togglePlayerPortal('${rosterEsc(p.id)}',false)">Disable</button></div>`;
+}
+window.resetPlayerPortalLogin=async function(id){
+  if(!portalCanWrite()){viewerBlocked('reset player portal logins');return;}
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));if(!p)return;
+  if(!confirm(`Reset ${p.full_name}'s Player Portal login? The currently claimed account will immediately lose authorization and the roster email must claim it again.`))return;
+  const {error}=await sb.rpc('captain_reset_player_login',{p_roster_player_id:id});
+  if(error)return setRosterStatus('Could not reset login: '+error.message,false);
+  setRosterStatus(`${p.full_name}'s Player Portal login was reset. The next successful login from ${p.email||'the roster email'} can claim the account.`,true);
+  await loadTeamRoster(false);
+};
+window.togglePlayerPortal=async function(id,enabled){
+  if(!portalCanWrite()){viewerBlocked('change player portal access');return;}
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));if(!p)return;
+  const {error}=await sb.from('team_roster').update({portal_enabled:!!enabled}).eq('id',id);
+  if(error)return setRosterStatus('Could not change Player Portal access: '+error.message,false);
+  setRosterStatus(`${p.full_name}'s Player Portal is now ${enabled?'enabled':'disabled'}.`,true);
+  await loadTeamRoster(false);
+};
+
 function renderRosterTable(){
   const body=document.getElementById("rosterTableBody");
   const count=document.getElementById("rosterCount");
   if(count)count.textContent=TEAM_ROSTER.filter(p=>p.active!==false).length;
   if(!body)return;
   if(!TEAM_ROSTER.length){
-    body.innerHTML='<tr><td colspan="8">No players found.</td></tr>';
+    body.innerHTML='<tr><td colspan="10">No players found.</td></tr>';
     return;
   }
   body.innerHTML=TEAM_ROSTER.map(p=>`
@@ -3031,6 +3163,8 @@ function renderRosterTable(){
         <button class="mini-btn roster-new-toggle" type="button" onclick="toggleRosterNewPlayer('${rosterEsc(p.id)}',${p.is_new?"false":"true"})">${p.is_new?"Remove tag":"Mark New"}</button>
       </td>
       <td>${p.email?rosterEsc(p.email):'<span class="roster-contact">—</span>'}</td>
+      <td class="portal-access-cell">${renderPlayerPortalAccess(p)}</td>
+      <td class="captain-access-cell">${renderCaptainAccess(p)}</td>
       <td>${p.phone?rosterEsc(p.phone):'<span class="roster-contact">—</span>'}</td>
       <td><span class="status">${p.active===false?"Inactive":"Active"}</span></td>
       <td class="roster-action-cell"><button class="mini-btn" type="button" onclick="editRosterPlayer('${rosterEsc(p.id)}')">Edit</button></td>
@@ -3062,6 +3196,8 @@ function resetRosterForm({keepMessage=false}={}){
   if(cancelBtn)cancelBtn.style.display="none";
   const newPlayerBox=document.getElementById("rosterIsNew");
   if(newPlayerBox)newPlayerBox.checked=true;
+  const portalBox=document.getElementById("rosterPortalEnabled");
+  if(portalBox)portalBox.checked=true;
   const numberInput=document.getElementById("rosterNumber");
   if(numberInput)numberInput.setCustomValidity("");
   setJerseyNumberStatus("Choose any number from 1–99.");
@@ -3080,6 +3216,7 @@ window.editRosterPlayer=function(id){
   document.getElementById("rosterEmail").value=p.email||"";
   document.getElementById("rosterPhone").value=p.phone||"";
   document.getElementById("rosterIsNew").checked=!!p.is_new;
+  document.getElementById("rosterPortalEnabled").checked=p.portal_enabled!==false;
   document.getElementById("rosterFormTitle").textContent=`Edit ${p.full_name}`;
   document.getElementById("addRosterPlayerBtn").textContent="Save Player";
   document.getElementById("cancelRosterEditBtn").style.display="inline-flex";
@@ -3164,17 +3301,29 @@ function updateDashboardAnnouncement(items){
 async function loadTeamRoster(showMessage=false){
   const {data,error}=await sb
     .from("team_roster")
-    .select("id,player_key,full_name,preferred_name,email,phone,jersey_number,position,bio,is_new,photo_url,sort_order,active,created_at")
+    .select("id,player_key,full_name,preferred_name,email,phone,jersey_number,position,bio,is_new,photo_url,sort_order,active,portal_enabled,created_at")
     .order("sort_order",{ascending:true})
     .order("created_at",{ascending:true});
   if(error){
     console.error("Could not load team roster:",error);
     const body=document.getElementById("rosterTableBody");
-    if(body)body.innerHTML='<tr><td colspan="8">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
+    if(body)body.innerHTML='<tr><td colspan="10">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
     if(showMessage)setRosterStatus("Could not load roster: "+error.message,false);
     return;
   }
   TEAM_ROSTER=data||[];
+  TEAM_PLAYER_ACCESS=[];
+  TEAM_CAPTAIN_ACCESS=[];
+  if(portalCanWrite()){
+    const [accessResult,captainResult]=await Promise.all([
+      sb.from("player_access").select("roster_player_id,approved_email,auth_user_id,active,claimed_at,last_login_at"),
+      sb.rpc("get_team_captain_access")
+    ]);
+    if(accessResult.error)console.warn("Player Portal access table is not ready yet:",accessResult.error);
+    else TEAM_PLAYER_ACCESS=accessResult.data||[];
+    if(captainResult.error)console.warn("Captain access management is not ready yet:",captainResult.error);
+    else TEAM_CAPTAIN_ACCESS=captainResult.data||[];
+  }
   const active=TEAM_ROSTER.filter(p=>p.active!==false);
   ROSTER=active.map(p=>({
     player_key:p.player_key||p.id,
@@ -3219,6 +3368,7 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
   const position=document.getElementById("rosterPosition").value.trim();
   const bio=document.getElementById("rosterBio").value.trim();
   const is_new=document.getElementById("rosterIsNew")?.checked!==false;
+  const portal_enabled=document.getElementById("rosterPortalEnabled")?.checked!==false;
   const email=document.getElementById("rosterEmail").value.trim().toLowerCase();
   const phone=document.getElementById("rosterPhone").value.trim();
   if(!full_name)return setRosterStatus("Enter the player's full name.",false);
@@ -3242,13 +3392,19 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
       bio:bio||null,
       email:email||null,
       phone:phone||null,
-      is_new
+      is_new,
+      portal_enabled
     };
     if(editId){
+      const prior=TEAM_ROSTER.find(p=>String(p.id)===String(editId));
+      const priorEmail=String(prior?.email||"").trim().toLowerCase();
+      const emailChanged=priorEmail!==email;
+      const wasClaimed=!!playerAccessFor(editId)?.auth_user_id;
       const {error}=await sb.from("team_roster").update(payload).eq("id",editId);
       if(error)throw error;
       resetRosterForm({keepMessage:true});
-      setRosterStatus(`${full_name} updated. Public name "${preferred_name||full_name.split(/\s+/)[0]}" now flows to the homepage, Meet the Squad, Lineups and all Game Day player selections.`,true);
+      const loginNote=emailChanged&&wasClaimed?` Player Portal authorization was reset because the roster email changed; ${email||"the new roster email"} must claim the account next time.`:"";
+      setRosterStatus(`${full_name} updated. Public name "${preferred_name||full_name.split(/\s+/)[0]}" now flows to the homepage, Meet the Squad, Lineups and all Game Day player selections.${loginNote}`,true);
     }else{
       const {error}=await sb.from("team_roster").insert({...payload,active:true,created_by:user.id});
       if(error)throw error;
@@ -3334,15 +3490,16 @@ function selectedPlayerData(selectEl,nameInput,numberInput,matchNumberInput=null
   if(!choice)return null;
   if(choice.kind==="roster"){
     const worn=String(matchNumberInput?.value||"").trim();
-    return{name:choice.name,number:worn||choice.number||null,rosterNumber:choice.number||null,manual:false};
+    const roster=ROSTER.find(p=>String(p.number)===String(choice.number)&&p.name===choice.name);
+    return{name:choice.name,number:worn||choice.number||null,rosterNumber:choice.number||null,playerKey:roster?.player_key||null,manual:false};
   }
   const name=nameInput.value.trim();
   const number=numberInput.value.trim()||choice.number;
   return{name:name||null,number:number||null,rosterNumber:null,manual:true};
 }
-function setPlayerEditorValue(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,name,number,rosterNumber){
-  if(!name&&!number&&!rosterNumber){selectEl.value="";syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value="";return;}
-  const roster=ROSTER.find(p=>String(p.number)===String(rosterNumber??number??"")&&p.name===name);
+function setPlayerEditorValue(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,name,number,rosterNumber,rosterKey=null){
+  if(!name&&!number&&!rosterNumber&&!rosterKey){selectEl.value="";syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value="";return;}
+  const roster=(rosterKey?ROSTER.find(p=>String(p.player_key)===String(rosterKey)):null)||ROSTER.find(p=>String(p.number)===String(rosterNumber??number??"")&&p.name===name);
   if(roster){selectEl.value=playerValue(roster);syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value=String(number??"")!==String(roster.number)?String(number??""):"";return;}
   const num=String(number??"");
   selectEl.value=EXTRA_JERSEY_NUMBERS.map(String).includes(num)?`extra|${num}|`:'manual||';
@@ -3372,7 +3529,7 @@ function renderMotm(){
   const sel=document.getElementById("motmPlayer"),wrap=document.getElementById("motmManualWrap"),name=document.getElementById("motmManualName"),num=document.getElementById("motmManualNumber"),matchWrap=document.getElementById("motmMatchNumberWrap"),matchNum=document.getElementById("motmMatchNumber"),reason=document.getElementById("motmReason"),preview=document.getElementById("motmPreview");
   if(!sel||!gameDaySelected)return;
   const motmName=gameDaySelected.man_of_match_player_name||"",motmNumber=gameDaySelected.man_of_match_player_number||"",motmRosterNumber=gameDaySelected.man_of_match_roster_player_number||"";
-  if(motmName||motmNumber||motmRosterNumber){setPlayerEditorValue(sel,wrap,name,num,matchWrap,matchNum,motmName,motmNumber,motmRosterNumber);}else{sel.value="";wrap.classList.remove("open");matchWrap.classList.remove("open");name.value="";num.value="";matchNum.value="";}
+  if(motmName||motmNumber||motmRosterNumber||gameDaySelected?.man_of_match_player_key){setPlayerEditorValue(sel,wrap,name,num,matchWrap,matchNum,motmName,motmNumber,motmRosterNumber,gameDaySelected?.man_of_match_player_key||null);}else{sel.value="";wrap.classList.remove("open");matchWrap.classList.remove("open");name.value="";num.value="";matchNum.value="";}
   reason.value=gameDaySelected.man_of_match_reason||"";
   if(motmName||motmNumber||reason.value){preview.style.display="block";preview.innerHTML=`<strong>${motmNumber?`#${gdEsc(motmNumber)} `:""}${gdEsc(motmName||"Unnamed player")}</strong><small>Man of the Match</small><div style="margin-top:7px">${gdEsc(reason.value)}</div>`;}else{preview.style.display="none";preview.innerHTML="";}
 }
@@ -3428,7 +3585,7 @@ async function loadCrowdAdmin(){
   if(!crowdSession){crowdStatus("No crowd-scoring session for this match yet.");renderCrowdAdmin();return;}
   const [inv,people,events,reports,refs,motm]=await Promise.all([
     sb.from("game_day_invites").select("id,invite_code,active,expires_at,created_at").eq("session_id",crowdSession.id).eq("active",true).order("created_at",{ascending:false}).limit(1),
-    sb.from("game_day_participants").select("user_id,display_name,joined_at,last_seen_at").eq("session_id",crowdSession.id).order("joined_at",{ascending:true}),
+    sb.rpc("get_game_day_participants",{p_session_id:crowdSession.id}),
     sb.from("game_day_crowd_events").select("id,event_type,active,participant_count_snapshot,consensus_threshold").eq("session_id",crowdSession.id).eq("active",true),
     sb.from("game_day_event_reports").select("event_id,verdict").eq("session_id",crowdSession.id),
     sb.from("game_day_ref_decisions").select("id").eq("session_id",crowdSession.id).eq("active",true),
@@ -3473,14 +3630,26 @@ async function loadCrowdAdmin(){
   crowdParticipantList.innerHTML=crowdParticipants
     .slice()
     .sort((a,b)=>(activeIds.has(b.user_id)?1:0)-(activeIds.has(a.user_id)?1:0))
-    .map(p=>`<span class="crowd-person ${activeIds.has(p.user_id)?"":"inactive"}">${gdEsc(p.display_name||"Scorer")}${activeIds.has(p.user_id)?"":" · idle"}</span>`)
+    .map(p=>`<span class="crowd-person ${activeIds.has(p.user_id)?"":"inactive"}">${gdEsc(p.display_name||"Scorer")}${activeIds.has(p.user_id)?"":" · idle"}${portalCanWrite()?` <button class="mini-btn" style="margin-left:5px;padding:3px 5px" type="button" data-reset-crowd-id="${gdEsc(p.user_id)}">Reset ID</button>`:""}</span>`)
     .join("");
+  crowdParticipantList.querySelectorAll("[data-reset-crowd-id]").forEach(btn=>btn.addEventListener("click",()=>resetCrowdParticipantId(btn.dataset.resetCrowdId)));
   const open=!!crowdSession.active&&(!crowdSession.expires_at||new Date(crowdSession.expires_at)>new Date());
   crowdStatus(open
     ? `Crowd scoring is open for ${gameDaySelected.home_team} vs ${gameDaySelected.away_team}. ${activePeople.length} active of ${crowdParticipants.length} joined. New events currently need ${newEventThreshold} matching confirmation${newEventThreshold===1?"":"s"}.`
     : "Crowd scoring is closed for this match.");
   renderCrowdAdmin();
 }
+async function resetCrowdParticipantId(userId){
+  if(!portalCanWrite()){viewerBlocked("reset Crowd IDs");return;}
+  if(!crowdSession?.id)return;
+  const person=crowdParticipants.find(p=>String(p.user_id)===String(userId));
+  if(!confirm(`Replace ${person?.display_name||"this participant"}'s Crowd ID with a new generic Fan-#### ID?`))return;
+  const {data,error}=await sb.rpc("captain_reset_game_day_crowd_id",{p_session_id:crowdSession.id,p_user_id:userId});
+  if(error)return alert("Could not reset Crowd ID: "+error.message);
+  crowdStatus(`Crowd ID reset to ${data||"a generic ID"}.`);
+  await loadCrowdAdmin();
+}
+
 async function ensureCrowdSession(){
   if(!portalCanWrite()){viewerBlocked("start Crowd Scoring");return null;}
   if(!gameDaySelected?.id){alert("Select a match first.");return null;}
@@ -3511,8 +3680,34 @@ if(crowdCopyLinkBtn)crowdCopyLinkBtn.addEventListener("click",async()=>{const te
 function startCrowdSummaryRefresh(){if(crowdSummaryTimer)clearInterval(crowdSummaryTimer);crowdSummaryTimer=setInterval(()=>{if(document.getElementById("gameday")?.classList.contains("active"))loadCrowdAdmin();},10000);}
 startCrowdSummaryRefresh();
 
+
+function engagementPlayerName(id){const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));return p?`#${p.jersey_number} ${p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0]}`:'Player';}
+async function loadPlayerEngagement(){
+  const panel=document.getElementById('playerEngagementPanel');if(!panel)return;
+  if(!portalCanWrite())return;
+  const matchId=gameDaySelected?.id;
+  const feedback=document.getElementById('playerFeedbackList'),reaction=document.getElementById('playerReactionSummary'),availList=document.getElementById('playerAvailabilityList');
+  if(!matchId){feedback.innerHTML='<div class="sub">Select a match.</div>';return;}
+  const [a,r,c]=await Promise.all([
+    sb.from('player_match_availability').select('player_id,status,note,updated_at').eq('match_id',matchId),
+    sb.from('player_match_reactions').select('player_id,self_reaction,team_reaction,updated_at').eq('match_id',matchId),
+    sb.rpc('get_player_match_comments',{p_match_id:matchId})
+  ]);
+  if(a.error||r.error||c.error){feedback.innerHTML='<div class="sub">Player Portal engagement requires the v50.2 SQL migration.</div>';reaction.innerHTML='';availList.innerHTML='';return;}
+  const av=a.data||[],rx=r.data||[],comments=c.data||[];
+  document.getElementById('engGoing').textContent=av.filter(x=>x.status==='going').length;
+  document.getElementById('engMaybe').textContent=av.filter(x=>x.status==='maybe').length;
+  document.getElementById('engOut').textContent=av.filter(x=>x.status==='out').length;
+  document.getElementById('engResponses').textContent=rx.length;
+  feedback.innerHTML=comments.length?comments.map(x=>`<div class="engagement-item ${x.visibility==='captains'?'feedback-private':'feedback-team'}"><strong>${gdEsc(`#${x.jersey_number} ${x.display_name}`)}</strong> · ${x.visibility==='captains'?'Captains Only':'Team'}<div>${gdEsc(x.comment)}</div><small>${new Date(x.created_at).toLocaleString()}</small></div>`).join(''):'<div class="sub">No player comments submitted yet.</div>';
+  const labels={great:'🔥 Great',good:'👍 Good',average:'😐 Average',rough:'👎 Rough'};
+  const line=(scope,key)=>rx.filter(x=>x[scope]===key).length;
+  reaction.innerHTML=['great','good','average','rough'].map(k=>`<div class="reaction-line"><span>${labels[k]}</span><span>Team ${line('team_reaction',k)} · Self ${line('self_reaction',k)}</span></div>`).join('');
+  availList.innerHTML=av.length?av.map(x=>`<div class="engagement-item"><strong>${gdEsc(engagementPlayerName(x.player_id))}</strong> — ${x.status==='going'?'Going':x.status==='maybe'?'Maybe':"Can't Make It"}${x.note?`<small>${gdEsc(x.note)}</small>`:''}</div>`).join(''):'<div class="sub">No availability responses yet.</div>';
+}
+
 async function loadGameDayMatches(preferredId=null){
-  const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
+  const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_player_key,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v14";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
@@ -3521,9 +3716,10 @@ async function loadGameDayMatches(preferredId=null){
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
-  const {data,error}=await sb.from("match_events").select("id,match_id,event_type,player_name,player_number,roster_player_number,assist_player_name,assist_player_number,assist_roster_player_number,half,sequence,created_at").eq("match_id",gameDaySelected.id).order("sequence",{ascending:true});
+  const {data,error}=await sb.from("match_events").select("id,match_id,event_type,player_name,player_number,roster_player_number,roster_player_key,assist_player_name,assist_player_number,assist_roster_player_number,assist_roster_player_key,half,sequence,created_at").eq("match_id",gameDaySelected.id).order("sequence",{ascending:true});
   if(error){backendBox.className="backend-warning";backendBox.textContent="Could not load match events: "+error.message;gameDayEvents=[];}else{backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected.";gameDayEvents=data||[];}
   renderGameDay();
+  await loadPlayerEngagement();
 }
 gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;await loadGameDayEvents();await loadCrowdAdmin();});
 document.querySelectorAll(".status-btn").forEach(btn=>btn.addEventListener("click",async()=>{
@@ -3540,8 +3736,8 @@ function openEventEditor(type,event=null){
   eventEditorTitle.textContent=(editingEventId?"Edit ":"Record ")+(titles[type]||"Event");
   const needsSkorPlayer=["skor_goal","skor_yellow_card","skor_red_card"].includes(type),needsOpponentPlayer=["opponent_yellow_card","opponent_red_card"].includes(type);
   eventPlayerWrap.style.display=needsSkorPlayer?"block":"none";eventAssistWrap.style.display=type==="skor_goal"?"block":"none";opponentPlayerWrap.style.display=needsOpponentPlayer?"block":"none";
-  setPlayerEditorValue(eventPlayer,eventPlayerManual,eventPlayerManualName,eventPlayerManualNumber,eventPlayerMatchNumberWrap,eventPlayerMatchNumber,event?.player_name,event?.player_number,event?.roster_player_number);
-  setPlayerEditorValue(eventAssist,eventAssistManual,eventAssistManualName,eventAssistManualNumber,eventAssistMatchNumberWrap,eventAssistMatchNumber,event?.assist_player_name,event?.assist_player_number,event?.assist_roster_player_number);
+  setPlayerEditorValue(eventPlayer,eventPlayerManual,eventPlayerManualName,eventPlayerManualNumber,eventPlayerMatchNumberWrap,eventPlayerMatchNumber,event?.player_name,event?.player_number,event?.roster_player_number,event?.roster_player_key);
+  setPlayerEditorValue(eventAssist,eventAssistManual,eventAssistManualName,eventAssistManualNumber,eventAssistMatchNumberWrap,eventAssistMatchNumber,event?.assist_player_name,event?.assist_player_number,event?.assist_roster_player_number,event?.assist_roster_player_key);
   opponentPlayerName.value=needsOpponentPlayer?(event?.player_name||""):"";opponentPlayerNumber.value=needsOpponentPlayer?(event?.player_number??""):"";
   eventHalf.value=event?.half||eventHalf.value;document.getElementById("saveMatchEvent").textContent=editingEventId?"Save Changes":"Save Event";eventEditor.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
@@ -3559,7 +3755,7 @@ document.getElementById("saveMatchEvent").addEventListener("click",async()=>{
   let eventPlayerData=player;
   if(needsOpponentPlayer){const name=opponentPlayerName.value.trim(),number=opponentPlayerNumber.value.trim();eventPlayerData={name:name||null,number:number||null};}
   const {data:{user}}=await sb.auth.getUser();
-  const payload={event_type:currentEventType,half:eventHalf.value,player_name:eventPlayerData?.name||null,player_number:eventPlayerData?.number||null,roster_player_number:needsSkorPlayer?(eventPlayerData?.rosterNumber||null):null,assist_player_name:currentEventType==="skor_goal"?(assist?.name||null):null,assist_player_number:currentEventType==="skor_goal"?(assist?.number||null):null,assist_roster_player_number:currentEventType==="skor_goal"?(assist?.rosterNumber||null):null};
+  const payload={event_type:currentEventType,half:eventHalf.value,player_name:eventPlayerData?.name||null,player_number:eventPlayerData?.number||null,roster_player_number:needsSkorPlayer?(eventPlayerData?.rosterNumber||null):null,roster_player_key:needsSkorPlayer?(eventPlayerData?.playerKey||null):null,assist_player_name:currentEventType==="skor_goal"?(assist?.name||null):null,assist_player_number:currentEventType==="skor_goal"?(assist?.number||null):null,assist_roster_player_number:currentEventType==="skor_goal"?(assist?.rosterNumber||null):null,assist_roster_player_key:currentEventType==="skor_goal"?(assist?.playerKey||null):null};
   let result;
   if(editingEventId){result=await sb.from("match_events").update(payload).eq("id",editingEventId);}else{result=await sb.from("match_events").insert({...payload,match_id:gameDaySelected.id,created_by:user?.id||null});}
   if(result.error){alert("Could not save event: "+result.error.message);return;}
@@ -3777,18 +3973,18 @@ loadAnnouncements();
     if(player.manual&&!player.name){alert('Enter the player name.');return;}
     const why=reason.value.trim();if(!why){alert('Add a reason for Man of the Match.');return;}
     saveBtn.disabled=true;saveBtn.textContent='Saving…';
-    const {error}=await sb.from('matches').update({man_of_match_player_name:player.name,man_of_match_player_number:player.number,man_of_match_roster_player_number:player.rosterNumber||null,man_of_match_reason:why}).eq('id',gameDaySelected.id);
+    const {error}=await sb.from('matches').update({man_of_match_player_name:player.name,man_of_match_player_number:player.number,man_of_match_roster_player_number:player.rosterNumber||null,man_of_match_player_key:player.playerKey||null,man_of_match_reason:why}).eq('id',gameDaySelected.id);
     saveBtn.disabled=false;saveBtn.textContent='Save / Update Man of the Match';
     if(error){alert('Could not save Man of the Match: '+error.message);return;}
-    gameDaySelected.man_of_match_player_name=player.name;gameDaySelected.man_of_match_player_number=player.number;gameDaySelected.man_of_match_roster_player_number=player.rosterNumber||null;gameDaySelected.man_of_match_reason=why;renderMotm();
+    gameDaySelected.man_of_match_player_name=player.name;gameDaySelected.man_of_match_player_number=player.number;gameDaySelected.man_of_match_roster_player_number=player.rosterNumber||null;gameDaySelected.man_of_match_player_key=player.playerKey||null;gameDaySelected.man_of_match_reason=why;renderMotm();
   });
   clearBtn.addEventListener('click',async()=>{
     if(!portalCanWrite()){viewerBlocked("clear Man of the Match");return;}
     if(!gameDayReady||!gameDaySelected?.id)return;
     if(!confirm('Clear Man of the Match for this game?'))return;
-    const {error}=await sb.from('matches').update({man_of_match_player_name:null,man_of_match_player_number:null,man_of_match_roster_player_number:null,man_of_match_reason:null}).eq('id',gameDaySelected.id);
+    const {error}=await sb.from('matches').update({man_of_match_player_name:null,man_of_match_player_number:null,man_of_match_roster_player_number:null,man_of_match_player_key:null,man_of_match_reason:null}).eq('id',gameDaySelected.id);
     if(error){alert('Could not clear Man of the Match: '+error.message);return;}
-    gameDaySelected.man_of_match_player_name=null;gameDaySelected.man_of_match_player_number=null;gameDaySelected.man_of_match_roster_player_number=null;gameDaySelected.man_of_match_reason=null;renderMotm();
+    gameDaySelected.man_of_match_player_name=null;gameDaySelected.man_of_match_player_number=null;gameDaySelected.man_of_match_roster_player_number=null;gameDaySelected.man_of_match_player_key=null;gameDaySelected.man_of_match_reason=null;renderMotm();
   });
 })();
 
