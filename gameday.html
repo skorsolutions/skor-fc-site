@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090a0d">
-<meta name="skor-build" content="gameday-v45-centered-score-impact-adaptive-consensus">
-<title>SKOR FC | Crowd Game Day v45</title>
+<meta name="skor-build" content="gameday-v50.2-universal-auth-crowd-id-adaptive-consensus">
+<title>SKOR FC | Crowd Game Day v50.2</title>
 <meta name="description" content="SKOR FC crowd-powered live match scoring, referee decision review and Man of the Match voting.">
 <style>
 :root{--bg:#07080a;--panel:#111318;--panel2:#171a20;--line:#2d3138;--text:#f5f5f6;--muted:#9da2aa;--maroon:#8f1836;--maroon2:#b51c43;--green:#2f7a5c;--amber:#9b7220;--red:#a52a3d;--blue:#315b85}
@@ -128,6 +128,21 @@
   padding-bottom:5px;
 }
 
+
+
+/* SKOR FC v50.2 — universal auth + private generic Crowd IDs */
+.auth-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#777d86;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+.auth-divider:before,.auth-divider:after{content:"";height:1px;background:#30343b;flex:1}
+.email-auth{text-align:left;margin-top:0}
+.email-auth .auth-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}
+.email-auth .auth-actions .btn{min-width:122px}
+.email-auth .code-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}
+.auth-help{margin-top:9px;color:#818791;font-size:10px;line-height:1.45;text-align:left}
+.crowd-id-note{margin-top:6px;color:#8d929a;font-size:10px;line-height:1.4}
+.crowd-id-note strong{color:#d7d9dc}
+.identity-row{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:10px}.identity-chip{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border:1px solid #343941;border-radius:999px;background:#101318;color:#c7cbd0;font-size:10px;font-weight:900}
+@media(max-width:520px){.email-auth .auth-actions,.email-auth .code-row{grid-template-columns:1fr}.email-auth .auth-actions .btn,.email-auth .code-row .btn{width:100%}}
+
 </style>
 </head>
 <body>
@@ -141,6 +156,19 @@
     <h1 class="title">Score it together.</h1>
     <p class="sub">Help record goals, assists and cards, review referee decisions, and vote for Man of the Match. Your reports are compared with other scorers before they become community-confirmed.</p>
     <button class="btn primary full" id="googleBtn" type="button" style="margin-top:18px">Continue with Google</button>
+    <div class="auth-divider">or use any email</div>
+    <div class="email-auth">
+      <label for="crowdEmail">Email address</label>
+      <div class="auth-actions">
+        <input id="crowdEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@yahoo.com">
+        <button class="btn secondary" id="emailLoginBtn" type="button">Email Sign-In</button>
+      </div>
+      <div class="code-row hidden" id="emailCodeRow">
+        <input id="crowdEmailCode" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code">
+        <button class="btn secondary" id="verifyEmailCodeBtn" type="button">Verify Code</button>
+      </div>
+      <div class="auth-help">Works with Gmail, Yahoo, Hotmail/Outlook and other email providers. Supabase may send either a one-time code or a secure sign-in link, depending on the email template.</div>
+    </div>
     <div class="status" id="loginStatus"></div>
   </div>
 </section>
@@ -149,7 +177,11 @@
   <div class="card">
     <div class="eyebrow">Join Game Day</div><h1 class="title">Choose a match.</h1>
     <p class="sub">Scan a captain's QR code or enter the invite code. If you already joined an active match, it will appear below.</p>
-    <div class="form"><div><label>Invite code</label><input id="inviteCode" autocomplete="off" placeholder="Paste or enter code"></div><button class="btn primary" id="joinBtn" type="button">Join Match</button></div>
+    <div class="form">
+      <div><label>Invite code</label><input id="inviteCode" autocomplete="off" placeholder="Paste or enter code"></div>
+      <div><label>Crowd ID <span style="color:#777;font-weight:600">(optional)</span></label><input id="crowdId" maxlength="20" autocomplete="off" placeholder="Eddy11"><div class="crowd-id-note">Leave this blank and SKOR assigns a private generic ID like <strong>Fan-4821</strong>. Your real name/email is never used as your visible Crowd ID.</div></div>
+      <button class="btn primary" id="joinBtn" type="button">Join Match</button>
+    </div>
     <div class="status" id="joinStatus"></div>
     <div class="sessionpick" id="mySessions"></div>
   </div>
@@ -161,6 +193,7 @@
     <div class="matchteams"><div class="team" id="homeTeam">Home</div><div class="score" id="crowdScore">0–0</div><div class="team" id="awayTeam">Away</div></div>
     <div class="phase" id="matchPhase">Crowd Scoring Open</div>
     <div class="crowdline" id="crowdLine">0 scorers joined</div>
+    <div class="identity-row"><div class="identity-chip" id="crowdIdentity">Crowd ID</div><button class="mini" id="changeCrowdIdBtn" type="button">Change ID</button></div>
     <div class="pendingbar hidden" id="pendingScore"></div>
   </div>
 
@@ -225,14 +258,16 @@ function showScreen(id){document.querySelectorAll('.screen').forEach(x=>x.classL
 function setStatus(id,msg,error=false){const e=$(id);if(!e)return;e.textContent=msg||"";e.classList.toggle('error',!!error);}
 function queryCode(){const q=new URLSearchParams(location.search).get('code')||'';if(q)sessionStorage.setItem('skorGameDayInvite',q);return q||sessionStorage.getItem('skorGameDayInvite')||'';}
 function fmtDate(v){if(!v)return"GAME DAY";return new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(v));}
-function displayNameFromUser(u){return u?.user_metadata?.full_name||u?.user_metadata?.name||u?.email?.split('@')[0]||'Scorer';}
 async function init(){const {data}=await db.auth.getSession();user=data.session?.user||null;if(user)await afterLogin();else showScreen('loginScreen');}
-async function afterLogin(){user=(await db.auth.getUser()).data.user;$('topUser').textContent=displayNameFromUser(user);$('logoutBtn').classList.remove('hidden');const code=queryCode();if(code){$('inviteCode').value=code;const ok=await joinByCode(code,true);if(ok)return;}await loadMySessions();showScreen('joinScreen');}
+async function afterLogin(){user=(await db.auth.getUser()).data.user;$('topUser').textContent='Authenticated';$('logoutBtn').classList.remove('hidden');const code=queryCode();if(code)$('inviteCode').value=code;await loadMySessions();showScreen('joinScreen');}
 $('googleBtn').addEventListener('click',async()=>{setStatus('loginStatus','Opening Google…');const code=queryCode();if(code)sessionStorage.setItem('skorGameDayInvite',code);const redirect=`${location.origin}/gameday.html`;const {error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:redirect}});if(error)setStatus('loginStatus',error.message,true);});
-$('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.href='gameday.html';});
+$('emailLoginBtn').addEventListener('click',async()=>{const email=$('crowdEmail').value.trim().toLowerCase();if(!email)return setStatus('loginStatus','Enter your email address.',true);const code=queryCode();if(code)sessionStorage.setItem('skorGameDayInvite',code);sessionStorage.setItem('skorCrowdAuthEmail',email);setStatus('loginStatus','Sending secure sign-in email…');const {error}=await db.auth.signInWithOtp({email,options:{emailRedirectTo:`${location.origin}/gameday.html`,shouldCreateUser:true}});if(error)return setStatus('loginStatus',error.message,true);$('emailCodeRow').classList.remove('hidden');setStatus('loginStatus','Check your email. Use the sign-in link, or enter the one-time code here if your message contains a code.');});
+$('verifyEmailCodeBtn').addEventListener('click',async()=>{const email=($('crowdEmail').value.trim().toLowerCase()||sessionStorage.getItem('skorCrowdAuthEmail')||'');const token=$('crowdEmailCode').value.trim();if(!email||!token)return setStatus('loginStatus','Enter the email address and code from your message.',true);setStatus('loginStatus','Verifying…');const {error}=await db.auth.verifyOtp({email,token,type:'email'});if(error)return setStatus('loginStatus',error.message,true);});
+$('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();sessionStorage.removeItem('skorCrowdAuthEmail');location.href='gameday.html';});
+$('changeCrowdIdBtn').addEventListener('click',async()=>{if(!sessionId)return;const current=participants.find(p=>p.user_id===user?.id)?.display_name||'';const requested=prompt('Choose a Crowd ID (3–20 characters). Leave blank for a new generic Fan-#### ID.',current);if(requested===null)return;const {data,error}=await db.rpc('set_game_day_crowd_id',{p_session_id:sessionId,p_crowd_id:requested});if(error)return alert(error.message);$('topUser').textContent=data||'Crowd participant';await loadAll();});
 $('joinBtn').addEventListener('click',()=>joinByCode($('inviteCode').value.trim(),false));
-async function joinByCode(code,quiet){if(!code){if(!quiet)setStatus('joinStatus','Enter an invite code.',true);return false;}const {data,error}=await db.rpc('join_game_day_session',{p_invite_code:code});if(error){if(!quiet)setStatus('joinStatus',error.message,true);return false;}const row=Array.isArray(data)?data[0]:data;if(!row?.session_id){if(!quiet)setStatus('joinStatus','Invite could not be claimed.',true);return false;}sessionStorage.removeItem('skorGameDayInvite');history.replaceState({},'',location.pathname);await openSession(row.session_id);return true;}
-async function loadMySessions(){const {data,error}=await db.from('game_day_participants').select('session_id,joined_at').eq('user_id',user.id).order('joined_at',{ascending:false});if(error){setStatus('joinStatus','Crowd Game Day is not installed yet. Ask a captain to deploy the v40 SQL and v41 adaptive-consensus patch.',true);return;}const ids=[...new Set((data||[]).map(x=>x.session_id))];if(!ids.length){$('mySessions').innerHTML='<div class="empty">No active joined matches yet.</div>';return;}const s=await db.from('game_day_sessions').select('id,match_id,active,expires_at').in('id',ids);const active=(s.data||[]).filter(x=>x.active&&(!x.expires_at||new Date(x.expires_at)>new Date()));if(!active.length){$('mySessions').innerHTML='<div class="empty">No active joined matches.</div>';return;}const mids=active.map(x=>x.match_id);const m=await db.from('matches').select('id,kickoff,home_team,away_team').in('id',mids);const byId=Object.fromEntries((m.data||[]).map(x=>[x.id,x]));$('mySessions').innerHTML=active.map(x=>{const mm=byId[x.match_id]||{};return `<button class="sessionbtn" type="button" data-session="${x.id}"><strong>${esc(mm.home_team||'Match')} vs ${esc(mm.away_team||'')}</strong><span>${esc(fmtDate(mm.kickoff))}</span></button>`}).join('');$('mySessions').querySelectorAll('[data-session]').forEach(b=>b.addEventListener('click',()=>openSession(b.dataset.session)));if(active.length===1)await openSession(active[0].id);}
+async function joinByCode(code,quiet){if(!code){if(!quiet)setStatus('joinStatus','Enter an invite code.',true);return false;}const requestedId=$('crowdId').value.trim()||null;const {data,error}=await db.rpc('join_game_day_session',{p_invite_code:code,p_crowd_id:requestedId});if(error){if(!quiet)setStatus('joinStatus',error.message,true);return false;}const row=Array.isArray(data)?data[0]:data;if(!row?.session_id){if(!quiet)setStatus('joinStatus','Invite could not be claimed.',true);return false;}sessionStorage.removeItem('skorGameDayInvite');history.replaceState({},'',location.pathname);if(row.display_name)$('topUser').textContent=row.display_name;await openSession(row.session_id);return true;}
+async function loadMySessions(){const {data,error}=await db.rpc('get_my_game_day_sessions');if(error){setStatus('joinStatus','Crowd Game Day v50.2 is not installed yet. Ask a captain to run the v50.2 SQL migration.',true);return;}const ids=[...new Set((data||[]).map(x=>x.session_id))];if(!ids.length){$('mySessions').innerHTML='<div class="empty">No active joined matches yet.</div>';return;}const s=await db.from('game_day_sessions').select('id,match_id,active,expires_at').in('id',ids);const active=(s.data||[]).filter(x=>x.active&&(!x.expires_at||new Date(x.expires_at)>new Date()));if(!active.length){$('mySessions').innerHTML='<div class="empty">No active joined matches.</div>';return;}const mids=active.map(x=>x.match_id);const m=await db.from('matches').select('id,kickoff,home_team,away_team').in('id',mids);const byId=Object.fromEntries((m.data||[]).map(x=>[x.id,x]));$('mySessions').innerHTML=active.map(x=>{const mm=byId[x.match_id]||{};return `<button class="sessionbtn" type="button" data-session="${x.id}"><strong>${esc(mm.home_team||'Match')} vs ${esc(mm.away_team||'')}</strong><span>${esc(fmtDate(mm.kickoff))}</span></button>`}).join('');$('mySessions').querySelectorAll('[data-session]').forEach(b=>b.addEventListener('click',()=>openSession(b.dataset.session)));}
 async function openSession(id){
   sessionId=id;
   await touchPresence();
@@ -248,7 +283,7 @@ async function openSession(id){
 async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_sessions').select('id,match_id,active,motm_voting_open,ref_review_open,expires_at').eq('id',sessionId).single();if(s.error){return;}session=s.data;const [m,r,p,e,er,rd,rv,mv]=await Promise.all([
  db.from('matches').select('id,kickoff,status,home_team,away_team,location').eq('id',session.match_id).single(),
  db.from('public_roster').select('player_key,display_name,jersey_number,position').order('jersey_number',{ascending:true}),
- db.from('game_day_participants').select('user_id,display_name,joined_at,last_seen_at').eq('session_id',sessionId),
+ db.rpc('get_game_day_participants',{p_session_id:sessionId}),
  db.from('game_day_crowd_events').select('*').eq('session_id',sessionId).eq('active',true).order('created_at',{ascending:false}),
  db.from('game_day_event_reports').select('event_id,user_id,verdict,player_key,player_name,player_number,assist_player_key,assist_player_name,assist_player_number,opponent_player_name').eq('session_id',sessionId),
  db.from('game_day_ref_decisions').select('*').eq('session_id',sessionId).eq('active',true).order('created_at',{ascending:false}),
@@ -290,6 +325,8 @@ function render(){
   const sc=crowdScore();
   $('crowdScore').textContent=`${sc.home}–${sc.away}`;
   $('crowdLine').textContent=`${active.length} active scorer${active.length===1?'':'s'} · ${participants.length} joined · ${events.filter(isConfirmed).length} confirmed event${events.filter(isConfirmed).length===1?'':'s'}`;
+  const mine=participants.find(p=>p.user_id===user?.id);
+  if(mine){$('crowdIdentity').textContent=`Your Crowd ID: ${mine.display_name}`;$('topUser').textContent=mine.display_name;}
   const rule=$('consensusRule');
   if(rule)rule.textContent=`${currentNeeded} confirmation${currentNeeded===1?'':'s'} needed now`;
   $('matchPhase').textContent=session.active?'Crowd Scoring Open':'Crowd Scoring Closed';
@@ -323,7 +360,7 @@ $('saveEventBtn').addEventListener('click',async()=>{const type=currentEventType
 $('refCallBtn').addEventListener('click',()=>{$('refDescription').value='';setStatus('refModalStatus','');$('refModal').classList.add('open');});
 $('saveRefBtn').addEventListener('click',async()=>{const {error}=await db.rpc('report_ref_decision',{p_session_id:sessionId,p_half:$('refHalf').value,p_decision_type:$('refType').value,p_description:$('refDescription').value.trim()||null,p_vote:$('refVote').value});if(error)return setStatus('refModalStatus',error.message,true);$('refModal').classList.remove('open');await loadAll();});
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>$(b.dataset.close).classList.remove('open')));document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
-function subscribeRealtime(){if(realtimeChannel){db.removeChannel(realtimeChannel);realtimeChannel=null;}realtimeChannel=db.channel('skor-crowd-'+sessionId).on('postgres_changes',{event:'*',schema:'public',table:'game_day_participants',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_crowd_events',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_event_reports',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_ref_decisions',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_ref_votes',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_motm_votes',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_day_sessions',filter:`id=eq.${sessionId}`},loadAll).subscribe();}
+function subscribeRealtime(){if(realtimeChannel){db.removeChannel(realtimeChannel);realtimeChannel=null;}realtimeChannel=db.channel('skor-crowd-'+sessionId).on('postgres_changes',{event:'*',schema:'public',table:'game_day_crowd_events',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_event_reports',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_ref_decisions',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_ref_votes',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_motm_votes',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_day_sessions',filter:`id=eq.${sessionId}`},loadAll).subscribe();}
 db.auth.onAuthStateChange((_e,s)=>{if(s?.user&&!user){setTimeout(afterLogin,0)}});init();
 </script>
 </body>
