@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08090b">
+<meta name="skor-build" content="player-portal-v50.3-clean-url-multi-role-compatible">
+<title>SKOR FC | Player Portal</title>
+<meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
+<style>
+:root{--bg:#07080a;--panel:#111318;--panel2:#171a20;--line:#30343b;--text:#f5f5f6;--muted:#969ca5;--maroon:#8f1836;--maroon2:#b51c43;--green:#2f7a5c;--amber:#a37a28;--red:#a33b4e}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at 80% 0,#241018 0,#08090b 31%,#07080a 58%);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif}button,input,select,textarea{font:inherit}button{touch-action:manipulation}.wrap{width:min(1050px,calc(100% - 28px));margin:auto}.hidden{display:none!important}
+.top{position:sticky;top:0;z-index:30;background:rgba(7,8,10,.94);backdrop-filter:blur(14px);border-bottom:1px solid #22262c}.topin{height:64px;display:flex;align-items:center;gap:11px}.top img{width:40px;height:40px;object-fit:contain}.brand{font-weight:950;letter-spacing:.04em}.spacer{flex:1}.top-name{font-size:12px;color:#c0c4ca;font-weight:800}.top button{border:1px solid #3a3e45;background:#121419;color:#ddd;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900}
+.screen{display:none;padding:28px 0 60px}.screen.active{display:block}.card{border:1px solid var(--line);background:linear-gradient(145deg,#14171c,#0d0f13);border-radius:18px;padding:20px;box-shadow:0 12px 38px rgba(0,0,0,.16)}.eyebrow{font-size:10px;color:#d3637c;font-weight:950;letter-spacing:.13em;text-transform:uppercase}.title{font-size:38px;line-height:.95;letter-spacing:-.045em;margin:7px 0 12px}.sub{color:var(--muted);font-size:13px;line-height:1.5}.btn{border:0;border-radius:11px;min-height:46px;padding:0 15px;font-weight:900;cursor:pointer}.primary{background:linear-gradient(135deg,#681028,var(--maroon2));color:#fff}.secondary{background:#181b20;border:1px solid #3b4047;color:#fff}.ghost{background:transparent;border:1px solid #3b4047;color:#d9dce0}.full{width:100%}.status{margin-top:10px;font-size:12px;color:#c7cbd0;line-height:1.45}.status.error{color:#ff9eb2}.form{display:grid;gap:11px;margin-top:16px}label{font-size:12px;font-weight:850}input,textarea{width:100%;min-height:46px;border:1px solid #3a3e45;border-radius:10px;background:#0c0e12;color:#fff;padding:11px 12px;font-size:16px;outline:none}textarea{min-height:92px;resize:vertical}.auth-card{width:min(560px,100%);margin:5vh auto 0;text-align:center}.loginlogo{width:104px;height:104px;object-fit:contain;margin:0 auto 14px}.auth-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#777d86;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:#30343b;flex:1}.email-auth{text-align:left}.email-actions,.code-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}.auth-help{text-align:left;color:#818791;font-size:10px;line-height:1.45;margin-top:9px}
+.portal-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.hero{position:relative;overflow:hidden;min-height:300px;display:grid;grid-template-columns:220px 1fr;gap:22px;align-items:center;background:linear-gradient(135deg,#180d12,#101216 64%)}.hero-number{position:absolute;right:-8px;top:-40px;font-size:210px;font-weight:950;color:rgba(255,255,255,.085);letter-spacing:-.09em;line-height:1}.avatar{width:190px;height:220px;border-radius:18px;border:1px solid #41454d;background:linear-gradient(145deg,#4f1324,#17191e);display:grid;place-items:center;overflow:hidden;position:relative;z-index:2}.avatar img{width:100%;height:100%;object-fit:cover}.avatar span{font-size:70px;font-weight:950}.hero-copy{position:relative;z-index:2}.hero-copy h1{font-size:50px;line-height:.9;margin:4px 0 12px;letter-spacing:-.05em}.player-meta{display:flex;gap:8px;flex-wrap:wrap}.pill{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;border:1px solid #393e45;background:#171a20;color:#d8dadd;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.05em}.pill.new{background:#7a1830;border-color:#a52b49;color:#fff}.bio{color:#aeb2b9;line-height:1.55;font-size:13px;margin-top:15px;max-width:540px}.hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.stat{border:1px solid var(--line);background:#0e1014;border-radius:14px;padding:15px;text-align:center}.stat strong{display:block;font-size:30px;letter-spacing:-.05em}.stat span{display:block;margin-top:4px;color:var(--muted);font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.07em}.section{margin-top:14px}.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px}.sectionhead h2{margin:0;font-size:20px}.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.match-list{display:grid;gap:9px}.match{border:1px solid #30343b;background:#0e1014;border-radius:14px;padding:14px}.match-top{display:flex;justify-content:space-between;gap:12px}.match h3{margin:0;font-size:15px}.match .meta{color:#8e949d;font-size:10px;margin-top:4px;line-height:1.4}.score{font-size:26px;font-weight:950;white-space:nowrap}.personal-line{margin-top:10px;color:#c8ccd1;font-size:11px;font-weight:800}.availability{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.availability button,.reaction-set button{border:1px solid #3a3f46;background:#171a20;color:#ddd;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900}.availability button.selected,.reaction-set button.selected{background:#6d142b;border-color:#a12343;color:#fff}.milestones{display:flex;gap:8px;flex-wrap:wrap}.milestone{border:1px solid #3a3e45;background:#12151a;border-radius:13px;padding:11px 13px;font-size:11px;font-weight:900}.milestone.locked{opacity:.38}.feedback-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:14px}.feedback-card{border:1px solid #30343b;background:#0e1014;border-radius:14px;padding:14px}.feedback-card h3{margin:0 0 9px;font-size:15px}.reaction-block{margin-bottom:14px}.reaction-set{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.comment-list{display:grid;gap:8px}.comment{border:1px solid #30343b;border-radius:12px;background:#121419;padding:11px;font-size:12px;line-height:1.45}.comment.team{border-left:4px solid #557b67}.comment.captains{border-left:4px solid var(--maroon)}.comment small{display:block;color:#818791;margin-top:5px;font-size:9px}.comment .comment-action{margin-top:7px;margin-right:10px;border:0;background:transparent;color:#d26c83;font-size:9px;font-weight:900;padding:0;cursor:pointer}.comment .edit{color:#9ca7b6}.summary-lines{display:grid;gap:5px;margin-top:8px}.summary-line{display:flex;justify-content:space-between;border-bottom:1px solid #25292f;padding:5px 0;font-size:11px;color:#c4c8cd}.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.denied{max-width:620px;margin:8vh auto 0;text-align:center}
+@media(max-width:850px){.portal-grid,.section-grid,.feedback-layout{grid-template-columns:1fr}.hero{grid-template-columns:150px 1fr;min-height:250px}.avatar{width:140px;height:175px}.hero-copy h1{font-size:40px}.hero-number{font-size:165px}.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.wrap{width:calc(100% - 18px)}.screen{padding-top:16px}.card{padding:15px}.hero{display:block;padding-top:18px}.avatar{width:122px;height:144px;margin-bottom:14px}.hero-copy h1{font-size:38px}.hero-number{font-size:150px;top:-16px}.stats{grid-template-columns:repeat(2,1fr)}.email-actions,.code-actions,.edit-grid{grid-template-columns:1fr}.top-name{display:none}.title{font-size:32px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap topin"><img src="assets/skor fc logo transparent.png" alt="SKOR FC"><div class="brand">SKOR FC PLAYER PORTAL</div><div class="spacer"></div><div class="top-name" id="topName"></div><button class="hidden" id="logoutBtn" type="button">Log out</button></div></header>
+
+<main class="wrap">
+<section class="screen active" id="loginScreen">
+  <div class="card auth-card">
+    <img class="loginlogo" src="assets/skor fc logo transparent.png" alt="SKOR FC crest">
+    <div class="eyebrow">Your SKOR FC</div>
+    <h1 class="title">Player Portal</h1>
+    <p class="sub">Your number, position, stats, upcoming games, availability, reactions and match feedback — tied only to your SKOR player identity.</p>
+    <button class="btn primary full" id="googleBtn" type="button" style="margin-top:18px">Continue with Google</button>
+    <div class="auth-divider">or use any email</div>
+    <div class="email-auth">
+      <label for="playerEmail">Email address</label>
+      <div class="email-actions"><input id="playerEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@yahoo.com"><button class="btn secondary" id="emailLoginBtn" type="button">Email Sign-In</button></div>
+      <div class="code-actions hidden" id="emailCodeRow"><input id="playerEmailCode" inputmode="numeric" autocomplete="one-time-code" placeholder="6-digit code"><button class="btn secondary" id="verifyEmailCodeBtn" type="button">Verify Code</button></div>
+      <div class="auth-help">Works with Gmail, Yahoo, Hotmail/Outlook and other email providers. The authenticated email must already be assigned to your roster profile by a captain. Once claimed, that player profile is locked to your authenticated account until a captain resets it.</div>
+    </div>
+    <div class="status" id="loginStatus"></div>
+  </div>
+</section>
+
+<section class="screen" id="deniedScreen">
+  <div class="card denied">
+    <div class="eyebrow">Authenticated · Not Authorized</div><h1 class="title">Player access not linked.</h1>
+    <p class="sub" id="deniedMessage">Ask a captain to verify your roster email.</p>
+    <button class="btn secondary" id="deniedLogoutBtn" type="button">Sign Out</button>
+  </div>
+</section>
+
+<section class="screen" id="portalScreen">
+  <div class="portal-grid">
+    <div class="card hero">
+      <div class="hero-number" id="heroNumber">11</div>
+      <div class="avatar" id="playerAvatar"><span>E</span></div>
+      <div class="hero-copy">
+        <div class="eyebrow">My Player Card</div>
+        <h1 id="playerDisplayName">Player</h1>
+        <div class="player-meta"><span class="pill" id="playerNumber">#--</span><span class="pill" id="playerPosition">Player</span><span class="pill new hidden" id="newPlayerBadge">New Player</span></div>
+        <div class="bio" id="playerBio">Bio pending.</div>
+        <div class="hero-actions"><button class="btn secondary" id="editProfileBtn" type="button">Edit My Profile</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">SKOR Career</div><h2 style="margin:6px 0 14px">My Stats</h2>
+      <div class="stats">
+        <div class="stat"><strong id="statGoals">0</strong><span>Goals</span></div>
+        <div class="stat"><strong id="statAssists">0</strong><span>Assists</span></div>
+        <div class="stat"><strong id="statMotm">0</strong><span>MOTM</span></div>
+        <div class="stat"><strong id="statYellow">0</strong><span>Yellow</span></div>
+        <div class="stat"><strong id="statRed">0</strong><span>Red</span></div>
+      </div>
+      <div class="section" style="margin-top:18px"><div class="eyebrow">Milestones</div><div class="milestones" id="milestones" style="margin-top:9px"></div></div>
+    </div>
+  </div>
+
+  <div class="section section-grid">
+    <div class="card">
+      <div class="sectionhead"><div><div class="eyebrow">Coming Up</div><h2>My Next Matches</h2></div></div>
+      <div class="match-list" id="upcomingMatches"><div class="sub">Loading schedule…</div></div>
+    </div>
+    <div class="card">
+      <div class="sectionhead"><div><div class="eyebrow">My Record</div><h2>Recent Matches</h2></div></div>
+      <div class="match-list" id="recentMatches"><div class="sub">Loading match history…</div></div>
+    </div>
+  </div>
+
+  <div class="section card" id="feedbackSection">
+    <div class="sectionhead"><div><div class="eyebrow">Make Your Voice Count</div><h2 id="feedbackTitle">Match Feedback</h2></div><span class="pill" id="feedbackMatchPill">Choose a match</span></div>
+    <div class="feedback-layout">
+      <div>
+        <div class="feedback-card">
+          <h3>How did you feel about your game?</h3>
+          <div class="reaction-set" id="selfReaction"><button data-reaction="great">🔥 Great</button><button data-reaction="good">👍 Good</button><button data-reaction="average">😐 Average</button><button data-reaction="rough">👎 Rough</button></div>
+          <h3 style="margin-top:18px">How did the team perform?</h3>
+          <div class="reaction-set" id="teamReaction"><button data-reaction="great">🔥 Great</button><button data-reaction="good">👍 Good</button><button data-reaction="average">😐 Average</button><button data-reaction="rough">👎 Rough</button></div>
+          <div class="status" id="reactionStatus"></div>
+        </div>
+        <div class="feedback-card" style="margin-top:10px">
+          <h3>Team Comment</h3><p class="sub">Visible to other authenticated SKOR players and captains.</p>
+          <textarea id="teamComment" maxlength="1500" placeholder="What worked? What should we do differently?"></textarea>
+          <button class="btn secondary full" id="postTeamComment" type="button" style="margin-top:8px">Post to Team</button>
+          <h3 style="margin-top:18px">Captain Feedback</h3><p class="sub">Private. Only you and SKOR captains can see this comment.</p>
+          <textarea id="captainComment" maxlength="1500" placeholder="Formation, position, substitutions, concerns, ideas…"></textarea>
+          <button class="btn secondary full" id="postCaptainComment" type="button" style="margin-top:8px">Send to Captains</button>
+          <div class="status" id="commentStatus"></div>
+        </div>
+      </div>
+      <div>
+        <div class="feedback-card">
+          <h3>Team Discussion</h3>
+          <div class="comment-list" id="commentList"><div class="sub">Choose a recent match to view feedback.</div></div>
+        </div>
+        <div class="feedback-card" style="margin-top:10px">
+          <h3>Team Reaction Summary</h3>
+          <div class="summary-lines" id="reactionSummary"><div class="sub">No reactions yet.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section card hidden" id="editProfileCard">
+    <div class="sectionhead"><div><div class="eyebrow">Player-Owned Profile</div><h2>Edit My Profile</h2></div><button class="btn ghost" id="cancelProfileEdit" type="button">Close</button></div>
+    <div class="edit-grid"><div><label>Public / Preferred Name</label><input id="editPreferredName" maxlength="60" placeholder="Eddy"><div class="auth-help">Your full roster name, number, official position, stats, New Player status and image remain captain-controlled.</div></div><div><label>Bio / Description</label><textarea id="editBio" maxlength="400"></textarea></div></div>
+    <button class="btn primary" id="saveProfileBtn" type="button" style="margin-top:10px">Save Profile</button><div class="status" id="profileStatus"></div>
+  </div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
+let user=null,profile=null,stats=null,upcoming=[],recent=[],feedbackMatchId=null,myReaction={self_reaction:null,team_reaction:null};
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');}
+function status(id,msg,error=false){const el=$(id);if(!el)return;el.textContent=msg||'';el.classList.toggle('error',!!error)}
+function dt(v){if(!v)return'';return new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(v));}
+function playerInitial(){return (profile?.display_name||profile?.full_name||'P').trim()[0]?.toUpperCase()||'P';}
+async function init(){const {data}=await db.auth.getSession();user=data.session?.user||null;if(!user)return show('loginScreen');await authorizePlayer();}
+async function authorizePlayer(){
+  user=(await db.auth.getUser()).data.user;
+  if(!user)return show('loginScreen');
+  const {data,error}=await db.rpc('claim_player_portal');
+  if(error){$('deniedMessage').textContent=error.message||'This login is not authorized for a SKOR player profile.';$('logoutBtn').classList.remove('hidden');return show('deniedScreen');}
+  $('logoutBtn').classList.remove('hidden');
+  await loadPortal();show('portalScreen');
+}
+$('googleBtn').addEventListener('click',async()=>{status('loginStatus','Opening Google…');const {error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:`${location.origin}/player-portal.html`}});if(error)status('loginStatus',error.message,true);});
+$('emailLoginBtn').addEventListener('click',async()=>{const email=$('playerEmail').value.trim().toLowerCase();if(!email)return status('loginStatus','Enter your email address.',true);sessionStorage.setItem('skorPlayerAuthEmail',email);status('loginStatus','Sending secure sign-in email…');const {error}=await db.auth.signInWithOtp({email,options:{emailRedirectTo:`${location.origin}/player-portal.html`,shouldCreateUser:true}});if(error)return status('loginStatus',error.message,true);$('emailCodeRow').classList.remove('hidden');status('loginStatus','Check your email. Use the secure link, or enter the one-time code here if your message contains a code.');});
+$('verifyEmailCodeBtn').addEventListener('click',async()=>{const email=($('playerEmail').value.trim().toLowerCase()||sessionStorage.getItem('skorPlayerAuthEmail')||'');const token=$('playerEmailCode').value.trim();if(!email||!token)return status('loginStatus','Enter the email address and one-time code.',true);status('loginStatus','Verifying…');const {error}=await db.auth.verifyOtp({email,token,type:'email'});if(error)status('loginStatus',error.message,true);});
+async function logout(){await db.auth.signOut();sessionStorage.removeItem('skorPlayerAuthEmail');location.href='player-portal.html';}
+$('logoutBtn').addEventListener('click',logout);$('deniedLogoutBtn').addEventListener('click',logout);
+db.auth.onAuthStateChange((_e,s)=>{if(s?.user&&!user)setTimeout(authorizePlayer,0)});
+
+async function loadPortal(){
+  const [p,st,up,rec]=await Promise.all([
+    db.rpc('get_my_player_profile'),db.rpc('get_my_player_stats'),db.rpc('get_my_upcoming_matches',{p_limit:5}),db.rpc('get_my_recent_matches',{p_limit:6})
+  ]);
+  if(p.error)throw new Error(p.error.message);profile=(Array.isArray(p.data)?p.data[0]:p.data)||{};
+  stats=(Array.isArray(st.data)?st.data[0]:st.data)||{goals:0,assists:0,yellow_cards:0,red_cards:0,motm:0};
+  upcoming=up.data||[];recent=rec.data||[];
+  renderProfile();renderStats();renderUpcoming();renderRecent();
+  if(recent.length)await selectFeedbackMatch(recent[0].match_id);
+}
+function renderProfile(){
+  $('topName').textContent=profile.display_name||'Player';$('heroNumber').textContent=profile.jersey_number??'';$('playerDisplayName').textContent=profile.display_name||'Player';$('playerNumber').textContent=`#${profile.jersey_number??'--'}`;$('playerPosition').textContent=profile.position||'Player';$('playerBio').textContent=profile.bio||'Bio pending.';$('newPlayerBadge').classList.toggle('hidden',!profile.is_new);
+  const av=$('playerAvatar');av.innerHTML=profile.photo_url?`<img src="${esc(profile.photo_url)}" alt="${esc(profile.display_name||'Player')}">`:`<span>${esc(playerInitial())}</span>`;
+  $('editPreferredName').value=profile.display_name||'';$('editBio').value=profile.bio==='Bio pending.'?'':(profile.bio||'');
+}
+function renderStats(){
+  $('statGoals').textContent=stats.goals||0;$('statAssists').textContent=stats.assists||0;$('statMotm').textContent=stats.motm||0;$('statYellow').textContent=stats.yellow_cards||0;$('statRed').textContent=stats.red_cards||0;
+  const milestones=[
+    {ok:Number(stats.goals)>=1,label:'🎯 First SKOR Goal'},
+    {ok:Number(stats.goals)>=5,label:'⚽ 5 Goals'},
+    {ok:Number(stats.goals)>=10,label:'⚽ 10 Goals'},
+    {ok:Number(stats.assists)>=5,label:'🅰️ 5 Assists'},
+    {ok:Number(stats.motm)>=1,label:'⭐ First MOTM'},
+    {ok:Number(stats.motm)>=3,label:'⭐ 3× MOTM'}
+  ];
+  $('milestones').innerHTML=milestones.map(m=>`<span class="milestone ${m.ok?'':'locked'}">${m.ok?'✓ ':''}${m.label}</span>`).join('');
+}
+function opponent(m){return m.home_team==='SKOR FC'?m.away_team:m.home_team;}
+function renderUpcoming(){
+  if(!upcoming.length){$('upcomingMatches').innerHTML='<div class="sub">No upcoming published matches.</div>';return;}
+  $('upcomingMatches').innerHTML=upcoming.map(m=>`<div class="match"><div class="match-top"><div><h3>SKOR FC vs ${esc(opponent(m)||'Opponent')}</h3><div class="meta">${esc(dt(m.kickoff))}${m.arrival_at?` · Arrive ${esc(new Date(m.arrival_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}))}`:''}<br>${esc(m.location||'Location TBD')}</div></div></div><div class="availability" data-match="${m.match_id}"><button data-av="going" class="${m.availability_status==='going'?'selected':''}">✓ Going</button><button data-av="maybe" class="${m.availability_status==='maybe'?'selected':''}">? Maybe</button><button data-av="out" class="${m.availability_status==='out'?'selected':''}">× Can't Make It</button></div></div>`).join('');
+  $('upcomingMatches').querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=>saveAvailability(b.closest('[data-match]').dataset.match,b.dataset.av)));
+}
+async function saveAvailability(matchId,av){const {error}=await db.rpc('save_my_match_availability',{p_match_id:matchId,p_status:av,p_note:null});if(error)return alert(error.message);const m=upcoming.find(x=>x.match_id===matchId);if(m)m.availability_status=av;renderUpcoming();}
+function renderRecent(){
+  if(!recent.length){$('recentMatches').innerHTML='<div class="sub">No recorded matches yet.</div>';return;}
+  $('recentMatches').innerHTML=recent.map(m=>{const personal=[m.my_goals?`${m.my_goals} Goal${m.my_goals===1?'':'s'}`:'',m.my_assists?`${m.my_assists} Assist${m.my_assists===1?'':'s'}`:'',m.my_yellow_cards?'Yellow Card':'',m.my_red_cards?'Red Card':'',m.my_motm?'⭐ MOTM':''].filter(Boolean).join(' · ')||'No personal match events recorded';return `<div class="match"><div class="match-top"><div><h3>SKOR FC vs ${esc(opponent(m)||'Opponent')}</h3><div class="meta">${esc(dt(m.kickoff))}<br>${esc(m.location||'')}</div></div><div class="score">${m.skor_score}–${m.opponent_score}</div></div><div class="personal-line">${esc(personal)}</div><button class="btn ghost" type="button" data-feedback="${m.match_id}" style="margin-top:10px;min-height:38px">Open Match Feedback</button></div>`}).join('');
+  $('recentMatches').querySelectorAll('[data-feedback]').forEach(b=>b.addEventListener('click',()=>selectFeedbackMatch(b.dataset.feedback)));
+}
+async function selectFeedbackMatch(matchId){
+  feedbackMatchId=matchId;const m=recent.find(x=>x.match_id===matchId);$('feedbackTitle').textContent=m?`Feedback · ${opponent(m)}`:'Match Feedback';$('feedbackMatchPill').textContent=m?dt(m.kickoff):'Selected';
+  await Promise.all([loadComments(),loadReactions()]);$('feedbackSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function loadComments(){
+  if(!feedbackMatchId)return;const {data,error}=await db.rpc('get_player_match_comments',{p_match_id:feedbackMatchId});if(error){$('commentList').innerHTML=`<div class="sub">${esc(error.message)}</div>`;return;}const rows=data||[];
+  $('commentList').innerHTML=rows.length?rows.map(c=>`<div class="comment ${c.visibility}"><strong>#${c.jersey_number} ${esc(c.display_name)}</strong> · ${c.visibility==='captains'?'Captains Only':'Team'}<div>${esc(c.comment)}</div><small>${new Date(c.created_at).toLocaleString()}</small>${c.is_mine?`<button class="comment-action edit" data-edit-comment="${c.id}" data-edit-visibility="${c.visibility}" data-edit-text="${encodeURIComponent(c.comment)}" type="button">Edit my comment</button><button class="comment-action delete" data-delete-comment="${c.id}" type="button">Delete my comment</button>`:''}</div>`).join(''):'<div class="sub">No comments yet. You can start the discussion.</div>';
+  $('commentList').querySelectorAll('[data-edit-comment]').forEach(b=>b.addEventListener('click',()=>editComment(b.dataset.editComment,b.dataset.editVisibility,decodeURIComponent(b.dataset.editText||''))));
+  $('commentList').querySelectorAll('[data-delete-comment]').forEach(b=>b.addEventListener('click',()=>deleteComment(b.dataset.deleteComment)));
+}
+async function editComment(id,visibility,currentText){const next=prompt('Edit your comment:',currentText||'');if(next===null)return;const text=next.trim();if(!text)return alert('Comment cannot be empty.');const vis=confirm('OK = Team comment. Cancel = Captains Only.')?'team':'captains';const {error}=await db.rpc('update_my_match_comment',{p_comment_id:id,p_visibility:vis||visibility,p_comment:text});if(error)return alert(error.message);await loadComments();}
+async function deleteComment(id){if(!confirm('Delete this comment?'))return;const {error}=await db.rpc('delete_my_match_comment',{p_comment_id:id});if(error)return alert(error.message);await loadComments();}
+async function postComment(visibility){const input=visibility==='team'?$('teamComment'):$('captainComment');const text=input.value.trim();if(!feedbackMatchId)return status('commentStatus','Choose a recent match first.',true);if(!text)return status('commentStatus','Write a comment first.',true);const {error}=await db.rpc('add_my_match_comment',{p_match_id:feedbackMatchId,p_visibility:visibility,p_comment:text});if(error)return status('commentStatus',error.message,true);input.value='';status('commentStatus',visibility==='team'?'Posted to the team.':'Sent privately to captains.');await loadComments();}
+$('postTeamComment').addEventListener('click',()=>postComment('team'));$('postCaptainComment').addEventListener('click',()=>postComment('captains'));
+async function loadReactions(){
+  if(!feedbackMatchId)return;const [mine,sum]=await Promise.all([db.rpc('get_my_match_reaction',{p_match_id:feedbackMatchId}),db.rpc('get_match_reaction_summary',{p_match_id:feedbackMatchId})]);myReaction=(mine.data||[])[0]||{self_reaction:null,team_reaction:null};renderReactionButtons();const rows=sum.data||[],labels={great:'🔥 Great',good:'👍 Good',average:'😐 Average',rough:'👎 Rough'};const n=(scope,k)=>Number(rows.find(x=>x.reaction_scope===scope&&x.reaction===k)?.votes||0);$('reactionSummary').innerHTML=['great','good','average','rough'].map(k=>`<div class="summary-line"><span>${labels[k]}</span><span>Team ${n('team',k)} · Player experience ${n('self',k)}</span></div>`).join('');
+}
+function renderReactionButtons(){document.querySelectorAll('#selfReaction [data-reaction]').forEach(b=>b.classList.toggle('selected',b.dataset.reaction===myReaction.self_reaction));document.querySelectorAll('#teamReaction [data-reaction]').forEach(b=>b.classList.toggle('selected',b.dataset.reaction===myReaction.team_reaction));}
+async function saveReaction(kind,value){if(!feedbackMatchId)return status('reactionStatus','Choose a recent match first.',true);myReaction[kind]=value;renderReactionButtons();const {error}=await db.rpc('save_my_match_reaction',{p_match_id:feedbackMatchId,p_self_reaction:myReaction.self_reaction,p_team_reaction:myReaction.team_reaction});if(error)return status('reactionStatus',error.message,true);status('reactionStatus','Reaction saved.');await loadReactions();}
+document.querySelectorAll('#selfReaction [data-reaction]').forEach(b=>b.addEventListener('click',()=>saveReaction('self_reaction',b.dataset.reaction)));document.querySelectorAll('#teamReaction [data-reaction]').forEach(b=>b.addEventListener('click',()=>saveReaction('team_reaction',b.dataset.reaction)));
+
+$('editProfileBtn').addEventListener('click',()=>{$('editProfileCard').classList.remove('hidden');$('editProfileCard').scrollIntoView({behavior:'smooth'});});$('cancelProfileEdit').addEventListener('click',()=>$('editProfileCard').classList.add('hidden'));
+$('saveProfileBtn').addEventListener('click',async()=>{const preferred=$('editPreferredName').value.trim(),bio=$('editBio').value.trim();status('profileStatus','Saving…');const {error}=await db.rpc('update_my_player_profile',{p_preferred_name:preferred||null,p_bio:bio||null});if(error)return status('profileStatus',error.message,true);status('profileStatus','Profile updated.');const p=await db.rpc('get_my_player_profile');profile=(p.data||[])[0]||profile;renderProfile();});
+init();
+</script>
+</body>
+</html>
