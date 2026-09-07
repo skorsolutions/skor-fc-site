@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v50.3-clean-url-multi-role-compatible">
+<meta name="skor-build" content="player-portal-v50.3.2-stable-auth-flow">
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <style>
@@ -22,7 +22,16 @@
 <header class="top"><div class="wrap topin"><img src="assets/skor fc logo transparent.png" alt="SKOR FC"><div class="brand">SKOR FC PLAYER PORTAL</div><div class="spacer"></div><div class="top-name" id="topName"></div><button class="hidden" id="logoutBtn" type="button">Log out</button></div></header>
 
 <main class="wrap">
-<section class="screen active" id="loginScreen">
+<section class="screen active" id="authLoadingScreen">
+  <div class="card auth-card">
+    <img class="loginlogo" src="assets/skor fc logo transparent.png" alt="SKOR FC crest">
+    <div class="eyebrow">SKOR FC Player Portal</div>
+    <h1 class="title">Opening your portal…</h1>
+    <p class="sub" id="authLoadingMessage">Checking your secure sign-in and player access.</p>
+  </div>
+</section>
+
+<section class="screen" id="loginScreen">
   <div class="card auth-card">
     <img class="loginlogo" src="assets/skor fc logo transparent.png" alt="SKOR FC crest">
     <div class="eyebrow">Your SKOR FC</div>
@@ -134,25 +143,88 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
 let user=null,profile=null,stats=null,upcoming=[],recent=[],feedbackMatchId=null,myReaction={self_reaction:null,team_reaction:null};
+let authInFlight=false,portalAuthorized=false;
 function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');}
 function status(id,msg,error=false){const el=$(id);if(!el)return;el.textContent=msg||'';el.classList.toggle('error',!!error)}
 function dt(v){if(!v)return'';return new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(v));}
 function playerInitial(){return (profile?.display_name||profile?.full_name||'P').trim()[0]?.toUpperCase()||'P';}
-async function init(){const {data}=await db.auth.getSession();user=data.session?.user||null;if(!user)return show('loginScreen');await authorizePlayer();}
-async function authorizePlayer(){
-  user=(await db.auth.getUser()).data.user;
-  if(!user)return show('loginScreen');
-  const {data,error}=await db.rpc('claim_player_portal');
-  if(error){$('deniedMessage').textContent=error.message||'This login is not authorized for a SKOR player profile.';$('logoutBtn').classList.remove('hidden');return show('deniedScreen');}
-  $('logoutBtn').classList.remove('hidden');
-  await loadPortal();show('portalScreen');
+function showAuthLoading(msg='Checking your secure sign-in and player access.'){
+  $('authLoadingMessage').textContent=msg;
+  show('authLoadingScreen');
 }
-$('googleBtn').addEventListener('click',async()=>{status('loginStatus','Opening Google…');const {error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:`${location.origin}/player-portal.html`}});if(error)status('loginStatus',error.message,true);});
+async function init(){
+  showAuthLoading();
+  const {data,error}=await db.auth.getSession();
+  if(error){status('loginStatus',error.message,true);return show('loginScreen');}
+  const session=data.session||null;
+  user=session?.user||null;
+  if(!user)return show('loginScreen');
+  await authorizePlayer(session);
+}
+async function authorizePlayer(session=null){
+  if(authInFlight||portalAuthorized)return;
+  authInFlight=true;
+  showAuthLoading('Opening your SKOR player profile…');
+  try{
+    if(!session){
+      const result=await db.auth.getSession();
+      if(result.error)throw result.error;
+      session=result.data.session||null;
+    }
+    user=session?.user||null;
+    if(!user){show('loginScreen');return;}
+
+    const {error}=await db.rpc('claim_player_portal');
+    if(error){
+      $('deniedMessage').textContent=error.message||'This login is not authorized for a SKOR player profile.';
+      $('logoutBtn').classList.remove('hidden');
+      show('deniedScreen');
+      return;
+    }
+
+    portalAuthorized=true;
+    $('logoutBtn').classList.remove('hidden');
+    showAuthLoading('Loading your SKOR stats, schedule and match activity…');
+    await loadPortal();
+    show('portalScreen');
+  }catch(err){
+    console.error('Player Portal authorization/load error',err);
+    $('deniedMessage').textContent=err?.message||'The Player Portal could not finish loading. Please try again.';
+    $('logoutBtn').classList.remove('hidden');
+    show('deniedScreen');
+  }finally{
+    authInFlight=false;
+  }
+}
+$('googleBtn').addEventListener('click',async()=>{
+  const btn=$('googleBtn');
+  if(btn.disabled)return;
+  btn.disabled=true;
+  btn.textContent='Opening Google…';
+  status('loginStatus','Opening Google…');
+  const {error}=await db.auth.signInWithOAuth({provider:'google',options:{redirectTo:`${location.origin}/player-portal.html`}});
+  if(error){
+    btn.disabled=false;
+    btn.textContent='Continue with Google';
+    status('loginStatus',error.message,true);
+  }
+});
 $('emailLoginBtn').addEventListener('click',async()=>{const email=$('playerEmail').value.trim().toLowerCase();if(!email)return status('loginStatus','Enter your email address.',true);sessionStorage.setItem('skorPlayerAuthEmail',email);status('loginStatus','Sending secure sign-in email…');const {error}=await db.auth.signInWithOtp({email,options:{emailRedirectTo:`${location.origin}/player-portal.html`,shouldCreateUser:true}});if(error)return status('loginStatus',error.message,true);$('emailCodeRow').classList.remove('hidden');status('loginStatus','Check your email. Use the secure link, or enter the one-time code here if your message contains a code.');});
 $('verifyEmailCodeBtn').addEventListener('click',async()=>{const email=($('playerEmail').value.trim().toLowerCase()||sessionStorage.getItem('skorPlayerAuthEmail')||'');const token=$('playerEmailCode').value.trim();if(!email||!token)return status('loginStatus','Enter the email address and one-time code.',true);status('loginStatus','Verifying…');const {error}=await db.auth.verifyOtp({email,token,type:'email'});if(error)status('loginStatus',error.message,true);});
-async function logout(){await db.auth.signOut();sessionStorage.removeItem('skorPlayerAuthEmail');location.href='player-portal.html';}
+async function logout(){portalAuthorized=false;user=null;await db.auth.signOut();sessionStorage.removeItem('skorPlayerAuthEmail');location.href='player-portal.html';}
 $('logoutBtn').addEventListener('click',logout);$('deniedLogoutBtn').addEventListener('click',logout);
-db.auth.onAuthStateChange((_e,s)=>{if(s?.user&&!user)setTimeout(authorizePlayer,0)});
+db.auth.onAuthStateChange((event,s)=>{
+  if(event==='SIGNED_OUT'){
+    user=null;
+    portalAuthorized=false;
+    if(!authInFlight)show('loginScreen');
+    return;
+  }
+  if(s?.user&&!portalAuthorized){
+    user=s.user;
+    setTimeout(()=>authorizePlayer(s),0);
+  }
+});
 
 async function loadPortal(){
   const [p,st,up,rec]=await Promise.all([
