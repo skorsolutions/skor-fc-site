@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v50.2-multi-role-superadmin-production" />
-  <title>SKOR FC Admin | Multi-Role + Super Admin v50.2</title>
+  <meta name="skor-build" content="lineup-admin-v50.4-match-temp-fillin-players" />
+  <title>SKOR FC Admin | Match Fill-ins v50.4</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -248,6 +248,26 @@
     .sub-row{display:grid;grid-template-columns:70px 1fr 22px 1fr auto;gap:6px;align-items:center}
     .sub-row select{padding:7px 8px;font-size:.78rem}.sub-minute{font-size:.74rem;font-weight:900;color:var(--muted)}
     .lineup-status{font-size:.8rem;color:var(--muted);min-height:20px}.lineup-status.ok{color:#2d6759}.lineup-status.err{color:#8b1e3f}
+
+    /* v50.4 — match-specific TEMP / fill-in players */
+    .temp-player-manager{margin:12px 0 10px;padding:11px;border:1px solid #e0d9dc;border-radius:12px;background:#fbf8f9}
+    .temp-player-manager h4{margin:0 0 3px;font-size:.82rem}
+    .temp-player-manager .temp-help{font-size:.7rem;line-height:1.35;color:var(--muted);margin-bottom:8px}
+    .temp-player-form{display:grid;grid-template-columns:minmax(0,1.25fr) 82px auto;gap:6px;align-items:end}
+    .temp-player-form input{min-height:36px;padding:7px 8px;font-size:.78rem}
+    .temp-player-form .mini-btn{min-height:36px}
+    .temp-player-list{display:grid;gap:5px;margin-top:8px}
+    .temp-player-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;border-top:1px solid #eadfe3;padding-top:6px;font-size:.74rem}
+    .temp-player-row:first-child{border-top:0}
+    .temp-player-row strong{display:flex;align-items:center;gap:5px;min-width:0}
+    .temp-player-actions{display:flex;gap:4px}
+    .temp-pill{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;background:#7a1830;color:#fff;font-size:.56rem;font-weight:950;letter-spacing:.07em}
+    .temp-context{font-size:.68rem;color:var(--muted);margin-top:6px}
+    .player-card.temp-player-card{border-style:dashed;background:#fff9fb}
+    .player-card.temp-player-card .peg-name:after{content:" TEMP";font-size:.5rem;color:var(--maroon);font-weight:950}
+    .jersey.temp-number{font-size:.68rem!important;letter-spacing:-.03em}
+    .bench-player.temp-player,.depth-chip.temp-player,.sub-player-chip.temp-player{border-style:dashed}
+    @media(max-width:720px){.temp-player-form{grid-template-columns:1fr 72px}.temp-player-form .mini-btn{grid-column:1/-1}}
     @media(max-width:1120px){.lineup-workspace{grid-template-columns:1fr}.soccer-pitch{max-height:680px}.lineup-toolbar{grid-template-columns:1fr 1fr}.player-pool{grid-template-columns:repeat(5,1fr)}}
     @media(max-width:720px){.lineup-toolbar{grid-template-columns:1fr}.player-pool{grid-template-columns:repeat(3,1fr)}.formation-slot{width:68px;min-height:66px}.jersey{width:44px;height:40px}.player-peg{width:64px}.peg-name{font-size:.64rem}.sub-row{grid-template-columns:58px 1fr 18px 1fr auto}}
 
@@ -971,7 +991,7 @@
     body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete{display:none!important}
     body.viewer-mode #gameday #statusControls,body.viewer-mode #gameday .event-buttons,body.viewer-mode #gameday #eventEditor,body.viewer-mode #gameday #saveMotmBtn,body.viewer-mode #gameday #clearMotmBtn{display:none!important}
     body.viewer-mode #gameday #motmPlayer,body.viewer-mode #gameday #motmReason,body.viewer-mode #gameday #motmManualName,body.viewer-mode #gameday #motmManualNumber,body.viewer-mode #gameday #motmMatchNumber{pointer-events:none;opacity:.72}
-    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove{display:none!important}
+    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
     body.viewer-mode #lineups .player-pool,body.viewer-mode #lineups .soccer-pitch,body.viewer-mode #lineups .bench-zone,body.viewer-mode #lineups .depth-grid,body.viewer-mode #lineups .sub-plan{pointer-events:none}
     body.viewer-mode #lineups .player-card,body.viewer-mode #lineups .depth-chip,body.viewer-mode #lineups .sub-player-chip{cursor:default!important}
     @media(max-width:650px){.portal-role-badge{order:3}.viewer-banner{align-items:flex-start;flex-direction:column}}
@@ -1734,7 +1754,20 @@ body.viewer-mode .player-engagement-panel{display:none!important}
 
           <div class="lineup-side">
             <div class="mini-panel lineup-players-panel">
-              <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. In Freeform / Custom, drag or tap to place players anywhere. Phone: tap a player, then tap a position or the pitch.</div><div class="v19-help">All active roster players sync from Supabase. Add a player in Roster and they will appear here automatically.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Substitutes to move the selected player there.</div>
+              <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. In Freeform / Custom, drag or tap to place players anywhere. Phone: tap a player, then tap a position or the pitch.</div><div class="v19-help">Permanent players sync from the shared roster. Match-specific fill-ins can be added below without creating a Player Portal account.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Substitutes to move the selected player there.</div>
+              <div class="temp-player-manager" id="tempPlayerManager">
+                <h4>Match Fill-ins / TEMP Players</h4>
+                <div class="temp-help">For one-game fill-ins. Name is required; jersey number is optional until you know which spare shirt fits. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
+                <div class="temp-player-form">
+                  <div><label for="tempPlayerName">Name</label><input id="tempPlayerName" maxlength="80" placeholder="Fill-in player name"></div>
+                  <div><label for="tempPlayerJersey">Jersey #</label><input id="tempPlayerJersey" type="number" min="1" max="99" inputmode="numeric" placeholder="TEMP"></div>
+                  <button class="mini-btn" id="saveTempPlayerBtn" type="button">Add TEMP</button>
+                </div>
+                <input id="tempPlayerEditId" type="hidden">
+                <button class="mini-btn" id="cancelTempPlayerEditBtn" type="button" style="display:none;margin-top:6px">Cancel edit</button>
+                <div class="temp-context" id="tempPlayerContext">Select a scheduled match to manage fill-ins.</div>
+                <div class="temp-player-list" id="tempPlayerList"></div>
+              </div>
               <div class="player-pool" id="lineupPlayerPool"><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="2-Ivan" aria-label="#2 Ivan"><div class="player-peg compact"><div class="jersey">2</div><div class="peg-name">Ivan</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="9-Andres" aria-label="#9 Andres"><div class="player-peg compact"><div class="jersey">9</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="17-David" aria-label="#17 Joshua"><div class="player-peg compact"><div class="jersey">17</div><div class="peg-name">Joshua</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="18-Jason" aria-label="#18 Jason"><div class="player-peg compact"><div class="jersey">18</div><div class="peg-name">Jason</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="20-Ayman" aria-label="#20 Ayman"><div class="player-peg compact"><div class="jersey">20</div><div class="peg-name">Ayman</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="6-Julio" aria-label="#6 Julio"><div class="player-peg compact"><div class="jersey">6</div><div class="peg-name">Julio</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="7-Tom" aria-label="#7 Tom"><div class="player-peg compact"><div class="jersey">7</div><div class="peg-name">Tom</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="14-Pedro" aria-label="#14 Pedro"><div class="player-peg compact"><div class="jersey">14</div><div class="peg-name">Pedro</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="16-CJ" aria-label="#16 CJ"><div class="player-peg compact"><div class="jersey">16</div><div class="peg-name">CJ</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="19-Dez" aria-label="#19 Dez"><div class="player-peg compact"><div class="jersey">19</div><div class="peg-name">Dez</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="8-Adolpho" aria-label="#8 Adolpho"><div class="player-peg compact"><div class="jersey">8</div><div class="peg-name">Adolpho</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="22-Vignesh" aria-label="#22 Vignesh"><div class="player-peg compact"><div class="jersey">22</div><div class="peg-name">Vignesh</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="11-Edward" aria-label="#11 Eddy"><div class="player-peg compact"><div class="jersey">11</div><div class="peg-name">Eddy</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="1-Todd" aria-label="#1 Todd"><div class="player-peg compact"><div class="jersey">1</div><div class="peg-name">Todd</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="3-Brad" aria-label="#3 Brad"><div class="player-peg compact"><div class="jersey">3</div><div class="peg-name">Brad</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="21-Andres" aria-label="#21 Andres"><div class="player-peg compact"><div class="jersey">21</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="12-Koushyar" aria-label="#12 Koushyar"><div class="player-peg compact"><div class="jersey">12</div><div class="peg-name">Koushyar</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="15-Andrew" aria-label="#15 Andrew"><div class="player-peg compact"><div class="jersey">15</div><div class="peg-name">Andrew</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="4-Nick" aria-label="#4 Nick"><div class="player-peg compact"><div class="jersey">4</div><div class="peg-name">Nick</div></div></button></div>
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
             </div>
@@ -1856,6 +1889,8 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     {player_key:"11-Edward",number:11,name:"Eddy"},{player_key:"1-Todd",number:1,name:"Todd"},{player_key:"3-Brad",number:3,name:"Brad"},{player_key:"21-Andres",number:21,name:"Andres"},
     {player_key:"12-Koushyar",number:12,name:"Koushyar"},{player_key:"15-Andrew",number:15,name:"Andrew"},{player_key:"4-Nick",number:4,name:"Nick"}
   ];
+  let permanentRoster = roster.slice();
+  let matchTempPlayers = [];
 
   const formations = {
     "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
@@ -1948,6 +1983,24 @@ body.viewer-mode .player-engagement-panel{display:none!important}
 
   function id(p){ return p.player_key || p.id || (p.number+"-"+p.name); }
   function player(pid){ return roster.find(p=>id(p)===pid); }
+  function selectableRoster(){ return roster.filter(p=>!p.archived); }
+  function jerseyLabel(p){ return p?.temp ? (Number.isInteger(Number(p.number))&&Number(p.number)>0?String(Number(p.number)):"TEMP") : String(p?.number??""); }
+  function playerListLabel(p,short=false){
+    if(!p)return "Unknown";
+    const name=short?shortName(p.name):p.name;
+    const num=jerseyLabel(p);
+    if(p.temp)return num==="TEMP" ? "TEMP "+name : "#"+num+" "+name+" · TEMP";
+    return "#"+num+" "+name;
+  }
+  function rebuildCombinedRoster(){
+    roster=[...permanentRoster,...matchTempPlayers].sort((a,b)=>{
+      if(!!a.temp!==!!b.temp)return a.temp?1:-1;
+      const an=Number(a.number),bn=Number(b.number);
+      if(Number.isFinite(an)&&Number.isFinite(bn)&&an!==bn)return an-bn;
+      if(Number.isFinite(an)!==Number.isFinite(bn))return Number.isFinite(an)?-1:1;
+      return String(a.name||"").localeCompare(String(b.name||""));
+    });
+  }
   function esc(v){ return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s])); }
   function clone(v){ return JSON.parse(JSON.stringify(v)); }
   function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
@@ -1980,8 +2033,9 @@ body.viewer-mode .player-engagement-panel{display:none!important}
   function peg(p,compact,onPitch=false){
     const pitchAttr = onPitch ? ' data-pitch-peg="1"' : '';
     const captain = onPitch && state.captainId===id(p) ? '<span class="captain-badge" title="Captain">C</span>' : '';
+    const number=jerseyLabel(p);
     return '<div class="player-peg'+(compact?' compact':'')+' '+modeClass()+'" draggable="true" data-v28-player="'+esc(id(p))+'"'+pitchAttr+'>'+
-      '<div class="jersey">'+esc(p.number)+'</div>'+captain+'<div class="peg-name">'+esc(p.name)+'</div></div>';
+      '<div class="jersey'+(p.temp&&number==="TEMP"?' temp-number':'')+'">'+esc(number)+'</div>'+captain+'<div class="peg-name">'+esc(p.name)+'</div></div>';
   }
   function markStatus(msg,ok=true){
     const el=document.getElementById("lineupStatus");
@@ -1992,7 +2046,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     if(!sel)return;
     const current=state.captainId||"";
     sel.innerHTML='<option value="">Select captain…</option>'+
-      roster.map(p=>'<option value="'+esc(id(p))+'">#'+p.number+' '+esc(p.name)+'</option>').join("");
+      permanentRoster.filter(p=>!p.archived).map(p=>'<option value="'+esc(id(p))+'">'+esc(playerListLabel(p))+'</option>').join("");
     if([...sel.options].some(o=>o.value===current))sel.value=current;
     else sel.value="";
   }
@@ -2049,7 +2103,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
   function prettyPlayer(pid, short=false){
     const p=player(pid);
     if(!p)return String(pid||"Unknown");
-    return short?("#"+p.number+" "+shortName(p.name)):("#"+p.number+" "+p.name);
+    return playerListLabel(p,short);
   }
   function prettyPlayers(values, short=false){
     const ids=Array.isArray(values)?values.filter(Boolean):[];
@@ -2120,7 +2174,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     const secondHalfSubs=filledSecondHalfSubs();
     const substituteCount=(state.bench||[]).length;
     const captain=player(state.captainId);
-    const captainText=captain?("#"+captain.number+" "+captain.name):"Not selected";
+    const captainText=captain?playerListLabel(captain):"Not selected";
     const pitchX=70,pitchY=212,pitchW=940,pitchH=790;
     const showNames=(state.labelMode||"names")!=="numbers";
     const hasFieldPlayers=starters.length>0;
@@ -2140,7 +2194,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       const names=(state?.depth?.[pos.key]||[])
         .map(pid=>player(pid))
         .filter(Boolean)
-        .map(p=>"#"+p.number+" "+shortName(p.name));
+        .map(p=>playerListLabel(p,true));
       return {key:pos.key, names};
     }).filter(row=>row.names.length);
 
@@ -2187,9 +2241,9 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       return `
         ${role}
         <circle cx="${x}" cy="${y}" r="44" fill="#801A3D" stroke="#ffffff" stroke-width="5"/>
-        <text x="${x}" y="${y+13}" text-anchor="middle" font-size="37" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(p.number)}</text>
+        <text x="${x}" y="${y+13}" text-anchor="middle" font-size="${p.temp&&jerseyLabel(p)==='TEMP'?22:37}" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
         ${captainBadge}
-        ${name}
+        ${name}${p.temp?`<text x="${x}" y="${y+79}" text-anchor="middle" font-size="13" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">TEMP</text>`:""}
       `;
     }).join("");
 
@@ -2415,11 +2469,12 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     const pool=document.getElementById("lineupPlayerPool");
     if(!pool)return;
     const count=document.querySelector("#lineups .v19-lineup-count");
-    if(count)count.textContent=roster.length;
+    const choices=selectableRoster();
+    if(count)count.textContent=choices.length;
     const used=new Set([...allFieldPlayerIds(), ...state.bench]);
-    pool.innerHTML=roster.map(p=>{
+    pool.innerHTML=choices.map(p=>{
       const pid=id(p),active=selectedPlayer===pid;
-      return '<button type="button" class="player-card v19-card'+(used.has(pid)?' on-field':'')+(active?' v19-selected':'')+'" data-v28-select="'+esc(pid)+'">'+peg(p,true,false)+'</button>';
+      return '<button type="button" class="player-card v19-card'+(p.temp?' temp-player-card':'')+(used.has(pid)?' on-field':'')+(active?' v19-selected':'')+'" data-v28-select="'+esc(pid)+'">'+peg(p,true,false)+'</button>';
     }).join('');
     pool.querySelectorAll('[data-v28-select]').forEach(btn=>btn.addEventListener('click',()=>{
       selectedPlayer=btn.dataset.v28Select;
@@ -2433,7 +2488,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     if(!list)return;
     list.innerHTML=state.bench.length?state.bench.map(pid=>{
       const p=player(pid);
-      return p?'<div class="bench-player" draggable="true" data-v28-player="'+esc(pid)+'">#'+p.number+' '+esc(p.name)+'</div>':'';
+      return p?'<div class="bench-player'+(p.temp?' temp-player':'')+'" draggable="true" data-v28-player="'+esc(pid)+'">'+esc(playerListLabel(p))+'</div>':'';
     }).join(''):'<span style="font-size:.8rem;color:var(--muted)">No substitutes listed yet.</span>';
   }
 
@@ -2476,7 +2531,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
   function depthOptions(selectedIds){
     const selected=new Set(selectedIds||[]);
     return '<option value="">+ Add player to this position</option>'+
-      roster.filter(p=>!selected.has(id(p))).map(p=>'<option value="'+esc(id(p))+'">#'+p.number+' '+esc(p.name)+'</option>').join('');
+      selectableRoster().filter(p=>!selected.has(id(p))).map(p=>'<option value="'+esc(id(p))+'">'+esc(playerListLabel(p))+'</option>').join('');
   }
   function renderDepth(){
     const grid=document.getElementById('lineupDepthGrid'); if(!grid)return;
@@ -2485,8 +2540,8 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       const members=state.depth[pos.key];
       const chips=members.length?members.map((pid,index)=>{
         const p=player(pid); if(!p) return '';
-        return '<button type="button" class="depth-chip selected" data-depth-remove="'+esc(pos.key)+'" data-depth-player="'+esc(pid)+'">'+
-          '<span class="depth-rank">'+(index+1)+'.</span> #'+p.number+' '+esc(p.name)+' <span class="depth-remove">×</span></button>';
+        return '<button type="button" class="depth-chip selected'+(p.temp?' temp-player':'')+'" data-depth-remove="'+esc(pos.key)+'" data-depth-player="'+esc(pid)+'">'+
+          '<span class="depth-rank">'+(index+1)+'.</span> '+esc(playerListLabel(p))+' <span class="depth-remove">×</span></button>';
       }).join(''):'<span class="depth-empty">No players assigned</span>';
       return '<div class="depth-row"><div class="depth-pos">'+esc(pos.key)+'<span>'+esc(pos.label)+'</span></div>'+
         '<div class="depth-lane"><div class="depth-selected">'+chips+'</div>'+
@@ -2518,9 +2573,9 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     return '<div class="sub-chip-side">'+
       '<div class="sub-chip-side-head"><span class="sub-chip-side-title">'+(side==="out"?"Players Out":"Players In")+'</span><span class="sub-chip-count">'+selected.size+'</span></div>'+
       '<div class="sub-chip-list">'+
-        roster.map(p=>{
+        selectableRoster().map(p=>{
           const pid=id(p),active=selected.has(pid);
-          return '<button type="button" class="sub-player-chip '+side+(active?' selected':'')+'" aria-pressed="'+(active?'true':'false')+'" data-sub-chip="1" data-sub-side="'+side+'" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" data-sub-player="'+esc(pid)+'">#'+p.number+' '+esc(p.name)+'</button>';
+          return '<button type="button" class="sub-player-chip '+side+(p.temp?' temp-player':'')+(active?' selected':'')+'" aria-pressed="'+(active?'true':'false')+'" data-sub-chip="1" data-sub-side="'+side+'" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" data-sub-player="'+esc(pid)+'">'+esc(playerListLabel(p))+'</button>';
         }).join('')+
       '</div>'+
       '<div class="sub-multi-help">'+(side==="out"?"Tap everyone leaving in this change.":"Tap everyone entering in this change.")+'</div>'+
@@ -2662,15 +2717,94 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       .map(r=>({
         player_key:String(r.player_key || r.id || (r.jersey_number+"-"+r.full_name)),
         number:Number(r.jersey_number),
-        name:String(r.preferred_name||r.display_name||String(r.full_name||"Player").trim().split(/\s+/)[0])
+        name:String(r.preferred_name||r.display_name||String(r.full_name||"Player").trim().split(/\s+/)[0]),
+        temp:false,
+        archived:false
       }))
       .filter(p=>Number.isFinite(p.number) && p.name)
       .sort((a,b)=>a.number-b.number || a.name.localeCompare(b.name));
     if(!next.length)return;
-    roster=next;
+    permanentRoster=next;
+    rebuildCombinedRoster();
     renderCaptainOptions();
     renderAll();
-    markStatus("Roster synced from Supabase — "+roster.length+" active players available.");
+    renderTempPlayerManager();
+    markStatus("Roster synced from Supabase — "+permanentRoster.length+" permanent players available.");
+  }
+
+  function selectedRealMatchId(){
+    const value=selectedEventValue();
+    return value && value!=="tinker" && !value.startsWith("variation:") ? value : null;
+  }
+  function tempPlayerFromRow(r){
+    return {
+      player_key:"temp:"+String(r.id),
+      id:"temp:"+String(r.id),
+      temp_id:String(r.id),
+      number:r.jersey_number===null||r.jersey_number===undefined?null:Number(r.jersey_number),
+      name:String(r.display_name||"Fill-in"),
+      temp:true,
+      archived:r.active===false
+    };
+  }
+  function removePlayerEverywhere(pid){
+    removeFromField(pid);
+    state.bench=(state.bench||[]).filter(x=>x!==pid);
+    Object.keys(state.depth||{}).forEach(k=>{state.depth[k]=(state.depth[k]||[]).filter(x=>x!==pid);});
+    state.subs=normalizeSubs(state.subs);
+    ["firstHalf","secondHalf"].forEach(phase=>{
+      state.subs[phase].forEach(row=>{
+        row.out=(row.out||[]).filter(x=>x!==pid);
+        row.in=(row.in||[]).filter(x=>x!==pid);
+      });
+    });
+    if(state.captainId===pid)state.captainId="";
+  }
+  function resetTempPlayerForm(){
+    const idEl=document.getElementById("tempPlayerEditId"),nameEl=document.getElementById("tempPlayerName"),jerseyEl=document.getElementById("tempPlayerJersey"),save=document.getElementById("saveTempPlayerBtn"),cancel=document.getElementById("cancelTempPlayerEditBtn");
+    if(idEl)idEl.value="";if(nameEl)nameEl.value="";if(jerseyEl)jerseyEl.value="";
+    if(save)save.textContent="Add TEMP";if(cancel)cancel.style.display="none";
+  }
+  function renderTempPlayerManager(){
+    const list=document.getElementById("tempPlayerList"),context=document.getElementById("tempPlayerContext"),name=document.getElementById("tempPlayerName"),jersey=document.getElementById("tempPlayerJersey"),save=document.getElementById("saveTempPlayerBtn");
+    if(!list||!context)return;
+    const matchId=selectedRealMatchId(),canWrite=!!window.SKORPortalCanWrite?.();
+    if(!matchId){
+      context.textContent="Select a scheduled match to add or edit fill-ins.";list.innerHTML="";
+      if(name)name.disabled=true;if(jersey)jersey.disabled=true;if(save)save.disabled=true;
+      resetTempPlayerForm();return;
+    }
+    if(name)name.disabled=!canWrite;if(jersey)jersey.disabled=!canWrite;if(save)save.disabled=!canWrite;
+    const active=matchTempPlayers.filter(p=>!p.archived);
+    context.textContent=active.length?active.length+" match fill-in"+(active.length===1?"":"s")+" available for this game.":"No fill-ins added for this match yet. Jersey number can stay blank until game day.";
+    list.innerHTML=active.length?active.map(p=>
+      '<div class="temp-player-row"><strong><span class="temp-pill">TEMP</span> '+esc(p.name)+' · '+esc(jerseyLabel(p)==="TEMP"?"Jersey TBD":"#"+jerseyLabel(p))+'</strong>'+
+      '<div class="temp-player-actions">'+(canWrite?'<button class="mini-btn" type="button" data-temp-edit="'+esc(p.temp_id)+'">Edit</button><button class="mini-btn" type="button" data-temp-remove="'+esc(p.temp_id)+'">Remove</button>':'')+'</div></div>'
+    ).join(""):'';
+    list.querySelectorAll("[data-temp-edit]").forEach(btn=>btn.addEventListener("click",()=>{
+      const p=matchTempPlayers.find(x=>x.temp_id===btn.dataset.tempEdit);if(!p)return;
+      document.getElementById("tempPlayerEditId").value=p.temp_id;document.getElementById("tempPlayerName").value=p.name;document.getElementById("tempPlayerJersey").value=jerseyLabel(p)==="TEMP"?"":jerseyLabel(p);
+      document.getElementById("saveTempPlayerBtn").textContent="Update TEMP";document.getElementById("cancelTempPlayerEditBtn").style.display="inline-block";
+    }));
+    list.querySelectorAll("[data-temp-remove]").forEach(btn=>btn.addEventListener("click",async()=>{
+      if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("remove match fill-ins");return;}
+      const p=matchTempPlayers.find(x=>x.temp_id===btn.dataset.tempRemove);if(!p)return;
+      if(!confirm("Remove "+p.name+" from this match's fill-ins? Existing saved variations keep the identity for history, but the player will no longer be selectable for new plans."))return;
+      const sb=sbClient();if(!sb)return;
+      const {error}=await sb.from("match_temp_players").update({active:false,updated_at:new Date().toISOString()}).eq("id",p.temp_id);
+      if(error){markStatus("Could not remove TEMP player: "+error.message,false);return;}
+      removePlayerEverywhere("temp:"+p.temp_id);persistDraft();resetTempPlayerForm();await refreshTempPlayers(false);markStatus(p.name+" removed from selectable match fill-ins.");
+    }));
+  }
+  async function refreshTempPlayers(showMessage=false){
+    const matchId=selectedRealMatchId();
+    if(!matchId){matchTempPlayers=[];rebuildCombinedRoster();renderTempPlayerManager();renderAll();return;}
+    const sb=sbClient();
+    if(!sb){matchTempPlayers=[];rebuildCombinedRoster();renderTempPlayerManager();renderAll();return;}
+    const {data,error}=await sb.from("match_temp_players").select("id,match_id,display_name,jersey_number,active,created_at,updated_at").eq("match_id",matchId).order("active",{ascending:false}).order("display_name",{ascending:true});
+    if(error){matchTempPlayers=[];rebuildCombinedRoster();renderTempPlayerManager();renderAll();if(showMessage)markStatus("Match fill-ins unavailable: "+error.message,false);return;}
+    matchTempPlayers=(data||[]).map(tempPlayerFromRow);rebuildCombinedRoster();renderTempPlayerManager();renderAll();window.SKORGameDayTempPlayersChanged?.(matchId);
+    if(showMessage)markStatus(matchTempPlayers.filter(p=>!p.archived).length+" match fill-in(s) loaded.");
   }
 
   function setEvents(matches, authoritative=false){
@@ -2750,9 +2884,31 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     persistDraft();
   });
 
+  const saveTempPlayerBtn=document.getElementById("saveTempPlayerBtn");
+  const cancelTempPlayerEditBtn=document.getElementById("cancelTempPlayerEditBtn");
+  if(cancelTempPlayerEditBtn)cancelTempPlayerEditBtn.addEventListener("click",resetTempPlayerForm);
+  if(saveTempPlayerBtn)saveTempPlayerBtn.addEventListener("click",async()=>{
+    if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("manage match fill-ins");return;}
+    const matchId=selectedRealMatchId();if(!matchId){markStatus("Select a scheduled match before adding a TEMP player.",false);return;}
+    const sb=sbClient();if(!sb){markStatus("Supabase is not connected.",false);return;}
+    const name=(document.getElementById("tempPlayerName").value||"").trim(),raw=(document.getElementById("tempPlayerJersey").value||"").trim(),jersey=raw===""?null:Number(raw),editId=(document.getElementById("tempPlayerEditId").value||"").trim();
+    if(!name){markStatus("Enter the fill-in player's name.",false);return;}
+    if(jersey!==null&&(!Number.isInteger(jersey)||jersey<1||jersey>99)){markStatus("TEMP jersey number must be 1–99 or left blank.",false);return;}
+    saveTempPlayerBtn.disabled=true;saveTempPlayerBtn.textContent="Saving…";
+    try{
+      let result;
+      if(editId)result=await sb.from("match_temp_players").update({display_name:name,jersey_number:jersey,active:true,updated_at:new Date().toISOString()}).eq("id",editId).eq("match_id",matchId);
+      else{const {data:{user}}=await sb.auth.getUser();result=await sb.from("match_temp_players").insert({match_id:matchId,display_name:name,jersey_number:jersey,active:true,created_by:user?.id||null});}
+      if(result.error)throw result.error;
+      resetTempPlayerForm();await refreshTempPlayers(false);markStatus(name+" saved as a match TEMP player"+(jersey?" wearing #"+jersey:" with jersey TBD")+".");
+    }catch(err){const msg=String(err?.message||err);markStatus(msg.toLowerCase().includes("duplicate")?"That active TEMP name or jersey number is already in use for this match.":"Could not save TEMP player: "+msg,false);}
+    finally{saveTempPlayerBtn.disabled=false;if(document.getElementById("tempPlayerEditId").value==="")saveTempPlayerBtn.textContent="Add TEMP";}
+  });
+
   if(eventSel) eventSel.addEventListener('change', async()=>{
     const selected=selectedEventValue();
     if(selected.startsWith('variation:')){
+      await refreshTempPlayers(false);
       const variationId=selected.slice('variation:'.length);
       let rec=sharedTinkerVariations.find(v=>String(v.id)===variationId);
       if(!rec){ await refreshTinkerVariations(); rec=sharedTinkerVariations.find(v=>String(v.id)===variationId); }
@@ -2761,6 +2917,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       renderVariations();
       return;
     }
+    await refreshTempPlayers(false);
     loadDraft(); selectedPlayer=null; sharedVariations=[]; renderAll();
     await refreshVariations(true);
   });
@@ -2822,13 +2979,14 @@ body.viewer-mode .player-engagement-panel{display:none!important}
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v33 ready. Planned substitutions now support unlimited grouped first-half and second-half sequences.');
+  markStatus('Lineup Builder v50.4 ready. Select a match to add TEMP fill-ins for the XI, bench, depth and planned substitutions.');
 
   window.SKORLineup={
     setRoster,
     setEvents,
     setCaptain,
     refreshVariations,
+    refreshTempPlayers,
     getState:()=>clone(state),
     reload:()=>{ loadDraft(); renderAll(); refreshVariations(false); }
   };
@@ -3000,18 +3158,21 @@ let ROSTER=[
 let TEAM_ROSTER=[];
 let TEAM_PLAYER_ACCESS=[];
 let TEAM_CAPTAIN_ACCESS=[];
+let MATCH_TEMP_PLAYERS=[];
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
 function gdEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
 function playerValue(p){return `roster|${p.number}|${p.name}`;}
+function tempPlayerValue(p){return `temp|${p.id}`;}
 function rosterOptions(includeNone=false){
   const first=includeNone?'<option value="">Unassisted / No assist</option>':'<option value="">Select player…</option>';
   const roster='<optgroup label="Roster">'+ROSTER.map(p=>`<option value="${gdEsc(playerValue(p))}">#${p.number} ${gdEsc(p.name)}</option>`).join("")+'</optgroup>';
+  const temps=MATCH_TEMP_PLAYERS.length?'<optgroup label="Match Fill-ins / TEMP">'+MATCH_TEMP_PLAYERS.map(p=>`<option value="${gdEsc(tempPlayerValue(p))}">${p.jersey_number?`#${p.jersey_number} ${gdEsc(p.display_name)} · TEMP`:`TEMP — ${gdEsc(p.display_name)}`}</option>`).join("")+'</optgroup>':'';
   const assigned=new Set(ROSTER.map(p=>Number(p.number)));
   const availableExtras=EXTRA_JERSEY_NUMBERS.filter(n=>!assigned.has(Number(n)));
-  const extras=availableExtras.length?'<optgroup label="Unassigned / Guest Jerseys">'+availableExtras.map(n=>`<option value="extra|${n}|">#${n} — Enter name</option>`).join("")+'</optgroup>':'';
-  return first+roster+extras+'<option value="manual||">Other player / number — Enter manually</option>';
+  const extras=availableExtras.length?'<optgroup label="One-off / Unregistered Jerseys">'+availableExtras.map(n=>`<option value="extra|${n}|">#${n} — Enter name</option>`).join("")+'</optgroup>':'';
+  return first+roster+temps+extras+'<option value="manual||">Other player / number — Enter manually</option>';
 }
 function refreshGameDayRosterOptions(){
   const playerValueNow=eventPlayer.value,assistValueNow=eventAssist.value;
@@ -3026,6 +3187,16 @@ function refreshGameDayRosterOptions(){
     if([...motm.options].some(o=>o.value===current))motm.value=current;
   }
 }
+async function loadGameDayTempPlayers(matchId){
+  MATCH_TEMP_PLAYERS=[];
+  if(!matchId){refreshGameDayRosterOptions();return;}
+  const {data,error}=await sb.from("match_temp_players").select("id,match_id,display_name,jersey_number,active").eq("match_id",matchId).eq("active",true).order("display_name",{ascending:true});
+  if(error){console.warn("Could not load match TEMP players:",error);refreshGameDayRosterOptions();return;}
+  MATCH_TEMP_PLAYERS=data||[];refreshGameDayRosterOptions();
+}
+window.SKORGameDayTempPlayersChanged=async function(matchId){
+  if(gameDaySelected?.id&&String(gameDaySelected.id)===String(matchId))await loadGameDayTempPlayers(matchId);
+};
 function rosterEsc(v){return gdEsc(v);}
 function setRosterStatus(message,ok=true){
   const el=document.getElementById("rosterFormStatus");
@@ -3469,14 +3640,16 @@ if(fieldForm)fieldForm.addEventListener("submit",async e=>{
 
 function parsePlayerChoice(value){
   if(!value)return null;
-  const [kind,number,name]=value.split("|");
-  return {kind,number:number||"",name:name||"",manual:kind!=="roster"};
+  const parts=value.split("|"),kind=parts[0];
+  if(kind==="temp")return {kind:"temp",id:parts[1]||"",number:"",name:"",manual:false};
+  const number=parts[1]||"",name=parts[2]||"";
+  return {kind,number,name,manual:!["roster","temp"].includes(kind)};
 }
 function syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap=null,matchInput=null,keepValues=false){
   const choice=parsePlayerChoice(selectEl.value);
   const manual=!!choice?.manual;
   wrap.classList.toggle("open",manual);
-  if(matchWrap)matchWrap.classList.toggle("open",!!choice && choice.kind==="roster");
+  if(matchWrap)matchWrap.classList.toggle("open",!!choice && ["roster","temp"].includes(choice.kind));
   if(!keepValues){
     nameInput.value=manual?(choice?.name||""):"";
     numberInput.value=manual?(choice?.number||""):"";
@@ -3491,7 +3664,12 @@ function selectedPlayerData(selectEl,nameInput,numberInput,matchNumberInput=null
   if(choice.kind==="roster"){
     const worn=String(matchNumberInput?.value||"").trim();
     const roster=ROSTER.find(p=>String(p.number)===String(choice.number)&&p.name===choice.name);
-    return{name:choice.name,number:worn||choice.number||null,rosterNumber:choice.number||null,playerKey:roster?.player_key||null,manual:false};
+    return{name:choice.name,number:worn||choice.number||null,rosterNumber:choice.number||null,playerKey:roster?.player_key||null,manual:false,tempId:null,matchNumberOverride:worn||null};
+  }
+  if(choice.kind==="temp"){
+    const worn=String(matchNumberInput?.value||"").trim(),temp=MATCH_TEMP_PLAYERS.find(p=>String(p.id)===String(choice.id));
+    if(!temp)return null;
+    return{name:temp.display_name,number:worn||temp.jersey_number||null,rosterNumber:null,playerKey:null,manual:false,tempId:temp.id,matchNumberOverride:worn||null};
   }
   const name=nameInput.value.trim();
   const number=numberInput.value.trim()||choice.number;
@@ -3501,6 +3679,8 @@ function setPlayerEditorValue(selectEl,wrap,nameInput,numberInput,matchWrap,matc
   if(!name&&!number&&!rosterNumber&&!rosterKey){selectEl.value="";syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value="";return;}
   const roster=(rosterKey?ROSTER.find(p=>String(p.player_key)===String(rosterKey)):null)||ROSTER.find(p=>String(p.number)===String(rosterNumber??number??"")&&p.name===name);
   if(roster){selectEl.value=playerValue(roster);syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value=String(number??"")!==String(roster.number)?String(number??""):"";return;}
+  const temp=MATCH_TEMP_PLAYERS.find(p=>String(p.display_name||"").trim().toLowerCase()===String(name||"").trim().toLowerCase());
+  if(temp){selectEl.value=tempPlayerValue(temp);syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value=String(number??"")!==String(temp.jersey_number??"")?String(number??""):"";return;}
   const num=String(number??"");
   selectEl.value=EXTRA_JERSEY_NUMBERS.map(String).includes(num)?`extra|${num}|`:'manual||';
   syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);
@@ -3712,7 +3892,7 @@ async function loadGameDayMatches(preferredId=null){
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v14";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
-  gameDayMatch.value=pick.id;gameDaySelected=pick;window.SKORLineup?.setEvents(gameDayMatches,false);await loadGameDayEvents();await loadCrowdAdmin();
+  gameDayMatch.value=pick.id;gameDaySelected=pick;window.SKORLineup?.setEvents(gameDayMatches,false);await loadGameDayTempPlayers(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
@@ -3721,7 +3901,7 @@ async function loadGameDayEvents(){
   renderGameDay();
   await loadPlayerEngagement();
 }
-gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;await loadGameDayEvents();await loadCrowdAdmin();});
+gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();});
 document.querySelectorAll(".status-btn").forEach(btn=>btn.addEventListener("click",async()=>{
   if(!portalCanWrite()){viewerBlocked("change match status");return;}
   if(!gameDayReady||!gameDaySelected)return;
@@ -3754,6 +3934,15 @@ document.getElementById("saveMatchEvent").addEventListener("click",async()=>{
   if(currentEventType==="skor_goal"&&assist?.manual&&!assist.name){alert("Enter the assist player's name, or choose Unassisted / No assist.");return;}
   let eventPlayerData=player;
   if(needsOpponentPlayer){const name=opponentPlayerName.value.trim(),number=opponentPlayerNumber.value.trim();eventPlayerData={name:name||null,number:number||null};}
+  const tempUpdates=[player,assist].filter(x=>x?.tempId&&x?.matchNumberOverride);
+  for(const temp of tempUpdates){
+    const n=Number(temp.matchNumberOverride);
+    if(Number.isInteger(n)&&n>=1&&n<=99){
+      const {error:tempError}=await sb.from("match_temp_players").update({jersey_number:n,updated_at:new Date().toISOString()}).eq("id",temp.tempId).eq("match_id",gameDaySelected.id);
+      if(tempError){alert("Could not update the TEMP jersey number: "+tempError.message);return;}
+    }
+  }
+  if(tempUpdates.length)await loadGameDayTempPlayers(gameDaySelected.id);
   const {data:{user}}=await sb.auth.getUser();
   const payload={event_type:currentEventType,half:eventHalf.value,player_name:eventPlayerData?.name||null,player_number:eventPlayerData?.number||null,roster_player_number:needsSkorPlayer?(eventPlayerData?.rosterNumber||null):null,roster_player_key:needsSkorPlayer?(eventPlayerData?.playerKey||null):null,assist_player_name:currentEventType==="skor_goal"?(assist?.name||null):null,assist_player_number:currentEventType==="skor_goal"?(assist?.number||null):null,assist_roster_player_number:currentEventType==="skor_goal"?(assist?.rosterNumber||null):null,assist_roster_player_key:currentEventType==="skor_goal"?(assist?.playerKey||null):null};
   let result;
@@ -3973,6 +4162,14 @@ loadAnnouncements();
     if(player.manual&&!player.name){alert('Enter the player name.');return;}
     const why=reason.value.trim();if(!why){alert('Add a reason for Man of the Match.');return;}
     saveBtn.disabled=true;saveBtn.textContent='Saving…';
+    if(player.tempId&&player.matchNumberOverride){
+      const n=Number(player.matchNumberOverride);
+      if(Number.isInteger(n)&&n>=1&&n<=99){
+        const {error:tempError}=await sb.from('match_temp_players').update({jersey_number:n,updated_at:new Date().toISOString()}).eq('id',player.tempId).eq('match_id',gameDaySelected.id);
+        if(tempError){saveBtn.disabled=false;saveBtn.textContent='Save / Update Man of the Match';alert('Could not update TEMP jersey number: '+tempError.message);return;}
+        await loadGameDayTempPlayers(gameDaySelected.id);
+      }
+    }
     const {error}=await sb.from('matches').update({man_of_match_player_name:player.name,man_of_match_player_number:player.number,man_of_match_roster_player_number:player.rosterNumber||null,man_of_match_player_key:player.playerKey||null,man_of_match_reason:why}).eq('id',gameDaySelected.id);
     saveBtn.disabled=false;saveBtn.textContent='Save / Update Man of the Match';
     if(error){alert('Could not save Man of the Match: '+error.message);return;}
