@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v50.5-temp-fillin-plus-injury-status" />
-  <title>SKOR FC Admin | Match Fill-ins + Injury Status v50.5</title>
+  <meta name="skor-build" content="lineup-admin-v50.6-captain-injury-controls" />
+  <title>SKOR FC Admin | Captain Injury Controls v50.6</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -1251,6 +1251,14 @@ body.viewer-mode .player-engagement-panel{display:none!important}
 .captain-role-state.viewer{background:#f4e8ec;color:#761a37}
 .captain-role-state.captain{background:#e5f1eb;color:#315f4a}
 .captain-role-state.super-admin{background:#17191e;color:#fff}
+.playing-role-state{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:.62rem;font-weight:950;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.playing-role-state.active{background:#e5f1eb;color:#315f4a}
+.playing-role-state.injured{background:#f6e5e9;color:#8b2942}
+.playing-role-state.inactive{background:#efeff1;color:#666}
+.playing-role-meta{display:block;color:var(--muted);font-size:.67rem;line-height:1.3;margin-bottom:5px}
+.playing-role-actions{display:flex;gap:5px;flex-wrap:wrap}
+.playing-role-actions .mark-injured{border-color:#d7abb7;color:#852a43;background:#fff7f9}
+.playing-role-actions .mark-active{border-color:#b9d4c6;color:#2e624b;background:#f5fbf8}
 .captain-role-meta{display:block;margin-top:5px;color:var(--muted);font-size:.64rem;line-height:1.25}
 .captain-role-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 
@@ -1728,10 +1736,10 @@ body.viewer-mode .player-engagement-panel{display:none!important}
           <div class="roster-table-wrap">
             <table class="table roster-table">
               <thead>
-                <tr><th>#</th><th>Player</th><th>Position</th><th>New Player</th><th>Email</th><th>Player Portal</th><th>Captain Access</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
+                <tr><th>#</th><th>Player</th><th>Position</th><th>New Player</th><th>Email</th><th>Player Portal</th><th>Captain Access</th><th>Playing Status</th><th>Phone</th><th>Roster Status</th><th>Actions</th></tr>
               </thead>
               <tbody id="rosterTableBody">
-                <tr><td colspan="10">Loading roster…</td></tr>
+                <tr><td colspan="11">Loading roster…</td></tr>
               </tbody>
             </table>
           </div>
@@ -3333,13 +3341,82 @@ window.togglePlayerPortal=async function(id,enabled){
   await loadTeamRoster(false);
 };
 
+function playingStatusForPlayer(playerId){
+  return TEAM_PLAYING_STATUS.find(x=>String(x.roster_player_id)===String(playerId))||null;
+}
+function renderPlayingStatusControl(p){
+  if(p.active===false){
+    return '<span class="playing-role-state inactive">Roster Inactive</span>';
+  }
+  if(!portalCanWrite()){
+    return '<span class="playing-role-state active">Captain Only</span>';
+  }
+  if(!TEAM_PLAYING_STATUS_READY){
+    return '<span class="playing-role-state active">Loading…</span>';
+  }
+
+  const record=playingStatusForPlayer(p.id);
+  const current=record?.playing_status==="injured"?"injured":"active";
+
+  if(current==="injured"){
+    return `<span class="playing-role-state injured">Injured</span>
+      <span class="playing-role-meta">Counts on the Captain Injury List.</span>
+      <div class="playing-role-actions">
+        <button class="mini-btn mark-active" type="button" onclick="captainSetPlayingStatus('${rosterEsc(p.id)}','active')">Mark Active</button>
+      </div>`;
+  }
+
+  return `<span class="playing-role-state active">Active</span>
+    <div class="playing-role-actions">
+      <button class="mini-btn mark-injured" type="button" onclick="captainSetPlayingStatus('${rosterEsc(p.id)}','injured')">Mark Injured</button>
+    </div>`;
+}
+window.captainSetPlayingStatus=async function(id,nextStatus){
+  if(!portalCanWrite()){viewerBlocked('change player playing status');return;}
+  if(!['active','injured'].includes(nextStatus))return;
+
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));
+  if(!p)return;
+  if(p.active===false)return setRosterStatus(`${p.full_name} is roster-inactive. Reactivate the roster record before changing Playing Status.`,false);
+
+  const preferred=p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0];
+  const current=(playingStatusForPlayer(id)?.playing_status||'active');
+
+  if(current===nextStatus)return;
+
+  const promptText=nextStatus==='injured'
+    ? `Mark ${preferred} as Injured? They will move from Active Players to the Captain Injury List, and their Player Portal will show Injured.`
+    : `Mark ${preferred} as Active? They will be removed from the Captain Injury List, and their Player Portal will show Active.`;
+
+  if(!confirm(promptText))return;
+
+  const {error}=await sb.rpc('captain_set_player_playing_status',{
+    p_roster_player_id:id,
+    p_status:nextStatus
+  });
+
+  if(error){
+    setRosterStatus(`Could not update ${preferred}'s Playing Status: ${error.message}`,false);
+    return;
+  }
+
+  setRosterStatus(
+    nextStatus==='injured'
+      ? `${preferred} is now marked Injured. Captain Dashboard and Player Portal will use this status.`
+      : `${preferred} is now marked Active. They were removed from the Injury List.`,
+    true
+  );
+
+  await loadTeamRoster(false);
+};
+
 function renderRosterTable(){
   const body=document.getElementById("rosterTableBody");
   const count=document.getElementById("rosterCount");
   if(count)count.textContent=TEAM_ROSTER.filter(p=>p.active!==false).length;
   if(!body)return;
   if(!TEAM_ROSTER.length){
-    body.innerHTML='<tr><td colspan="10">No players found.</td></tr>';
+    body.innerHTML='<tr><td colspan="11">No players found.</td></tr>';
     return;
   }
   body.innerHTML=TEAM_ROSTER.map(p=>`
@@ -3354,6 +3431,7 @@ function renderRosterTable(){
       <td>${p.email?rosterEsc(p.email):'<span class="roster-contact">—</span>'}</td>
       <td class="portal-access-cell">${renderPlayerPortalAccess(p)}</td>
       <td class="captain-access-cell">${renderCaptainAccess(p)}</td>
+      <td class="playing-status-cell">${renderPlayingStatusControl(p)}</td>
       <td>${p.phone?rosterEsc(p.phone):'<span class="roster-contact">—</span>'}</td>
       <td><span class="status">${p.active===false?"Inactive":"Active"}</span></td>
       <td class="roster-action-cell"><button class="mini-btn" type="button" onclick="editRosterPlayer('${rosterEsc(p.id)}')">Edit</button></td>
@@ -3524,7 +3602,7 @@ async function loadTeamRoster(showMessage=false){
   if(error){
     console.error("Could not load team roster:",error);
     const body=document.getElementById("rosterTableBody");
-    if(body)body.innerHTML='<tr><td colspan="10">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
+    if(body)body.innerHTML='<tr><td colspan="11">Could not load Supabase roster: '+rosterEsc(error.message)+'</td></tr>';
     if(showMessage)setRosterStatus("Could not load roster: "+error.message,false);
     return;
   }
