@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v50.3.3-navigation-role-aware">
+<meta name="skor-build" content="player-portal-v50.5-playing-status-injury">
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <style>
@@ -14,6 +14,7 @@
 .screen{display:none;padding:28px 0 60px}.screen.active{display:block}.card{border:1px solid var(--line);background:linear-gradient(145deg,#14171c,#0d0f13);border-radius:18px;padding:20px;box-shadow:0 12px 38px rgba(0,0,0,.16)}.eyebrow{font-size:10px;color:#d3637c;font-weight:950;letter-spacing:.13em;text-transform:uppercase}.title{font-size:38px;line-height:.95;letter-spacing:-.045em;margin:7px 0 12px}.sub{color:var(--muted);font-size:13px;line-height:1.5}.btn{border:0;border-radius:11px;min-height:46px;padding:0 15px;font-weight:900;cursor:pointer}.primary{background:linear-gradient(135deg,#681028,var(--maroon2));color:#fff}.secondary{background:#181b20;border:1px solid #3b4047;color:#fff}.ghost{background:transparent;border:1px solid #3b4047;color:#d9dce0}.full{width:100%}.status{margin-top:10px;font-size:12px;color:#c7cbd0;line-height:1.45}.status.error{color:#ff9eb2}.form{display:grid;gap:11px;margin-top:16px}label{font-size:12px;font-weight:850}input,textarea{width:100%;min-height:46px;border:1px solid #3a3e45;border-radius:10px;background:#0c0e12;color:#fff;padding:11px 12px;font-size:16px;outline:none}textarea{min-height:92px;resize:vertical}.auth-card{width:min(560px,100%);margin:5vh auto 0;text-align:center}.loginlogo{width:104px;height:104px;object-fit:contain;margin:0 auto 14px}.auth-divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#777d86;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:#30343b;flex:1}.email-auth{text-align:left}.email-actions,.code-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}.auth-help{text-align:left;color:#818791;font-size:10px;line-height:1.45;margin-top:9px}
 .portal-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.hero{position:relative;overflow:hidden;min-height:300px;display:grid;grid-template-columns:220px 1fr;gap:22px;align-items:center;background:linear-gradient(135deg,#180d12,#101216 64%)}.hero-number{position:absolute;right:-8px;top:-40px;font-size:210px;font-weight:950;color:rgba(255,255,255,.085);letter-spacing:-.09em;line-height:1}.avatar{width:190px;height:220px;border-radius:18px;border:1px solid #41454d;background:linear-gradient(145deg,#4f1324,#17191e);display:grid;place-items:center;overflow:hidden;position:relative;z-index:2}.avatar img{width:100%;height:100%;object-fit:cover}.avatar span{font-size:70px;font-weight:950}.hero-copy{position:relative;z-index:2}.hero-copy h1{font-size:50px;line-height:.9;margin:4px 0 12px;letter-spacing:-.05em}.player-meta{display:flex;gap:8px;flex-wrap:wrap}.pill{display:inline-flex;align-items:center;padding:7px 10px;border-radius:999px;border:1px solid #393e45;background:#171a20;color:#d8dadd;font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.05em}.pill.new{background:#7a1830;border-color:#a52b49;color:#fff}.bio{color:#aeb2b9;line-height:1.55;font-size:13px;margin-top:15px;max-width:540px}.hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.stat{border:1px solid var(--line);background:#0e1014;border-radius:14px;padding:15px;text-align:center}.stat strong{display:block;font-size:30px;letter-spacing:-.05em}.stat span{display:block;margin-top:4px;color:var(--muted);font-size:9px;font-weight:950;text-transform:uppercase;letter-spacing:.07em}.section{margin-top:14px}.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px}.sectionhead h2{margin:0;font-size:20px}.section-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.match-list{display:grid;gap:9px}.match{border:1px solid #30343b;background:#0e1014;border-radius:14px;padding:14px}.match-top{display:flex;justify-content:space-between;gap:12px}.match h3{margin:0;font-size:15px}.match .meta{color:#8e949d;font-size:10px;margin-top:4px;line-height:1.4}.score{font-size:26px;font-weight:950;white-space:nowrap}.personal-line{margin-top:10px;color:#c8ccd1;font-size:11px;font-weight:800}.availability{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.availability button,.reaction-set button{border:1px solid #3a3f46;background:#171a20;color:#ddd;border-radius:9px;padding:8px 10px;font-size:10px;font-weight:900}.availability button.selected,.reaction-set button.selected{background:#6d142b;border-color:#a12343;color:#fff}.milestones{display:flex;gap:8px;flex-wrap:wrap}.milestone{border:1px solid #3a3e45;background:#12151a;border-radius:13px;padding:11px 13px;font-size:11px;font-weight:900}.milestone.locked{opacity:.38}.feedback-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:14px}.feedback-card{border:1px solid #30343b;background:#0e1014;border-radius:14px;padding:14px}.feedback-card h3{margin:0 0 9px;font-size:15px}.reaction-block{margin-bottom:14px}.reaction-set{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.comment-list{display:grid;gap:8px}.comment{border:1px solid #30343b;border-radius:12px;background:#121419;padding:11px;font-size:12px;line-height:1.45}.comment.team{border-left:4px solid #557b67}.comment.captains{border-left:4px solid var(--maroon)}.comment small{display:block;color:#818791;margin-top:5px;font-size:9px}.comment .comment-action{margin-top:7px;margin-right:10px;border:0;background:transparent;color:#d26c83;font-size:9px;font-weight:900;padding:0;cursor:pointer}.comment .edit{color:#9ca7b6}.summary-lines{display:grid;gap:5px;margin-top:8px}.summary-line{display:flex;justify-content:space-between;border-bottom:1px solid #25292f;padding:5px 0;font-size:11px;color:#c4c8cd}.edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.denied{max-width:620px;margin:8vh auto 0;text-align:center}
+.playing-status-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}.playing-status-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.playing-status-actions .btn.selected{outline:2px solid #fff;outline-offset:2px}.injury-badge{background:#7f2637!important;border-color:#b64a60!important;color:#fff!important}.playing-status-card.injured{border-color:#7f2637;background:linear-gradient(145deg,#211116,#0d0f13)}@media(max-width:650px){.playing-status-card{grid-template-columns:1fr}.playing-status-actions{justify-content:flex-start}}
 @media(max-width:850px){.portal-grid,.section-grid,.feedback-layout{grid-template-columns:1fr}.hero{grid-template-columns:150px 1fr;min-height:250px}.avatar{width:140px;height:175px}.hero-copy h1{font-size:40px}.hero-number{font-size:165px}.stats{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.wrap{width:calc(100% - 18px)}.screen{padding-top:16px}.card{padding:15px}.hero{display:block;padding-top:18px}.avatar{width:122px;height:144px;margin-bottom:14px}.hero-copy h1{font-size:38px}.hero-number{font-size:150px;top:-16px}.stats{grid-template-columns:repeat(2,1fr)}.email-actions,.code-actions,.edit-grid{grid-template-columns:1fr}.top-name{display:none}.title{font-size:32px}}
 </style>
@@ -65,7 +66,7 @@
       <div class="hero-copy">
         <div class="eyebrow">My Player Card</div>
         <h1 id="playerDisplayName">Player</h1>
-        <div class="player-meta"><span class="pill" id="playerNumber">#--</span><span class="pill" id="playerPosition">Player</span><span class="pill new hidden" id="newPlayerBadge">New Player</span></div>
+        <div class="player-meta"><span class="pill" id="playerNumber">#--</span><span class="pill" id="playerPosition">Player</span><span class="pill new hidden" id="newPlayerBadge">New Player</span><span class="pill injury-badge hidden" id="injuryBadge">Injured</span></div>
         <div class="bio" id="playerBio">Bio pending.</div>
         <div class="hero-actions">
           <button class="btn secondary" id="editProfileBtn" type="button">Edit My Profile</button>
@@ -84,6 +85,19 @@
         <div class="stat"><strong id="statRed">0</strong><span>Red</span></div>
       </div>
       <div class="section" style="margin-top:18px"><div class="eyebrow">Milestones</div><div class="milestones" id="milestones" style="margin-top:9px"></div></div>
+    </div>
+  </div>
+
+  <div class="section card playing-status-card" id="playingStatusCard">
+    <div>
+      <div class="eyebrow">Team Status</div>
+      <h2 style="margin:6px 0 7px">Playing Status: <span id="playingStatusLabel">Active</span></h2>
+      <div class="sub">Mark yourself Injured when you are currently unavailable because of injury. Captains will see you on the Injury List. This is private to team administration and does not change your match RSVP automatically.</div>
+      <div class="status" id="playingStatusMessage"></div>
+    </div>
+    <div class="playing-status-actions">
+      <button class="btn secondary" id="markActiveBtn" type="button">Active</button>
+      <button class="btn ghost" id="markInjuredBtn" type="button">Injured</button>
     </div>
   </div>
 
@@ -147,6 +161,7 @@ const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
 let user=null,profile=null,stats=null,upcoming=[],recent=[],feedbackMatchId=null,myReaction={self_reaction:null,team_reaction:null};
+let playingStatus={playing_status:'active',status_updated_at:null};
 let authInFlight=false,portalAuthorized=false;
 function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');}
 function status(id,msg,error=false){const el=$(id);if(!el)return;el.textContent=msg||'';el.classList.toggle('error',!!error)}
@@ -248,13 +263,18 @@ db.auth.onAuthStateChange((event,s)=>{
 });
 
 async function loadPortal(){
-  const [p,st,up,rec]=await Promise.all([
-    db.rpc('get_my_player_profile'),db.rpc('get_my_player_stats'),db.rpc('get_my_upcoming_matches',{p_limit:5}),db.rpc('get_my_recent_matches',{p_limit:6})
+  const [p,st,up,rec,ps]=await Promise.all([
+    db.rpc('get_my_player_profile'),
+    db.rpc('get_my_player_stats'),
+    db.rpc('get_my_upcoming_matches',{p_limit:5}),
+    db.rpc('get_my_recent_matches',{p_limit:6}),
+    db.rpc('get_my_playing_status')
   ]);
   if(p.error)throw new Error(p.error.message);profile=(Array.isArray(p.data)?p.data[0]:p.data)||{};
   stats=(Array.isArray(st.data)?st.data[0]:st.data)||{goals:0,assists:0,yellow_cards:0,red_cards:0,motm:0};
+  if(ps.error)console.warn('Playing status unavailable:',ps.error);else playingStatus=(Array.isArray(ps.data)?ps.data[0]:ps.data)||playingStatus;
   upcoming=up.data||[];recent=rec.data||[];
-  renderProfile();renderStats();renderUpcoming();renderRecent();
+  renderProfile();renderStats();renderPlayingStatus();renderUpcoming();renderRecent();
   if(recent.length)await selectFeedbackMatch(recent[0].match_id);
 }
 function renderProfile(){
@@ -262,6 +282,38 @@ function renderProfile(){
   const av=$('playerAvatar');av.innerHTML=profile.photo_url?`<img src="${esc(profile.photo_url)}" alt="${esc(profile.display_name||'Player')}">`:`<span>${esc(playerInitial())}</span>`;
   $('editPreferredName').value=profile.display_name||'';$('editBio').value=profile.bio==='Bio pending.'?'':(profile.bio||'');
 }
+function renderPlayingStatus(){
+  const injured=playingStatus?.playing_status==='injured';
+  $('playingStatusLabel').textContent=injured?'Injured':'Active';
+  $('injuryBadge').classList.toggle('hidden',!injured);
+  $('playingStatusCard').classList.toggle('injured',injured);
+  $('markActiveBtn').classList.toggle('selected',!injured);
+  $('markInjuredBtn').classList.toggle('selected',injured);
+  $('markActiveBtn').classList.toggle('primary',!injured);
+  $('markActiveBtn').classList.toggle('secondary',injured);
+  $('markInjuredBtn').classList.toggle('primary',injured);
+  $('markInjuredBtn').classList.toggle('ghost',!injured);
+}
+async function savePlayingStatus(next){
+  if(!['active','injured'].includes(next))return;
+  if(next==='injured'&&playingStatus?.playing_status!=='injured'){
+    if(!confirm('Mark yourself Injured? SKOR captains will see you on the Injury List until you mark yourself Active again.'))return;
+  }
+  if(next==='active'&&playingStatus?.playing_status==='injured'){
+    if(!confirm('Mark yourself Active again? This removes you from the captain Injury List.'))return;
+  }
+  $('markActiveBtn').disabled=true;$('markInjuredBtn').disabled=true;
+  status('playingStatusMessage',next==='injured'?'Updating injury status…':'Updating playing status…');
+  const {error}=await db.rpc('set_my_playing_status',{p_status:next});
+  $('markActiveBtn').disabled=false;$('markInjuredBtn').disabled=false;
+  if(error)return status('playingStatusMessage',error.message,true);
+  playingStatus={playing_status:next,status_updated_at:new Date().toISOString()};
+  renderPlayingStatus();
+  status('playingStatusMessage',next==='injured'?'You are listed as Injured for SKOR captains.':'You are listed as Active.');
+}
+$('markActiveBtn').addEventListener('click',()=>savePlayingStatus('active'));
+$('markInjuredBtn').addEventListener('click',()=>savePlayingStatus('injured'));
+
 function renderStats(){
   $('statGoals').textContent=stats.goals||0;$('statAssists').textContent=stats.assists||0;$('statMotm').textContent=stats.motm||0;$('statYellow').textContent=stats.yellow_cards||0;$('statRed').textContent=stats.red_cards||0;
   const milestones=[
