@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v50.4-match-temp-fillin-players" />
-  <title>SKOR FC Admin | Match Fill-ins v50.4</title>
+  <meta name="skor-build" content="lineup-admin-v50.5-temp-fillin-plus-injury-status" />
+  <title>SKOR FC Admin | Match Fill-ins + Injury Status v50.5</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -973,6 +973,14 @@
     .dashboard-pill{background:#f1e8eb;color:var(--maroon)}
     .dashboard-announcement-body{white-space:pre-wrap;line-height:1.5}
     #dashboardNextPractice{font-size:1.2rem;line-height:1.15}
+    #dashboard .dashboard-metrics{grid-template-columns:repeat(5,1fr)}
+    .dashboard-injury-panel{display:none;margin-top:18px;border-color:#dec4cb;background:linear-gradient(145deg,#fff,#fbf5f7)}
+    .dashboard-injury-panel.visible{display:block}
+    .injury-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .injury-player{display:inline-flex;align-items:center;gap:7px;border:1px solid #ddc5cb;background:#fff;border-radius:999px;padding:8px 11px;font-size:.78rem;font-weight:850}
+    .injury-player .injury-dot{width:8px;height:8px;border-radius:50%;background:#9b3048}
+    @media(max-width:1100px){#dashboard .dashboard-metrics{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:650px){#dashboard .dashboard-metrics{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:650px){
       #dashboardNextPractice{font-size:1rem}
       #dashboard .dashboard-lower-grid{grid-template-columns:1fr}
@@ -1302,11 +1310,19 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     </div>
 
     <section class="view active" id="dashboard">
-      <div class="grid">
+      <div class="grid dashboard-metrics">
         <div class="metric"><span>Active Players</span><strong id="dashboardActivePlayers">—</strong></div>
+        <div class="metric"><span>Injured</span><strong id="dashboardInjuredPlayers">—</strong></div>
         <div class="metric"><span>Next Practice</span><strong id="dashboardNextPractice">—</strong></div>
         <div class="metric"><span>Join Requests</span><strong>0</strong></div>
         <div class="metric"><span>Unpaid Fees</span><strong>0</strong></div>
+      </div>
+
+      <div class="panel dashboard-injury-panel" id="dashboardInjuryPanel">
+        <span class="pill dashboard-pill">Injury List</span>
+        <h2 style="margin:12px 0 4px">Players currently marked Injured</h2>
+        <div class="sub">Player-reported team status. Injury details are not collected here.</div>
+        <div class="injury-list" id="dashboardInjuryList"></div>
       </div>
 
       <div class="content-grid">
@@ -3158,6 +3174,8 @@ let ROSTER=[
 let TEAM_ROSTER=[];
 let TEAM_PLAYER_ACCESS=[];
 let TEAM_CAPTAIN_ACCESS=[];
+let TEAM_PLAYING_STATUS=[];
+let TEAM_PLAYING_STATUS_READY=false;
 let MATCH_TEMP_PLAYERS=[];
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
@@ -3411,8 +3429,36 @@ function dashboardDateShort(value){
   return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
 }
 function updateDashboardRoster(){
-  const el=document.getElementById("dashboardActivePlayers");
-  if(el)el.textContent=TEAM_ROSTER.filter(p=>p.active!==false).length;
+  const activeRoster=TEAM_ROSTER.filter(p=>p.active!==false);
+  const activeEl=document.getElementById("dashboardActivePlayers");
+  const injuredEl=document.getElementById("dashboardInjuredPlayers");
+  const panel=document.getElementById("dashboardInjuryPanel");
+  const list=document.getElementById("dashboardInjuryList");
+
+  if(!portalCanWrite()||!TEAM_PLAYING_STATUS_READY){
+    if(activeEl)activeEl.textContent=activeRoster.length;
+    if(injuredEl)injuredEl.textContent=portalCanWrite()?"—":"Captain only";
+    if(panel)panel.classList.remove("visible");
+    return;
+  }
+
+  const injuredIds=new Set(
+    TEAM_PLAYING_STATUS
+      .filter(x=>x.playing_status==="injured")
+      .map(x=>String(x.roster_player_id))
+  );
+  const injured=activeRoster.filter(p=>injuredIds.has(String(p.id)));
+  const activeCount=Math.max(0,activeRoster.length-injured.length);
+
+  if(activeEl)activeEl.textContent=activeCount;
+  if(injuredEl)injuredEl.textContent=injured.length;
+
+  if(panel)panel.classList.toggle("visible",injured.length>0);
+  if(list){
+    list.innerHTML=injured.length
+      ? injured.map(p=>`<span class="injury-player"><span class="injury-dot"></span><strong>#${rosterEsc(p.jersey_number)} ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</strong></span>`).join("")
+      : "";
+  }
 }
 function updateDashboardSchedule(){
   const now=Date.now();
@@ -3485,15 +3531,20 @@ async function loadTeamRoster(showMessage=false){
   TEAM_ROSTER=data||[];
   TEAM_PLAYER_ACCESS=[];
   TEAM_CAPTAIN_ACCESS=[];
+  TEAM_PLAYING_STATUS=[];
+  TEAM_PLAYING_STATUS_READY=false;
   if(portalCanWrite()){
-    const [accessResult,captainResult]=await Promise.all([
+    const [accessResult,captainResult,playingStatusResult]=await Promise.all([
       sb.from("player_access").select("roster_player_id,approved_email,auth_user_id,active,claimed_at,last_login_at"),
-      sb.rpc("get_team_captain_access")
+      sb.rpc("get_team_captain_access"),
+      sb.rpc("get_team_playing_status")
     ]);
     if(accessResult.error)console.warn("Player Portal access table is not ready yet:",accessResult.error);
     else TEAM_PLAYER_ACCESS=accessResult.data||[];
     if(captainResult.error)console.warn("Captain access management is not ready yet:",captainResult.error);
     else TEAM_CAPTAIN_ACCESS=captainResult.data||[];
+    if(playingStatusResult.error)console.warn("Playing status is not ready yet:",playingStatusResult.error);
+    else{TEAM_PLAYING_STATUS=playingStatusResult.data||[];TEAM_PLAYING_STATUS_READY=true;}
   }
   const active=TEAM_ROSTER.filter(p=>p.active!==false);
   ROSTER=active.map(p=>({
@@ -3505,7 +3556,10 @@ async function loadTeamRoster(showMessage=false){
   updateDashboardRoster();
   refreshGameDayRosterOptions();
   window.SKORLineup?.setRoster(TEAM_ROSTER);
-  if(showMessage)setRosterStatus("Roster refreshed — "+active.length+" active players.",true);
+  if(showMessage){
+    const injured=TEAM_PLAYING_STATUS_READY?TEAM_PLAYING_STATUS.filter(x=>x.playing_status==="injured").length:0;
+    setRosterStatus("Roster refreshed — "+(active.length-injured)+" active"+(TEAM_PLAYING_STATUS_READY?" · "+injured+" injured":"")+" players.",true);
+  }
 }
 
 eventPlayer.innerHTML=rosterOptions(false);
