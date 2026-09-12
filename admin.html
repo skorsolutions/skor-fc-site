@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.3-dashboard-attendance" />
+  <meta name="skor-build" content="lineup-admin-v51.7-starting-lineup-header-fix" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -2261,7 +2261,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const substituteCount=(state.bench||[]).length;
     const captain=player(state.captainId);
     const captainText=captain?playerListLabel(captain):"Not selected";
-    const pitchX=70,pitchY=212,pitchW=940,pitchH=790;
+    const pitchX=70,pitchY=258,pitchW=940,pitchH=744;
     const showNames=(state.labelMode||"names")!=="numbers";
     const hasFieldPlayers=starters.length>0;
     const standardFormation=!isFreeform(state.formation);
@@ -2299,7 +2299,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
     const pitch = `
       <rect x="50" y="178" width="980" height="860" rx="24" ry="24" fill="#f8faf9" stroke="#d8dbe1"/>
-      <text x="74" y="204" font-size="26" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Starting Lineup</text>
+      <text x="74" y="216" font-size="26" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Starting Lineup</text>
       <rect x="${pitchX}" y="${pitchY}" width="${pitchW}" height="${pitchH}" rx="34" ry="34" fill="#2f8b43"/>
       <rect x="${pitchX+12}" y="${pitchY+12}" width="${pitchW-24}" height="${pitchH-24}" rx="28" ry="28" fill="none" stroke="#d6f0da" stroke-width="4"/>
       <line x1="${pitchX}" y1="${pitchY + pitchH/2}" x2="${pitchX+pitchW}" y2="${pitchY + pitchH/2}" stroke="#d6f0da" stroke-width="4"/>
@@ -2338,37 +2338,40 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const planCardX=550, planCardY=1064, planCardW=480, planCardH=560;
 
     const depthRows = subsByPosition.length ? subsByPosition.map((row, idx)=>{
-      const rowY = depthCardY + 104 + idx*39;
+      const bubbleY = depthCardY + 98 + idx*40;
       const names = row.names.join(", ");
       return `
-        <text x="${depthCardX+24}" y="${rowY}" font-size="18" font-weight="950" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">${esc(row.key)}</text>
-        ${svgTextBlock(names, depthCardX+84, rowY, 35, 18, 1, 'font-size="16" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
-        <line x1="${depthCardX+20}" y1="${rowY+14}" x2="${depthCardX+depthCardW-20}" y2="${rowY+14}" stroke="#eceef3"/>
+        <rect x="${depthCardX+20}" y="${bubbleY}" width="${depthCardW-40}" height="34" rx="17" ry="17" fill="#f7f8fa" stroke="#e2e5e9"/>
+        <rect x="${depthCardX+24}" y="${bubbleY+3}" width="64" height="28" rx="14" ry="14" fill="#801A3D"/>
+        <text x="${depthCardX+56}" y="${bubbleY+22}" text-anchor="middle" font-size="17" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(row.key)}</text>
+        ${svgTextBlock(names, depthCardX+102, bubbleY+22, 36, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
       `;
-    }).join("") : `<text x="${depthCardX+24}" y="${depthCardY+116}" font-size="20" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No depth coverage assigned.</text>`;
+    }).join("") : `<rect x="${depthCardX+20}" y="${depthCardY+104}" width="${depthCardW-40}" height="44" rx="22" ry="22" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${depthCardX+40}" y="${depthCardY+133}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No potential positions assigned.</text>`;
 
     const renderPlanRows=(rows,startY,labelColor)=>{
       return rows.slice(0,4).map((entry, idx)=>{
-        const top = startY + idx*55;
+        const bubbleY = startY + idx*54;
         const outText = prettyPlayers(entry.out, true);
         const inText = prettyPlayers(entry.in, true);
         return `
-          <text x="${planCardX+28}" y="${top}" font-size="16" font-weight="950" fill="${labelColor}" font-family="Arial, Helvetica, sans-serif">${ordinal(idx+1)}</text>
-          ${svgTextBlock('Out: '+outText, planCardX+76, top-2, 37, 17, 1, 'font-size="15" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
-          ${svgTextBlock('In: '+inText, planCardX+76, top+24, 37, 17, 1, 'font-size="15" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+          <rect x="${planCardX+20}" y="${bubbleY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/>
+          <circle cx="${planCardX+48}" cy="${bubbleY+24}" r="18" fill="${labelColor}"/>
+          <text x="${planCardX+48}" y="${bubbleY+30}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${idx+1}</text>
+          ${svgTextBlock('Out: '+outText, planCardX+78, bubbleY+19, 38, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+          ${svgTextBlock('In: '+inText, planCardX+78, bubbleY+39, 38, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
         `;
       }).join("");
     };
 
-    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1178, '#801A3D') : `<text x="${planCardX+24}" y="1178" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
-    const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1400, '#234b74') : `<text x="${planCardX+24}" y="1400" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
-    const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1374" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
-    const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1605" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
+    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1170, '#801A3D') : `<rect x="${planCardX+20}" y="1170" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="1200" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
+    const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1404, '#234b74') : `<rect x="${planCardX+20}" y="1404" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="1434" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
+    const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1394" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
+    const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1628" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
 
     const messageY=1648;
     const quoteBlock = state.quote ? `
       <rect x="50" y="${messageY}" width="980" height="76" rx="20" ry="20" fill="#801A3D"/>
-      ${svgTextBlock('“'+state.quote+'”',74,messageY+46,78,24,2,'font-size="24" font-style="italic" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif"')}
+      ${svgTextBlock('“'+state.quote+'”',W/2,messageY+39,68,24,2,'text-anchor="middle" font-size="24" font-style="italic" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif"')}
     ` : "";
 
     const notesY=state.quote ? 1740 : 1648;
@@ -2384,16 +2387,16 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       ${markerSvg}
 
       <rect x="${depthCardX}" y="${depthCardY}" width="${depthCardW}" height="${depthCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
-      <text x="${depthCardX+24}" y="${depthCardY+46}" font-size="25" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Potential Positions</text>
-      <text x="${depthCardX+24}" y="${depthCardY+72}" font-size="15" font-weight="700" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">${esc(state.formation)} positions · ${substituteCount} substitutes</text>
+      <text x="${depthCardX+24}" y="${depthCardY+44}" font-size="27" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Potential Positions</text>
+      <text x="${depthCardX+24}" y="${depthCardY+70}" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">${esc(state.formation)} positions · ${substituteCount} substitutes</text>
       ${depthRows}
 
       <rect x="${planCardX}" y="${planCardY}" width="${planCardW}" height="${planCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
-      <text x="${planCardX+24}" y="${planCardY+46}" font-size="25" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Substitutions</text>
-      <text x="${planCardX+24}" y="1148" font-size="18" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
+      <text x="${planCardX+24}" y="${planCardY+44}" font-size="27" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Substitutions</text>
+      <text x="${planCardX+24}" y="1142" font-size="19" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
       ${firstHalfRows}
       ${firstHalfExtra}
-      <text x="${planCardX+24}" y="1370" font-size="18" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
+      <text x="${planCardX+24}" y="1376" font-size="19" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
       ${secondHalfRows}
       ${secondHalfExtra}
 
@@ -3071,7 +3074,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51 ready. Potential Positions now follows the selected formation and the gameplan export uses balanced depth/substitution panels.');
+  markStatus('Lineup Builder v51.7 ready. Starting Lineup now has a true white header band above the field.');
 
   window.SKORLineup={
     setRoster,
