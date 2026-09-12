@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.2-rsvp-attendance" />
+  <meta name="skor-build" content="lineup-admin-v51.3-dashboard-attendance" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -973,7 +973,8 @@
     .dashboard-pill{background:#f1e8eb;color:var(--maroon)}
     .dashboard-announcement-body{white-space:pre-wrap;line-height:1.5}
     #dashboardNextPractice{font-size:1.2rem;line-height:1.15}
-    #dashboard .dashboard-metrics{grid-template-columns:repeat(5,1fr)}
+    #dashboard .dashboard-metrics{grid-template-columns:repeat(6,1fr)}
+    #dashboard .metric small{display:block;margin-top:5px;color:var(--muted);font-size:.64rem;line-height:1.25;font-weight:750}
     .dashboard-injury-panel{display:none;margin-top:18px;border-color:#dec4cb;background:linear-gradient(145deg,#fff,#fbf5f7)}
     .dashboard-injury-panel.visible{display:block}
     .injury-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
@@ -1324,6 +1325,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <div class="grid dashboard-metrics">
         <div class="metric"><span>Active Players</span><strong id="dashboardActivePlayers">—</strong></div>
         <div class="metric"><span>Injured</span><strong id="dashboardInjuredPlayers">—</strong></div>
+        <div class="metric"><span>Team Attendance</span><strong id="dashboardAttendanceRate">—</strong><small id="dashboardAttendanceDetail">No attendance recorded</small></div>
         <div class="metric"><span>Next Practice</span><strong id="dashboardNextPractice">—</strong></div>
         <div class="metric"><span>Join Requests</span><strong>0</strong></div>
         <div class="metric"><span>Unpaid Fees</span><strong>0</strong></div>
@@ -3252,6 +3254,7 @@ let TEAM_PLAYING_STATUS=[];
 let TEAM_PLAYING_STATUS_READY=false;
 let MATCH_TEMP_PLAYERS=[];
 let MATCH_RSVP_ATTENDANCE=[];
+let TEAM_ATTENDANCE_STATS={present_count:0,absent_count:0,excused_count:0,eligible_count:0,attendance_rate:null};
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
@@ -3573,6 +3576,40 @@ function dashboardDateShort(value){
   if(Number.isNaN(d.getTime()))return String(value);
   return d.toLocaleDateString("en-US",{month:"short",day:"numeric"});
 }
+async function loadDashboardAttendance(){
+  const rateEl=document.getElementById("dashboardAttendanceRate");
+  const detailEl=document.getElementById("dashboardAttendanceDetail");
+  if(!rateEl||!detailEl)return;
+
+  if(!portalCanWrite()){
+    rateEl.textContent="Captain only";
+    detailEl.textContent="";
+    return;
+  }
+
+  const {data,error}=await sb.rpc("get_team_attendance_stats");
+  if(error){
+    console.warn("Team attendance stats unavailable:",error);
+    rateEl.textContent="—";
+    detailEl.textContent="Run v51.3 attendance SQL";
+    return;
+  }
+
+  TEAM_ATTENDANCE_STATS=(Array.isArray(data)?data[0]:data)||TEAM_ATTENDANCE_STATS;
+  const present=Number(TEAM_ATTENDANCE_STATS.present_count||0);
+  const absent=Number(TEAM_ATTENDANCE_STATS.absent_count||0);
+  const excused=Number(TEAM_ATTENDANCE_STATS.excused_count||0);
+  const eligible=Number(TEAM_ATTENDANCE_STATS.eligible_count||0);
+  const rate=TEAM_ATTENDANCE_STATS.attendance_rate===null||TEAM_ATTENDANCE_STATS.attendance_rate===undefined
+    ? null
+    : Number(TEAM_ATTENDANCE_STATS.attendance_rate);
+
+  rateEl.textContent=rate===null?"—":`${Math.round(rate)}%`;
+  detailEl.textContent=eligible
+    ? `${present} present · ${absent} absent${excused?` · ${excused} excused`:''}`
+    : (excused?`${excused} excused · no counted attendance`:"No attendance recorded");
+}
+
 function updateDashboardRoster(){
   const activeRoster=TEAM_ROSTER.filter(p=>p.active!==false);
   const activeEl=document.getElementById("dashboardActivePlayers");
@@ -3699,6 +3736,7 @@ async function loadTeamRoster(showMessage=false){
   }));
   renderRosterTable();
   updateDashboardRoster();
+  await loadDashboardAttendance();
   refreshGameDayRosterOptions();
   window.SKORLineup?.setRoster(TEAM_ROSTER);
   if(showMessage){
@@ -4088,6 +4126,7 @@ async function setMatchAttendance(playerId,statusValue){
   const {error}=await sb.rpc('captain_set_match_attendance',{p_match_id:gameDaySelected.id,p_roster_player_id:playerId,p_status:statusValue});
   if(error)return alert('Could not update attendance: '+error.message);
   await loadPlayerEngagement();
+  await loadDashboardAttendance();
 }
 async function loadPlayerEngagement(){
   const panel=document.getElementById('playerEngagementPanel');if(!panel)return;
