@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.7-starting-lineup-header-fix" />
+  <meta name="skor-build" content="lineup-admin-v51.8-attendance-page" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1241,7 +1241,7 @@
 .engagement-stat{border:1px solid var(--line);border-radius:11px;padding:10px;text-align:center;background:#fff}.engagement-stat strong{font-size:1.2rem;display:block}.engagement-stat span{display:block;color:var(--muted);font-size:.62rem;font-weight:900;text-transform:uppercase;margin-top:3px}
 .engagement-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.engagement-list{display:grid;gap:7px}.engagement-item{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px;font-size:.75rem;line-height:1.4}.engagement-item small{display:block;color:var(--muted);margin-top:4px}.feedback-private{border-left:4px solid var(--maroon)}.feedback-team{border-left:4px solid #557b67}.reaction-bars{display:grid;gap:5px}.reaction-line{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:5px 0;font-size:.72rem}
 .rsvp-roster-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.rsvp-badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;font-size:.6rem;font-weight:950;text-transform:uppercase;letter-spacing:.04em}.rsvp-badge.going{background:#e5f1eb;color:#315f4a}.rsvp-badge.out{background:#f6e5e9;color:#8b2942}.rsvp-badge.none{background:#eef0f2;color:#70757c}.rsvp-badge.injured{margin-left:5px;background:#f6e5e9;color:#8b2942}.match-attendance-panel{border-color:#cfd7d3;background:linear-gradient(145deg,#fff,#f7faf8);margin-top:18px}.attendance-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.attendance-list{display:grid;gap:7px}.attendance-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px}.attendance-person small{display:block;margin-top:4px;color:var(--muted);font-size:.68rem}.attendance-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.attendance-actions .mini-btn.selected.present{background:#315f4a;color:#fff;border-color:#315f4a}.attendance-actions .mini-btn.selected.absent{background:#8b2942;color:#fff;border-color:#8b2942}.attendance-actions .mini-btn.selected.excused{background:#7a6221;color:#fff;border-color:#7a6221}.attendance-actions .mini-btn.clear-attendance{color:#70757c}.attendance-note{margin-top:8px;color:var(--muted);font-size:.7rem;line-height:1.4}
-body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-panel{display:none!important}
+body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-panel,body.viewer-mode #attendance,body.viewer-mode .nav button[data-view="attendance"]{display:none!important}
 @media(max-width:900px){.engagement-grid{grid-template-columns:repeat(3,1fr)}.attendance-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:800px){.engagement-columns{grid-template-columns:1fr}.attendance-row{grid-template-columns:1fr}.attendance-actions{justify-content:flex-start}}
 @media(max-width:560px){.engagement-grid{grid-template-columns:repeat(2,1fr)}}
@@ -1266,6 +1266,25 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 .captain-role-meta{display:block;margin-top:5px;color:var(--muted);font-size:.64rem;line-height:1.25}
 .captain-role-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 
+
+/* SKOR FC v51.8 — dedicated attendance page */
+.attendance-page-metrics{grid-template-columns:repeat(5,1fr);margin-bottom:18px}
+.attendance-page-controls{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:14px 0}
+.attendance-page-controls .control{min-width:170px;flex:1}.attendance-page-controls .control label{display:block;margin-bottom:5px}
+.attendance-page-controls input,.attendance-page-controls select{width:100%}.attendance-actions-top{display:flex;gap:8px;flex-wrap:wrap}
+.attendance-table-wrap,.attendance-matrix-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+.attendance-table{width:100%;min-width:820px;border-collapse:collapse}.attendance-table th,.attendance-table td{padding:11px 10px;border-bottom:1px solid #e8eaed;text-align:left;vertical-align:middle}
+.attendance-table th{position:sticky;top:0;z-index:2;background:#f7f8fa;color:#5c6168;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em}.attendance-table tbody tr:last-child td{border-bottom:0}
+.attendance-player-name{font-weight:900;color:#20242a;white-space:nowrap}.attendance-player-name small{display:block;margin-top:3px;color:var(--muted);font-size:.66rem;font-weight:750}
+.attendance-percent{display:inline-flex;min-width:62px;justify-content:center;border-radius:999px;padding:6px 9px;font-weight:950;background:#eef0f2;color:#4d5259}.attendance-percent.good{background:#e3f2ea;color:#2d6750}.attendance-percent.mid{background:#f5edd8;color:#7a6120}.attendance-percent.low{background:#f6e3e7;color:#922c45}.attendance-percent.none{background:#eef0f2;color:#777c83}
+.attendance-playing-status{display:inline-flex;border-radius:999px;padding:4px 7px;font-size:.61rem;font-weight:950;text-transform:uppercase;letter-spacing:.04em;background:#e5f1eb;color:#315f4a}.attendance-playing-status.injured{background:#f6e5e9;color:#8b2942}
+.attendance-matrix{border-collapse:separate;border-spacing:0;min-width:980px;width:100%}.attendance-matrix th,.attendance-matrix td{padding:8px;border-right:1px solid #e8eaed;border-bottom:1px solid #e8eaed;text-align:center;vertical-align:middle}
+.attendance-matrix thead th{position:sticky;top:0;z-index:3;background:#f7f8fa;color:#50555c;font-size:.64rem}.attendance-matrix .player-col{position:sticky;left:0;z-index:4;min-width:155px;text-align:left;background:#fff;font-weight:900}.attendance-matrix thead .player-col{z-index:5;background:#f7f8fa}
+.attendance-match-head{min-width:78px}.attendance-match-head strong{display:block;font-size:.68rem;color:#252a30}.attendance-match-head span{display:block;margin-top:2px;font-size:.58rem;color:var(--muted);max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attendance-cell{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:10px;font-size:.7rem;font-weight:950}.attendance-cell.present{background:#dff0e7;color:#2d6750}.attendance-cell.absent{background:#f5dfe5;color:#922c45}.attendance-cell.excused{background:#f4ecd5;color:#7a6120}.attendance-cell.unmarked{background:#eef0f2;color:#858a91}
+.attendance-legend{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0;color:var(--muted);font-size:.68rem;font-weight:800}.attendance-legend span{display:inline-flex;align-items:center;gap:5px}.attendance-legend i{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;font-style:normal;font-size:.6rem;font-weight:950}.attendance-empty{padding:24px;text-align:center;color:var(--muted)}
+@media(max-width:1100px){.attendance-page-metrics{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.attendance-page-metrics{grid-template-columns:repeat(2,1fr)}.attendance-page-controls{display:grid;grid-template-columns:1fr}.attendance-page-controls .control{min-width:0}.attendance-actions-top{width:100%}.attendance-actions-top .btn{flex:1}}
 </style>
 </head>
 <body>
@@ -1290,6 +1309,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     <div class="nav">
       <button class="active" data-view="dashboard">⌂ <span>Dashboard</span></button>
       <button data-view="gameday">⚽ <span>Game Day</span></button>
+      <button data-view="attendance">✓ <span>Attendance</span></button>
       <button data-view="announcements">✦ <span>Announcements</span></button>
       <button data-view="schedule">◷ <span>Schedule</span></button>
       <button data-view="roster">♟ <span>Roster</span></button>
@@ -1299,7 +1319,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v50.2</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.8</div>
   </aside>
 
   <main>
@@ -1344,6 +1364,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="sub">The things captains will use most often.</div>
           <div class="actions">
             <button class="action" onclick="openView('gameday')">⚽ Open Game Day</button>
+            <button class="action" onclick="openView('attendance')">✓ Attendance</button>
             <button class="action" onclick="openCrowdScoring()">👥 Crowd Scoring</button>
             <button class="action" onclick="openView('announcements')">＋ New announcement</button>
             <button class="action" onclick="openView('schedule')">＋ Add practice</button>
@@ -1590,6 +1611,37 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="attendance-list" id="matchAttendanceList"><div class="sub">Select a match to manage attendance.</div></div>
           <div class="attendance-note">Attendance stat = Present ÷ (Present + Absent). Excused matches are tracked but excluded from the percentage.</div>
         </div>
+      </div>
+    </section>
+
+    <section class="view" id="attendance">
+      <div class="grid attendance-page-metrics">
+        <div class="metric"><span>Team Attendance</span><strong id="attendancePageRate">—</strong><small id="attendancePageRateDetail">No attendance recorded</small></div>
+        <div class="metric"><span>Present</span><strong id="attendancePagePresent">0</strong></div>
+        <div class="metric"><span>Absent</span><strong id="attendancePageAbsent">0</strong></div>
+        <div class="metric"><span>Excused</span><strong id="attendancePageExcused">0</strong></div>
+        <div class="metric"><span>Players With Data</span><strong id="attendancePageTracked">0</strong></div>
+      </div>
+
+      <div class="panel">
+        <span class="pill">Season View</span>
+        <h2 style="margin:12px 0 4px">Player Attendance</h2>
+        <div class="sub">Every active permanent SKOR FC player in one view. Attendance is Captain-confirmed in Game Day. Excused matches are tracked but do not lower the attendance percentage.</div>
+        <div class="attendance-page-controls">
+          <div class="control"><label for="attendanceSearch">Find player</label><input id="attendanceSearch" type="search" placeholder="Name or jersey number"></div>
+          <div class="control"><label for="attendanceStatusFilter">Player status</label><select id="attendanceStatusFilter"><option value="all">All Players</option><option value="active">Active</option><option value="injured">Injured</option></select></div>
+          <div class="control"><label for="attendanceSort">Sort</label><select id="attendanceSort"><option value="jersey">Jersey Number</option><option value="attendance_desc">Attendance % — High to Low</option><option value="attendance_asc">Attendance % — Low to High</option><option value="absent_desc">Most Absences</option><option value="name">Name</option></select></div>
+          <div class="attendance-actions-top"><button class="btn btn-light" type="button" id="refreshAttendancePageBtn">Refresh</button><button class="btn btn-primary" type="button" onclick="openView('gameday')">Open Game Day Attendance</button></div>
+        </div>
+        <div class="attendance-table-wrap"><table class="attendance-table"><thead><tr><th>Player</th><th>Status</th><th>Present</th><th>Absent</th><th>Excused</th><th>Counted</th><th>Attendance</th><th>Last Marked</th></tr></thead><tbody id="attendancePlayerBody"><tr><td colspan="8">Loading attendance…</td></tr></tbody></table></div>
+      </div>
+
+      <div class="panel" style="margin-top:18px">
+        <span class="pill">By Match</span>
+        <h2 style="margin:12px 0 4px">Attendance History</h2>
+        <div class="sub">Latest 12 past/final matches. Unmarked cells make older games that still need backfill easy to spot.</div>
+        <div class="attendance-legend"><span><i class="attendance-cell present">P</i> Present</span><span><i class="attendance-cell absent">A</i> Absent</span><span><i class="attendance-cell excused">E</i> Excused</span><span><i class="attendance-cell unmarked">—</i> Unmarked</span></div>
+        <div class="attendance-matrix-wrap" style="margin-top:12px"><div id="attendanceMatrixHost"><div class="attendance-empty">Loading match history…</div></div></div>
       </div>
     </section>
 
@@ -3214,6 +3266,7 @@ sb.auth.onAuthStateChange((_event, session)=>{
 const meta = {
   dashboard:["Captain Dashboard","Manage the team without touching the website code."],
   gameday:["Game Day","Track live score, goals, assists and cards from the sideline."],
+  attendance:["Attendance","Review player attendance across the season and past matches."],
   announcements:["Announcements","Publish team updates to the homepage."],
   schedule:["Schedule","Create games, practices and team events."],
   roster:["Roster","Manage players, numbers, positions and status."],
@@ -3231,6 +3284,7 @@ function openView(id){
   if(btn) btn.classList.add("active");
   document.getElementById("pageTitle").textContent=meta[id][0];
   document.getElementById("pageSub").textContent=meta[id][1];
+  if(id==="attendance")loadAttendancePage();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function openCrowdScoring(){
@@ -3245,6 +3299,10 @@ function openCrowdScoring(){
   },300);
 }
 document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>openView(btn.dataset.view)));
+document.getElementById("attendanceSearch")?.addEventListener("input",()=>{renderAttendancePlayerTable();renderAttendanceMatrix();});
+document.getElementById("attendanceStatusFilter")?.addEventListener("change",()=>{renderAttendancePlayerTable();renderAttendanceMatrix();});
+document.getElementById("attendanceSort")?.addEventListener("change",renderAttendancePlayerTable);
+document.getElementById("refreshAttendancePageBtn")?.addEventListener("click",()=>loadAttendancePage(true));
 
 
 let ROSTER=[
@@ -3258,6 +3316,8 @@ let TEAM_PLAYING_STATUS_READY=false;
 let MATCH_TEMP_PLAYERS=[];
 let MATCH_RSVP_ATTENDANCE=[];
 let TEAM_ATTENDANCE_STATS={present_count:0,absent_count:0,excused_count:0,eligible_count:0,attendance_rate:null};
+let TEAM_ATTENDANCE_BY_PLAYER=[];
+let TEAM_ATTENDANCE_MATRIX=[];
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
@@ -3611,6 +3671,49 @@ async function loadDashboardAttendance(){
   detailEl.textContent=eligible
     ? `${present} present · ${absent} absent${excused?` · ${excused} excused`:''}`
     : (excused?`${excused} excused · no counted attendance`:"No attendance recorded");
+}
+
+
+function attendanceRateClass(rate){
+  if(rate===null||rate===undefined||Number.isNaN(Number(rate)))return "none";
+  const n=Number(rate); if(n>=90)return "good"; if(n>=75)return "mid"; return "low";
+}
+function attendanceDateShort(value){if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleDateString("en-US",{month:"short",day:"numeric"});}
+function attendanceDateTimeShort(value){if(!value)return "—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
+function attendanceCellMarkup(status){if(status==="present")return '<span class="attendance-cell present" title="Present">P</span>';if(status==="absent")return '<span class="attendance-cell absent" title="Absent">A</span>';if(status==="excused")return '<span class="attendance-cell excused" title="Excused">E</span>';return '<span class="attendance-cell unmarked" title="Unmarked">—</span>';}
+function attendanceFilteredPlayers(){
+  const q=(document.getElementById("attendanceSearch")?.value||"").trim().toLowerCase(),filter=document.getElementById("attendanceStatusFilter")?.value||"all",sort=document.getElementById("attendanceSort")?.value||"jersey";
+  let rows=[...TEAM_ATTENDANCE_BY_PLAYER];
+  if(q)rows=rows.filter(x=>`${x.jersey_number??""} ${x.display_name??""}`.toLowerCase().includes(q));
+  if(filter!=="all")rows=rows.filter(x=>(x.playing_status||"active")===filter);
+  const rate=x=>x.attendance_rate===null||x.attendance_rate===undefined?-1:Number(x.attendance_rate);
+  rows.sort((a,b)=>{if(sort==="attendance_desc")return rate(b)-rate(a)||Number(a.jersey_number)-Number(b.jersey_number);if(sort==="attendance_asc"){const ar=rate(a),br=rate(b);if(ar<0&&br>=0)return 1;if(br<0&&ar>=0)return -1;return ar-br||Number(a.jersey_number)-Number(b.jersey_number);}if(sort==="absent_desc")return Number(b.absent_count||0)-Number(a.absent_count||0)||Number(a.jersey_number)-Number(b.jersey_number);if(sort==="name")return String(a.display_name||"").localeCompare(String(b.display_name||""));return Number(a.jersey_number)-Number(b.jersey_number);});
+  return rows;
+}
+function renderAttendancePlayerTable(){
+  const body=document.getElementById("attendancePlayerBody");if(!body)return;const rows=attendanceFilteredPlayers();
+  if(!rows.length){body.innerHTML='<tr><td colspan="8"><div class="attendance-empty">No players match this filter.</div></td></tr>';return;}
+  body.innerHTML=rows.map(x=>{const p=Number(x.present_count||0),a=Number(x.absent_count||0),e=Number(x.excused_count||0),counted=Number(x.eligible_count||0),rate=x.attendance_rate===null||x.attendance_rate===undefined?null:Number(x.attendance_rate),inj=x.playing_status==="injured";return `<tr><td><div class="attendance-player-name">#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}<small>${counted+e} total marked match${counted+e===1?"":"es"}</small></div></td><td><span class="attendance-playing-status ${inj?"injured":""}">${inj?"Injured":"Active"}</span></td><td><strong>${p}</strong></td><td><strong>${a}</strong></td><td><strong>${e}</strong></td><td>${counted}</td><td><span class="attendance-percent ${attendanceRateClass(rate)}">${rate===null?"—":`${Math.round(rate)}%`}</span></td><td>${gdEsc(attendanceDateTimeShort(x.last_attendance_at))}</td></tr>`;}).join("");
+}
+function renderAttendanceMatrix(){
+  const host=document.getElementById("attendanceMatrixHost");if(!host)return;const q=(document.getElementById("attendanceSearch")?.value||"").trim().toLowerCase(),filter=document.getElementById("attendanceStatusFilter")?.value||"all";
+  const players=TEAM_ATTENDANCE_BY_PLAYER.filter(x=>(filter==="all"||(x.playing_status||"active")===filter)&&(!q||`${x.jersey_number??""} ${x.display_name??""}`.toLowerCase().includes(q))).sort((a,b)=>Number(a.jersey_number)-Number(b.jersey_number));
+  const mm=new Map();TEAM_ATTENDANCE_MATRIX.forEach(x=>{if(!mm.has(String(x.match_id)))mm.set(String(x.match_id),{match_id:x.match_id,kickoff:x.kickoff,opponent:x.opponent});});const matches=[...mm.values()].sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+  if(!matches.length){host.innerHTML='<div class="attendance-empty">No past/final matches are available yet.</div>';return;}
+  const sm=new Map(TEAM_ATTENDANCE_MATRIX.map(x=>[`${x.roster_player_id}|${x.match_id}`,x.attendance_status||null]));
+  const head=matches.map(m=>`<th class="attendance-match-head" title="${gdEsc(m.opponent||"Opponent")}"><strong>${gdEsc(attendanceDateShort(m.kickoff))}</strong><span>${gdEsc(m.opponent||"Opponent")}</span></th>`).join("");
+  const rows=players.map(p=>`<tr><td class="player-col">#${gdEsc(p.jersey_number)} ${gdEsc(p.display_name)}</td>${matches.map(m=>`<td>${attendanceCellMarkup(sm.get(`${p.roster_player_id}|${m.match_id}`))}</td>`).join("")}</tr>`).join("");
+  host.innerHTML=`<table class="attendance-matrix"><thead><tr><th class="player-col">Player</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderAttendancePage(){
+  const p=Number(TEAM_ATTENDANCE_STATS.present_count||0),a=Number(TEAM_ATTENDANCE_STATS.absent_count||0),e=Number(TEAM_ATTENDANCE_STATS.excused_count||0),counted=Number(TEAM_ATTENDANCE_STATS.eligible_count||0),rate=TEAM_ATTENDANCE_STATS.attendance_rate===null||TEAM_ATTENDANCE_STATS.attendance_rate===undefined?null:Number(TEAM_ATTENDANCE_STATS.attendance_rate),tracked=TEAM_ATTENDANCE_BY_PLAYER.filter(x=>Number(x.present_count||0)+Number(x.absent_count||0)+Number(x.excused_count||0)>0).length;
+  document.getElementById("attendancePageRate").textContent=rate===null?"—":`${Math.round(rate)}%`;document.getElementById("attendancePageRateDetail").textContent=counted?`${p} present · ${a} absent${e?` · ${e} excused`:""}`:"No counted attendance";document.getElementById("attendancePagePresent").textContent=p;document.getElementById("attendancePageAbsent").textContent=a;document.getElementById("attendancePageExcused").textContent=e;document.getElementById("attendancePageTracked").textContent=tracked;renderAttendancePlayerTable();renderAttendanceMatrix();
+}
+async function loadAttendancePage(showMessage=false){
+  if(!portalCanWrite())return;const body=document.getElementById("attendancePlayerBody"),host=document.getElementById("attendanceMatrixHost");if(body)body.innerHTML='<tr><td colspan="8">Loading attendance…</td></tr>';if(host)host.innerHTML='<div class="attendance-empty">Loading match history…</div>';
+  const [pr,mr,tr]=await Promise.all([sb.rpc("get_team_attendance_by_player"),sb.rpc("get_team_attendance_matrix",{p_limit:12}),sb.rpc("get_team_attendance_stats")]);
+  if(pr.error||mr.error||tr.error){const msg=pr.error?.message||mr.error?.message||tr.error?.message||"Attendance data unavailable.";if(body)body.innerHTML=`<tr><td colspan="8">Attendance page requires v51.8 SQL: ${gdEsc(msg)}</td></tr>`;if(host)host.innerHTML='<div class="attendance-empty">Run the v51.8 attendance page SQL migration.</div>';return;}
+  TEAM_ATTENDANCE_BY_PLAYER=pr.data||[];TEAM_ATTENDANCE_MATRIX=mr.data||[];TEAM_ATTENDANCE_STATS=(Array.isArray(tr.data)?tr.data[0]:tr.data)||TEAM_ATTENDANCE_STATS;renderAttendancePage();if(showMessage){const b=document.getElementById("refreshAttendancePageBtn");if(b){const old=b.textContent;b.textContent="Refreshed ✓";setTimeout(()=>b.textContent=old,1200);}}
 }
 
 function updateDashboardRoster(){
@@ -4130,6 +4233,7 @@ async function setMatchAttendance(playerId,statusValue){
   if(error)return alert('Could not update attendance: '+error.message);
   await loadPlayerEngagement();
   await loadDashboardAttendance();
+  if(document.getElementById("attendance")?.classList.contains("active"))await loadAttendancePage();
 }
 async function loadPlayerEngagement(){
   const panel=document.getElementById('playerEngagementPanel');if(!panel)return;
