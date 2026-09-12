@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v51.12-login-events">
+<meta name="skor-build" content="player-portal-v51.13-captain-feedback-privacy">
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <style>
@@ -128,7 +128,7 @@
           <h3>Team Comment</h3><p class="sub">Visible to other authenticated SKOR players and captains.</p>
           <textarea id="teamComment" maxlength="1500" placeholder="What worked? What should we do differently?"></textarea>
           <button class="btn secondary full" id="postTeamComment" type="button" style="margin-top:8px">Post to Team</button>
-          <h3 style="margin-top:18px">Captain Feedback</h3><p class="sub">Private. Only you and SKOR captains can see this comment.</p>
+          <h3 style="margin-top:18px">Send to Captains</h3><p class="sub">Private. Only SKOR captains can read this message. After you send it, the message itself will not appear in your Player Portal.</p>
           <textarea id="captainComment" maxlength="1500" placeholder="Formation, position, substitutions, concerns, ideas…"></textarea>
           <button class="btn secondary full" id="postCaptainComment" type="button" style="margin-top:8px">Send to Captains</button>
           <div class="status" id="commentStatus"></div>
@@ -422,14 +422,14 @@ async function selectFeedbackMatch(matchId){
   await Promise.all([loadComments(),loadReactions()]);$('feedbackSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 async function loadComments(){
-  if(!feedbackMatchId)return;const {data,error}=await db.rpc('get_player_match_comments',{p_match_id:feedbackMatchId});if(error){$('commentList').innerHTML=`<div class="sub">${esc(error.message)}</div>`;return;}const rows=data||[];
-  $('commentList').innerHTML=rows.length?rows.map(c=>`<div class="comment ${c.visibility}"><strong>#${c.jersey_number} ${esc(c.display_name)}</strong> · ${c.visibility==='captains'?'Captains Only':'Team'}<div>${esc(c.comment)}</div><small>${new Date(c.created_at).toLocaleString()}</small>${c.is_mine?`<button class="comment-action edit" data-edit-comment="${c.id}" data-edit-visibility="${c.visibility}" data-edit-text="${encodeURIComponent(c.comment)}" type="button">Edit my comment</button><button class="comment-action delete" data-delete-comment="${c.id}" type="button">Delete my comment</button>`:''}</div>`).join(''):'<div class="sub">No comments yet. You can start the discussion.</div>';
+  if(!feedbackMatchId)return;const {data,error}=await db.rpc('get_player_portal_match_comments',{p_match_id:feedbackMatchId});if(error){$('commentList').innerHTML=`<div class="sub">${esc(error.message)}</div>`;return;}const rows=data||[];
+  $('commentList').innerHTML=rows.length?rows.map(c=>`<div class="comment ${c.visibility}"><strong>#${c.jersey_number} ${esc(c.display_name)}</strong> · ${c.visibility==='captains'?'Captains Only':'Team'}<div>${esc(c.comment)}</div><small>${new Date(c.created_at).toLocaleString()}</small>${c.is_mine?`<button class="comment-action edit" data-edit-comment="${c.id}" data-edit-visibility="${c.visibility}" data-edit-text="${encodeURIComponent(c.comment)}" type="button">Edit my comment</button><button class="comment-action delete" data-delete-comment="${c.id}" type="button">Delete my comment</button>`:''}</div>`).join(''):'<div class="sub">No team comments yet.</div>';
   $('commentList').querySelectorAll('[data-edit-comment]').forEach(b=>b.addEventListener('click',()=>editComment(b.dataset.editComment,b.dataset.editVisibility,decodeURIComponent(b.dataset.editText||''))));
   $('commentList').querySelectorAll('[data-delete-comment]').forEach(b=>b.addEventListener('click',()=>deleteComment(b.dataset.deleteComment)));
 }
 async function editComment(id,visibility,currentText){const next=prompt('Edit your comment:',currentText||'');if(next===null)return;const text=next.trim();if(!text)return alert('Comment cannot be empty.');const vis=confirm('OK = Team comment. Cancel = Captains Only.')?'team':'captains';const {error}=await db.rpc('update_my_match_comment',{p_comment_id:id,p_visibility:vis||visibility,p_comment:text});if(error)return alert(error.message);await loadComments();}
 async function deleteComment(id){if(!confirm('Delete this comment?'))return;const {error}=await db.rpc('delete_my_match_comment',{p_comment_id:id});if(error)return alert(error.message);await loadComments();}
-async function postComment(visibility){const input=visibility==='team'?$('teamComment'):$('captainComment');const text=input.value.trim();if(!feedbackMatchId)return status('commentStatus','Choose a recent match first.',true);if(!text)return status('commentStatus','Write a comment first.',true);const {error}=await db.rpc('add_my_match_comment',{p_match_id:feedbackMatchId,p_visibility:visibility,p_comment:text});if(error)return status('commentStatus',error.message,true);input.value='';status('commentStatus',visibility==='team'?'Posted to the team.':'Sent privately to captains.');await loadComments();}
+async function postComment(visibility){const input=visibility==='team'?$('teamComment'):$('captainComment');const text=input.value.trim();if(!feedbackMatchId)return status('commentStatus','Choose a recent match first.',true);if(!text)return status('commentStatus','Write a comment first.',true);const {error}=await db.rpc('add_my_match_comment',{p_match_id:feedbackMatchId,p_visibility:visibility,p_comment:text});if(error)return status('commentStatus',error.message,true);input.value='';status('commentStatus',visibility==='team'?'Posted to the team.':'Sent privately to captains. Only captains can read it.');await loadComments();}
 $('postTeamComment').addEventListener('click',()=>postComment('team'));$('postCaptainComment').addEventListener('click',()=>postComment('captains'));
 async function loadReactions(){
   if(!feedbackMatchId)return;const [mine,sum]=await Promise.all([db.rpc('get_my_match_reaction',{p_match_id:feedbackMatchId}),db.rpc('get_match_reaction_summary',{p_match_id:feedbackMatchId})]);myReaction=(mine.data||[])[0]||{self_reaction:null,team_reaction:null};renderReactionButtons();const rows=sum.data||[],labels={great:'🔥 Great',good:'👍 Good',average:'😐 Average',rough:'👎 Rough'};const n=(scope,k)=>Number(rows.find(x=>x.reaction_scope===scope&&x.reaction===k)?.votes||0);$('reactionSummary').innerHTML=['great','good','average','rough'].map(k=>`<div class="summary-line"><span>${labels[k]}</span><span>Team ${n('team',k)} · Player experience ${n('self',k)}</span></div>`).join('');
