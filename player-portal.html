@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v51.2-rsvp-attendance">
+<meta name="skor-build" content="player-portal-v51.12-login-events">
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <style>
@@ -204,6 +204,8 @@ async function authorizePlayer(session=null){
     }
 
     portalAuthorized=true;
+    const loginEvent=await db.rpc('record_my_player_portal_login');
+    if(loginEvent.error)console.warn('Portal login event could not be recorded:',loginEvent.error);
     $('logoutBtn').classList.remove('hidden');
     syncCaptainPortalButton();
     showAuthLoading('Loading your SKOR stats, schedule and match activity…');
