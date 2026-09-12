@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.9-attendance-percentage-column" />
+  <meta name="skor-build" content="lineup-admin-v51.11-depth-continuation-rows" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1319,7 +1319,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.9</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.11</div>
   </aside>
 
   <main>
@@ -2389,16 +2389,56 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const depthCardX=50, depthCardY=1064, depthCardW=480, depthCardH=560;
     const planCardX=550, planCardY=1064, planCardW=480, planCardH=560;
 
-    const depthRows = subsByPosition.length ? subsByPosition.map((row, idx)=>{
-      const bubbleY = depthCardY + 98 + idx*40;
-      const names = row.names.join(", ");
-      return `
-        <rect x="${depthCardX+20}" y="${bubbleY}" width="${depthCardW-40}" height="34" rx="17" ry="17" fill="#f7f8fa" stroke="#e2e5e9"/>
-        <rect x="${depthCardX+24}" y="${bubbleY+3}" width="64" height="28" rx="14" ry="14" fill="#801A3D"/>
-        <text x="${depthCardX+56}" y="${bubbleY+22}" text-anchor="middle" font-size="17" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(row.key)}</text>
-        ${svgTextBlock(names, depthCardX+102, bubbleY+22, 36, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
-      `;
-    }).join("") : `<rect x="${depthCardX+20}" y="${depthCardY+104}" width="${depthCardW-40}" height="44" rx="22" ry="22" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${depthCardX+40}" y="${depthCardY+133}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No potential positions assigned.</text>`;
+    function wrapExportLines(value, maxChars=28){
+      const raw=String(value||"").trim();
+      if(!raw)return [];
+      const words=raw.split(/\s+/).filter(Boolean);
+      const lines=[];
+      let line="";
+      words.forEach(word=>{
+        const candidate=line?(line+" "+word):word;
+        if(candidate.length>maxChars && line){
+          lines.push(line);
+          line=word;
+        }else{
+          line=candidate;
+        }
+      });
+      if(line)lines.push(line);
+      return lines;
+    }
+
+    const depthRows = subsByPosition.length ? (()=>{
+      let currentY = depthCardY + 98;
+      const baseRowH = 34;
+      const continuationH = 30;
+      const innerGap = 4;
+      const positionGap = 8;
+      return subsByPosition.map((row)=>{
+        const names = row.names.join(", ");
+        const lines = wrapExportLines(names, 28);
+        const firstLine = lines[0] || "";
+        const continuationLines = lines.slice(1);
+        const firstY = currentY;
+        let svg = `
+          <rect x="${depthCardX+20}" y="${firstY}" width="${depthCardW-40}" height="${baseRowH}" rx="17" ry="17" fill="#f7f8fa" stroke="#e2e5e9"/>
+          <rect x="${depthCardX+24}" y="${firstY+3}" width="64" height="28" rx="14" ry="14" fill="#801A3D"/>
+          <text x="${depthCardX+56}" y="${firstY+22}" text-anchor="middle" font-size="17" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(row.key)}</text>
+          <text x="${depthCardX+102}" y="${firstY+22}" font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(firstLine)}</text>
+        `;
+        currentY += baseRowH;
+        continuationLines.forEach((line)=>{
+          currentY += innerGap;
+          svg += `
+            <rect x="${depthCardX+92}" y="${currentY}" width="${depthCardW-112}" height="${continuationH}" rx="15" ry="15" fill="#fbfbfc" stroke="#e7e9ec"/>
+            <text x="${depthCardX+106}" y="${currentY+20}" font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(line)}</text>
+          `;
+          currentY += continuationH;
+        });
+        currentY += positionGap;
+        return svg;
+      }).join("");
+    })() : `<rect x="${depthCardX+20}" y="${depthCardY+104}" width="${depthCardW-40}" height="44" rx="22" ry="22" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${depthCardX+40}" y="${depthCardY+133}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No potential positions assigned.</text>`;
 
     const renderPlanRows=(rows,startY,labelColor)=>{
       return rows.slice(0,4).map((entry, idx)=>{
@@ -3126,7 +3166,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.7 ready. Starting Lineup now has a true white header band above the field.');
+  markStatus('Lineup Builder v51.11 ready. Potential Positions use separate continuation rows so extra names never collide with the next position badge.');
 
   window.SKORLineup={
     setRoster,
