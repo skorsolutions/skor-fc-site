@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v50.7-calendar-arrival-kits" />
-  <title>SKOR FC Admin | Captain Injury Controls v50.6</title>
+  <meta name="skor-build" content="lineup-admin-v51.1-potential-positions-wording" />
+  <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
       --maroon:#741f35;
@@ -1750,7 +1750,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V40</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V51</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -1804,8 +1804,8 @@ body.viewer-mode .player-engagement-panel{display:none!important}
         </div>
 
         <div class="panel">
-          <h2>Position Depth & Sub Coverage</h2>
-          <div class="sub">Build a depth chart by position. A player can appear in as many positions as needed. This depth chart is saved inside each variation.</div>
+          <h2>Potential Positions</h2>
+          <div class="sub">The depth chart automatically matches the selected formation. A player can appear in as many formation positions as needed. This depth chart is saved inside each variation.</div>
           <div class="depth-grid" id="lineupDepthGrid"></div>
         </div>
 
@@ -1904,7 +1904,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
 
 
 <script>
-/* SKOR FC Lineup Builder v50.2 - multi-role player/captain auth + super admin controls */
+/* SKOR FC Lineup Builder v51 - formation-aware depth + balanced gameplan export */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"Joshua"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -1924,18 +1924,57 @@ body.viewer-mode .player-engagement-panel{display:none!important}
   };
   const FREEFORM = "Freeform / Custom";
 
-  const depthPositions = [
+  const positionLabels = {
+    GK:"Goalkeeper",
+    LB:"Left Back",
+    LCB:"Left Center Back",
+    CB:"Center Back",
+    RCB:"Right Center Back",
+    RB:"Right Back",
+    LWB:"Left Wing Back",
+    RWB:"Right Wing Back",
+    LDM:"Left Defensive Midfielder",
+    CDM:"Defensive Midfielder",
+    RDM:"Right Defensive Midfielder",
+    LM:"Left Midfielder",
+    LCM:"Left Central Midfielder",
+    CM:"Central Midfielder",
+    RCM:"Right Central Midfielder",
+    RM:"Right Midfielder",
+    LW:"Left Wing",
+    CAM:"Attacking Midfielder",
+    RW:"Right Wing",
+    LST:"Left Striker",
+    ST:"Striker",
+    RST:"Right Striker"
+  };
+
+  const freeformDepthPositions = [
     {key:"GK",label:"Goalkeeper"},
-    {key:"LB",label:"Left Back / LWB"},
+    {key:"LB",label:"Left Back"},
     {key:"CB",label:"Center Back"},
-    {key:"RB",label:"Right Back / RWB"},
-    {key:"CDM",label:"Defensive Mid"},
-    {key:"CM",label:"Central Mid"},
-    {key:"CAM",label:"Attacking Mid"},
-    {key:"LW",label:"Left Wing / LM"},
-    {key:"RW",label:"Right Wing / RM"},
+    {key:"RB",label:"Right Back"},
+    {key:"CDM",label:"Defensive Midfielder"},
+    {key:"CM",label:"Central Midfielder"},
+    {key:"CAM",label:"Attacking Midfielder"},
+    {key:"LW",label:"Left Wing"},
+    {key:"RW",label:"Right Wing"},
     {key:"ST",label:"Striker"}
   ];
+
+  function depthPositionsForFormation(formation=state?.formation){
+    if(isFreeform(formation))return freeformDepthPositions;
+    const shape=formations[formation]||formations["4-2-3-1"];
+    return shape.map(([key])=>({key,label:positionLabels[key]||key}));
+  }
+
+  function ensureDepthPositions(snapshot=state){
+    if(!snapshot.depth||typeof snapshot.depth!=="object")snapshot.depth={};
+    depthPositionsForFormation(snapshot.formation).forEach(pos=>{
+      if(!Array.isArray(snapshot.depth[pos.key]))snapshot.depth[pos.key]=[];
+    });
+    return snapshot.depth;
+  }
 
   const DRAFT_PREFIX = "skorLineupDraftV28";
   let captainKey = "captain";
@@ -1979,9 +2018,13 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     const rawFormation=value?.formation;
     const formation=(rawFormation===FREEFORM||formations[rawFormation])?rawFormation:"4-2-3-1";
     const depth={};
-    depthPositions.forEach(pos=>{
-      const raw=Array.isArray(value?.depth?.[pos.key])?value.depth[pos.key]:[];
-      depth[pos.key]=raw.filter(Boolean);
+    if(value?.depth && typeof value.depth==="object"){
+      Object.entries(value.depth).forEach(([key,raw])=>{
+        depth[key]=Array.isArray(raw)?raw.filter(Boolean).map(String):[];
+      });
+    }
+    depthPositionsForFormation(formation).forEach(pos=>{
+      if(!Array.isArray(depth[pos.key]))depth[pos.key]=[];
     });
     const freeform={};
     if(value?.freeform && typeof value.freeform==="object"){
@@ -2179,7 +2222,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       }).filter(Boolean);
   }
   function coverageForPlayer(pid, snapshot=state){
-    return depthPositions
+    return depthPositionsForFormation(snapshot?.formation)
       .filter(pos=>Array.isArray(snapshot?.depth?.[pos.key]) && snapshot.depth[pos.key].includes(pid))
       .map(pos=>pos.key);
   }
@@ -2214,12 +2257,13 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       return outMin+((value-min)/(max-min))*(outMax-outMin);
     }
 
-    const subsByPosition = depthPositions.map(pos=>{
+    const depthForExport=depthPositionsForFormation(state.formation);
+    const subsByPosition = depthForExport.map(pos=>{
       const names=(state?.depth?.[pos.key]||[])
         .map(pid=>player(pid))
         .filter(Boolean)
         .map(p=>playerListLabel(p,true));
-      return {key:pos.key, names};
+      return {key:pos.key, label:pos.label, names};
     }).filter(row=>row.names.length);
 
     const header = `
@@ -2271,35 +2315,36 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       `;
     }).join("");
 
-    const subsCardX=50, subsCardY=1064, subsCardW=612, subsCardH=360;
-    const subsRows = subsByPosition.length ? subsByPosition.map((row, idx)=>{
-      const rowY = subsCardY + 102 + idx*32;
+    const depthCardX=50, depthCardY=1064, depthCardW=480, depthCardH=560;
+    const planCardX=550, planCardY=1064, planCardW=480, planCardH=560;
+
+    const depthRows = subsByPosition.length ? subsByPosition.map((row, idx)=>{
+      const rowY = depthCardY + 104 + idx*39;
       const names = row.names.join(", ");
       return `
-        <text x="${subsCardX+24}" y="${rowY}" font-size="19" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">${esc(row.key)}</text>
-        <text x="${subsCardX+84}" y="${rowY}" font-size="18" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(names)}</text>
-        <line x1="${subsCardX+20}" y1="${rowY+13}" x2="${subsCardX+subsCardW-20}" y2="${rowY+13}" stroke="#eceef3"/>
+        <text x="${depthCardX+24}" y="${rowY}" font-size="18" font-weight="950" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">${esc(row.key)}</text>
+        ${svgTextBlock(names, depthCardX+84, rowY, 35, 18, 1, 'font-size="16" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+        <line x1="${depthCardX+20}" y1="${rowY+14}" x2="${depthCardX+depthCardW-20}" y2="${rowY+14}" stroke="#eceef3"/>
       `;
-    }).join("") : `<text x="${subsCardX+24}" y="${subsCardY+112}" font-size="24" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No substitute coverage assigned.</text>`;
+    }).join("") : `<text x="${depthCardX+24}" y="${depthCardY+116}" font-size="20" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No depth coverage assigned.</text>`;
 
-    const planCardX=686, planCardY=1064, planCardW=344, planCardH=560;
     const renderPlanRows=(rows,startY,labelColor)=>{
       return rows.slice(0,4).map((entry, idx)=>{
-        const top = startY + idx*54;
+        const top = startY + idx*55;
         const outText = prettyPlayers(entry.out, true);
         const inText = prettyPlayers(entry.in, true);
         return `
-          <text x="${planCardX+32}" y="${top}" font-size="15" font-weight="900" fill="${labelColor}" font-family="Arial, Helvetica, sans-serif">${idx+1}${idx===0?'st':idx===1?'nd':idx===2?'rd':'th'}</text>
-          ${svgTextBlock('Out: '+outText, planCardX+68, top-2, 25, 15, 1, 'font-size="13" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
-          ${svgTextBlock('In: '+inText, planCardX+68, top+23, 25, 15, 1, 'font-size="13" font-weight="800" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+          <text x="${planCardX+28}" y="${top}" font-size="16" font-weight="950" fill="${labelColor}" font-family="Arial, Helvetica, sans-serif">${ordinal(idx+1)}</text>
+          ${svgTextBlock('Out: '+outText, planCardX+76, top-2, 37, 17, 1, 'font-size="15" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+          ${svgTextBlock('In: '+inText, planCardX+76, top+24, 37, 17, 1, 'font-size="15" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
         `;
       }).join("");
     };
 
-    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1176, '#801A3D') : `<text x="${planCardX+24}" y="1176" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
-    const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1398, '#234b74') : `<text x="${planCardX+24}" y="1398" font-size="16" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
-    const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1372" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
-    const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1603" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
+    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1178, '#801A3D') : `<text x="${planCardX+24}" y="1178" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
+    const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1400, '#234b74') : `<text x="${planCardX+24}" y="1400" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
+    const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1374" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
+    const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1605" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
 
     const messageY=1648;
     const quoteBlock = state.quote ? `
@@ -2319,17 +2364,17 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       ${pitch}
       ${markerSvg}
 
-      <rect x="${subsCardX}" y="${subsCardY}" width="${subsCardW}" height="${subsCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
-      <text x="${subsCardX+24}" y="${subsCardY+48}" font-size="28" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Substitutes · ${substituteCount}</text>
-      <text x="${subsCardX+24}" y="${subsCardY+72}" font-size="16" font-weight="700" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">Coverage grouped by position from Position Depth.</text>
-      ${subsRows}
+      <rect x="${depthCardX}" y="${depthCardY}" width="${depthCardW}" height="${depthCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
+      <text x="${depthCardX+24}" y="${depthCardY+46}" font-size="25" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Potential Positions</text>
+      <text x="${depthCardX+24}" y="${depthCardY+72}" font-size="15" font-weight="700" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">${esc(state.formation)} positions · ${substituteCount} substitutes</text>
+      ${depthRows}
 
       <rect x="${planCardX}" y="${planCardY}" width="${planCardW}" height="${planCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
-      <text x="${planCardX+24}" y="${planCardY+48}" font-size="28" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Subs</text>
-      <text x="${planCardX+24}" y="1147" font-size="17" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
+      <text x="${planCardX+24}" y="${planCardY+46}" font-size="25" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Substitutions</text>
+      <text x="${planCardX+24}" y="1148" font-size="18" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
       ${firstHalfRows}
       ${firstHalfExtra}
-      <text x="${planCardX+24}" y="1369" font-size="17" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
+      <text x="${planCardX+24}" y="1370" font-size="18" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
       ${secondHalfRows}
       ${secondHalfExtra}
 
@@ -2559,8 +2604,9 @@ body.viewer-mode .player-engagement-panel{display:none!important}
   }
   function renderDepth(){
     const grid=document.getElementById('lineupDepthGrid'); if(!grid)return;
-    depthPositions.forEach(pos=>{ if(!Array.isArray(state.depth[pos.key])) state.depth[pos.key]=[]; });
-    grid.innerHTML=depthPositions.map(pos=>{
+    ensureDepthPositions(state);
+    const activeDepthPositions=depthPositionsForFormation(state.formation);
+    grid.innerHTML=activeDepthPositions.map(pos=>{
       const members=state.depth[pos.key];
       const chips=members.length?members.map((pid,index)=>{
         const p=player(pid); if(!p) return '';
@@ -2868,8 +2914,9 @@ body.viewer-mode .player-engagement-panel{display:none!important}
     if(isFreeform(next) && !isFreeform(prev)){
       convertSlotsToFreeform();
       state.formation=next;
-      persistDraft(); renderCore();
-      markStatus('Switched to Freeform / Custom. Your current on-field players were converted into a movable tactical board.');
+      ensureDepthPositions(state);
+      persistDraft(); renderAll();
+      markStatus('Switched to Freeform / Custom. Your current on-field players were converted into a movable tactical board and the depth chart changed to generic positions.');
       return;
     }
     state.formation=next;
@@ -2877,14 +2924,16 @@ body.viewer-mode .player-engagement-panel{display:none!important}
       state.freeform={};
       state.slots={};
       selectedPlayer=null;
-      persistDraft(); renderCore();
-      markStatus('Switched back to '+next+'. Starting XI was cleared because the custom board has no fixed positions.');
+      ensureDepthPositions(state);
+      persistDraft(); renderAll();
+      markStatus('Switched back to '+next+'. Starting XI was cleared and the depth chart now matches the '+next+' positions.');
       return;
     }
     state.slots={};
     selectedPlayer=null;
-    persistDraft(); renderCore();
-    markStatus('Formation changed to '+state.formation+'. Starting XI cleared; substitutes, depth and sub plan kept.');
+    ensureDepthPositions(state);
+    persistDraft(); renderAll();
+    markStatus('Formation changed to '+state.formation+'. Starting XI cleared; the depth chart now uses the exact '+state.formation+' position names. Existing depth assignments are preserved for any matching positions.');
   });
 
   if(labelMode) labelMode.addEventListener('change',()=>{
@@ -3003,7 +3052,7 @@ body.viewer-mode .player-engagement-panel{display:none!important}
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v50.4 ready. Select a match to add TEMP fill-ins for the XI, bench, depth and planned substitutions.');
+  markStatus('Lineup Builder v51 ready. Potential Positions now follows the selected formation and the gameplan export uses balanced depth/substitution panels.');
 
   window.SKORLineup={
     setRoster,
