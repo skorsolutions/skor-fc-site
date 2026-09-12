@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.1-potential-positions-wording" />
+  <meta name="skor-build" content="lineup-admin-v51.2-rsvp-attendance" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1236,11 +1236,14 @@
 .portal-meta{display:block;color:var(--muted);font-size:.62rem;line-height:1.3;margin:2px 0 6px}
 .portal-actions{display:flex;gap:5px;flex-wrap:wrap}
 .player-engagement-panel{border-color:#dacbd0;background:linear-gradient(145deg,#fff,#fbf8f9)}
-.engagement-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.engagement-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0}
 .engagement-stat{border:1px solid var(--line);border-radius:11px;padding:10px;text-align:center;background:#fff}.engagement-stat strong{font-size:1.2rem;display:block}.engagement-stat span{display:block;color:var(--muted);font-size:.62rem;font-weight:900;text-transform:uppercase;margin-top:3px}
 .engagement-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.engagement-list{display:grid;gap:7px}.engagement-item{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px;font-size:.75rem;line-height:1.4}.engagement-item small{display:block;color:var(--muted);margin-top:4px}.feedback-private{border-left:4px solid var(--maroon)}.feedback-team{border-left:4px solid #557b67}.reaction-bars{display:grid;gap:5px}.reaction-line{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:5px 0;font-size:.72rem}
-body.viewer-mode .player-engagement-panel{display:none!important}
-@media(max-width:800px){.engagement-grid{grid-template-columns:repeat(2,1fr)}.engagement-columns{grid-template-columns:1fr}}
+.rsvp-roster-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.rsvp-badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;font-size:.6rem;font-weight:950;text-transform:uppercase;letter-spacing:.04em}.rsvp-badge.going{background:#e5f1eb;color:#315f4a}.rsvp-badge.out{background:#f6e5e9;color:#8b2942}.rsvp-badge.none{background:#eef0f2;color:#70757c}.rsvp-badge.injured{margin-left:5px;background:#f6e5e9;color:#8b2942}.match-attendance-panel{border-color:#cfd7d3;background:linear-gradient(145deg,#fff,#f7faf8);margin-top:18px}.attendance-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.attendance-list{display:grid;gap:7px}.attendance-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px}.attendance-person small{display:block;margin-top:4px;color:var(--muted);font-size:.68rem}.attendance-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.attendance-actions .mini-btn.selected.present{background:#315f4a;color:#fff;border-color:#315f4a}.attendance-actions .mini-btn.selected.absent{background:#8b2942;color:#fff;border-color:#8b2942}.attendance-actions .mini-btn.selected.excused{background:#7a6221;color:#fff;border-color:#7a6221}.attendance-actions .mini-btn.clear-attendance{color:#70757c}.attendance-note{margin-top:8px;color:var(--muted);font-size:.7rem;line-height:1.4}
+body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-panel{display:none!important}
+@media(max-width:900px){.engagement-grid{grid-template-columns:repeat(3,1fr)}.attendance-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){.engagement-columns{grid-template-columns:1fr}.attendance-row{grid-template-columns:1fr}.attendance-actions{justify-content:flex-start}}
+@media(max-width:560px){.engagement-grid{grid-template-columns:repeat(2,1fr)}}
 
 
 /* SKOR FC v50.2 — multi-role + Super Admin controls */
@@ -1551,25 +1554,39 @@ body.viewer-mode .player-engagement-panel{display:none!important}
         </div>
 
         <div class="panel player-engagement-panel" id="playerEngagementPanel">
-          <h2>Player Portal Feedback</h2>
-          <div class="sub">Private captain view of player availability, match reactions and comments submitted from each player’s personal portal.</div>
+          <h2>RSVP & Player Feedback</h2>
+          <div class="sub">Private captain view of the full roster. Every player is shown as Going, Can't Make It, or No Response. RSVP notes, reactions and comments are shown here too.</div>
           <div class="engagement-grid">
             <div class="engagement-stat"><strong id="engGoing">0</strong><span>Going</span></div>
-            <div class="engagement-stat"><strong id="engMaybe">0</strong><span>Maybe</span></div>
-            <div class="engagement-stat"><strong id="engOut">0</strong><span>Out</span></div>
+            <div class="engagement-stat"><strong id="engOut">0</strong><span>Can't Make It</span></div>
+            <div class="engagement-stat"><strong id="engNoResponse">0</strong><span>No Response</span></div>
+            <div class="engagement-stat"><strong id="engInjured">0</strong><span>Injured</span></div>
             <div class="engagement-stat"><strong id="engResponses">0</strong><span>Reactions</span></div>
           </div>
           <div class="engagement-columns">
             <div>
-              <h3 style="margin:0 0 8px">Player Feedback</h3>
-              <div class="engagement-list" id="playerFeedbackList"><div class="sub">No feedback submitted yet.</div></div>
+              <h3 style="margin:0 0 8px">Full Roster RSVP</h3>
+              <div class="engagement-list" id="playerAvailabilityList"><div class="sub">Loading RSVP roster…</div></div>
             </div>
             <div>
-              <h3 style="margin:0 0 8px">Reactions & Availability</h3>
+              <h3 style="margin:0 0 8px">Player Feedback</h3>
               <div class="reaction-bars" id="playerReactionSummary"><div class="sub">No reactions submitted yet.</div></div>
-              <div class="engagement-list" id="playerAvailabilityList" style="margin-top:10px"></div>
+              <div class="engagement-list" id="playerFeedbackList" style="margin-top:10px"><div class="sub">No feedback submitted yet.</div></div>
             </div>
           </div>
+        </div>
+
+        <div class="panel match-attendance-panel" id="matchAttendancePanel">
+          <h2>Match Attendance</h2>
+          <div class="sub">Captain-confirmed attendance is separate from RSVP. Mark who actually attended. Excused absences do not lower the player's attendance percentage.</div>
+          <div class="attendance-grid">
+            <div class="engagement-stat"><strong id="attPresent">0</strong><span>Present</span></div>
+            <div class="engagement-stat"><strong id="attAbsent">0</strong><span>Absent</span></div>
+            <div class="engagement-stat"><strong id="attExcused">0</strong><span>Excused</span></div>
+            <div class="engagement-stat"><strong id="attUnmarked">0</strong><span>Unmarked</span></div>
+          </div>
+          <div class="attendance-list" id="matchAttendanceList"><div class="sub">Select a match to manage attendance.</div></div>
+          <div class="attendance-note">Attendance stat = Present ÷ (Present + Absent). Excused matches are tracked but excluded from the percentage.</div>
         </div>
       </div>
     </section>
@@ -3234,6 +3251,7 @@ let TEAM_CAPTAIN_ACCESS=[];
 let TEAM_PLAYING_STATUS=[];
 let TEAM_PLAYING_STATUS_READY=false;
 let MATCH_TEMP_PLAYERS=[];
+let MATCH_RSVP_ATTENDANCE=[];
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
@@ -4043,28 +4061,62 @@ startCrowdSummaryRefresh();
 
 
 function engagementPlayerName(id){const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));return p?`#${p.jersey_number} ${p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0]}`:'Player';}
+function rsvpAdminLabel(status){return status==='going'?'Going':status==='out'?"Can't Make It":'No Response';}
+function attendanceAdminLabel(status){return status==='present'?'Present':status==='absent'?'Absent':status==='excused'?'Excused':'Unmarked';}
+function renderMatchAttendance(){
+  const list=document.getElementById('matchAttendanceList');if(!list)return;
+  const rows=MATCH_RSVP_ATTENDANCE||[];
+  document.getElementById('attPresent').textContent=rows.filter(x=>x.attendance_status==='present').length;
+  document.getElementById('attAbsent').textContent=rows.filter(x=>x.attendance_status==='absent').length;
+  document.getElementById('attExcused').textContent=rows.filter(x=>x.attendance_status==='excused').length;
+  document.getElementById('attUnmarked').textContent=rows.filter(x=>!x.attendance_status).length;
+  list.innerHTML=rows.length?rows.map(x=>{
+    const current=x.attendance_status||'';
+    const rsvp=rsvpAdminLabel(x.rsvp_status);
+    const injury=x.playing_status==='injured'?' · Injured':'';
+    return `<div class="attendance-row"><div class="attendance-person"><strong>#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong><small>RSVP: ${gdEsc(rsvp)}${gdEsc(injury)}</small></div><div class="attendance-actions"><button class="mini-btn ${current==='present'?'selected present':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="present">Present</button><button class="mini-btn ${current==='absent'?'selected absent':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="absent">Absent</button><button class="mini-btn ${current==='excused'?'selected excused':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="excused">Excused</button>${current?`<button class="mini-btn clear-attendance" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="unmarked">Clear</button>`:''}</div></div>`;
+  }).join(''):'<div class="sub">No active permanent roster players found.</div>';
+  list.querySelectorAll('[data-attendance-player]').forEach(btn=>btn.addEventListener('click',()=>setMatchAttendance(btn.dataset.attendancePlayer,btn.dataset.attendanceStatus)));
+}
+async function setMatchAttendance(playerId,statusValue){
+  if(!portalCanWrite()){viewerBlocked('record match attendance');return;}
+  if(!gameDaySelected?.id)return;
+  if(!['present','absent','excused','unmarked'].includes(statusValue))return;
+  const row=MATCH_RSVP_ATTENDANCE.find(x=>String(x.roster_player_id)===String(playerId));
+  const name=row?`#${row.jersey_number} ${row.display_name}`:'this player';
+  if(statusValue==='absent'&&!confirm(`Mark ${name} Absent? This will count against their attendance percentage.`))return;
+  const {error}=await sb.rpc('captain_set_match_attendance',{p_match_id:gameDaySelected.id,p_roster_player_id:playerId,p_status:statusValue});
+  if(error)return alert('Could not update attendance: '+error.message);
+  await loadPlayerEngagement();
+}
 async function loadPlayerEngagement(){
   const panel=document.getElementById('playerEngagementPanel');if(!panel)return;
   if(!portalCanWrite())return;
   const matchId=gameDaySelected?.id;
-  const feedback=document.getElementById('playerFeedbackList'),reaction=document.getElementById('playerReactionSummary'),availList=document.getElementById('playerAvailabilityList');
-  if(!matchId){feedback.innerHTML='<div class="sub">Select a match.</div>';return;}
+  const feedback=document.getElementById('playerFeedbackList'),reaction=document.getElementById('playerReactionSummary'),availList=document.getElementById('playerAvailabilityList'),attendanceList=document.getElementById('matchAttendanceList');
+  if(!matchId){feedback.innerHTML='<div class="sub">Select a match.</div>';availList.innerHTML='<div class="sub">Select a match.</div>';if(attendanceList)attendanceList.innerHTML='<div class="sub">Select a match.</div>';return;}
   const [a,r,c]=await Promise.all([
-    sb.from('player_match_availability').select('player_id,status,note,updated_at').eq('match_id',matchId),
+    sb.rpc('get_match_rsvp_attendance',{p_match_id:matchId}),
     sb.from('player_match_reactions').select('player_id,self_reaction,team_reaction,updated_at').eq('match_id',matchId),
     sb.rpc('get_player_match_comments',{p_match_id:matchId})
   ]);
-  if(a.error||r.error||c.error){feedback.innerHTML='<div class="sub">Player Portal engagement requires the v50.2 SQL migration.</div>';reaction.innerHTML='';availList.innerHTML='';return;}
-  const av=a.data||[],rx=r.data||[],comments=c.data||[];
-  document.getElementById('engGoing').textContent=av.filter(x=>x.status==='going').length;
-  document.getElementById('engMaybe').textContent=av.filter(x=>x.status==='maybe').length;
-  document.getElementById('engOut').textContent=av.filter(x=>x.status==='out').length;
+  if(a.error||r.error||c.error){
+    feedback.innerHTML='<div class="sub">RSVP / attendance requires the v51.2 SQL migration.</div>';
+    reaction.innerHTML='';availList.innerHTML='';if(attendanceList)attendanceList.innerHTML='<div class="sub">Run the v51.2 RSVP / attendance SQL migration.</div>';return;
+  }
+  MATCH_RSVP_ATTENDANCE=a.data||[];
+  const rows=MATCH_RSVP_ATTENDANCE,rx=r.data||[],comments=c.data||[];
+  document.getElementById('engGoing').textContent=rows.filter(x=>x.rsvp_status==='going').length;
+  document.getElementById('engOut').textContent=rows.filter(x=>x.rsvp_status==='out').length;
+  document.getElementById('engNoResponse').textContent=rows.filter(x=>!x.rsvp_status).length;
+  document.getElementById('engInjured').textContent=rows.filter(x=>x.playing_status==='injured').length;
   document.getElementById('engResponses').textContent=rx.length;
   feedback.innerHTML=comments.length?comments.map(x=>`<div class="engagement-item ${x.visibility==='captains'?'feedback-private':'feedback-team'}"><strong>${gdEsc(`#${x.jersey_number} ${x.display_name}`)}</strong> · ${x.visibility==='captains'?'Captains Only':'Team'}<div>${gdEsc(x.comment)}</div><small>${new Date(x.created_at).toLocaleString()}</small></div>`).join(''):'<div class="sub">No player comments submitted yet.</div>';
   const labels={great:'🔥 Great',good:'👍 Good',average:'😐 Average',rough:'👎 Rough'};
   const line=(scope,key)=>rx.filter(x=>x[scope]===key).length;
   reaction.innerHTML=['great','good','average','rough'].map(k=>`<div class="reaction-line"><span>${labels[k]}</span><span>Team ${line('team_reaction',k)} · Self ${line('self_reaction',k)}</span></div>`).join('');
-  availList.innerHTML=av.length?av.map(x=>`<div class="engagement-item"><strong>${gdEsc(engagementPlayerName(x.player_id))}</strong> — ${x.status==='going'?'Going':x.status==='maybe'?'Maybe':"Can't Make It"}${x.note?`<small>${gdEsc(x.note)}</small>`:''}</div>`).join(''):'<div class="sub">No availability responses yet.</div>';
+  availList.innerHTML=rows.length?rows.map(x=>`<div class="engagement-item rsvp-roster-item"><div><strong>#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong>${x.rsvp_note?`<small>${gdEsc(x.rsvp_note)}</small>`:''}</div><div><span class="rsvp-badge ${x.rsvp_status||'none'}">${gdEsc(rsvpAdminLabel(x.rsvp_status))}</span>${x.playing_status==='injured'?'<span class="rsvp-badge injured">Injured</span>':''}</div></div>`).join(''):'<div class="sub">No active roster players found.</div>';
+  renderMatchAttendance();
 }
 
 async function loadGameDayMatches(preferredId=null){
