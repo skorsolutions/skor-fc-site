@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.8-attendance-page" />
+  <meta name="skor-build" content="lineup-admin-v51.9-attendance-percentage-column" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1319,7 +1319,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.8</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.9</div>
   </aside>
 
   <main>
@@ -1633,7 +1633,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="control"><label for="attendanceSort">Sort</label><select id="attendanceSort"><option value="jersey">Jersey Number</option><option value="attendance_desc">Attendance % — High to Low</option><option value="attendance_asc">Attendance % — Low to High</option><option value="absent_desc">Most Absences</option><option value="name">Name</option></select></div>
           <div class="attendance-actions-top"><button class="btn btn-light" type="button" id="refreshAttendancePageBtn">Refresh</button><button class="btn btn-primary" type="button" onclick="openView('gameday')">Open Game Day Attendance</button></div>
         </div>
-        <div class="attendance-table-wrap"><table class="attendance-table"><thead><tr><th>Player</th><th>Status</th><th>Present</th><th>Absent</th><th>Excused</th><th>Counted</th><th>Attendance</th><th>Last Marked</th></tr></thead><tbody id="attendancePlayerBody"><tr><td colspan="8">Loading attendance…</td></tr></tbody></table></div>
+        <div class="attendance-table-wrap"><table class="attendance-table"><thead><tr><th>Player</th><th>Status</th><th>Attendance %</th><th>Present</th><th>Absent</th><th>Excused</th><th>Counted</th><th>Last Marked</th></tr></thead><tbody id="attendancePlayerBody"><tr><td colspan="8">Loading attendance…</td></tr></tbody></table></div>
       </div>
 
       <div class="panel" style="margin-top:18px">
@@ -3693,7 +3693,7 @@ function attendanceFilteredPlayers(){
 function renderAttendancePlayerTable(){
   const body=document.getElementById("attendancePlayerBody");if(!body)return;const rows=attendanceFilteredPlayers();
   if(!rows.length){body.innerHTML='<tr><td colspan="8"><div class="attendance-empty">No players match this filter.</div></td></tr>';return;}
-  body.innerHTML=rows.map(x=>{const p=Number(x.present_count||0),a=Number(x.absent_count||0),e=Number(x.excused_count||0),counted=Number(x.eligible_count||0),rate=x.attendance_rate===null||x.attendance_rate===undefined?null:Number(x.attendance_rate),inj=x.playing_status==="injured";return `<tr><td><div class="attendance-player-name">#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}<small>${counted+e} total marked match${counted+e===1?"":"es"}</small></div></td><td><span class="attendance-playing-status ${inj?"injured":""}">${inj?"Injured":"Active"}</span></td><td><strong>${p}</strong></td><td><strong>${a}</strong></td><td><strong>${e}</strong></td><td>${counted}</td><td><span class="attendance-percent ${attendanceRateClass(rate)}">${rate===null?"—":`${Math.round(rate)}%`}</span></td><td>${gdEsc(attendanceDateTimeShort(x.last_attendance_at))}</td></tr>`;}).join("");
+  body.innerHTML=rows.map(x=>{const p=Number(x.present_count||0),a=Number(x.absent_count||0),e=Number(x.excused_count||0),counted=Number(x.eligible_count||0),rate=x.attendance_rate===null||x.attendance_rate===undefined?null:Number(x.attendance_rate),inj=x.playing_status==="injured";return `<tr><td><div class="attendance-player-name">#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}<small>${counted+e} total marked match${counted+e===1?"":"es"}</small></div></td><td><span class="attendance-playing-status ${inj?"injured":""}">${inj?"Injured":"Active"}</span></td><td><span class="attendance-percent ${attendanceRateClass(rate)}">${rate===null?"—":`${Math.round(rate)}%`}</span></td><td><strong>${p}</strong></td><td><strong>${a}</strong></td><td><strong>${e}</strong></td><td>${counted}</td><td>${gdEsc(attendanceDateTimeShort(x.last_attendance_at))}</td></tr>`;}).join("");
 }
 function renderAttendanceMatrix(){
   const host=document.getElementById("attendanceMatrixHost");if(!host)return;const q=(document.getElementById("attendanceSearch")?.value||"").trim().toLowerCase(),filter=document.getElementById("attendanceStatusFilter")?.value||"all";
