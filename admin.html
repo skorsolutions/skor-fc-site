@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.28-bench-absent-action" />
+  <meta name="skor-build" content="lineup-admin-v51.29-mobile-nav-restore" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -491,19 +491,26 @@
       aside .brand,aside .aside-bottom{display:none!important}
       .nav{
         margin:0!important;
+        width:100%;
         height:100%;
         display:flex!important;
+        flex-direction:row!important;
+        flex-wrap:nowrap!important;
         align-items:stretch;
+        justify-content:flex-start;
         gap:2px;
         padding:5px 6px;
         overflow-x:auto;
         overflow-y:hidden;
         -webkit-overflow-scrolling:touch;
         scrollbar-width:none;
+        touch-action:pan-x;
+        scroll-snap-type:x proximity;
       }
       .nav::-webkit-scrollbar{display:none}
       .nav button{
         flex:0 0 68px;
+        scroll-snap-align:start;
         min-width:68px;
         height:60px;
         padding:6px 3px!important;
@@ -1613,7 +1620,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.28</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.29</div>
   </aside>
 
   <main>
