@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.19-responsive-jersey-grid" />
+  <meta name="skor-build" content="lineup-admin-v51.20-copy-lineup-to-game" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -108,6 +108,30 @@
     .lineup-players-panel .player-chip,
     .lineup-players-panel .jersey-card{width:100%;max-width:100%;box-sizing:border-box}
     .lineup-players-panel .jersey{max-width:100%;margin-left:auto;margin-right:auto}
+
+
+    .lineup-copy-dialog{
+      border:0;
+      border-radius:16px;
+      padding:0;
+      width:min(560px,calc(100vw - 28px));
+      max-width:560px;
+      box-shadow:0 24px 70px rgba(0,0,0,.30);
+      background:#fff;
+      color:var(--ink);
+    }
+    .lineup-copy-dialog::backdrop{background:rgba(15,16,19,.62);backdrop-filter:blur(2px)}
+    .lineup-copy-shell{padding:18px}
+    .lineup-copy-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .lineup-copy-head h3{margin:0;font-size:1.1rem}
+    .lineup-copy-close{border:0;background:#f1f2f4;border-radius:9px;width:34px;height:34px;cursor:pointer;font-size:18px;font-weight:900}
+    .lineup-copy-grid{display:grid;grid-template-columns:1fr;gap:12px}
+    .lineup-copy-grid label{display:block;font-size:.72rem;font-weight:900;color:var(--muted);margin-bottom:5px}
+    .lineup-copy-grid select,.lineup-copy-grid input{width:100%}
+    .lineup-copy-summary{padding:10px 12px;border-radius:10px;background:#f7f8fa;border:1px solid #e1e3e7;font-size:.76rem;line-height:1.45;color:#555b63}
+    .lineup-copy-warning{display:none;padding:10px 12px;border-radius:10px;background:#fff5df;border:1px solid #ead3a0;color:#6e551d;font-size:.76rem;font-weight:800;line-height:1.45}
+    .lineup-copy-warning.show{display:block}
+    .lineup-copy-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
 
     @media(min-width:901px) and (max-width:1220px){
       .app{grid-template-columns:188px minmax(0,1fr)}
@@ -1057,7 +1081,7 @@
     body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete{display:none!important}
     body.viewer-mode #gameday #statusControls,body.viewer-mode #gameday .event-buttons,body.viewer-mode #gameday #eventEditor,body.viewer-mode #gameday #saveMotmBtn,body.viewer-mode #gameday #clearMotmBtn{display:none!important}
     body.viewer-mode #gameday #motmPlayer,body.viewer-mode #gameday #motmReason,body.viewer-mode #gameday #motmManualName,body.viewer-mode #gameday #motmManualNumber,body.viewer-mode #gameday #motmMatchNumber{pointer-events:none;opacity:.72}
-    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
+    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
     body.viewer-mode #lineups .player-pool,body.viewer-mode #lineups .soccer-pitch,body.viewer-mode #lineups .bench-zone,body.viewer-mode #lineups .depth-grid,body.viewer-mode #lineups .sub-plan{pointer-events:none}
     body.viewer-mode #lineups .player-card,body.viewer-mode #lineups .depth-chip,body.viewer-mode #lineups .sub-player-chip{cursor:default!important}
     @media(max-width:650px){.portal-role-badge{order:3}.viewer-banner{align-items:flex-start;flex-direction:column}}
@@ -1394,7 +1418,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.19</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.20</div>
   </aside>
 
   <main>
@@ -1936,7 +1960,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option><option>Freeform / Custom</option></select></div><div><label>Player Labels</label><select id="lineupLabelMode"><option value="names">Names + Numbers</option><option value="numbers">Numbers Only</option></select></div>
             <div><label>Variation name</label><input id="lineupVariationName" value="Balanced" placeholder="Balanced, Aggressive, Protect Lead..."></div>
             <div><label>Captain</label><select id="lineupCaptain"><option value="">Select captain…</option></select></div>
-            <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button>
+            <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button><button class="btn btn-light" id="copyCurrentLineupBtn" type="button">Copy Current to Game</button>
           </div>
           <div class="lineup-status" id="lineupStatus"></div>
         </div>
@@ -2085,6 +2109,35 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </table>
       </div>
     </section>
+  
+    <dialog class="lineup-copy-dialog" id="copyLineupDialog">
+      <div class="lineup-copy-shell">
+        <div class="lineup-copy-head">
+          <div>
+            <h3>Copy Lineup to Game</h3>
+            <div class="sub" id="copyLineupSourceLabel">Copy this lineup into another game without changing the source.</div>
+          </div>
+          <button class="lineup-copy-close" id="copyLineupCloseBtn" type="button" aria-label="Close">×</button>
+        </div>
+        <div class="lineup-copy-grid">
+          <div>
+            <label for="copyLineupTargetGame">Destination game</label>
+            <select id="copyLineupTargetGame"></select>
+          </div>
+          <div>
+            <label for="copyLineupName">New variation name</label>
+            <input id="copyLineupName" maxlength="80" placeholder="Copied lineup">
+          </div>
+          <div class="lineup-copy-summary" id="copyLineupSummary">The copied lineup will be saved as a new variation under the destination game.</div>
+          <div class="lineup-copy-warning" id="copyLineupTempWarning"></div>
+        </div>
+        <div class="lineup-copy-actions">
+          <button class="btn btn-light" id="copyLineupCancelBtn" type="button">Cancel</button>
+          <button class="btn btn-primary" id="copyLineupConfirmBtn" type="button">Copy Lineup</button>
+        </div>
+      </div>
+    </dialog>
+
   </main>
 </div>
 
@@ -2170,6 +2223,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   let sharedVariations = [];
   let allSharedVariations = [];
   let sharedTinkerVariations = [];
+  let lineupCopyContext=null;
   let realtimeChannel = null;
   let state = blankState("4-2-3-1");
 
@@ -2960,6 +3014,172 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     }));
   }
 
+
+  function lineupTempIds(snapshot){
+    const s=normalizeState(snapshot||{});
+    const ids=new Set();
+    const add=pid=>{if(String(pid||"").startsWith("temp:"))ids.add(String(pid));};
+    Object.values(s.slots||{}).forEach(add);
+    Object.keys(s.freeform||{}).forEach(add);
+    (s.bench||[]).forEach(add);
+    Object.values(s.depth||{}).forEach(list=>(list||[]).forEach(add));
+    ["firstHalf","secondHalf"].forEach(phase=>(s.subs?.[phase]||[]).forEach(row=>{
+      (row.out||[]).forEach(add);
+      (row.in||[]).forEach(add);
+    }));
+    add(s.captainId);
+    return [...ids];
+  }
+
+  function stripTempPlayersForCopy(snapshot){
+    const s=normalizeState(clone(snapshot||{}));
+    const removed=lineupTempIds(s);
+    const isTemp=pid=>String(pid||"").startsWith("temp:");
+
+    Object.keys(s.slots||{}).forEach(key=>{
+      if(isTemp(s.slots[key]))delete s.slots[key];
+    });
+    Object.keys(s.freeform||{}).forEach(pid=>{
+      if(isTemp(pid))delete s.freeform[pid];
+    });
+    s.bench=(s.bench||[]).filter(pid=>!isTemp(pid));
+    Object.keys(s.depth||{}).forEach(key=>{
+      s.depth[key]=(s.depth[key]||[]).filter(pid=>!isTemp(pid));
+    });
+    s.subs=normalizeSubs(s.subs);
+    ["firstHalf","secondHalf"].forEach(phase=>{
+      s.subs[phase].forEach(row=>{
+        row.out=(row.out||[]).filter(pid=>!isTemp(pid));
+        row.in=(row.in||[]).filter(pid=>!isTemp(pid));
+      });
+    });
+    if(isTemp(s.captainId))s.captainId="";
+    return {snapshot:s,removed};
+  }
+
+  function lineupCopyTargetOptions(sourceEventKey){
+    return [...eventMatches.values()]
+      .filter(m=>String(m.id)!==String(sourceEventKey||""))
+      .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+  }
+
+  function lineupCopySourceDescription(ctx){
+    if(ctx?.sourceType==="saved"){
+      return (ctx.sourceEventKey==="tinker"?"Tinker":"Saved game lineup")+' — '+(ctx.sourceName||"Untitled");
+    }
+    return eventKey()==="tinker"?"Current Tinker board":"Current game board";
+  }
+
+  function updateCopyLineupDialogPreview(){
+    const targetSel=document.getElementById("copyLineupTargetGame");
+    const summary=document.getElementById("copyLineupSummary");
+    const warning=document.getElementById("copyLineupTempWarning");
+    if(!lineupCopyContext||!targetSel)return;
+
+    const target=eventMatches.get(String(targetSel.value));
+    const result=stripTempPlayersForCopy(lineupCopyContext.snapshot);
+    if(summary){
+      const destination=target?formatMatch(target):"Select a game";
+      summary.textContent='A new saved variation will be created under '+destination+'. The source lineup will not be changed.';
+    }
+    if(warning){
+      if(result.removed.length){
+        warning.classList.add("show");
+        warning.textContent=result.removed.length+' match-specific TEMP player'+(result.removed.length===1?'':'s')+' will be removed from the copy. Their field, bench, Potential Position, captain, or planned-sub assignments will be left open for the destination game.';
+      }else{
+        warning.classList.remove("show");
+        warning.textContent="";
+      }
+    }
+  }
+
+  function openCopyLineupDialog(context){
+    if(!window.SKORPortalCanWrite?.()){
+      window.SKORViewerBlocked?.("copy lineup variations");
+      return;
+    }
+    const dialog=document.getElementById("copyLineupDialog");
+    const targetSel=document.getElementById("copyLineupTargetGame");
+    const nameInput=document.getElementById("copyLineupName");
+    const sourceLabel=document.getElementById("copyLineupSourceLabel");
+    if(!dialog||!targetSel||!nameInput)return;
+
+    lineupCopyContext={
+      sourceType:context?.sourceType||"current",
+      sourceEventKey:String(context?.sourceEventKey||eventKey()),
+      sourceName:String(context?.sourceName||document.getElementById("lineupVariationName")?.value||"Lineup"),
+      snapshot:normalizeState(clone(context?.snapshot||state))
+    };
+
+    const targets=lineupCopyTargetOptions(lineupCopyContext.sourceEventKey);
+    if(!targets.length){
+      markStatus("No other scheduled games are available to copy this lineup into.",false);
+      return;
+    }
+
+    targetSel.innerHTML=targets.map(m=>'<option value="'+esc(String(m.id))+'">'+esc(formatMatch(m))+'</option>').join("");
+    nameInput.value=(lineupCopyContext.sourceName||"Lineup")+' Copy';
+    if(sourceLabel)sourceLabel.textContent='Source: '+lineupCopySourceDescription(lineupCopyContext);
+    updateCopyLineupDialogPreview();
+
+    if(typeof dialog.showModal==="function")dialog.showModal();
+    else dialog.setAttribute("open","");
+  }
+
+  function closeCopyLineupDialog(){
+    const dialog=document.getElementById("copyLineupDialog");
+    if(!dialog)return;
+    if(typeof dialog.close==="function"&&dialog.open)dialog.close();
+    else dialog.removeAttribute("open");
+    lineupCopyContext=null;
+  }
+
+  async function confirmCopyLineup(){
+    if(!lineupCopyContext)return;
+    if(!window.SKORPortalCanWrite?.()){
+      window.SKORViewerBlocked?.("copy lineup variations");
+      return;
+    }
+    const sb=sbClient();
+    if(!sb){markStatus("Supabase is not connected.",false);return;}
+
+    const targetId=String(document.getElementById("copyLineupTargetGame")?.value||"");
+    const target=eventMatches.get(targetId);
+    const name=(document.getElementById("copyLineupName")?.value||"").trim()||"Copied Lineup";
+    const confirmBtn=document.getElementById("copyLineupConfirmBtn");
+    if(!target){markStatus("Choose a destination game.",false);return;}
+
+    const {snapshot,removed}=stripTempPlayersForCopy(lineupCopyContext.snapshot);
+    const originalText=confirmBtn?.textContent||"Copy Lineup";
+    if(confirmBtn){confirmBtn.disabled=true;confirmBtn.textContent="Copying…";}
+
+    try{
+      const {data:{user},error:userError}=await sb.auth.getUser();
+      if(userError||!user)throw new Error(userError?.message||"Captain session not found.");
+      const fullName=user.user_metadata?.full_name||user.user_metadata?.name||user.email||"Captain";
+      const payload={
+        event_key:String(target.id),
+        event_label:formatMatch(target),
+        name,
+        state:snapshot,
+        created_by:user.id,
+        created_by_name:fullName,
+        created_by_email:user.email||null
+      };
+      const {error}=await sb.from("lineup_variations").insert(payload);
+      if(error)throw error;
+
+      const sourceName=lineupCopyContext?.sourceName||name;
+      closeCopyLineupDialog();
+      await refreshVariations(false);
+      markStatus('Copied "'+sourceName+'" to '+formatMatch(target)+' as "'+name+'".'+(removed.length?' '+removed.length+' TEMP player'+(removed.length===1?' was':'s were')+' removed from the copy.':''));
+    }catch(err){
+      markStatus("Could not copy lineup: "+(err?.message||err),false);
+    }finally{
+      if(confirmBtn){confirmBtn.disabled=false;confirmBtn.textContent=originalText;}
+    }
+  }
+
   function renderVariations(){
     const box=document.getElementById('lineupVariationList');
     const count=document.getElementById('lineupVariationCount');
@@ -3002,7 +3222,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             '<span class="variation-meta">'+esc(snapshot.formation)+' · '+starters+' on field · '+bench+' subs</span>'+
             '<span class="variation-meta">'+esc(formatStamp(v.created_at))+'</span>'+
             '<span class="variation-owner">Saved by '+esc(owner)+'</span></button>'+
-            '<div class="variation-card-actions"><button class="mini-btn variation-delete" type="button" data-delete-variation="'+esc(v.id)+'">Delete</button></div></div>';
+            '<div class="variation-card-actions"><button class="mini-btn variation-copy" type="button" data-copy-variation="'+esc(v.id)+'">Copy to Game</button><button class="mini-btn variation-delete" type="button" data-delete-variation="'+esc(v.id)+'">Delete</button></div></div>';
         }).join('');
       return '<section class="variation-game-group"><div class="variation-game-head"><div class="variation-game-title">'+esc(group.key==='tinker'?'Tinker Boards':group.label)+'</div><span class="variation-game-count">'+group.items.length+'</span></div><div class="variation-game-row">'+cards+'</div></section>';
     }).join('');
@@ -3024,6 +3244,17 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       loadVariationRecord(rec);
       updateVariationSaveButton();
       renderVariations();
+    }));
+
+    box.querySelectorAll('[data-copy-variation]').forEach(btn=>btn.addEventListener('click',()=>{
+      const rec=library.find(v=>String(v.id)===String(btn.dataset.copyVariation));
+      if(!rec)return;
+      openCopyLineupDialog({
+        sourceType:"saved",
+        sourceEventKey:String(rec.event_key||"tinker"),
+        sourceName:rec.name||"Lineup",
+        snapshot:rec.state||{}
+      });
     }));
 
     box.querySelectorAll('[data-delete-variation]').forEach(btn=>btn.addEventListener('click',async()=>{
@@ -3207,6 +3438,12 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   const gameplanQuote=document.getElementById('gameplanQuote');
   const gameplanNotes=document.getElementById('gameplanNotes');
   const saveBtn=document.getElementById('saveLineupVariation');
+  const copyCurrentBtn=document.getElementById('copyCurrentLineupBtn');
+  const copyDialog=document.getElementById('copyLineupDialog');
+  const copyTargetSel=document.getElementById('copyLineupTargetGame');
+  const copyCloseBtn=document.getElementById('copyLineupCloseBtn');
+  const copyCancelBtn=document.getElementById('copyLineupCancelBtn');
+  const copyConfirmBtn=document.getElementById('copyLineupConfirmBtn');
   updateVariationSaveButton();
   const clearBtn=document.getElementById('clearLineupBtn');
   const addFirstHalfSubBtn=document.getElementById('addFirstHalfSubBtn');
@@ -3304,6 +3541,20 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     await refreshVariations(true);
   });
 
+  if(copyCurrentBtn)copyCurrentBtn.addEventListener('click',()=>{
+    openCopyLineupDialog({
+      sourceType:"current",
+      sourceEventKey:eventKey(),
+      sourceName:(document.getElementById("lineupVariationName")?.value||"Lineup").trim()||"Lineup",
+      snapshot:state
+    });
+  });
+  if(copyTargetSel)copyTargetSel.addEventListener('change',updateCopyLineupDialogPreview);
+  if(copyCloseBtn)copyCloseBtn.addEventListener('click',closeCopyLineupDialog);
+  if(copyCancelBtn)copyCancelBtn.addEventListener('click',closeCopyLineupDialog);
+  if(copyConfirmBtn)copyConfirmBtn.addEventListener('click',confirmCopyLineup);
+  if(copyDialog)copyDialog.addEventListener('cancel',event=>{event.preventDefault();closeCopyLineupDialog();});
+
   if(saveBtn) saveBtn.addEventListener('click', async()=>{
     if(!window.SKORPortalCanWrite?.()){ window.SKORViewerBlocked?.("save lineup variations"); return; }
     const sb=sbClient(); if(!sb){ markStatus('Supabase is not connected.',false); return; }
@@ -3364,7 +3615,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.19 ready. The player jersey pool now wraps responsively to the available panel width with no horizontal scrolling.');
+  markStatus('Lineup Builder v51.20 ready. Tinker boards, saved game lineups, and the current board can now be copied into another game while match-specific TEMP players are safely removed.');
 
   window.SKORLineup={
     setRoster,
