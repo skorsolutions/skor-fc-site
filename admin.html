@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.12-player-activity-feedback-inbox" />
+  <meta name="skor-build" content="lineup-admin-v51.14-export-second-half-toggle-dynamic-height" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1301,6 +1301,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 .dashboard-feedback-list{display:grid;gap:8px;margin-top:12px}.dashboard-feedback-item{border:1px solid #e3d8dc;border-radius:11px;background:#fff;padding:11px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}.dashboard-feedback-item strong{font-size:.78rem}.dashboard-feedback-meta{color:var(--muted);font-size:.63rem;margin-top:3px}.dashboard-feedback-comment{font-size:.74rem;line-height:1.45;margin-top:6px;color:#34383e}.feedback-visibility{display:inline-flex;border-radius:999px;padding:3px 6px;font-size:.56rem;font-weight:950;text-transform:uppercase;letter-spacing:.04em;background:#e7efe9;color:#3d6651}.feedback-visibility.captains{background:#f4e5e9;color:#8a2942}.dashboard-feedback-open{white-space:nowrap}
 @media(max-width:950px){.player-activity-summary{grid-template-columns:repeat(2,1fr)}.player-login-events{grid-template-columns:repeat(5,140px)}}
 @media(max-width:650px){.player-activity-summary{grid-template-columns:1fr 1fr}.player-activity-head{grid-template-columns:1fr}.player-activity-last{text-align:left}.dashboard-feedback-item{grid-template-columns:1fr}.dashboard-feedback-open{justify-self:start}}
+  .second-half-export-toggle{white-space:nowrap}.second-half-export-toggle.active{background:#234b74;color:#fff;border-color:#234b74}.sub-phase.second-half-hidden{opacity:.72}
 </style>
 </head>
 <body>
@@ -1336,7 +1337,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.12</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.14</div>
   </aside>
 
   <main>
@@ -2109,7 +2110,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function isFreeform(formation){ return formation === FREEFORM; }
   function blankSubs(){ return {firstHalf:[{out:[],in:[]}],secondHalf:[{out:[],in:[]}]}; }
   function blankState(formation){
-    return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),labelMode:"names",captainId:"",quote:"",notes:""};
+    return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),showSecondHalfSubs:false,labelMode:"names",captainId:"",quote:"",notes:""};
   }
   function normalizeSubs(value){
     const normalizeIds=v=>{
@@ -2154,13 +2155,16 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         }
       });
     }
+    const normalizedSubs=normalizeSubs(value?.subs);
+    const hasStoredSecondHalf=normalizedSubs.secondHalf.some(row=>(row.out||[]).length||(row.in||[]).length);
     return {
       formation,
       slots:(value?.slots&&typeof value.slots==="object")?value.slots:{},
       freeform,
       bench:Array.isArray(value?.bench)?value.bench.filter(Boolean):[],
       depth,
-      subs:normalizeSubs(value?.subs),
+      subs:normalizedSubs,
+      showSecondHalfSubs:typeof value?.showSecondHalfSubs==="boolean"?value.showSecondHalfSubs:hasStoredSecondHalf,
       labelMode:value?.labelMode==="numbers"?"numbers":"names",
       captainId:String(value?.captainId||""),
       quote:String(value?.quote||"").slice(0,100),
@@ -2353,7 +2357,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     return raw.replace(/[^a-z0-9\- _]/gi,"").replace(/\s+/g,"_")+"."+ext;
   }
   function buildGameplanSvg(){
-    const W=1080,H=1920;
+    const W=1080;
+    let H=1920;
     const previewTitle=(document.getElementById("lineupVariationName")?.value||"Untitled Variation").trim()||"Untitled Variation";
     const eventTitle=eventLabel()||"Tinker / No Game";
     const starters=fieldEntries();
@@ -2377,14 +2382,44 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       return outMin+((value-min)/(max-min))*(outMax-outMin);
     }
 
+    function wrapExportLines(value,maxChars=28){
+      const raw=String(value||"").trim();
+      if(!raw)return [];
+      const words=raw.split(/\s+/).filter(Boolean);
+      const lines=[];
+      let line="";
+      words.forEach(word=>{
+        const candidate=line?(line+" "+word):word;
+        if(candidate.length>maxChars&&line){
+          lines.push(line);
+          line=word;
+        }else{
+          line=candidate;
+        }
+      });
+      if(line)lines.push(line);
+      return lines;
+    }
+
     const depthForExport=depthPositionsForFormation(state.formation);
     const subsByPosition = depthForExport.map(pos=>{
       const names=(state?.depth?.[pos.key]||[])
         .map(pid=>player(pid))
         .filter(Boolean)
         .map(p=>playerListLabel(p,true));
-      return {key:pos.key, label:pos.label, names};
+      return {key:pos.key,label:pos.label,names,lines:wrapExportLines(names.join(", "),28)};
     }).filter(row=>row.names.length);
+
+    const depthBaseRowH=34,depthContinuationH=30,depthInnerGap=4,depthPositionGap=8;
+    const depthRowsHeight=subsByPosition.reduce((sum,row)=>{
+      const continuationCount=Math.max(0,(row.lines||[]).length-1);
+      return sum+depthBaseRowH+(continuationCount*(depthInnerGap+depthContinuationH))+depthPositionGap;
+    },0);
+    const depthNeededHeight=Math.max(560,98+depthRowsHeight+18);
+    const lowerCardExtra=Math.max(0,depthNeededHeight-560);
+    const lowerCardH=560+lowerCardExtra;
+    H+=lowerCardExtra;
+    const showSecondHalfExport=state.showSecondHalfSubs===true;
 
     const header = `
       <rect x="0" y="0" width="${W}" height="${H}" fill="#13161d"/>
@@ -2435,27 +2470,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       `;
     }).join("");
 
-    const depthCardX=50, depthCardY=1064, depthCardW=480, depthCardH=560;
-    const planCardX=550, planCardY=1064, planCardW=480, planCardH=560;
-
-    function wrapExportLines(value, maxChars=28){
-      const raw=String(value||"").trim();
-      if(!raw)return [];
-      const words=raw.split(/\s+/).filter(Boolean);
-      const lines=[];
-      let line="";
-      words.forEach(word=>{
-        const candidate=line?(line+" "+word):word;
-        if(candidate.length>maxChars && line){
-          lines.push(line);
-          line=word;
-        }else{
-          line=candidate;
-        }
-      });
-      if(line)lines.push(line);
-      return lines;
-    }
+    const depthCardX=50, depthCardY=1064, depthCardW=480, depthCardH=lowerCardH;
+    const planCardX=550, planCardY=1064, planCardW=480, planCardH=lowerCardH;
 
     const depthRows = subsByPosition.length ? (()=>{
       let currentY = depthCardY + 98;
@@ -2464,8 +2480,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const innerGap = 4;
       const positionGap = 8;
       return subsByPosition.map((row)=>{
-        const names = row.names.join(", ");
-        const lines = wrapExportLines(names, 28);
+        const lines = row.lines||[];
         const firstLine = lines[0] || "";
         const continuationLines = lines.slice(1);
         const firstY = currentY;
@@ -2505,11 +2520,11 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     };
 
     const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1170, '#801A3D') : `<rect x="${planCardX+20}" y="1170" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="1200" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
-    const secondHalfRows = secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1404, '#234b74') : `<rect x="${planCardX+20}" y="1404" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="1434" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`;
+    const secondHalfRows = !showSecondHalfExport ? '' : (secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1404, '#234b74') : `<rect x="${planCardX+20}" y="1404" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="1434" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`);
     const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1394" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
-    const secondHalfExtra = secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1628" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
+    const secondHalfExtra = showSecondHalfExport&&secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1628" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
 
-    const messageY=1648;
+    const messageY=1648+lowerCardExtra;
     const quoteBlock = state.quote ? `
       <rect x="50" y="${messageY}" width="980" height="76" rx="20" ry="20" fill="#801A3D"/>
       ${svgTextBlock('“'+state.quote+'”',W/2,messageY+39,68,24,2,'text-anchor="middle" font-size="24" font-style="italic" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif"')}
@@ -2537,9 +2552,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <text x="${planCardX+24}" y="1142" font-size="19" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
       ${firstHalfRows}
       ${firstHalfExtra}
-      <text x="${planCardX+24}" y="1376" font-size="19" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>
-      ${secondHalfRows}
-      ${secondHalfExtra}
+      ${showSecondHalfExport?`<text x="${planCardX+24}" y="1376" font-size="19" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>${secondHalfRows}${secondHalfExtra}`:''}
 
       ${quoteBlock}
       ${notesBlock}
@@ -2560,7 +2573,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const img=new Image();
       img.onload=()=>{
         const canvas=document.createElement("canvas");
-        canvas.width=1080; canvas.height=1920;
+        const svgHeight=Number(svgText.match(/<svg[^>]*height="([0-9]+)"/i)?.[1]||1920);
+        canvas.width=1080; canvas.height=svgHeight;
         const ctx=canvas.getContext("2d");
         if(ext==="jpg"){
           ctx.fillStyle="#ffffff";
@@ -2825,8 +2839,15 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       '</div>';
   }
   function subPhaseHTML(title,note,phase,rows){
-    return '<div class="sub-phase"><div class="sub-phase-head"><div class="sub-phase-title">'+title+'</div><div class="sub-phase-note">'+note+'</div></div>'+
-      rows.map((r,i)=>subRowHTML(r,phase,i,true)).join('')+'</div>';
+    const secondHalf=phase==="secondHalf";
+    const enabled=!secondHalf||state.showSecondHalfSubs===true;
+    const toggle=secondHalf
+      ? '<button class="mini-btn second-half-export-toggle '+(enabled?'active':'')+'" type="button" data-second-half-export-toggle="1">'+(enabled?'✓ Show on Export':'Hidden from Export')+'</button>'
+      : '';
+    return '<div class="sub-phase '+(secondHalf&&!enabled?'second-half-hidden':'')+'"><div class="sub-phase-head"><div><div class="sub-phase-title">'+title+'</div><div class="sub-phase-note">'+note+'</div></div>'+toggle+'</div>'+
+      rows.map((r,i)=>subRowHTML(r,phase,i,true)).join('')+
+      (secondHalf?'<div class="sub-multi-help">'+(enabled?'Second-half substitutions will appear on the exported gameplan.':'Second-half planning is saved, but hidden from the exported gameplan.')+'</div>':'')+
+      '</div>';
   }
   function renderSubPlan(){
     const box=document.getElementById('lineupSubPlan'); if(!box)return;
@@ -2834,6 +2855,14 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     box.innerHTML=
       subPhaseHTML('First Half Subs','1st, 2nd, 3rd, 4th... planned changes before halftime','firstHalf',state.subs.firstHalf)+
       subPhaseHTML('Second Half Subs','1st, 2nd, 3rd, 4th... planned changes after halftime','secondHalf',state.subs.secondHalf);
+
+    box.querySelector('[data-second-half-export-toggle]')?.addEventListener('click',()=>{
+      state.showSecondHalfSubs=!state.showSecondHalfSubs;
+      persistDraft();
+      renderSubPlan();
+      renderGameplanPreview();
+      markStatus(state.showSecondHalfSubs?'Second-half substitutions will show on the gameplan export.':'Second-half substitutions are hidden from the gameplan export.');
+    });
 
     box.querySelectorAll('[data-sub-chip]').forEach(btn=>btn.addEventListener('click',()=>{
       const phase=btn.dataset.subPhase;
@@ -3208,14 +3237,15 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   if(addSecondHalfSubBtn) addSecondHalfSubBtn.addEventListener('click',()=>{
     state.subs=normalizeSubs(state.subs);
     state.subs.secondHalf.push({out:[],in:[]});
-    persistDraft(); renderSubPlan();
-    markStatus('Second-half substitution added. Save a variation to share the plan.');
+    state.showSecondHalfSubs=true;
+    persistDraft(); renderSubPlan(); renderGameplanPreview();
+    markStatus('Second-half substitution added and enabled for the gameplan export.');
   });
 
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.11 ready. Potential Positions use separate continuation rows so extra names never collide with the next position badge.');
+  markStatus('Lineup Builder v51.14 ready. Second-half substitutions can be hidden from export, and Potential Positions expand the export height instead of running off the page.');
 
   window.SKORLineup={
     setRoster,
