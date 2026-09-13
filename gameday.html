@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090a0d">
-<meta name="skor-build" content="gameday-v50.2-universal-auth-crowd-id-adaptive-consensus">
-<title>SKOR FC | Crowd Game Day v50.2</title>
+<meta name="skor-build" content="gameday-v51.25-official-lineup-match-center">
+<title>SKOR FC | Match Center v51.25</title>
 <meta name="description" content="SKOR FC crowd-powered live match scoring, referee decision review and Man of the Match voting.">
 <style>
 :root{--bg:#07080a;--panel:#111318;--panel2:#171a20;--line:#2d3138;--text:#f5f5f6;--muted:#9da2aa;--maroon:#8f1836;--maroon2:#b51c43;--green:#2f7a5c;--amber:#9b7220;--red:#a52a3d;--blue:#315b85}
@@ -143,6 +143,48 @@
 .identity-row{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:10px}.identity-chip{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border:1px solid #343941;border-radius:999px;background:#101318;color:#c7cbd0;font-size:10px;font-weight:900}
 @media(max-width:520px){.email-auth .auth-actions,.email-auth .code-row{grid-template-columns:1fr}.email-auth .auth-actions .btn,.email-auth .code-row .btn{width:100%}}
 
+
+/* SKOR FC v51.25 — Official lineup Match Center */
+.lineup-showcase{overflow:hidden;padding:0!important;background:linear-gradient(180deg,#12151a,#0b0d10)!important}
+.lineup-showcase-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 16px 12px;border-bottom:1px solid #262a31}
+.lineup-showcase-title{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.lineup-showcase-title h2{margin:0;font-size:21px}
+.lineup-final-badge{display:inline-flex;padding:5px 8px;border-radius:999px;background:#163329;color:#80d6aa;font-size:9px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+.lineup-updated{font-size:10px;color:#8d949d;margin-top:5px}
+.match-lineup-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(210px,.75fr);gap:0}
+.match-pitch-wrap{padding:16px;background:radial-gradient(circle at 50% 45%,rgba(72,148,92,.12),transparent 60%)}
+.match-pitch{position:relative;width:min(100%,470px);aspect-ratio:68/105;margin:auto;border:3px solid rgba(255,255,255,.88);border-radius:12px;overflow:hidden;background:repeating-linear-gradient(0deg,#367845 0 10%,#3e824c 10% 20%);box-shadow:inset 0 0 35px rgba(0,0,0,.2),0 15px 35px rgba(0,0,0,.24)}
+.match-pitch:before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.78)}
+.match-pitch:after{content:"";position:absolute;left:40%;top:calc(50% - 10%);width:20%;aspect-ratio:1;border:2px solid rgba(255,255,255,.78);border-radius:50%}
+.match-box{position:absolute;left:21%;width:58%;height:16%;border:2px solid rgba(255,255,255,.78)}
+.match-box.top{top:-2px}.match-box.bottom{bottom:-2px}
+.match-six{position:absolute;left:35%;width:30%;height:7%;border:2px solid rgba(255,255,255,.78)}
+.match-six.top{top:-2px}.match-six.bottom{bottom:-2px}
+.match-player{position:absolute;transform:translate(-50%,-50%);width:76px;text-align:center;z-index:3}
+.match-role{font-size:9px;font-weight:950;color:#d7efdc;text-shadow:0 1px 3px #173d23;margin-bottom:2px}
+.match-jersey{position:relative;width:45px;height:40px;margin:auto;background:linear-gradient(145deg,#a21d43,#71102c);clip-path:polygon(20% 0,35% 7%,65% 7%,80% 0,100% 19%,85% 34%,78% 28%,78% 100%,22% 100%,22% 28%,15% 34%,0 19%);display:grid;place-items:center;color:#fff;font-size:15px;font-weight:950;filter:drop-shadow(0 4px 5px rgba(0,0,0,.34))}
+.match-jersey:before{content:"";position:absolute;top:2px;width:14px;height:7px;border-radius:0 0 12px 12px;background:#17181c}
+.match-player-name{margin-top:3px;font-size:10px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-lineup-side{padding:16px;border-left:1px solid #282c32;background:#101217}
+.match-lineup-section+.match-lineup-section{margin-top:16px}
+.match-lineup-section h3{font-size:12px;margin:0 0 8px;color:#d4d7db;text-transform:uppercase;letter-spacing:.08em}
+.match-bench{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.match-bench-player{display:flex;align-items:center;gap:7px;padding:7px;border:1px solid #30353d;border-radius:10px;background:#171a1f;min-width:0}
+.match-bench-num{display:grid;place-items:center;min-width:30px;height:30px;border-radius:8px;background:#75132f;color:#fff;font-size:11px;font-weight:950}
+.match-bench-name{font-size:10px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-wave{border:1px solid #30353d;border-radius:11px;padding:8px 9px;background:#15181d;margin-top:7px}
+.match-wave-title{font-size:10px;font-weight:950;color:#d15d79}
+.match-wave-copy{font-size:9px;color:#a6abb2;line-height:1.5;margin-top:3px}
+.lineup-no-final{padding:18px;color:#8c929a;font-size:12px}
+@media(max-width:680px){
+ .match-lineup-layout{grid-template-columns:1fr}
+ .match-lineup-side{border-left:0;border-top:1px solid #282c32}
+ .match-pitch{width:min(100%,390px)}
+ .match-player{width:64px}
+ .match-jersey{width:40px;height:36px;font-size:13px}
+ .match-player-name{font-size:9px}
+}
+
 </style>
 </head>
 <body>
@@ -195,6 +237,19 @@
     <div class="crowdline" id="crowdLine">0 scorers joined</div>
     <div class="identity-row"><div class="identity-chip" id="crowdIdentity">Crowd ID</div><button class="mini" id="changeCrowdIdBtn" type="button">Change ID</button></div>
     <div class="pendingbar hidden" id="pendingScore"></div>
+  </div>
+
+
+  <div class="card lineup-showcase" id="officialLineupCard">
+    <div class="lineup-showcase-head">
+      <div>
+        <div class="lineup-showcase-title"><div class="eyebrow">Official Team Sheet</div><span class="lineup-final-badge">Production / Final</span></div>
+        <h2 style="margin:5px 0 0" id="officialLineupName">SKOR FC Lineup</h2>
+        <div class="lineup-updated" id="officialLineupUpdated">Waiting for the captain's published lineup.</div>
+      </div>
+      <div class="phase" id="officialFormation" style="margin-top:0">Formation</div>
+    </div>
+    <div id="officialLineupBody"><div class="lineup-no-final">No official lineup has been published for this match yet.</div></div>
   </div>
 
   <div class="card">
@@ -252,7 +307,7 @@
 const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-let user=null,sessionId=null,session=null,match=null,roster=[],participants=[],events=[],reports=[],refDecisions=[],refVotes=[],motmVotes=[],currentEventType=null,refreshTimer=null,presenceTimer=null,realtimeChannel=null;
+let user=null,sessionId=null,session=null,match=null,roster=[],participants=[],events=[],reports=[],refDecisions=[],refVotes=[],motmVotes=[],productionLineup=null,productionTempPlayers=[],currentEventType=null,refreshTimer=null,presenceTimer=null,realtimeChannel=null;
 const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
 function showScreen(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');}
 function setStatus(id,msg,error=false){const e=$(id);if(!e)return;e.textContent=msg||"";e.classList.toggle('error',!!error);}
@@ -280,7 +335,7 @@ async function openSession(id){
   if(presenceTimer)clearInterval(presenceTimer);
   presenceTimer=setInterval(touchPresence,30000);
 }
-async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_sessions').select('id,match_id,active,motm_voting_open,ref_review_open,expires_at').eq('id',sessionId).single();if(s.error){return;}session=s.data;const [m,r,p,e,er,rd,rv,mv]=await Promise.all([
+async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_sessions').select('id,match_id,active,motm_voting_open,ref_review_open,expires_at').eq('id',sessionId).single();if(s.error){return;}session=s.data;const [m,r,p,e,er,rd,rv,mv,gp]=await Promise.all([
  db.from('matches').select('id,kickoff,status,home_team,away_team,location').eq('id',session.match_id).single(),
  db.from('public_roster').select('player_key,display_name,jersey_number,position').order('jersey_number',{ascending:true}),
  db.rpc('get_game_day_participants',{p_session_id:sessionId}),
@@ -288,8 +343,12 @@ async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_se
  db.from('game_day_event_reports').select('event_id,user_id,verdict,player_key,player_name,player_number,assist_player_key,assist_player_name,assist_player_number,opponent_player_name').eq('session_id',sessionId),
  db.from('game_day_ref_decisions').select('*').eq('session_id',sessionId).eq('active',true).order('created_at',{ascending:false}),
  db.from('game_day_ref_votes').select('decision_id,user_id,vote').eq('session_id',sessionId),
- db.from('game_day_motm_votes').select('user_id,player_key,player_name,player_number').eq('session_id',sessionId)
-]);match=m.data||null;roster=r.data||[];participants=p.data||[];events=e.data||[];reports=er.data||[];refDecisions=rd.data||[];refVotes=rv.data||[];motmVotes=mv.data||[];render();}
+ db.from('game_day_motm_votes').select('user_id,player_key,player_name,player_number').eq('session_id',sessionId),
+ db.rpc('get_match_center_production_lineup',{p_session_id:sessionId})
+]);match=m.data||null;roster=r.data||[];participants=p.data||[];events=e.data||[];reports=er.data||[];refDecisions=rd.data||[];refVotes=rv.data||[];motmVotes=mv.data||[];
+const gpRow=gp.error?null:(Array.isArray(gp.data)?gp.data[0]:gp.data);
+productionLineup=gpRow||null;productionTempPlayers=Array.isArray(gpRow?.temp_players)?gpRow.temp_players:[];
+render();}
 const ACTIVE_WINDOW_MS=5*60*1000;
 function activeParticipants(){
   const cutoff=Date.now()-ACTIVE_WINDOW_MS;
@@ -315,6 +374,91 @@ async function touchPresence(){
 }
 function assistConsensus(ev){const rs=reports.filter(r=>r.event_id===ev.id&&r.verdict==='confirm'&&r.assist_player_name);if(!rs.length)return null;const counts={};rs.forEach(r=>{const k=r.assist_player_key||r.assist_player_name;counts[k]=(counts[k]||{n:0,name:r.assist_player_name,number:r.assist_player_number});counts[k].n++;});return Object.values(counts).sort((a,b)=>b.n-a.n)[0]||null;}
 function eventLabel(ev){const pn=ev.player_name?`${ev.player_number?'#'+ev.player_number+' ':''}${ev.player_name}`:'';const ac=assistConsensus(ev);if(ev.event_type==='skor_goal')return `⚽ SKOR Goal${pn?' — '+pn:''}${ac?` · Assist ${ac.number?'#'+ac.number+' ':''}${ac.name} (${ac.n})`:''}`;if(ev.event_type==='opponent_goal')return `⚽ Opponent Goal`;if(ev.event_type==='opponent_own_goal')return `↩ Opponent Own Goal — SKOR`;if(ev.event_type==='skor_own_goal')return `↪ SKOR Own Goal — Opponent`;if(ev.event_type==='skor_yellow_card')return `🟨 SKOR Yellow${pn?' — '+pn:''}`;if(ev.event_type==='skor_red_card')return `🟥 SKOR Red${pn?' — '+pn:''}`;if(ev.event_type==='opponent_yellow_card')return `🟨 Opponent Yellow${ev.opponent_player_name?' — '+ev.opponent_player_name:''}`;if(ev.event_type==='opponent_red_card')return `🟥 Opponent Red${ev.opponent_player_name?' — '+ev.opponent_player_name:''}`;return ev.event_type;}
+
+const MATCH_FORMATIONS={
+  "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
+  "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
+  "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
+  "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
+};
+function matchLineupPlayer(pid){
+  const key=String(pid||"");
+  if(key.startsWith("temp:")){
+    const id=key.slice(5);
+    const t=productionTempPlayers.find(x=>String(x.id)===id);
+    return t?{name:t.display_name||"TEMP",number:t.jersey_number||"TEMP",temp:true}:{name:"TEMP",number:"TEMP",temp:true};
+  }
+  const p=roster.find(x=>String(x.player_key)===key);
+  return p?{name:p.display_name,number:p.jersey_number,temp:false}:{name:key||"Player",number:"?",temp:false};
+}
+function renderOfficialLineup(){
+  const body=$('officialLineupBody'), nameEl=$('officialLineupName'), updated=$('officialLineupUpdated'), formationEl=$('officialFormation');
+  if(!body||!nameEl||!updated||!formationEl)return;
+  if(!productionLineup){
+    nameEl.textContent='SKOR FC Lineup';
+    updated.textContent="Waiting for the captain's published lineup.";
+    formationEl.textContent='Formation';
+    body.innerHTML='<div class="lineup-no-final">No official lineup has been published for this match yet.</div>';
+    return;
+  }
+  const state=productionLineup.state||{};
+  const formation=state.formation||"4-2-3-1";
+  nameEl.textContent=productionLineup.name||"Official Lineup";
+  formationEl.textContent=formation;
+  updated.textContent='Published '+new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(productionLineup.updated_at||productionLineup.created_at));
+
+  let markers=[];
+  if(formation==="Freeform / Custom"){
+    markers=Object.entries(state.freeform||{}).map(([pid,pt])=>({pid,role:"",x:Number(pt?.x)||50,y:Number(pt?.y)||50}));
+  }else{
+    markers=(MATCH_FORMATIONS[formation]||MATCH_FORMATIONS["4-2-3-1"]).map(([role,x,y])=>{
+      const pid=state.slots?.[role];
+      return pid?{pid,role,x,y}:null;
+    }).filter(Boolean);
+  }
+
+  const markerHtml=markers.map(m=>{
+    const p=matchLineupPlayer(m.pid);
+    return `<div class="match-player" style="left:${m.x}%;top:${m.y}%">
+      <div class="match-role">${esc(m.role||"")}</div>
+      <div class="match-jersey">${esc(p.number)}</div>
+      <div class="match-player-name">${esc(p.name)}${p.temp?' · TEMP':''}</div>
+    </div>`;
+  }).join("");
+
+  const bench=(state.bench||[]).map(matchLineupPlayer);
+  const benchHtml=bench.length?bench.map(p=>`<div class="match-bench-player"><div class="match-bench-num">${esc(p.number)}</div><div class="match-bench-name">${esc(p.name)}${p.temp?' · TEMP':''}</div></div>`).join(""):'<div class="empty">No bench listed.</div>';
+
+  const waves=[];
+  (state.subs?.firstHalf||[]).forEach((row,i)=>{
+    if((row.out||[]).length||(row.in||[]).length)waves.push({phase:"1st Half",i:i+1,row});
+  });
+  if(state.showSecondHalfSubs===true){
+    (state.subs?.secondHalf||[]).forEach((row,i)=>{
+      if((row.out||[]).length||(row.in||[]).length)waves.push({phase:"2nd Half",i:i+1,row});
+    });
+  }
+  const wavesHtml=waves.length?waves.map(w=>{
+    const label=String(w.row.label||"").trim();
+    const outs=(w.row.out||[]).map(pid=>{const p=matchLineupPlayer(pid);return `${p.number} ${p.name}`}).join(", ")||"—";
+    const ins=(w.row.in||[]).map(pid=>{const p=matchLineupPlayer(pid);return `${p.number} ${p.name}`}).join(", ")||"—";
+    return `<div class="match-wave"><div class="match-wave-title">${esc(w.phase)} · Wave ${w.i}${label?' — '+esc(label):''}</div><div class="match-wave-copy">OUT: ${esc(outs)}<br>IN: ${esc(ins)}</div></div>`;
+  }).join(""):'<div class="empty">No planned substitution waves published.</div>';
+
+  body.innerHTML=`<div class="match-lineup-layout">
+    <div class="match-pitch-wrap">
+      <div class="match-pitch">
+        <div class="match-box top"></div><div class="match-six top"></div>
+        <div class="match-box bottom"></div><div class="match-six bottom"></div>
+        ${markerHtml}
+      </div>
+    </div>
+    <aside class="match-lineup-side">
+      <div class="match-lineup-section"><h3>Bench</h3><div class="match-bench">${benchHtml}</div></div>
+      <div class="match-lineup-section"><h3>Planned Waves</h3>${wavesHtml}</div>
+    </aside>
+  </div>`;
+}
 function render(){
   if(!match)return;
   $('homeTeam').textContent=match.home_team;
@@ -335,7 +479,7 @@ function render(){
   if(sc.pOpp)pending.push(`Opponent +${sc.pOpp} pending`);
   $('pendingScore').classList.toggle('hidden',!pending.length);
   $('pendingScore').textContent=pending.join(' · ');
-  renderRosterOptions();renderEventFeed();renderRefFeed();renderMotm();
+  renderOfficialLineup();renderRosterOptions();renderEventFeed();renderRefFeed();renderMotm();
   document.querySelectorAll('[data-report],#refCallBtn').forEach(b=>b.disabled=!session.active);
 }
 function renderRosterOptions(){const opts='<option value="">Select player…</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">#${p.jersey_number} ${esc(p.display_name)}</option>`).join('');const cur=$('eventPlayer').value;$('eventPlayer').innerHTML=opts;if([...$('eventPlayer').options].some(o=>o.value===cur))$('eventPlayer').value=cur;const acur=$('eventAssist').value;$('eventAssist').innerHTML='<option value="">Unassisted / No assist</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">#${p.jersey_number} ${esc(p.display_name)}</option>`).join('');if([...$('eventAssist').options].some(o=>o.value===acur))$('eventAssist').value=acur;}
