@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.21-named-sub-waves" />
+  <meta name="skor-build" content="lineup-admin-v51.22-gameplan-notes-layout-fix" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1442,7 +1442,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.21</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.22</div>
   </aside>
 
   <main>
@@ -2686,7 +2686,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       ${svgTextBlock('“'+state.quote+'”',W/2,messageY+39,68,24,2,'text-anchor="middle" font-size="24" font-style="italic" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif"')}
     ` : "";
 
-    const notesY=state.quote ? 1740 : 1648;
+    const notesY=state.quote ? messageY+92 : messageY;
     const notesBlock = state.notes ? `
       <rect x="50" y="${notesY}" width="980" height="${state.quote?144:236}" rx="20" ry="20" fill="#f7f8fa" stroke="#dfe2e7"/>
       <text x="74" y="${notesY+31}" font-size="18" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">GAMEPLAN NOTES</text>
@@ -3656,7 +3656,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.21 ready. Planned substitution waves can now be given custom names such as Defensive Subs, Forwards, or Wingers, and those names carry into saved plans and exports.');
+  markStatus('Lineup Builder v51.22 ready. Gameplan Notes now follows the dynamically expanded export layout so player/substitution text cannot bleed into the notes area.');
 
   window.SKORLineup={
     setRoster,
