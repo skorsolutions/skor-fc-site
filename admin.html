@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.18-sticky-player-pool" />
+  <meta name="skor-build" content="lineup-admin-v51.19-responsive-jersey-grid" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -101,12 +101,25 @@
     .nav-floating-tooltip.show{opacity:1;transform:translateY(-50%) translateX(0)}
 
 
+
+    .lineup-players-panel{min-width:0}
+    .lineup-players-panel .player-pool>*{min-width:0;max-width:100%}
+    .lineup-players-panel .player-card,
+    .lineup-players-panel .player-chip,
+    .lineup-players-panel .jersey-card{width:100%;max-width:100%;box-sizing:border-box}
+    .lineup-players-panel .jersey{max-width:100%;margin-left:auto;margin-right:auto}
+
     @media(min-width:901px) and (max-width:1220px){
       .app{grid-template-columns:188px minmax(0,1fr)}
       aside{padding-left:10px;padding-right:10px}
       .nav button{padding-left:9px;padding-right:9px;font-size:.78rem}
       main{padding:18px}
       .lineup-workspace{gap:12px}
+    }
+
+
+    @media(min-width:901px) and (max-width:1220px){
+      .lineup-players-panel .player-pool{grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:6px}
     }
 
     @media(max-width:900px){
@@ -256,7 +269,7 @@
     .jersey:before{content:"";position:absolute;top:2px;width:16px;height:8px;border-radius:0 0 12px 12px;background:#17181c}
     .peg-name{font-size:.72rem;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .player-card .peg-name{color:var(--ink);text-shadow:none}
-    .player-pool{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:430px;overflow:auto;padding-right:3px}
+    .player-pool{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:7px;min-height:70px;width:100%;max-width:100%;overflow-x:hidden}
     .player-card{border:1px solid var(--line);border-radius:12px;padding:9px 5px;background:#faf9f7;display:grid;place-items:center;cursor:grab}
     .player-card.on-field{opacity:.42}.player-card:hover{border-color:#bca8af;background:#fff}
     .bench-zone{margin-top:14px;border:2px dashed #d7d2cd;border-radius:14px;min-height:92px;padding:10px;background:#faf9f7}
@@ -310,8 +323,10 @@
     .jersey.temp-number{font-size:.68rem!important;letter-spacing:-.03em}
     .bench-player.temp-player,.depth-chip.temp-player,.sub-player-chip.temp-player{border-style:dashed}
     @media(max-width:720px){.temp-player-form{grid-template-columns:1fr 72px}.temp-player-form .mini-btn{grid-column:1/-1}}
-    @media(max-width:900px){.lineup-workspace{grid-template-columns:1fr}.lineup-players-panel{position:static;max-height:none;overflow:visible}.soccer-pitch{max-height:680px}.lineup-toolbar{grid-template-columns:1fr 1fr}.player-pool{grid-template-columns:repeat(5,1fr)}}
-    @media(max-width:720px){.lineup-toolbar{grid-template-columns:1fr}.player-pool{grid-template-columns:repeat(3,1fr)}.formation-slot{width:68px;min-height:66px}.jersey{width:44px;height:40px}.player-peg{width:64px}.peg-name{font-size:.64rem}.sub-row{grid-template-columns:58px 1fr 18px 1fr auto}}
+    @media(max-width:900px){.lineup-workspace{grid-template-columns:1fr}.lineup-players-panel{position:static;max-height:none;overflow:visible}
+      .lineup-players-panel .player-pool{grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:6px}
+.soccer-pitch{max-height:680px}.lineup-toolbar{grid-template-columns:1fr 1fr}}
+    @media(max-width:720px){.lineup-toolbar{grid-template-columns:1fr}.formation-slot{width:68px;min-height:66px}.jersey{width:44px;height:40px}.player-peg{width:64px}.peg-name{font-size:.64rem}.sub-row{grid-template-columns:58px 1fr 18px 1fr auto}}
 
 
     /* Lineup Builder v20 - single captain tactical board */
@@ -1379,7 +1394,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.18</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.19</div>
   </aside>
 
   <main>
@@ -3349,7 +3364,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.18 ready. The permanent player jersey panel now stays sticky beside the field on desktop while TEMP Players remain in a separate panel below.');
+  markStatus('Lineup Builder v51.19 ready. The player jersey pool now wraps responsively to the available panel width with no horizontal scrolling.');
 
   window.SKORLineup={
     setRoster,
