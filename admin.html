@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.22-gameplan-notes-layout-fix" />
+  <meta name="skor-build" content="lineup-admin-v51.23-first-half-bench-coverage" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1011,6 +1011,72 @@
       line-height:1.25;
     }
 
+
+    .first-half-coverage{
+      margin:12px 0 14px;
+      padding:11px 12px;
+      border-radius:12px;
+      border:1px solid #e5d8b7;
+      background:#fff9eb;
+    }
+    .first-half-coverage.complete{
+      border-color:#bed9c8;
+      background:#edf8f1;
+    }
+    .first-half-coverage.empty{
+      border-color:#dfe2e7;
+      background:#f7f8fa;
+    }
+    .first-half-coverage-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:8px;
+    }
+    .first-half-coverage-title{
+      font-size:.76rem;
+      font-weight:950;
+      color:#6f5418;
+    }
+    .first-half-coverage.complete .first-half-coverage-title{color:#2f6a4b}
+    .first-half-coverage.empty .first-half-coverage-title{color:#666c73}
+    .first-half-coverage-count{
+      display:inline-flex;
+      min-width:24px;
+      height:24px;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      background:#f0dfb3;
+      color:#6f5418;
+      font-size:.68rem;
+      font-weight:950;
+    }
+    .first-half-coverage.complete .first-half-coverage-count{background:#d8ecdf;color:#2f6a4b}
+    .first-half-coverage.empty .first-half-coverage-count{background:#e7e9ec;color:#666c73}
+    .first-half-coverage-chips{display:flex;flex-wrap:wrap;gap:6px}
+    .first-half-coverage-chip{
+      display:inline-flex;
+      align-items:center;
+      padding:6px 8px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid #e5d8b7;
+      color:#6b531c;
+      font-size:.68rem;
+      font-weight:900;
+    }
+    .first-half-coverage-help{
+      margin-top:7px;
+      font-size:.64rem;
+      line-height:1.4;
+      color:#7d6b43;
+      font-weight:750;
+    }
+    .first-half-coverage.complete .first-half-coverage-help{color:#47755d}
+
     .sub-wave-head{
       grid-column:1/-1;
       display:grid;
@@ -1442,7 +1508,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.22</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.23</div>
   </aside>
 
   <main>
@@ -2996,6 +3062,32 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       (removable?'<button class="mini-btn sub-remove" type="button" data-sub-remove="'+index+'" data-sub-phase="'+esc(phase)+'" title="Remove this planned sub">×</button>':'<span></span>')+
       '</div>';
   }
+
+  function firstHalfBenchCoverage(snapshot=state){
+    const s=normalizeState(snapshot||{});
+    const bench=(s.bench||[]).filter(Boolean);
+    const plannedIn=new Set();
+    (s.subs?.firstHalf||[]).forEach(row=>(row.in||[]).forEach(pid=>plannedIn.add(String(pid))));
+    const needs=bench.filter(pid=>!plannedIn.has(String(pid)));
+    const covered=bench.filter(pid=>plannedIn.has(String(pid)));
+    return {bench,plannedIn,needs,covered};
+  }
+
+  function firstHalfCoverageHTML(){
+    const coverage=firstHalfBenchCoverage();
+    if(!coverage.bench.length){
+      return '<div class="first-half-coverage empty"><div class="first-half-coverage-head"><div class="first-half-coverage-title">First-Half Bench Coverage</div><span class="first-half-coverage-count">0</span></div><div class="first-half-coverage-help">No players are currently designated as substitutes on the bench.</div></div>';
+    }
+    if(!coverage.needs.length){
+      return '<div class="first-half-coverage complete"><div class="first-half-coverage-head"><div class="first-half-coverage-title">Everyone is planned to enter in the first half ✓</div><span class="first-half-coverage-count">0</span></div><div class="first-half-coverage-help">Every bench player appears at least once in a First Half “Players In” group.</div></div>';
+    }
+    const chips=coverage.needs.map(pid=>{
+      const p=player(pid);
+      return '<span class="first-half-coverage-chip">'+esc(p?playerListLabel(p):String(pid))+'</span>';
+    }).join('');
+    return '<div class="first-half-coverage"><div class="first-half-coverage-head"><div class="first-half-coverage-title">Still Needs First-Half Minutes</div><span class="first-half-coverage-count">'+coverage.needs.length+'</span></div><div class="first-half-coverage-chips">'+chips+'</div><div class="first-half-coverage-help">Rule for now: every player on the bench should appear at least once in a First Half “Players In” selection.</div></div>';
+  }
+
   function subPhaseHTML(title,note,phase,rows){
     const secondHalf=phase==="secondHalf";
     const enabled=!secondHalf||state.showSecondHalfSubs===true;
@@ -3004,6 +3096,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       : '';
     return '<div class="sub-phase '+(secondHalf&&!enabled?'second-half-hidden':'')+'"><div class="sub-phase-head"><div><div class="sub-phase-title">'+title+'</div><div class="sub-phase-note">'+note+'</div></div>'+toggle+'</div>'+
       rows.map((r,i)=>subRowHTML(r,phase,i,true)).join('')+
+      (phase==="firstHalf"?firstHalfCoverageHTML():'')+
       (secondHalf?'<div class="sub-multi-help">'+(enabled?'Second-half substitutions will appear on the exported gameplan.':'Second-half planning is saved, but hidden from the exported gameplan.')+'</div>':'')+
       '</div>';
   }
@@ -3656,7 +3749,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.22 ready. Gameplan Notes now follows the dynamically expanded export layout so player/substitution text cannot bleed into the notes area.');
+  markStatus('Lineup Builder v51.23 ready. First-half planning now shows which bench players still need to be scheduled into the game at least once before halftime.');
 
   window.SKORLineup={
     setRoster,
