@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.16-lineup-width-layout" />
+  <meta name="skor-build" content="lineup-admin-v51.18-sticky-player-pool" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -263,7 +263,7 @@
     .bench-zone.dragover{border-color:var(--maroon);background:#fff5f8}
     .bench-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
     .bench-player{border:1px solid var(--line);border-radius:999px;background:#fff;padding:7px 10px;font-size:.78rem;font-weight:900;cursor:grab}
-    .lineup-side{min-width:0;position:sticky;top:18px;align-self:start;display:grid;gap:14px}
+    .lineup-side{min-width:0;position:static;align-self:start;display:grid;gap:14px}.lineup-players-panel{position:sticky;top:18px;z-index:8;max-height:calc(100dvh - 36px);overflow:auto}
     .mini-panel{border:1px solid var(--line);background:#fff;border-radius:16px;padding:16px}
     .mini-panel h3{margin:0 0 3px;font-size:1rem}.mini-panel .sub{margin-bottom:12px}
     .variation-list{display:flex;gap:12px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 10px;scroll-snap-type:x proximity;scrollbar-width:thin}
@@ -292,7 +292,7 @@
     .lineup-status{font-size:.8rem;color:var(--muted);min-height:20px}.lineup-status.ok{color:#2d6759}.lineup-status.err{color:#8b1e3f}
 
     /* v50.4 — match-specific TEMP / fill-in players */
-    .temp-player-manager{margin:12px 0 10px;padding:11px;border:1px solid #e0d9dc;border-radius:12px;background:#fbf8f9}
+    .temp-player-manager{margin:0;padding:11px;border:1px solid #e0d9dc;border-radius:12px;background:#fbf8f9}
     .temp-player-manager h4{margin:0 0 3px;font-size:.82rem}
     .temp-player-manager .temp-help{font-size:.7rem;line-height:1.35;color:var(--muted);margin-bottom:8px}
     .temp-player-form{display:grid;grid-template-columns:minmax(0,1.25fr) 82px auto;gap:6px;align-items:end}
@@ -310,7 +310,7 @@
     .jersey.temp-number{font-size:.68rem!important;letter-spacing:-.03em}
     .bench-player.temp-player,.depth-chip.temp-player,.sub-player-chip.temp-player{border-style:dashed}
     @media(max-width:720px){.temp-player-form{grid-template-columns:1fr 72px}.temp-player-form .mini-btn{grid-column:1/-1}}
-    @media(max-width:1050px){.lineup-workspace{grid-template-columns:1fr}.lineup-side{position:static}.soccer-pitch{max-height:680px}.lineup-toolbar{grid-template-columns:1fr 1fr}.player-pool{grid-template-columns:repeat(5,1fr)}}
+    @media(max-width:900px){.lineup-workspace{grid-template-columns:1fr}.lineup-players-panel{position:static;max-height:none;overflow:visible}.soccer-pitch{max-height:680px}.lineup-toolbar{grid-template-columns:1fr 1fr}.player-pool{grid-template-columns:repeat(5,1fr)}}
     @media(max-width:720px){.lineup-toolbar{grid-template-columns:1fr}.player-pool{grid-template-columns:repeat(3,1fr)}.formation-slot{width:68px;min-height:66px}.jersey{width:44px;height:40px}.player-peg{width:64px}.peg-name{font-size:.64rem}.sub-row{grid-template-columns:58px 1fr 18px 1fr auto}}
 
 
@@ -1379,7 +1379,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.16</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.18</div>
   </aside>
 
   <main>
@@ -1953,21 +1953,22 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="lineup-side">
             <div class="mini-panel lineup-players-panel">
               <h3>Players <span class="v19-lineup-count">19</span></h3><div class="sub">Desktop: drag a jersey onto the pitch. In Freeform / Custom, drag or tap to place players anywhere. Phone: tap a player, then tap a position or the pitch.</div><div class="v19-help">Permanent players sync from the shared roster. Match-specific fill-ins can be added below without creating a Player Portal account.</div><div class="mobile-lineup-tip">Tap player → tap position. Tap Substitutes to move the selected player there.</div>
-              <div class="temp-player-manager" id="tempPlayerManager">
-                <h4>Match Fill-ins / TEMP Players</h4>
-                <div class="temp-help">For one-game fill-ins. Name is required; jersey number is optional until you know which spare shirt fits. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
-                <div class="temp-player-form">
-                  <div><label for="tempPlayerName">Name</label><input id="tempPlayerName" maxlength="80" placeholder="Fill-in player name"></div>
-                  <div><label for="tempPlayerJersey">Jersey #</label><input id="tempPlayerJersey" type="number" min="1" max="99" inputmode="numeric" placeholder="TEMP"></div>
-                  <button class="mini-btn" id="saveTempPlayerBtn" type="button">Add TEMP</button>
-                </div>
-                <input id="tempPlayerEditId" type="hidden">
-                <button class="mini-btn" id="cancelTempPlayerEditBtn" type="button" style="display:none;margin-top:6px">Cancel edit</button>
-                <div class="temp-context" id="tempPlayerContext">Select a scheduled match to manage fill-ins.</div>
-                <div class="temp-player-list" id="tempPlayerList"></div>
-              </div>
               <div class="player-pool" id="lineupPlayerPool"><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="2-Ivan" aria-label="#2 Ivan"><div class="player-peg compact"><div class="jersey">2</div><div class="peg-name">Ivan</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="9-Andres" aria-label="#9 Andres"><div class="player-peg compact"><div class="jersey">9</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="17-David" aria-label="#17 Joshua"><div class="player-peg compact"><div class="jersey">17</div><div class="peg-name">Joshua</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="18-Jason" aria-label="#18 Jason"><div class="player-peg compact"><div class="jersey">18</div><div class="peg-name">Jason</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="20-Ayman" aria-label="#20 Ayman"><div class="player-peg compact"><div class="jersey">20</div><div class="peg-name">Ayman</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="6-Julio" aria-label="#6 Julio"><div class="player-peg compact"><div class="jersey">6</div><div class="peg-name">Julio</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="7-Tom" aria-label="#7 Tom"><div class="player-peg compact"><div class="jersey">7</div><div class="peg-name">Tom</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="14-Pedro" aria-label="#14 Pedro"><div class="player-peg compact"><div class="jersey">14</div><div class="peg-name">Pedro</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="16-CJ" aria-label="#16 CJ"><div class="player-peg compact"><div class="jersey">16</div><div class="peg-name">CJ</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="19-Dez" aria-label="#19 Dez"><div class="player-peg compact"><div class="jersey">19</div><div class="peg-name">Dez</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="8-Adolpho" aria-label="#8 Adolpho"><div class="player-peg compact"><div class="jersey">8</div><div class="peg-name">Adolpho</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="22-Vignesh" aria-label="#22 Vignesh"><div class="player-peg compact"><div class="jersey">22</div><div class="peg-name">Vignesh</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="11-Edward" aria-label="#11 Eddy"><div class="player-peg compact"><div class="jersey">11</div><div class="peg-name">Eddy</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="1-Todd" aria-label="#1 Todd"><div class="player-peg compact"><div class="jersey">1</div><div class="peg-name">Todd</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="3-Brad" aria-label="#3 Brad"><div class="player-peg compact"><div class="jersey">3</div><div class="peg-name">Brad</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="21-Andres" aria-label="#21 Andres"><div class="player-peg compact"><div class="jersey">21</div><div class="peg-name">Andres</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="12-Koushyar" aria-label="#12 Koushyar"><div class="player-peg compact"><div class="jersey">12</div><div class="peg-name">Koushyar</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="15-Andrew" aria-label="#15 Andrew"><div class="player-peg compact"><div class="jersey">15</div><div class="peg-name">Andrew</div></div></button><button type="button" class="player-card v18-player-card" draggable="true" data-v18-player="4-Nick" aria-label="#4 Nick"><div class="player-peg compact"><div class="jersey">4</div><div class="peg-name">Nick</div></div></button></div>
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
+            </div>
+
+            <div class="mini-panel temp-player-manager" id="tempPlayerManager">
+              <h4>Match Fill-ins / TEMP Players</h4>
+              <div class="temp-help">For one-game fill-ins. Name is required; jersey number is optional until you know which spare shirt fits. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
+              <div class="temp-player-form">
+                <div><label for="tempPlayerName">Name</label><input id="tempPlayerName" maxlength="80" placeholder="Fill-in player name"></div>
+                <div><label for="tempPlayerJersey">Jersey #</label><input id="tempPlayerJersey" type="number" min="1" max="99" inputmode="numeric" placeholder="TEMP"></div>
+                <button class="mini-btn" id="saveTempPlayerBtn" type="button">Add TEMP</button>
+              </div>
+              <input id="tempPlayerEditId" type="hidden">
+              <button class="mini-btn" id="cancelTempPlayerEditBtn" type="button" style="display:none;margin-top:6px">Cancel edit</button>
+              <div class="temp-context" id="tempPlayerContext">Select a scheduled match to manage fill-ins.</div>
+              <div class="temp-player-list" id="tempPlayerList"></div>
             </div>
 
           </div>
@@ -3348,7 +3349,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.16 ready. The sidebar is narrower, the lineup workspace fits the browser better, and Saved Variations now sit above Substitutes instead of beside the pitch.');
+  markStatus('Lineup Builder v51.18 ready. The permanent player jersey panel now stays sticky beside the field on desktop while TEMP Players remain in a separate panel below.');
 
   window.SKORLineup={
     setRoster,
