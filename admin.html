@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.23-first-half-bench-coverage" />
+  <meta name="skor-build" content="lineup-admin-v51.24-production-final-gameplan" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -132,6 +132,91 @@
     .lineup-copy-warning{display:none;padding:10px 12px;border-radius:10px;background:#fff5df;border:1px solid #ead3a0;color:#6e551d;font-size:.76rem;font-weight:800;line-height:1.45}
     .lineup-copy-warning.show{display:block}
     .lineup-copy-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
+
+
+    .variation-card.production-final{
+      border-color:#2f6a4b;
+      box-shadow:0 0 0 2px rgba(47,106,75,.11);
+      background:#f7fcf9;
+    }
+    .variation-final-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      margin-top:5px;
+      padding:4px 7px;
+      border-radius:999px;
+      background:#dcefe3;
+      color:#285d42;
+      font-size:.61rem;
+      font-weight:950;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+    }
+    .variation-final.active{
+      background:#2f6a4b;
+      color:#fff;
+      border-color:#2f6a4b;
+    }
+    .production-gameplan-panel{
+      border:2px solid #c7ddd0;
+      background:linear-gradient(180deg,#fbfffc,#f5faf7);
+    }
+    .production-gameplan-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .production-gameplan-title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .production-gameplan-badge{
+      display:inline-flex;
+      align-items:center;
+      padding:5px 8px;
+      border-radius:999px;
+      background:#2f6a4b;
+      color:#fff;
+      font-size:.64rem;
+      font-weight:950;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    .production-grid{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    .production-block{
+      padding:11px;
+      border:1px solid #dfe8e2;
+      border-radius:11px;
+      background:#fff;
+    }
+    .production-block h4{margin:0 0 8px;font-size:.78rem}
+    .production-line{
+      display:flex;
+      gap:7px;
+      align-items:flex-start;
+      padding:5px 0;
+      border-bottom:1px solid #edf0ee;
+      font-size:.72rem;
+      line-height:1.35;
+    }
+    .production-line:last-child{border-bottom:0}
+    .production-role{min-width:42px;font-weight:950;color:var(--maroon)}
+    .production-player{font-weight:850}
+    .production-wave{margin-top:7px;padding:8px;border-radius:9px;background:#f7f8fa;border:1px solid #e6e8eb}
+    .production-wave strong{display:block;font-size:.68rem;color:#374151;margin-bottom:3px}
+    .production-wave span{font-size:.67rem;color:#5e646b;line-height:1.35}
+    .production-empty{padding:14px;border-radius:10px;background:#f7f8fa;color:var(--muted);font-size:.76rem}
+    @media(max-width:760px){.production-grid{grid-template-columns:1fr}}
 
     @media(min-width:901px) and (max-width:1220px){
       .app{grid-template-columns:188px minmax(0,1fr)}
@@ -1171,7 +1256,7 @@
     body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete{display:none!important}
     body.viewer-mode #gameday #statusControls,body.viewer-mode #gameday .event-buttons,body.viewer-mode #gameday #eventEditor,body.viewer-mode #gameday #saveMotmBtn,body.viewer-mode #gameday #clearMotmBtn{display:none!important}
     body.viewer-mode #gameday #motmPlayer,body.viewer-mode #gameday #motmReason,body.viewer-mode #gameday #motmManualName,body.viewer-mode #gameday #motmManualNumber,body.viewer-mode #gameday #motmMatchNumber{pointer-events:none;opacity:.72}
-    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
+    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups .variation-final,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
     body.viewer-mode #lineups .player-pool,body.viewer-mode #lineups .soccer-pitch,body.viewer-mode #lineups .bench-zone,body.viewer-mode #lineups .depth-grid,body.viewer-mode #lineups .sub-plan{pointer-events:none}
     body.viewer-mode #lineups .player-card,body.viewer-mode #lineups .depth-chip,body.viewer-mode #lineups .sub-player-chip{cursor:default!important}
     @media(max-width:650px){.portal-role-badge{order:3}.viewer-banner{align-items:flex-start;flex-direction:column}}
@@ -1508,7 +1593,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.23</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.24</div>
   </aside>
 
   <main>
@@ -1617,6 +1702,17 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div><label>Match</label><select id="gameDayMatch"></select></div>
             <div><label>Event half</label><select id="eventHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
           </div>
+        </div>
+
+        <div class="panel production-gameplan-panel" id="productionGameplanPanel">
+          <div class="production-gameplan-head">
+            <div>
+              <div class="production-gameplan-title"><h2 style="margin:0">Official Gameplan</h2><span class="production-gameplan-badge">Production / Final</span></div>
+              <div class="sub" id="productionGameplanMeta">Select a match to load its final lineup.</div>
+            </div>
+            <button class="mini-btn" id="productionOpenLineupBtn" type="button" style="display:none">Open in Lineup Builder</button>
+          </div>
+          <div id="productionGameplanBody"><div class="production-empty">No final gameplan selected yet.</div></div>
         </div>
 
         <div class="panel crowd-admin-panel" id="crowdAdminPanel">
@@ -3351,12 +3447,16 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           const starters=isFreeform(snapshot.formation)?Object.keys(snapshot.freeform||{}).length:Object.keys(snapshot.slots||{}).length;
           const bench=(snapshot.bench||[]).length;
           const owner=v.created_by_name||'Captain';
-          return '<div class="variation-card '+(group.key===currentKey?'current-game':'')+'">'+
+          const isFinal=v.is_production===true;
+          const finalBadge=isFinal?'<span class="variation-final-badge">✓ Production / Final</span>':'';
+          const finalAction=group.key==='tinker'?'':('<button class="mini-btn variation-final '+(isFinal?'active':'')+'" type="button" data-final-variation="'+esc(v.id)+'">'+(isFinal?'FINAL ✓':'Production / Final')+'</button>');
+          return '<div class="variation-card '+(group.key===currentKey?'current-game ':'')+(isFinal?'production-final':'')+'">'+
             '<button type="button" class="variation-load" data-load-variation="'+esc(v.id)+'"><strong>'+esc(v.name)+'</strong>'+
+            finalBadge+
             '<span class="variation-meta">'+esc(snapshot.formation)+' · '+starters+' on field · '+bench+' subs</span>'+
             '<span class="variation-meta">'+esc(formatStamp(v.created_at))+'</span>'+
             '<span class="variation-owner">Saved by '+esc(owner)+'</span></button>'+
-            '<div class="variation-card-actions"><button class="mini-btn variation-copy" type="button" data-copy-variation="'+esc(v.id)+'">Copy to Game</button><button class="mini-btn variation-delete" type="button" data-delete-variation="'+esc(v.id)+'">Delete</button></div></div>';
+            '<div class="variation-card-actions">'+finalAction+'<button class="mini-btn variation-copy" type="button" data-copy-variation="'+esc(v.id)+'">Copy to Game</button><button class="mini-btn variation-delete" type="button" data-delete-variation="'+esc(v.id)+'">Delete</button></div></div>';
         }).join('');
       return '<section class="variation-game-group"><div class="variation-game-head"><div class="variation-game-title">'+esc(group.key==='tinker'?'Tinker Boards':group.label)+'</div><span class="variation-game-count">'+group.items.length+'</span></div><div class="variation-game-row">'+cards+'</div></section>';
     }).join('');
@@ -3378,6 +3478,31 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       loadVariationRecord(rec);
       updateVariationSaveButton();
       renderVariations();
+    }));
+
+    box.querySelectorAll('[data-final-variation]').forEach(btn=>btn.addEventListener('click',async()=>{
+      if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("mark the Production / Final lineup");return;}
+      const rec=library.find(v=>String(v.id)===String(btn.dataset.finalVariation));
+      if(!rec||String(rec.event_key)==='tinker')return;
+      if(rec.is_production===true){
+        markStatus('"'+rec.name+'" is already the Production / Final lineup for this game.');
+        return;
+      }
+      const existing=library.find(v=>String(v.event_key)===String(rec.event_key)&&v.is_production===true);
+      const message=existing
+        ? 'Replace "'+existing.name+'" with "'+rec.name+'" as the Production / Final lineup for this game?'
+        : 'Mark "'+rec.name+'" as the Production / Final lineup for this game?';
+      if(!confirm(message))return;
+      const sb=sbClient();if(!sb){markStatus('Supabase is not connected.',false);return;}
+      btn.disabled=true;const oldText=btn.textContent;btn.textContent='Setting…';
+      const {error}=await sb.rpc('set_production_lineup',{p_variation_id:rec.id});
+      btn.disabled=false;btn.textContent=oldText;
+      if(error){markStatus('Could not set Production / Final: '+error.message,false);return;}
+      await refreshVariations(false);
+      if(typeof window.loadProductionGameplan==='function'&&window.gameDaySelected?.id&&String(window.gameDaySelected.id)===String(rec.event_key)){
+        await window.loadProductionGameplan(rec.event_key);
+      }
+      markStatus('"'+rec.name+'" is now the Production / Final lineup for '+(rec.event_label||'this game')+'.');
     }));
 
     box.querySelectorAll('[data-copy-variation]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -3418,7 +3543,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const sb=sbClient();
     if(!sb){sharedVariations=[];allSharedVariations=[];renderVariations();if(showMessage)markStatus('Supabase is not connected yet.',false);return;}
     const {data,error}=await sb.from('lineup_variations')
-      .select('id,event_key,event_label,name,state,created_by,created_by_name,created_by_email,created_at,updated_at')
+      .select('id,event_key,event_label,name,state,is_production,created_by,created_by_name,created_by_email,created_at,updated_at')
       .order('created_at',{ascending:false});
     if(error){sharedVariations=[];allSharedVariations=[];renderVariations();if(showMessage)markStatus('Shared variations unavailable: '+error.message,false);return;}
     allSharedVariations=data||[];
@@ -3749,7 +3874,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.23 ready. First-half planning now shows which bench players still need to be scheduled into the game at least once before halftime.');
+  markStatus('Lineup Builder v51.24 ready. Saved game variations can now be marked Production / Final, and the official plan appears directly in Game Day for that match.');
 
   window.SKORLineup={
     setRoster,
@@ -3757,6 +3882,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     setCaptain,
     refreshVariations,
     refreshTempPlayers,
+    findVariation:id=>allSharedVariations.find(v=>String(v.id)===String(id))||null,
+    loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
     getState:()=>clone(state),
     reload:()=>{ loadDraft(); renderAll(); refreshVariations(false); }
   };
@@ -3984,6 +4111,8 @@ let PLAYER_PORTAL_ACTIVITY=[];
 let DASHBOARD_FEEDBACK=[];
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
+let PRODUCTION_GAMEPLAN=null;
+window.gameDaySelected=null;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
 function gdEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
 function playerValue(p){return `roster|${p.number}|${p.name}`;}
@@ -5010,13 +5139,109 @@ async function loadPlayerEngagement(){
   renderMatchAttendance();
 }
 
+
+function officialEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
+function officialPlayerLabel(pid){
+  const key=String(pid||"");
+  if(key.startsWith("temp:")){
+    const id=key.slice(5);
+    const t=MATCH_TEMP_PLAYERS.find(x=>String(x.id)===id);
+    return t?(t.jersey_number?`#${t.jersey_number} ${t.display_name} · TEMP`:`TEMP — ${t.display_name}`):"TEMP player";
+  }
+  const p=TEAM_ROSTER.find(x=>String(x.player_key||x.id)===key);
+  if(!p)return key||"Unknown";
+  const name=p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0];
+  return `#${p.jersey_number} ${name}`;
+}
+function officialFormationSlots(formation){
+  const map={
+    "4-2-3-1":["GK","LB","LCB","RCB","RB","LDM","RDM","LW","CAM","RW","ST"],
+    "4-3-3":["GK","LB","LCB","RCB","RB","LCM","CM","RCM","LW","ST","RW"],
+    "4-4-2":["GK","LB","LCB","RCB","RB","LM","LCM","RCM","RM","LST","RST"],
+    "3-5-2":["GK","LCB","CB","RCB","LWB","LCM","CM","RCM","RWB","LST","RST"]
+  };
+  return map[formation]||Object.keys(PRODUCTION_GAMEPLAN?.state?.slots||{});
+}
+function renderProductionGameplan(){
+  const body=document.getElementById("productionGameplanBody");
+  const meta=document.getElementById("productionGameplanMeta");
+  const openBtn=document.getElementById("productionOpenLineupBtn");
+  if(!body||!meta)return;
+  if(!gameDaySelected?.id){
+    meta.textContent="Select a match to load its final lineup.";
+    body.innerHTML='<div class="production-empty">No match selected.</div>';
+    if(openBtn)openBtn.style.display="none";
+    return;
+  }
+  if(!PRODUCTION_GAMEPLAN){
+    meta.textContent=`${gameDaySelected.home_team} vs ${gameDaySelected.away_team}`;
+    body.innerHTML='<div class="production-empty">No Production / Final lineup has been selected for this game yet. Go to Lineups, choose a saved variation, and mark it Production / Final.</div>';
+    if(openBtn)openBtn.style.display="none";
+    return;
+  }
+  const s=PRODUCTION_GAMEPLAN.state||{};
+  const formation=s.formation||"4-2-3-1";
+  const slots=s.slots||{};
+  let starters=[];
+  if(formation==="Freeform"){
+    starters=Object.keys(s.freeform||{}).map(pid=>({role:"",pid}));
+  }else{
+    starters=officialFormationSlots(formation).map(role=>({role,pid:slots[role]})).filter(x=>x.pid);
+  }
+  const bench=(s.bench||[]).filter(Boolean);
+  const phases=[];
+  (s.subs?.firstHalf||[]).forEach((row,i)=>{
+    if((row.out||[]).length||(row.in||[]).length)phases.push({phase:"1st Half",index:i+1,row});
+  });
+  if(s.showSecondHalfSubs===true){
+    (s.subs?.secondHalf||[]).forEach((row,i)=>{
+      if((row.out||[]).length||(row.in||[]).length)phases.push({phase:"2nd Half",index:i+1,row});
+    });
+  }
+  const startersHtml=starters.length?starters.map(x=>`<div class="production-line"><span class="production-role">${officialEsc(x.role||"XI")}</span><span class="production-player">${officialEsc(officialPlayerLabel(x.pid))}</span></div>`).join(""):'<div class="production-empty">No starters saved.</div>';
+  const benchHtml=bench.length?bench.map(pid=>`<div class="production-line"><span class="production-player">${officialEsc(officialPlayerLabel(pid))}</span></div>`).join(""):'<div class="production-empty">No substitutes saved.</div>';
+  const wavesHtml=phases.length?phases.map(x=>{
+    const name=String(x.row.label||"").trim();
+    const title=`${x.phase} · Wave ${x.index}${name?` — ${name}`:""}`;
+    const outs=(x.row.out||[]).map(officialPlayerLabel).join(", ")||"—";
+    const ins=(x.row.in||[]).map(officialPlayerLabel).join(", ")||"—";
+    return `<div class="production-wave"><strong>${officialEsc(title)}</strong><span>Out: ${officialEsc(outs)}<br>In: ${officialEsc(ins)}</span></div>`;
+  }).join(""):'<div class="production-empty">No planned substitution waves saved.</div>';
+
+  meta.textContent=`${PRODUCTION_GAMEPLAN.name} · ${formation} · Finalized ${new Date(PRODUCTION_GAMEPLAN.updated_at||PRODUCTION_GAMEPLAN.created_at).toLocaleString()}`;
+  body.innerHTML=`<div class="production-grid"><div class="production-block"><h4>Starting XI</h4>${startersHtml}</div><div class="production-block"><h4>Bench</h4>${benchHtml}<h4 style="margin-top:12px">Planned Substitutions</h4>${wavesHtml}</div></div>`;
+  if(openBtn){openBtn.style.display="inline-flex";openBtn.dataset.variationId=PRODUCTION_GAMEPLAN.id;}
+}
+async function loadProductionGameplan(matchId){
+  const body=document.getElementById("productionGameplanBody");
+  if(!matchId){PRODUCTION_GAMEPLAN=null;renderProductionGameplan();return;}
+  if(body)body.innerHTML='<div class="production-empty">Loading official gameplan…</div>';
+  const {data,error}=await sb.rpc("get_production_lineup",{p_match_id:matchId});
+  if(error){
+    PRODUCTION_GAMEPLAN=null;
+    if(body)body.innerHTML='<div class="production-empty">Official gameplan requires the v51.24 SQL migration.</div>';
+    return;
+  }
+  PRODUCTION_GAMEPLAN=Array.isArray(data)?(data[0]||null):(data||null);
+  renderProductionGameplan();
+}
+window.loadProductionGameplan=loadProductionGameplan;
+document.getElementById("productionOpenLineupBtn")?.addEventListener("click",()=>{
+  if(!PRODUCTION_GAMEPLAN)return;
+  openView("lineups");
+  setTimeout(()=>{
+    const rec=window.SKORLineup?.findVariation?.(PRODUCTION_GAMEPLAN.id);
+    if(rec)window.SKORLineup.loadVariation(rec);
+  },60);
+});
+
 async function loadGameDayMatches(preferredId=null){
   const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_player_key,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v14";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
-  gameDayMatch.value=pick.id;gameDaySelected=pick;window.SKORLineup?.setEvents(gameDayMatches,false);await loadGameDayTempPlayers(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
+  gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;window.SKORLineup?.setEvents(gameDayMatches,false);await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
@@ -5025,7 +5250,7 @@ async function loadGameDayEvents(){
   renderGameDay();
   await loadPlayerEngagement();
 }
-gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();});
+gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;window.gameDaySelected=gameDaySelected;await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadProductionGameplan(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();});
 document.querySelectorAll(".status-btn").forEach(btn=>btn.addEventListener("click",async()=>{
   if(!portalCanWrite()){viewerBlocked("change match status");return;}
   if(!gameDayReady||!gameDaySelected)return;
