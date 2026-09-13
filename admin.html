@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.24-production-final-gameplan" />
+  <meta name="skor-build" content="lineup-admin-v51.25-live-final-match-center" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1256,7 +1256,7 @@
     body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete{display:none!important}
     body.viewer-mode #gameday #statusControls,body.viewer-mode #gameday .event-buttons,body.viewer-mode #gameday #eventEditor,body.viewer-mode #gameday #saveMotmBtn,body.viewer-mode #gameday #clearMotmBtn{display:none!important}
     body.viewer-mode #gameday #motmPlayer,body.viewer-mode #gameday #motmReason,body.viewer-mode #gameday #motmManualName,body.viewer-mode #gameday #motmManualNumber,body.viewer-mode #gameday #motmMatchNumber{pointer-events:none;opacity:.72}
-    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups .variation-final,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
+    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups #updateProductionFromCurrentBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups .variation-final,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
     body.viewer-mode #lineups .player-pool,body.viewer-mode #lineups .soccer-pitch,body.viewer-mode #lineups .bench-zone,body.viewer-mode #lineups .depth-grid,body.viewer-mode #lineups .sub-plan{pointer-events:none}
     body.viewer-mode #lineups .player-card,body.viewer-mode #lineups .depth-chip,body.viewer-mode #lineups .sub-player-chip{cursor:default!important}
     @media(max-width:650px){.portal-role-badge{order:3}.viewer-banner{align-items:flex-start;flex-direction:column}}
@@ -1593,7 +1593,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.24</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.25</div>
   </aside>
 
   <main>
@@ -1710,7 +1710,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <div class="production-gameplan-title"><h2 style="margin:0">Official Gameplan</h2><span class="production-gameplan-badge">Production / Final</span></div>
               <div class="sub" id="productionGameplanMeta">Select a match to load its final lineup.</div>
             </div>
-            <button class="mini-btn" id="productionOpenLineupBtn" type="button" style="display:none">Open in Lineup Builder</button>
+            <button class="mini-btn" id="productionOpenLineupBtn" type="button" style="display:none">Edit Final in Lineup Builder</button>
           </div>
           <div id="productionGameplanBody"><div class="production-empty">No final gameplan selected yet.</div></div>
         </div>
@@ -2146,7 +2146,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option><option>Freeform / Custom</option></select></div><div><label>Player Labels</label><select id="lineupLabelMode"><option value="names">Names + Numbers</option><option value="numbers">Numbers Only</option></select></div>
             <div><label>Variation name</label><input id="lineupVariationName" value="Balanced" placeholder="Balanced, Aggressive, Protect Lead..."></div>
             <div><label>Captain</label><select id="lineupCaptain"><option value="">Select captain…</option></select></div>
-            <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button><button class="btn btn-light" id="copyCurrentLineupBtn" type="button">Copy Current to Game</button>
+            <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button><button class="btn btn-light" id="copyCurrentLineupBtn" type="button">Copy Current to Game</button><button class="btn btn-light" id="updateProductionFromCurrentBtn" type="button" style="display:none">Publish Current Board to Final</button>
           </div>
           <div class="lineup-status" id="lineupStatus"></div>
         </div>
@@ -2514,6 +2514,25 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     if(!btn)return;
     btn.textContent=eventKey()==='tinker'?'Save Tinker Board':'Save Variation';
     btn.title=eventKey()==='tinker'?'Save this Tinker board so every Captain can load it later.':'Save this lineup variation for the selected game.';
+    updateProductionCurrentButton();
+  }
+  function productionVariationForEvent(key=eventKey()){
+    if(String(key)==='tinker')return null;
+    return allSharedVariations.find(v=>String(v.event_key)===String(key)&&v.is_production===true)||null;
+  }
+  function updateProductionCurrentButton(){
+    const btn=document.getElementById('updateProductionFromCurrentBtn');
+    if(!btn)return;
+    const finalRec=productionVariationForEvent();
+    const show=!!finalRec&&eventKey()!=='tinker';
+    btn.style.display=show?'inline-flex':'none';
+    if(show){
+      btn.textContent='Publish Current Board to Final';
+      btn.title='Replace the current Production / Final lineup state with the board you are looking at now.';
+      btn.dataset.finalVariationId=String(finalRec.id);
+    }else{
+      btn.removeAttribute('data-final-variation-id');
+    }
   }
   function draftKey(){ return `${DRAFT_PREFIX}:${captainKey}:${eventKey()}`; }
   function sbClient(){ return window.SKORSupabase||null; }
@@ -3461,6 +3480,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       return '<section class="variation-game-group"><div class="variation-game-head"><div class="variation-game-title">'+esc(group.key==='tinker'?'Tinker Boards':group.label)+'</div><span class="variation-game-count">'+group.items.length+'</span></div><div class="variation-game-row">'+cards+'</div></section>';
     }).join('');
 
+    updateProductionCurrentButton();
+
     box.querySelectorAll('[data-load-variation]').forEach(btn=>btn.addEventListener('click',async()=>{
       const rec=library.find(v=>String(v.id)===String(btn.dataset.loadVariation));
       if(!rec)return;
@@ -3698,6 +3719,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   const gameplanNotes=document.getElementById('gameplanNotes');
   const saveBtn=document.getElementById('saveLineupVariation');
   const copyCurrentBtn=document.getElementById('copyCurrentLineupBtn');
+  const updateProductionBtn=document.getElementById('updateProductionFromCurrentBtn');
   const copyDialog=document.getElementById('copyLineupDialog');
   const copyTargetSel=document.getElementById('copyLineupTargetGame');
   const copyCloseBtn=document.getElementById('copyLineupCloseBtn');
@@ -3784,6 +3806,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
   if(eventSel) eventSel.addEventListener('change', async()=>{
     updateVariationSaveButton();
+    updateProductionCurrentButton();
     const selected=selectedEventValue();
     if(selected.startsWith('variation:')){
       await refreshTempPlayers(false);
@@ -3798,6 +3821,35 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     await refreshTempPlayers(false);
     loadDraft(); selectedPlayer=null; sharedVariations=[]; renderAll();
     await refreshVariations(true);
+  });
+
+  if(updateProductionBtn)updateProductionBtn.addEventListener('click',async()=>{
+    if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("update the Production / Final lineup");return;}
+    const finalRec=productionVariationForEvent();
+    if(!finalRec){
+      markStatus('This game does not have a Production / Final lineup yet.',false);
+      updateProductionCurrentButton();
+      return;
+    }
+    const gameName=eventLabel();
+    if(!confirm('Publish the current board as the updated Production / Final lineup for '+gameName+'? This is intended for last-minute absences, formation changes, and warmup changes.'))return;
+    const sb=sbClient();
+    if(!sb){markStatus('Supabase is not connected.',false);return;}
+    const old=updateProductionBtn.textContent;
+    updateProductionBtn.disabled=true;
+    updateProductionBtn.textContent='Publishing…';
+    const {error}=await sb.rpc('update_production_lineup_state',{
+      p_variation_id:finalRec.id,
+      p_state:normalizeState(clone(state))
+    });
+    updateProductionBtn.disabled=false;
+    updateProductionBtn.textContent=old;
+    if(error){markStatus('Could not update Production / Final: '+error.message,false);return;}
+    await refreshVariations(false);
+    if(window.gameDaySelected?.id&&String(window.gameDaySelected.id)===String(eventKey())){
+      await window.loadProductionGameplan?.(eventKey());
+    }
+    markStatus('Production / Final updated for '+gameName+'. The Game Day and Match Center lineup will use this latest board.');
   });
 
   if(copyCurrentBtn)copyCurrentBtn.addEventListener('click',()=>{
@@ -3874,7 +3926,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.24 ready. Saved game variations can now be marked Production / Final, and the official plan appears directly in Game Day for that match.');
+  markStatus('Lineup Builder v51.25 ready. Production / Final can now be republished from the current board for last-minute changes, and the same live lineup feeds the Match Center.');
 
   window.SKORLineup={
     setRoster,
@@ -5208,7 +5260,7 @@ function renderProductionGameplan(){
     return `<div class="production-wave"><strong>${officialEsc(title)}</strong><span>Out: ${officialEsc(outs)}<br>In: ${officialEsc(ins)}</span></div>`;
   }).join(""):'<div class="production-empty">No planned substitution waves saved.</div>';
 
-  meta.textContent=`${PRODUCTION_GAMEPLAN.name} · ${formation} · Finalized ${new Date(PRODUCTION_GAMEPLAN.updated_at||PRODUCTION_GAMEPLAN.created_at).toLocaleString()}`;
+  meta.textContent=`${PRODUCTION_GAMEPLAN.name} · ${formation} · Published ${new Date(PRODUCTION_GAMEPLAN.updated_at||PRODUCTION_GAMEPLAN.created_at).toLocaleString()} · Editable until match time` ;
   body.innerHTML=`<div class="production-grid"><div class="production-block"><h4>Starting XI</h4>${startersHtml}</div><div class="production-block"><h4>Bench</h4>${benchHtml}<h4 style="margin-top:12px">Planned Substitutions</h4>${wavesHtml}</div></div>`;
   if(openBtn){openBtn.style.display="inline-flex";openBtn.dataset.variationId=PRODUCTION_GAMEPLAN.id;}
 }
