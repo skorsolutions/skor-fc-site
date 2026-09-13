@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.20-copy-lineup-to-game" />
+  <meta name="skor-build" content="lineup-admin-v51.21-named-sub-waves" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1010,6 +1010,30 @@
       font-weight:700;
       line-height:1.25;
     }
+
+    .sub-wave-head{
+      grid-column:1/-1;
+      display:grid;
+      grid-template-columns:auto minmax(150px,280px);
+      align-items:center;
+      gap:9px;
+      margin-bottom:1px;
+    }
+    .sub-wave-head .sub-event-number{grid-column:auto;margin:0}
+    .sub-wave-name{
+      min-width:0;
+      padding:7px 9px!important;
+      min-height:34px!important;
+      border-radius:9px!important;
+      font-size:.72rem!important;
+      font-weight:800;
+      background:#fff;
+    }
+    @media(max-width:650px){
+      #lineups .sub-wave-head{grid-template-columns:1fr;gap:5px}
+      #lineups .sub-wave-name{width:100%;font-size:.66rem!important;min-height:32px!important}
+    }
+
     .sub-event-number{
       grid-column:1/-1;
       font-size:.7rem;font-weight:950;color:#333;
@@ -1418,7 +1442,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.20</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.21</div>
   </aside>
 
   <main>
@@ -2021,7 +2045,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
         <div class="panel">
           <h2>Planned Substitutions</h2>
-          <div class="sub">Plan as many substitutions as you want for the first half and second half. Each planned sub can include multiple players out and multiple players in. Tap player chips to build each group change.</div>
+          <div class="sub">Plan as many substitution waves as you want for the first half and second half. Give any wave an optional name such as Defensive Subs, Forwards, or Wingers, then tap player chips to build the group change.</div>
           <div class="sub-plan" id="lineupSubPlan"></div>
           <div class="sub-plan-actions"><button class="btn btn-light" id="addFirstHalfSubBtn" type="button">+ Add first-half sub</button><button class="btn btn-light" id="addSecondHalfSubBtn" type="button">+ Add second-half sub</button></div>
         </div>
@@ -2228,7 +2252,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   let state = blankState("4-2-3-1");
 
   function isFreeform(formation){ return formation === FREEFORM; }
-  function blankSubs(){ return {firstHalf:[{out:[],in:[]}],secondHalf:[{out:[],in:[]}]}; }
+  function blankSubs(){ return {firstHalf:[{label:"",out:[],in:[]}],secondHalf:[{label:"",out:[],in:[]}]}; }
   function blankState(formation){
     return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),showSecondHalfSubs:false,labelMode:"names",captainId:"",quote:"",notes:""};
   }
@@ -2237,22 +2261,22 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       if(Array.isArray(v)) return v.filter(Boolean).map(String);
       return v ? [String(v)] : [];
     };
-    const row=x=>({out:normalizeIds(x?.out),in:normalizeIds(x?.in)});
+    const row=x=>({label:String(x?.label||"").slice(0,40),out:normalizeIds(x?.out),in:normalizeIds(x?.in)});
     // Backward compatibility:
     // old shape: {first, second, halftime[]}
     if(value && (!Array.isArray(value.firstHalf) || !Array.isArray(value.secondHalf)) && ("first" in value || "second" in value || "halftime" in value)){
       const firstHalf=[row(value?.first), row(value?.second)].filter(x=>x.out.length||x.in.length);
       const secondHalf=Array.isArray(value?.halftime)?value.halftime.map(row).filter(x=>x.out.length||x.in.length):[];
       return {
-        firstHalf:firstHalf.length?firstHalf:[{out:[],in:[]}],
-        secondHalf:secondHalf.length?secondHalf:[{out:[],in:[]}]
+        firstHalf:firstHalf.length?firstHalf:[{label:"",out:[],in:[]}],
+        secondHalf:secondHalf.length?secondHalf:[{label:"",out:[],in:[]}]
       };
     }
     const firstHalf=Array.isArray(value?.firstHalf)?value.firstHalf.map(row).filter(Boolean):[];
     const secondHalf=Array.isArray(value?.secondHalf)?value.secondHalf.map(row).filter(Boolean):[];
     return {
-      firstHalf:firstHalf.length?firstHalf:[{out:[],in:[]}],
-      secondHalf:secondHalf.length?secondHalf:[{out:[],in:[]}]
+      firstHalf:firstHalf.length?firstHalf:[{label:"",out:[],in:[]}],
+      secondHalf:secondHalf.length?secondHalf:[{label:"",out:[],in:[]}]
     };
   }
   function normalizeState(value){
@@ -2635,12 +2659,18 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         const bubbleY = startY + idx*54;
         const outText = prettyPlayers(entry.out, true);
         const inText = prettyPlayers(entry.in, true);
+        const waveName=String(entry?.label||"").trim();
+        const details = waveName
+          ? `${svgTextBlock(waveName, planCardX+78, bubbleY+13, 34, 14, 1, 'font-size="13" font-weight="950" fill="'+labelColor+'" font-family="Arial, Helvetica, sans-serif"')}
+             ${svgTextBlock('Out: '+outText, planCardX+78, bubbleY+29, 42, 15, 1, 'font-size="14" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+             ${svgTextBlock('In: '+inText, planCardX+78, bubbleY+44, 42, 15, 1, 'font-size="14" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}`
+          : `${svgTextBlock('Out: '+outText, planCardX+78, bubbleY+19, 38, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+             ${svgTextBlock('In: '+inText, planCardX+78, bubbleY+39, 38, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}`;
         return `
           <rect x="${planCardX+20}" y="${bubbleY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/>
           <circle cx="${planCardX+48}" cy="${bubbleY+24}" r="18" fill="${labelColor}"/>
           <text x="${planCardX+48}" y="${bubbleY+30}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${idx+1}</text>
-          ${svgTextBlock('Out: '+outText, planCardX+78, bubbleY+19, 38, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
-          ${svgTextBlock('In: '+inText, planCardX+78, bubbleY+39, 38, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
+          ${details}
         `;
       }).join("");
     };
@@ -2956,8 +2986,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
   function subRowHTML(record,phase,index=null,removable=false){
     const suffix=index===null?phase:phase+'-'+index;
+    const waveLabel=String(record?.label||"");
     return '<div class="sub-row multi-sub" data-sub-row="'+esc(suffix)+'">'+
-      '<div class="sub-event-number">'+ordinal(index+1)+' planned sub</div>'+
+      '<div class="sub-wave-head"><div class="sub-event-number">'+ordinal(index+1)+' planned sub</div>'+
+      '<input class="sub-wave-name" type="text" maxlength="40" placeholder="Optional wave name — e.g. Defensive Subs" value="'+esc(waveLabel)+'" data-sub-wave-name="1" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'"></div>'+
       subChipListHTML(record.out,phase,index,'out')+
       '<span class="sub-arrow">→</span>'+
       subChipListHTML(record.in,phase,index,'in')+
@@ -2990,6 +3022,15 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       markStatus(state.showSecondHalfSubs?'Second-half substitutions will show on the gameplan export.':'Second-half substitutions are hidden from the gameplan export.');
     });
 
+    box.querySelectorAll('[data-sub-wave-name]').forEach(input=>input.addEventListener('input',()=>{
+      const phase=input.dataset.subPhase;
+      const idx=+input.dataset.subIndex;
+      if(!Array.isArray(state.subs[phase])||!state.subs[phase][idx])return;
+      state.subs[phase][idx].label=String(input.value||"").slice(0,40);
+      persistDraft();
+      renderGameplanPreview();
+    }));
+
     box.querySelectorAll('[data-sub-chip]').forEach(btn=>btn.addEventListener('click',()=>{
       const phase=btn.dataset.subPhase;
       const idx=+btn.dataset.subIndex;
@@ -3008,7 +3049,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const idx=+btn.dataset.subRemove;
       if(Array.isArray(state.subs[phase])){
         state.subs[phase].splice(idx,1);
-        if(!state.subs[phase].length) state.subs[phase].push({out:[],in:[]});
+        if(!state.subs[phase].length) state.subs[phase].push({label:"",out:[],in:[]});
       }
       persistDraft(); renderSubPlan();
     }));
@@ -3600,13 +3641,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   });
   if(addFirstHalfSubBtn) addFirstHalfSubBtn.addEventListener('click',()=>{
     state.subs=normalizeSubs(state.subs);
-    state.subs.firstHalf.push({out:[],in:[]});
+    state.subs.firstHalf.push({label:"",out:[],in:[]});
     persistDraft(); renderSubPlan();
     markStatus('First-half substitution added. Save a variation to share the plan.');
   });
   if(addSecondHalfSubBtn) addSecondHalfSubBtn.addEventListener('click',()=>{
     state.subs=normalizeSubs(state.subs);
-    state.subs.secondHalf.push({out:[],in:[]});
+    state.subs.secondHalf.push({label:"",out:[],in:[]});
     state.showSecondHalfSubs=true;
     persistDraft(); renderSubPlan(); renderGameplanPreview();
     markStatus('Second-half substitution added and enabled for the gameplan export.');
@@ -3615,7 +3656,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.20 ready. Tinker boards, saved game lineups, and the current board can now be copied into another game while match-specific TEMP players are safely removed.');
+  markStatus('Lineup Builder v51.21 ready. Planned substitution waves can now be given custom names such as Defensive Subs, Forwards, or Wingers, and those names carry into saved plans and exports.');
 
   window.SKORLineup={
     setRoster,
