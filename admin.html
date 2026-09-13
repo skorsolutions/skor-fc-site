@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.25-live-final-match-center" />
+  <meta name="skor-build" content="lineup-admin-v51.28-bench-absent-action" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -431,6 +431,26 @@
     .player-card.temp-player-card .peg-name:after{content:" TEMP";font-size:.5rem;color:var(--maroon);font-weight:950}
     .jersey.temp-number{font-size:.68rem!important;letter-spacing:-.03em}
     .bench-player.temp-player,.depth-chip.temp-player,.sub-player-chip.temp-player{border-style:dashed}
+
+    .bench-player{display:inline-flex;align-items:center;gap:5px}
+    .bench-player-label{display:inline-flex;align-items:center;min-width:0}
+    .bench-absent-btn{
+      border:0;
+      border-radius:999px;
+      padding:3px 6px;
+      margin-left:2px;
+      background:#fbe7ea;
+      color:#9a233b;
+      font-size:.58rem;
+      font-weight:950;
+      cursor:pointer;
+      line-height:1.2;
+      white-space:nowrap;
+    }
+    .bench-absent-btn:hover{background:#f4cbd2;color:#78172c}
+    .bench-absent-btn:disabled{opacity:.55;cursor:wait}
+    body.viewer-mode .bench-absent-btn{display:none!important}
+
     @media(max-width:720px){.temp-player-form{grid-template-columns:1fr 72px}.temp-player-form .mini-btn{grid-column:1/-1}}
     @media(max-width:900px){.lineup-workspace{grid-template-columns:1fr}.lineup-players-panel{position:static;max-height:none;overflow:visible}
       .lineup-players-panel .player-pool{grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:6px}
@@ -1593,7 +1613,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.25</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.28</div>
   </aside>
 
   <main>
@@ -3066,13 +3086,110 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     }));
   }
 
+
+  function permanentRosterRowForLineupPid(pid){
+    const key=String(pid||"");
+    if(key.startsWith("temp:"))return null;
+    if(typeof TEAM_ROSTER==="undefined"||!Array.isArray(TEAM_ROSTER))return null;
+    return TEAM_ROSTER.find(r=>String(r.player_key||r.id)===key)||null;
+  }
+
+  async function markBenchPlayerAbsent(pid,button=null){
+    if(!window.SKORPortalCanWrite?.()){
+      window.SKORViewerBlocked?.("mark a player absent");
+      return;
+    }
+    const matchId=selectedRealMatchId();
+    if(!matchId){
+      markStatus("Select the actual game before marking a player absent.",false);
+      return;
+    }
+    const p=player(pid);
+    if(!p)return;
+
+    if(p.temp){
+      if(!confirm(`Remove ${p.name} from this match plan? TEMP players do not have season attendance records.`))return;
+      removePlayerEverywhere(pid);
+      if(selectedPlayer===pid)selectedPlayer=null;
+      persistDraft();
+      renderAll();
+      markStatus(`${p.name} removed from the lineup plan and all planned substitution waves.`);
+      return;
+    }
+
+    const rosterRow=permanentRosterRowForLineupPid(pid);
+    if(!rosterRow?.id){
+      markStatus(`Could not match ${p.name} to the permanent roster attendance record.`,false);
+      return;
+    }
+
+    if(!confirm(`Mark #${p.number} ${p.name} ABSENT for this game?\n\nThis will remove him from the lineup/bench, Potential Positions, and all planned substitution waves.`))return;
+
+    const oldText=button?.textContent||"Absent ✕";
+    if(button){
+      button.disabled=true;
+      button.textContent="…";
+    }
+
+    try{
+      const sb=sbClient();
+      if(!sb)throw new Error("Supabase is not connected.");
+
+      const {error}=await sb.rpc("captain_set_match_attendance",{
+        p_match_id:matchId,
+        p_roster_player_id:rosterRow.id,
+        p_status:"absent"
+      });
+      if(error)throw error;
+
+      removePlayerEverywhere(pid);
+      if(selectedPlayer===pid)selectedPlayer=null;
+      persistDraft();
+      renderAll();
+
+      try{
+        if(typeof loadPlayerEngagement==="function" && window.gameDaySelected?.id && String(window.gameDaySelected.id)===String(matchId)){
+          await loadPlayerEngagement();
+        }
+        if(typeof loadDashboardAttendance==="function")await loadDashboardAttendance();
+        if(document.getElementById("attendance")?.classList.contains("active") && typeof loadAttendancePage==="function"){
+          await loadAttendancePage();
+        }
+      }catch(refreshErr){
+        console.warn("Attendance refresh after bench absence:",refreshErr);
+      }
+
+      const finalRec=productionVariationForEvent?.();
+      const finalNote=finalRec
+        ? ' The current board changed; use "Publish Current Board to Final" if this should immediately replace the published Match Center lineup.'
+        : '';
+      markStatus(`#${p.number} ${p.name} marked Absent and removed from the lineup plan, Potential Positions, and all planned sub waves.${finalNote}`);
+    }catch(err){
+      markStatus(`Could not mark ${p.name} absent: ${err?.message||err}`,false);
+      if(button){
+        button.disabled=false;
+        button.textContent=oldText;
+      }
+    }
+  }
+
   function renderBench(){
     const list=document.getElementById("lineupBenchList");
     if(!list)return;
     list.innerHTML=state.bench.length?state.bench.map(pid=>{
       const p=player(pid);
-      return p?'<div class="bench-player'+(p.temp?' temp-player':'')+'" draggable="true" data-v28-player="'+esc(pid)+'">'+esc(playerListLabel(p))+'</div>':'';
+      if(!p)return '';
+      const action=p.temp
+        ? '<button type="button" class="bench-absent-btn" data-bench-absent="'+esc(pid)+'" title="Remove this TEMP player from the match plan">Remove ✕</button>'
+        : '<button type="button" class="bench-absent-btn" data-bench-absent="'+esc(pid)+'" title="Mark absent and remove from this match plan">Absent ✕</button>';
+      return '<div class="bench-player'+(p.temp?' temp-player':'')+'" draggable="true" data-v28-player="'+esc(pid)+'"><span class="bench-player-label">'+esc(playerListLabel(p))+'</span>'+action+'</div>';
     }).join(''):'<span style="font-size:.8rem;color:var(--muted)">No substitutes listed yet.</span>';
+
+    list.querySelectorAll('[data-bench-absent]').forEach(btn=>btn.addEventListener('click',async e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      await markBenchPlayerAbsent(btn.dataset.benchAbsent,btn);
+    }));
   }
 
   function bindDrags(){
@@ -3081,6 +3198,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       el.addEventListener('dragend',()=>{ draggedPlayer=null; });
     });
     document.querySelectorAll('.bench-player[data-v28-player]').forEach(el=>el.addEventListener('click',e=>{
+      if(e.target.closest('[data-bench-absent]'))return;
       e.stopPropagation();
       selectedPlayer=el.dataset.v28Player;
       renderPool();
@@ -3926,7 +4044,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.25 ready. Production / Final can now be republished from the current board for last-minute changes, and the same live lineup feeds the Match Center.');
+  markStatus('Lineup Builder v51.28 ready. Bench players now have a one-click Absent action that removes no-shows from the match plan and planned substitution waves while recording match attendance.');
 
   window.SKORLineup={
     setRoster,
