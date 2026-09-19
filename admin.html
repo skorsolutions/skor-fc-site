@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.30-roster-departure-archive" />
+  <meta name="skor-build" content="lineup-admin-v51.31-roster-archive-success-state" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1013,6 +1013,19 @@
     .departure-captain-warning{display:none;margin-top:9px;padding:9px 10px;border-radius:9px;background:#f6e4e8;border:1px solid #e1bdc6;color:#7e263b;font-size:.68rem;font-weight:850;line-height:1.4}.departure-captain-warning.show{display:block}
     .departure-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:15px}
 
+    .departure-success{display:none;margin-top:14px;padding:18px;border:1px solid #bddbc8;border-radius:13px;background:#f2faf5;text-align:center}
+    .departure-success.show{display:block}
+    .departure-success-icon{width:48px;height:48px;margin:0 auto 10px;display:grid;place-items:center;border-radius:50%;background:#2f6a4b;color:#fff;font-size:24px;font-weight:950}
+    .departure-success h4{margin:0 0 7px;font-size:1rem;color:#285b41}
+    .departure-success p{margin:0;color:#4f6659;font-size:.74rem;line-height:1.55}
+    .departure-success-details{display:grid;gap:5px;margin:12px auto 0;max-width:390px;text-align:left;padding:10px 11px;border-radius:10px;background:#fff;border:1px solid #d8e8de;font-size:.69rem;color:#4f5f56}
+    .departure-success-details strong{color:#283b31}
+    .departure-dialog.success-mode .departure-config{display:none!important}
+    .departure-dialog.success-mode #departureCancelBtn,
+    .departure-dialog.success-mode #departureConfirmBtn{display:none!important}
+    .departure-dialog.success-mode #departureDoneBtn{display:inline-flex!important}
+
+
     .roster-admin-grid{grid-template-columns:minmax(320px,.8fr) minmax(0,1.4fr)}
     .roster-form-grid{display:grid;grid-template-columns:1.5fr .6fr 1.2fr 1fr;gap:10px}
     .roster-heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -1643,7 +1656,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.30</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.31</div>
   </aside>
 
   <main>
@@ -2189,15 +2202,21 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     <dialog class="departure-dialog" id="departureDialog">
       <div class="departure-shell">
         <div class="departure-head"><div><h3>Remove Player from Current Squad</h3><div class="sub">Archive the roster identity instead of deleting it.</div></div><button class="departure-close" id="departureCloseBtn" type="button" aria-label="Close">×</button></div>
-        <div class="departure-player" id="departurePlayerLabel">Player</div>
-        <div class="departure-options">
+        <div class="departure-player departure-config" id="departurePlayerLabel">Player</div>
+        <div class="departure-options departure-config">
           <label class="departure-option"><input type="radio" name="departureType" value="eligible_to_return" checked><span><strong>Former Player — Eligible to Return</strong><small>Best for a normal departure. Removes the player now, releases the jersey, disables Player Portal, but preserves their identity and claimed login so a future return can be restored cleanly.</small></span></label>
           <label class="departure-option"><input type="radio" name="departureType" value="do_not_reactivate"><span><strong>Former Player — Do Not Reactivate</strong><small>Use for a hard separation. Performs the same roster removal, but also clears the claimed Player Portal identity and prevents accidental one-click restoration.</small></span></label>
         </div>
-        <div class="departure-note"><label for="departureNote">Captain-only note (optional)</label><textarea id="departureNote" maxlength="800" placeholder="Reason / context. This is never shown on the public Squad page."></textarea></div>
-        <div class="departure-impact">This removes the player from the current Squad, lineup player pool, future RSVP/attendance planning, Tinker/future saved lineups and future Production/Final plans. Past stats, past attendance, comments and historical match identity are preserved. Their former jersey number becomes available to another active player.</div>
-        <div class="departure-captain-warning" id="departureCaptainWarning"></div>
-        <div class="departure-actions"><button class="btn btn-light" id="departureCancelBtn" type="button">Cancel</button><button class="btn btn-primary" id="departureConfirmBtn" type="button">Archive Player & Release Number</button></div>
+        <div class="departure-note departure-config"><label for="departureNote">Captain-only note (optional)</label><textarea id="departureNote" maxlength="800" placeholder="Reason / context. This is never shown on the public Squad page."></textarea></div>
+        <div class="departure-impact departure-config">This removes the player from the current Squad, lineup player pool, future RSVP/attendance planning, Tinker/future saved lineups and future Production/Final plans. Past stats, past attendance, comments and historical match identity are preserved. Their former jersey number becomes available to another active player.</div>
+        <div class="departure-captain-warning departure-config" id="departureCaptainWarning"></div>
+        <div class="departure-success" id="departureSuccess" aria-live="polite">
+          <div class="departure-success-icon">✓</div>
+          <h4 id="departureSuccessTitle">Player archived</h4>
+          <p id="departureSuccessSummary"></p>
+          <div class="departure-success-details" id="departureSuccessDetails"></div>
+        </div>
+        <div class="departure-actions"><button class="btn btn-light" id="departureCancelBtn" type="button">Cancel</button><button class="btn btn-primary" id="departureConfirmBtn" type="button">Archive Player & Release Number</button><button class="btn btn-primary" id="departureDoneBtn" type="button" style="display:none">Done / Close</button></div>
       </div>
     </dialog>
 
@@ -4577,6 +4596,8 @@ window.openDepartureDialog=function(id){
   if(!p||p.active===false)return;
   DEPARTURE_PLAYER_ID=String(id);
   const dlg=document.getElementById("departureDialog"),label=document.getElementById("departurePlayerLabel"),note=document.getElementById("departureNote"),warning=document.getElementById("departureCaptainWarning");
+  dlg?.classList.remove("success-mode");
+  document.getElementById("departureSuccess")?.classList.remove("show");
   const defaultRadio=document.querySelector('input[name="departureType"][value="eligible_to_return"]');if(defaultRadio)defaultRadio.checked=true;
   if(label)label.textContent=`#${p.jersey_number} ${p.full_name}`;
   if(note)note.value="";
@@ -5013,29 +5034,90 @@ if(rosterNumberInput){
 const departureDialog=document.getElementById("departureDialog");
 document.getElementById("departureCloseBtn")?.addEventListener("click",closeDepartureDialog);
 document.getElementById("departureCancelBtn")?.addEventListener("click",closeDepartureDialog);
+document.getElementById("departureDoneBtn")?.addEventListener("click",closeDepartureDialog);
 departureDialog?.addEventListener("cancel",event=>{event.preventDefault();closeDepartureDialog();});
 document.getElementById("departureConfirmBtn")?.addEventListener("click",async()=>{
   if(!DEPARTURE_PLAYER_ID)return;
   if(!portalCanWrite()){viewerBlocked("archive roster players");return;}
-  const p=TEAM_ROSTER.find(x=>String(x.id)===String(DEPARTURE_PLAYER_ID));if(!p)return;
+
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(DEPARTURE_PLAYER_ID));
+  if(!p)return;
+
   const type=document.querySelector('input[name="departureType"]:checked')?.value||"eligible_to_return";
   const note=document.getElementById("departureNote")?.value.trim()||null;
   const label=type==="do_not_reactivate"?"Do Not Reactivate":"Eligible to Return";
-  if(!confirm(`Archive #${p.jersey_number} ${p.full_name} as "${label}"?\n\n#${p.jersey_number} will immediately become available to another current player.`))return;
-  const btn=document.getElementById("departureConfirmBtn"),old=btn.textContent;btn.disabled=true;btn.textContent="Archiving…";
+  const btn=document.getElementById("departureConfirmBtn");
+  const oldText=btn.textContent;
+
+  btn.disabled=true;
+  btn.textContent="Archiving…";
+
   try{
-    const {data,error}=await sb.rpc("captain_depart_roster_player",{p_roster_player_id:p.id,p_departure_status:type,p_note:note});
+    const {data,error}=await sb.rpc("captain_depart_roster_player",{
+      p_roster_player_id:p.id,
+      p_departure_status:type,
+      p_note:note
+    });
     if(error)throw error;
+
     const result=Array.isArray(data)?data[0]:data;
-    window.SKORLineup?.removePermanentPlayer?.(p.player_key||p.id);
-    closeDepartureDialog();
-    await loadTeamRoster(false);
+    const releasedNumber=result?.released_number??p.jersey_number;
+
+    // Database success is authoritative. UI refresh issues must never make a
+    // successful archive look like it failed.
+    try{
+      window.SKORLineup?.removePermanentPlayer?.(p.player_key||p.id);
+    }catch(localErr){
+      console.warn("Could not refresh current lineup after player archive:",localErr);
+    }
+
+    try{
+      await loadTeamRoster(false);
+    }catch(rosterRefreshErr){
+      console.warn("Could not refresh roster after player archive:",rosterRefreshErr);
+    }
+
     const cleanup=[];
-    if(Number(result?.variations_cleaned||0))cleanup.push(`${result.variations_cleaned} future/Tinker lineup plan${Number(result.variations_cleaned)===1?"":"s"} cleaned`);
-    if(Number(result?.future_rsvps_removed||0))cleanup.push(`${result.future_rsvps_removed} future RSVP${Number(result.future_rsvps_removed)===1?"":"s"} removed`);
-    setRosterStatus(`${p.full_name} is now a former player (${label}). #${p.jersey_number} is released, Player Portal access is disabled, and historical match data is preserved.${cleanup.length?" "+cleanup.join(" · ")+".":""}`,true);
-  }catch(err){setRosterStatus(`Could not archive ${p.full_name}: ${err?.message||err}`,false);}
-  finally{btn.disabled=false;btn.textContent=old;}
+    if(Number(result?.variations_cleaned||0)){
+      cleanup.push(`${result.variations_cleaned} future/Tinker lineup plan${Number(result.variations_cleaned)===1?"":"s"} cleaned`);
+    }
+    if(Number(result?.future_rsvps_removed||0)){
+      cleanup.push(`${result.future_rsvps_removed} future RSVP${Number(result.future_rsvps_removed)===1?"":"s"} removed`);
+    }
+    if(Number(result?.future_attendance_removed||0)){
+      cleanup.push(`${result.future_attendance_removed} future attendance entr${Number(result.future_attendance_removed)===1?"y":"ies"} removed`);
+    }
+
+    const dlg=document.getElementById("departureDialog");
+    const success=document.getElementById("departureSuccess");
+    const title=document.getElementById("departureSuccessTitle");
+    const summary=document.getElementById("departureSuccessSummary");
+    const details=document.getElementById("departureSuccessDetails");
+
+    if(title)title.textContent=`${p.full_name} archived`;
+    if(summary)summary.textContent=`#${releasedNumber} is released and Player Portal access is disabled.`;
+    if(details){
+      details.innerHTML=
+        `<div><strong>Status:</strong> ${rosterEsc(label)}</div>`+
+        `<div><strong>Jersey:</strong> #${rosterEsc(releasedNumber)} is now available</div>`+
+        `<div><strong>History:</strong> past matches, attendance and stats preserved</div>`+
+        `<div><strong>Player Portal:</strong> disabled${type==="do_not_reactivate"?"; claimed login cleared":""}</div>`+
+        (cleanup.length?`<div><strong>Cleanup:</strong> ${rosterEsc(cleanup.join(" · "))}</div>`:"");
+    }
+
+    dlg?.classList.add("success-mode");
+    success?.classList.add("show");
+
+    setRosterStatus(
+      `${p.full_name} archived (${label}). #${releasedNumber} released; Player Portal disabled; historical data preserved.`,
+      true
+    );
+  }catch(err){
+    setRosterStatus(`Could not archive ${p.full_name}: ${err?.message||err}`,false);
+  }finally{
+    btn.disabled=false;
+    btn.textContent=oldText;
+  }
 });
 
 if(refreshRosterBtn)refreshRosterBtn.addEventListener("click",()=>loadTeamRoster(true));
