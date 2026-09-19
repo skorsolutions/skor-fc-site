@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.32-roster-archive-rpc-fix" />
+  <meta name="skor-build" content="lineup-admin-v51.33-desktop-roster-private-chat" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1048,6 +1048,57 @@
     .roster-table{width:100%;min-width:720px}
     .roster-table td{vertical-align:middle}
     .roster-contact{font-size:.76rem;color:var(--muted)}
+
+    /* v51.33 — desktop roster only. Do not alter the working mobile layout. */
+    @media(min-width:901px){
+      #roster .roster-admin-grid{
+        grid-template-columns:minmax(0,1fr)!important;
+        gap:18px;
+      }
+      #roster .panel{min-width:0}
+      #roster .roster-form-grid{
+        grid-template-columns:minmax(240px,1.35fr) minmax(190px,.9fr) minmax(105px,.42fr) minmax(180px,.8fr);
+      }
+      #roster .roster-table-wrap{
+        width:100%;
+        max-width:100%;
+        overflow-x:auto;
+        overflow-y:visible;
+        padding-bottom:8px;
+        scrollbar-gutter:stable;
+      }
+      #roster .roster-table{
+        width:100%;
+        min-width:1510px;
+        table-layout:auto;
+        border-collapse:separate;
+        border-spacing:0;
+      }
+      #roster .roster-table th,
+      #roster .roster-table td{
+        padding:10px 9px;
+        white-space:nowrap;
+        vertical-align:middle;
+      }
+      #roster .roster-table th:nth-child(1),
+      #roster .roster-table td:nth-child(1){min-width:54px;text-align:center}
+      #roster .roster-name-cell{min-width:245px;white-space:normal!important}
+      #roster .roster-table th:nth-child(3),
+      #roster .roster-table td:nth-child(3){min-width:150px}
+      #roster .roster-new-cell{min-width:145px}
+      #roster .roster-table th:nth-child(5),
+      #roster .roster-table td:nth-child(5){min-width:215px}
+      #roster .portal-access-cell{min-width:190px}
+      #roster .captain-access-cell{min-width:185px}
+      #roster .playing-status-cell{min-width:165px}
+      #roster .roster-table th:nth-child(9),
+      #roster .roster-table td:nth-child(9){min-width:135px}
+      #roster .roster-table th:nth-child(10),
+      #roster .roster-table td:nth-child(10){min-width:190px}
+      #roster .roster-action-cell{min-width:135px}
+      #roster .roster-heading-row{align-items:center}
+    }
+
     @media(max-width:900px){
       .roster-admin-grid{grid-template-columns:1fr}
       .roster-form-grid{grid-template-columns:1fr 1fr}
@@ -1573,7 +1624,41 @@
 .player-engagement-panel{border-color:#dacbd0;background:linear-gradient(145deg,#fff,#fbf8f9)}
 .engagement-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:14px 0}
 .engagement-stat{border:1px solid var(--line);border-radius:11px;padding:10px;text-align:center;background:#fff}.engagement-stat strong{font-size:1.2rem;display:block}.engagement-stat span{display:block;color:var(--muted);font-size:.62rem;font-weight:900;text-transform:uppercase;margin-top:3px}
-.engagement-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.engagement-list{display:grid;gap:7px}.engagement-item{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px;font-size:.75rem;line-height:1.4}.engagement-item small{display:block;color:var(--muted);margin-top:4px}.feedback-private{border-left:4px solid var(--maroon)}.feedback-team{border-left:4px solid #557b67}.reaction-bars{display:grid;gap:5px}.reaction-line{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:5px 0;font-size:.72rem}
+.engagement-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}.engagement-list{display:grid;gap:7px}.engagement-item{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px;font-size:.75rem;line-height:1.4}.engagement-item small{display:block;color:var(--muted);margin-top:4px}.feedback-private{border-left:4px solid var(--maroon)}.feedback-team{border-left:4px solid #557b67}
+
+    .captain-chat-thread{margin-top:9px;border-top:1px solid #eadde1;padding-top:8px}
+    .captain-chat-reply{
+      margin-top:7px;
+      padding:8px 9px;
+      border-radius:9px;
+      background:#f8f4f5;
+      border:1px solid #eadde1;
+      font-size:.7rem;
+      line-height:1.4;
+    }
+    .captain-chat-reply strong{display:block;font-size:.64rem;color:#7f2940;margin-bottom:3px}
+    .captain-chat-reply small{display:block;margin-top:4px;color:var(--muted);font-size:.59rem}
+    .captain-chat-compose{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:7px;
+      margin-top:8px;
+      align-items:end;
+    }
+    .captain-chat-compose textarea{
+      min-height:62px;
+      resize:vertical;
+      font-size:.72rem;
+      padding:8px 9px;
+    }
+    .captain-chat-send{align-self:stretch;min-width:76px}
+    .captain-chat-status{min-height:14px;margin-top:5px;font-size:.62rem;color:var(--muted)}
+    .captain-chat-status.error{color:#9a2942}
+    @media(max-width:650px){
+      .captain-chat-compose{grid-template-columns:1fr}
+      .captain-chat-send{width:100%;min-height:38px}
+    }
+.reaction-bars{display:grid;gap:5px}.reaction-line{display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding:5px 0;font-size:.72rem}
 .rsvp-roster-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}.rsvp-badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;font-size:.6rem;font-weight:950;text-transform:uppercase;letter-spacing:.04em}.rsvp-badge.going{background:#e5f1eb;color:#315f4a}.rsvp-badge.out{background:#f6e5e9;color:#8b2942}.rsvp-badge.none{background:#eef0f2;color:#70757c}.rsvp-badge.injured{margin-left:5px;background:#f6e5e9;color:#8b2942}.match-attendance-panel{border-color:#cfd7d3;background:linear-gradient(145deg,#fff,#f7faf8);margin-top:18px}.attendance-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}.attendance-list{display:grid;gap:7px}.attendance-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:11px;background:#fff;padding:10px}.attendance-person small{display:block;margin-top:4px;color:var(--muted);font-size:.68rem}.attendance-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.attendance-actions .mini-btn.selected.present{background:#315f4a;color:#fff;border-color:#315f4a}.attendance-actions .mini-btn.selected.absent{background:#8b2942;color:#fff;border-color:#8b2942}.attendance-actions .mini-btn.selected.excused{background:#7a6221;color:#fff;border-color:#7a6221}.attendance-actions .mini-btn.clear-attendance{color:#70757c}.attendance-note{margin-top:8px;color:var(--muted);font-size:.7rem;line-height:1.4}
 body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-panel,body.viewer-mode #attendance,body.viewer-mode .nav button[data-view="attendance"],body.viewer-mode #activity,body.viewer-mode .nav button[data-view="activity"]{display:none!important}
 @media(max-width:900px){.engagement-grid{grid-template-columns:repeat(3,1fr)}.attendance-grid{grid-template-columns:repeat(2,1fr)}}
@@ -1671,7 +1756,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.32</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.33</div>
   </aside>
 
   <main>
@@ -5513,36 +5598,101 @@ async function setMatchAttendance(playerId,statusValue){
   await loadDashboardAttendance();
   if(document.getElementById("attendance")?.classList.contains("active"))await loadAttendancePage();
 }
+async function sendCaptainPrivateReply(commentId,textarea,button,statusEl){
+  if(!portalCanWrite()){viewerBlocked('reply to private player feedback');return;}
+  const message=String(textarea?.value||"").trim();
+  if(!message){
+    if(statusEl){statusEl.textContent="Write a reply first.";statusEl.classList.add("error");}
+    return;
+  }
+  const old=button?.textContent||"Reply";
+  if(button){button.disabled=true;button.textContent="Sending…";}
+  if(statusEl){statusEl.textContent="";statusEl.classList.remove("error");}
+  const {error}=await sb.rpc("captain_reply_to_player_comment",{p_comment_id:commentId,p_message:message});
+  if(error){
+    if(statusEl){statusEl.textContent=error.message;statusEl.classList.add("error");}
+    if(button){button.disabled=false;button.textContent=old;}
+    return;
+  }
+  if(textarea)textarea.value="";
+  if(statusEl){statusEl.textContent="Reply sent privately to the player.";statusEl.classList.remove("error");}
+  if(button){button.disabled=false;button.textContent=old;}
+  await loadPlayerEngagement();
+}
+
+function renderCaptainFeedbackThread(comment,replies){
+  const isPrivate=comment.visibility==="captains";
+  const threadReplies=(replies||[]).filter(r=>String(r.source_comment_id)===String(comment.id));
+  const repliesHtml=isPrivate?threadReplies.map(r=>`
+    <div class="captain-chat-reply">
+      <strong>${gdEsc(r.captain_name||"SKOR Captain")}</strong>
+      <div>${gdEsc(r.message)}</div>
+      <small>${new Date(r.created_at).toLocaleString()}</small>
+    </div>`).join(""):"";
+  const composer=isPrivate?`
+    <div class="captain-chat-compose">
+      <textarea maxlength="1500" data-private-reply-text="${gdEsc(comment.id)}" placeholder="Reply privately to ${gdEsc(comment.display_name)}…"></textarea>
+      <button class="mini-btn captain-chat-send" type="button" data-private-reply-send="${gdEsc(comment.id)}">Reply</button>
+    </div>
+    <div class="captain-chat-status" data-private-reply-status="${gdEsc(comment.id)}"></div>`:"";
+  return `<div class="engagement-item ${isPrivate?'feedback-private':'feedback-team'}">
+    <strong>${gdEsc(`#${comment.jersey_number} ${comment.display_name}`)}</strong> · ${isPrivate?'Captains Only':'Team'}
+    <div>${gdEsc(comment.comment)}</div>
+    <small>${new Date(comment.created_at).toLocaleString()}</small>
+    ${isPrivate?`<div class="captain-chat-thread">${repliesHtml||'<div class="sub">No captain replies yet.</div>'}${composer}</div>`:""}
+  </div>`;
+}
+
 async function loadPlayerEngagement(){
   const panel=document.getElementById('playerEngagementPanel');if(!panel)return;
   if(!portalCanWrite())return;
   const matchId=gameDaySelected?.id;
   const feedback=document.getElementById('playerFeedbackList'),reaction=document.getElementById('playerReactionSummary'),availList=document.getElementById('playerAvailabilityList'),attendanceList=document.getElementById('matchAttendanceList');
   if(!matchId){feedback.innerHTML='<div class="sub">Select a match.</div>';availList.innerHTML='<div class="sub">Select a match.</div>';if(attendanceList)attendanceList.innerHTML='<div class="sub">Select a match.</div>';return;}
-  const [a,r,c]=await Promise.all([
+
+  const [a,r,c,chat]=await Promise.all([
     sb.rpc('get_match_rsvp_attendance',{p_match_id:matchId}),
     sb.from('player_match_reactions').select('player_id,self_reaction,team_reaction,updated_at').eq('match_id',matchId),
-    sb.rpc('get_player_match_comments',{p_match_id:matchId})
+    sb.rpc('get_player_match_comments',{p_match_id:matchId}),
+    sb.rpc('get_captain_private_chat_replies',{p_match_id:matchId})
   ]);
+
   if(a.error||r.error||c.error){
     feedback.innerHTML='<div class="sub">RSVP / attendance requires the v51.2 SQL migration.</div>';
     reaction.innerHTML='';availList.innerHTML='';if(attendanceList)attendanceList.innerHTML='<div class="sub">Run the v51.2 RSVP / attendance SQL migration.</div>';return;
   }
+
   MATCH_RSVP_ATTENDANCE=a.data||[];
   const rows=MATCH_RSVP_ATTENDANCE,rx=r.data||[],comments=c.data||[];
+  const replies=chat.error?[]:(chat.data||[]);
+
   document.getElementById('engGoing').textContent=rows.filter(x=>x.rsvp_status==='going').length;
   document.getElementById('engOut').textContent=rows.filter(x=>x.rsvp_status==='out').length;
   document.getElementById('engNoResponse').textContent=rows.filter(x=>!x.rsvp_status).length;
   document.getElementById('engInjured').textContent=rows.filter(x=>x.playing_status==='injured').length;
   document.getElementById('engResponses').textContent=rx.length;
-  feedback.innerHTML=comments.length?comments.map(x=>`<div class="engagement-item ${x.visibility==='captains'?'feedback-private':'feedback-team'}"><strong>${gdEsc(`#${x.jersey_number} ${x.display_name}`)}</strong> · ${x.visibility==='captains'?'Captains Only':'Team'}<div>${gdEsc(x.comment)}</div><small>${new Date(x.created_at).toLocaleString()}</small></div>`).join(''):'<div class="sub">No player comments submitted yet.</div>';
+
+  feedback.innerHTML=comments.length
+    ? comments.map(x=>renderCaptainFeedbackThread(x,replies)).join('')
+    : '<div class="sub">No player comments submitted yet.</div>';
+
+  if(chat.error && comments.some(x=>x.visibility==='captains')){
+    feedback.insertAdjacentHTML('afterbegin','<div class="engagement-item feedback-private"><strong>Private chat replies unavailable</strong><div>Run the v51.33 SQL migration to enable captain replies.</div></div>');
+  }
+
+  feedback.querySelectorAll('[data-private-reply-send]').forEach(btn=>btn.addEventListener('click',()=>{
+    const id=btn.dataset.privateReplySend;
+    const textarea=feedback.querySelector(`[data-private-reply-text="${CSS.escape(id)}"]`);
+    const statusEl=feedback.querySelector(`[data-private-reply-status="${CSS.escape(id)}"]`);
+    sendCaptainPrivateReply(id,textarea,btn,statusEl);
+  }));
+
   const labels={great:'🔥 Great',good:'👍 Good',average:'😐 Average',rough:'👎 Rough'};
   const line=(scope,key)=>rx.filter(x=>x[scope]===key).length;
   reaction.innerHTML=['great','good','average','rough'].map(k=>`<div class="reaction-line"><span>${labels[k]}</span><span>Team ${line('team_reaction',k)} · Self ${line('self_reaction',k)}</span></div>`).join('');
   availList.innerHTML=rows.length?rows.map(x=>`<div class="engagement-item rsvp-roster-item"><div><strong>#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong>${x.rsvp_note?`<small>${gdEsc(x.rsvp_note)}</small>`:''}</div><div><span class="rsvp-badge ${x.rsvp_status||'none'}">${gdEsc(rsvpAdminLabel(x.rsvp_status))}</span>${x.playing_status==='injured'?'<span class="rsvp-badge injured">Injured</span>':''}</div></div>`).join(''):'<div class="sub">No active roster players found.</div>';
   renderMatchAttendance();
 }
-
 
 function officialEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
 function officialPlayerLabel(pid){
