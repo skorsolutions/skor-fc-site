@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.31-roster-archive-success-state" />
+  <meta name="skor-build" content="lineup-admin-v51.32-roster-archive-rpc-fix" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1013,6 +1013,21 @@
     .departure-captain-warning{display:none;margin-top:9px;padding:9px 10px;border-radius:9px;background:#f6e4e8;border:1px solid #e1bdc6;color:#7e263b;font-size:.68rem;font-weight:850;line-height:1.4}.departure-captain-warning.show{display:block}
     .departure-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:15px}
 
+
+    .departure-error{
+      display:none;
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:10px;
+      background:#fff0f2;
+      border:1px solid #e1b8c2;
+      color:#84263d;
+      font-size:.72rem;
+      font-weight:850;
+      line-height:1.45;
+    }
+    .departure-error.show{display:block}
+
     .departure-success{display:none;margin-top:14px;padding:18px;border:1px solid #bddbc8;border-radius:13px;background:#f2faf5;text-align:center}
     .departure-success.show{display:block}
     .departure-success-icon{width:48px;height:48px;margin:0 auto 10px;display:grid;place-items:center;border-radius:50%;background:#2f6a4b;color:#fff;font-size:24px;font-weight:950}
@@ -1656,7 +1671,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.31</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.32</div>
   </aside>
 
   <main>
@@ -2210,6 +2225,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="departure-note departure-config"><label for="departureNote">Captain-only note (optional)</label><textarea id="departureNote" maxlength="800" placeholder="Reason / context. This is never shown on the public Squad page."></textarea></div>
         <div class="departure-impact departure-config">This removes the player from the current Squad, lineup player pool, future RSVP/attendance planning, Tinker/future saved lineups and future Production/Final plans. Past stats, past attendance, comments and historical match identity are preserved. Their former jersey number becomes available to another active player.</div>
         <div class="departure-captain-warning departure-config" id="departureCaptainWarning"></div>
+        <div class="departure-error" id="departureError" role="alert"></div>
         <div class="departure-success" id="departureSuccess" aria-live="polite">
           <div class="departure-success-icon">✓</div>
           <h4 id="departureSuccessTitle">Player archived</h4>
@@ -4598,6 +4614,8 @@ window.openDepartureDialog=function(id){
   const dlg=document.getElementById("departureDialog"),label=document.getElementById("departurePlayerLabel"),note=document.getElementById("departureNote"),warning=document.getElementById("departureCaptainWarning");
   dlg?.classList.remove("success-mode");
   document.getElementById("departureSuccess")?.classList.remove("show");
+  const depError=document.getElementById("departureError");
+  if(depError){depError.classList.remove("show");depError.textContent="";}
   const defaultRadio=document.querySelector('input[name="departureType"][value="eligible_to_return"]');if(defaultRadio)defaultRadio.checked=true;
   if(label)label.textContent=`#${p.jersey_number} ${p.full_name}`;
   if(note)note.value="";
@@ -5051,6 +5069,10 @@ document.getElementById("departureConfirmBtn")?.addEventListener("click",async()
 
   btn.disabled=true;
   btn.textContent="Archiving…";
+  const inlineError=document.getElementById("departureError");
+  if(inlineError){inlineError.classList.remove("show");inlineError.textContent="";}
+  const playerLabel=document.getElementById("departurePlayerLabel");
+  if(playerLabel)playerLabel.textContent=`#${p.jersey_number} ${p.full_name} · Archiving…`;
 
   try{
     const {data,error}=await sb.rpc("captain_depart_roster_player",{
@@ -5105,6 +5127,7 @@ document.getElementById("departureConfirmBtn")?.addEventListener("click",async()
         (cleanup.length?`<div><strong>Cleanup:</strong> ${rosterEsc(cleanup.join(" · "))}</div>`:"");
     }
 
+    if(inlineError){inlineError.classList.remove("show");inlineError.textContent="";}
     dlg?.classList.add("success-mode");
     success?.classList.add("show");
 
@@ -5113,7 +5136,13 @@ document.getElementById("departureConfirmBtn")?.addEventListener("click",async()
       true
     );
   }catch(err){
-    setRosterStatus(`Could not archive ${p.full_name}: ${err?.message||err}`,false);
+    const msg=String(err?.message||err||"Unknown archive error");
+    setRosterStatus(`Could not archive ${p.full_name}: ${msg}`,false);
+    if(inlineError){
+      inlineError.textContent=`Archive failed: ${msg}`;
+      inlineError.classList.add("show");
+    }
+    if(playerLabel)playerLabel.textContent=`#${p.jersey_number} ${p.full_name}`;
   }finally{
     btn.disabled=false;
     btn.textContent=oldText;
