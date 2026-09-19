@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.29-mobile-nav-restore" />
+  <meta name="skor-build" content="lineup-admin-v51.30-roster-departure-archive" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -990,6 +990,29 @@
     /* =========================================================
        SKOR FC v29 — Supabase-backed roster
        ========================================================= */
+
+    .roster-former-row{opacity:.76;background:#fafafa}
+    .roster-former-row td{border-color:#eceef1}
+    .roster-status-stack{display:grid;gap:4px;min-width:150px}
+    .former-state{display:inline-flex;width:max-content;max-width:100%;align-items:center;border-radius:999px;padding:5px 8px;font-size:.61rem;font-weight:950;text-transform:uppercase;letter-spacing:.035em}
+    .former-state.return{background:#e6f2eb;color:#315f4a}
+    .former-state.locked{background:#f5e4e8;color:#8b2942}
+    .former-meta{font-size:.63rem;color:var(--muted);line-height:1.35}
+    .roster-action-group{display:flex;gap:5px;flex-wrap:wrap}
+    .roster-depart-btn{border-color:#d9b8c1!important;color:#8b2942!important;background:#fff8fa!important}
+    .roster-restore-btn{border-color:#bad7c7!important;color:#315f4a!important;background:#f7fcf9!important}
+    .departure-dialog{border:0;border-radius:16px;padding:0;width:min(610px,calc(100vw - 28px));max-width:610px;background:#fff;color:var(--ink);box-shadow:0 28px 80px rgba(0,0,0,.34)}
+    .departure-dialog::backdrop{background:rgba(15,16,19,.64);backdrop-filter:blur(2px)}
+    .departure-shell{padding:19px}.departure-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.departure-head h3{margin:0;font-size:1.15rem}
+    .departure-close{border:0;background:#f0f1f3;border-radius:9px;width:34px;height:34px;cursor:pointer;font-size:18px;font-weight:950}
+    .departure-player{margin:14px 0;padding:11px 12px;border:1px solid #e1e4e8;border-radius:11px;background:#f8f9fa;font-weight:900}
+    .departure-options{display:grid;gap:9px;margin-top:12px}.departure-option{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:flex-start;padding:11px;border:1px solid #e0e3e7;border-radius:11px;cursor:pointer;background:#fff}
+    .departure-option:has(input:checked){border-color:#8f2944;background:#fff8fa;box-shadow:0 0 0 2px rgba(143,41,68,.06)}.departure-option input{margin-top:2px}.departure-option strong{display:block;font-size:.79rem}.departure-option small{display:block;margin-top:4px;color:var(--muted);font-size:.69rem;line-height:1.4}
+    .departure-note{margin-top:13px}.departure-note textarea{width:100%;min-height:82px;resize:vertical}
+    .departure-impact{margin-top:12px;padding:10px 11px;border-radius:10px;background:#fff8e8;border:1px solid #eadbb0;color:#69572a;font-size:.68rem;line-height:1.45;font-weight:750}
+    .departure-captain-warning{display:none;margin-top:9px;padding:9px 10px;border-radius:9px;background:#f6e4e8;border:1px solid #e1bdc6;color:#7e263b;font-size:.68rem;font-weight:850;line-height:1.4}.departure-captain-warning.show{display:block}
+    .departure-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:15px}
+
     .roster-admin-grid{grid-template-columns:minmax(320px,.8fr) minmax(0,1.4fr)}
     .roster-form-grid{display:grid;grid-template-columns:1.5fr .6fr 1.2fr 1fr;gap:10px}
     .roster-heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -1620,7 +1643,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.29</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.30</div>
   </aside>
 
   <main>
@@ -2144,7 +2167,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="roster-heading-row">
             <div>
               <h2>Team Roster <span class="variation-count" id="rosterCount">0</span></h2>
-              <div class="sub">Shared roster for every approved captain. Active players feed the lineup and Game Day tools automatically.</div>
+              <div class="sub">Shared roster for every approved captain. Active players feed Lineups and Game Day. Former players stay archived here so history can be preserved without occupying a current squad spot or jersey number.</div>
             </div>
             <button class="mini-btn" id="refreshRosterBtn" type="button">Refresh</button>
           </div>
@@ -2161,6 +2184,22 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </div>
       </div>
     </section>
+
+
+    <dialog class="departure-dialog" id="departureDialog">
+      <div class="departure-shell">
+        <div class="departure-head"><div><h3>Remove Player from Current Squad</h3><div class="sub">Archive the roster identity instead of deleting it.</div></div><button class="departure-close" id="departureCloseBtn" type="button" aria-label="Close">×</button></div>
+        <div class="departure-player" id="departurePlayerLabel">Player</div>
+        <div class="departure-options">
+          <label class="departure-option"><input type="radio" name="departureType" value="eligible_to_return" checked><span><strong>Former Player — Eligible to Return</strong><small>Best for a normal departure. Removes the player now, releases the jersey, disables Player Portal, but preserves their identity and claimed login so a future return can be restored cleanly.</small></span></label>
+          <label class="departure-option"><input type="radio" name="departureType" value="do_not_reactivate"><span><strong>Former Player — Do Not Reactivate</strong><small>Use for a hard separation. Performs the same roster removal, but also clears the claimed Player Portal identity and prevents accidental one-click restoration.</small></span></label>
+        </div>
+        <div class="departure-note"><label for="departureNote">Captain-only note (optional)</label><textarea id="departureNote" maxlength="800" placeholder="Reason / context. This is never shown on the public Squad page."></textarea></div>
+        <div class="departure-impact">This removes the player from the current Squad, lineup player pool, future RSVP/attendance planning, Tinker/future saved lineups and future Production/Final plans. Past stats, past attendance, comments and historical match identity are preserved. Their former jersey number becomes available to another active player.</div>
+        <div class="departure-captain-warning" id="departureCaptainWarning"></div>
+        <div class="departure-actions"><button class="btn btn-light" id="departureCancelBtn" type="button">Cancel</button><button class="btn btn-primary" id="departureConfirmBtn" type="button">Archive Player & Release Number</button></div>
+      </div>
+    </dialog>
 
     <section class="view" id="lineups">
       <div class="lineup-shell">
@@ -4051,7 +4090,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v51.28 ready. Bench players now have a one-click Absent action that removes no-shows from the match plan and planned substitution waves while recording match attendance.');
+  markStatus('Lineup Builder v51.30 ready. Former-player roster archival now preserves history while removing departed players from current and future match planning.');
 
   window.SKORLineup={
     setRoster,
@@ -4061,6 +4100,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     refreshTempPlayers,
     findVariation:id=>allSharedVariations.find(v=>String(v.id)===String(id))||null,
     loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
+    removePermanentPlayer:pid=>{removePlayerEverywhere(String(pid));if(selectedPlayer===String(pid))selectedPlayer=null;persistDraft();renderAll();},
     getState:()=>clone(state),
     reload:()=>{ loadDraft(); renderAll(); refreshVariations(false); }
   };
@@ -4419,6 +4459,7 @@ window.removeRosterPlayerCaptain=async function(id){
   await loadTeamRoster(false);
 };
 function renderPlayerPortalAccess(p){
+  if(p.active===false)return '<span class="portal-state disabled">Disabled</span><span class="portal-meta">Former player — Player Portal authorization is inactive.</span>';
   if(!portalCanWrite())return '<span class="portal-meta">Captain only</span>';
   if(!p.email)return '<span class="portal-state noemail">No Email</span><span class="portal-meta">Add an email before portal login can activate.</span>';
   if(p.portal_enabled===false)return `<span class="portal-state disabled">Disabled</span><div class="portal-actions"><button class="mini-btn" type="button" onclick="togglePlayerPortal('${rosterEsc(p.id)}',true)">Enable</button></div>`;
@@ -4513,6 +4554,53 @@ window.captainSetPlayingStatus=async function(id,nextStatus){
   await loadTeamRoster(false);
 };
 
+function rosterDepartureLabel(p){
+  if(p.active!==false)return '<span class="status">Active</span>';
+  const date=p.departed_at?new Date(p.departed_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"Former player";
+  if(p.departure_status==="do_not_reactivate"){
+    return `<div class="roster-status-stack"><span class="former-state locked">Do Not Reactivate</span><span class="former-meta">${rosterEsc(date)} · former #${rosterEsc(p.jersey_number)} released</span></div>`;
+  }
+  return `<div class="roster-status-stack"><span class="former-state return">Eligible to Return</span><span class="former-meta">${rosterEsc(date)} · former #${rosterEsc(p.jersey_number)} released</span></div>`;
+}
+function rosterActions(p){
+  if(!portalCanWrite())return '<span class="roster-contact">View only</span>';
+  if(p.active===false){
+    const restore=p.departure_status!=="do_not_reactivate" ? `<button class="mini-btn roster-restore-btn" type="button" onclick="restoreFormerPlayer('${rosterEsc(p.id)}')">Restore</button>` : '';
+    return `<div class="roster-action-group"><button class="mini-btn" type="button" onclick="editRosterPlayer('${rosterEsc(p.id)}')">Edit</button>${restore}</div>`;
+  }
+  return `<div class="roster-action-group"><button class="mini-btn" type="button" onclick="editRosterPlayer('${rosterEsc(p.id)}')">Edit</button><button class="mini-btn roster-depart-btn" type="button" onclick="openDepartureDialog('${rosterEsc(p.id)}')">Depart</button></div>`;
+}
+let DEPARTURE_PLAYER_ID=null;
+window.openDepartureDialog=function(id){
+  if(!portalCanWrite()){viewerBlocked("archive roster players");return;}
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));
+  if(!p||p.active===false)return;
+  DEPARTURE_PLAYER_ID=String(id);
+  const dlg=document.getElementById("departureDialog"),label=document.getElementById("departurePlayerLabel"),note=document.getElementById("departureNote"),warning=document.getElementById("departureCaptainWarning");
+  const defaultRadio=document.querySelector('input[name="departureType"][value="eligible_to_return"]');if(defaultRadio)defaultRadio.checked=true;
+  if(label)label.textContent=`#${p.jersey_number} ${p.full_name}`;
+  if(note)note.value="";
+  const captainAccess=captainAccessForPlayer(p);
+  if(warning){
+    if(captainAccess?.active&&["captain","super_admin","viewer"].includes(captainAccess.role||"")){
+      warning.classList.add("show");
+      warning.textContent=portalIsSuperAdmin()?`This player also has ${captainAccess.role==="super_admin"?"Super Admin":captainAccess.role==="viewer"?"View Only":"Captain"} portal access. Roster departure does not automatically change Captain Portal roles; remove that role separately if appropriate.`:`This player also has Captain Portal access. Roster departure cannot remove that role; a Super Admin must handle Captain access separately.`;
+    }else{warning.classList.remove("show");warning.textContent="";}
+  }
+  if(typeof dlg?.showModal==="function")dlg.showModal();else dlg?.setAttribute("open","");
+};
+function closeDepartureDialog(){const dlg=document.getElementById("departureDialog");if(dlg?.open&&typeof dlg.close==="function")dlg.close();else dlg?.removeAttribute("open");DEPARTURE_PLAYER_ID=null;}
+window.restoreFormerPlayer=async function(id){
+  if(!portalCanWrite()){viewerBlocked("restore former players");return;}
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));if(!p||p.active!==false)return;
+  if(p.departure_status==="do_not_reactivate"){setRosterStatus(`${p.full_name} is marked Do Not Reactivate. Change that separation status deliberately before returning the player.`,false);return;}
+  if(!confirm(`Restore ${p.full_name} to the current squad using #${p.jersey_number}?\n\nIf #${p.jersey_number} has been reassigned, edit this former player first and choose an available number.`))return;
+  const {error}=await sb.rpc("captain_restore_roster_player",{p_roster_player_id:p.id,p_portal_enabled:true});
+  if(error)return setRosterStatus(String(error.message||error),false);
+  setRosterStatus(`${p.full_name} restored to the current squad. Their historical identity and stats remain attached to the same player record.`,true);
+  await loadTeamRoster(false);
+};
+
 function renderRosterTable(){
   const body=document.getElementById("rosterTableBody");
   const count=document.getElementById("rosterCount");
@@ -4523,7 +4611,7 @@ function renderRosterTable(){
     return;
   }
   body.innerHTML=TEAM_ROSTER.map(p=>`
-    <tr>
+    <tr class="${p.active===false?'roster-former-row':''}">
       <td><strong>#${rosterEsc(p.jersey_number)}</strong></td>
       <td class="roster-name-cell"><strong>${rosterEsc(p.full_name)}</strong><small><b>Public:</b> ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</small><small>${rosterEsc(p.bio||"Bio pending.")}</small></td>
       <td>${rosterEsc(p.position||"Player")}</td>
@@ -4536,8 +4624,8 @@ function renderRosterTable(){
       <td class="captain-access-cell">${renderCaptainAccess(p)}</td>
       <td class="playing-status-cell">${renderPlayingStatusControl(p)}</td>
       <td>${p.phone?rosterEsc(p.phone):'<span class="roster-contact">—</span>'}</td>
-      <td><span class="status">${p.active===false?"Inactive":"Active"}</span></td>
-      <td class="roster-action-cell"><button class="mini-btn" type="button" onclick="editRosterPlayer('${rosterEsc(p.id)}')">Edit</button></td>
+      <td>${rosterDepartureLabel(p)}</td>
+      <td class="roster-action-cell">${rosterActions(p)}</td>
     </tr>`).join("");
 }
 window.toggleRosterNewPlayer=async function(id,isNew){
@@ -4857,7 +4945,7 @@ function updateDashboardAnnouncement(items){
 async function loadTeamRoster(showMessage=false){
   const {data,error}=await sb
     .from("team_roster")
-    .select("id,player_key,full_name,preferred_name,email,phone,jersey_number,position,bio,is_new,photo_url,sort_order,active,portal_enabled,created_at")
+    .select("id,player_key,full_name,preferred_name,email,phone,jersey_number,position,bio,is_new,photo_url,sort_order,active,portal_enabled,departure_status,departed_at,departure_note,departed_by,created_at")
     .order("sort_order",{ascending:true})
     .order("created_at",{ascending:true});
   if(error){
@@ -4922,6 +5010,34 @@ if(rosterNumberInput){
   rosterNumberInput.addEventListener("change",validateChosenNumber);
   rosterNumberInput.addEventListener("blur",()=>{if(rosterNumberInput.value.trim())checkJerseyNumberAvailability(rosterNumberInput.value,{excludeId:document.getElementById("rosterEditId")?.value||null});});
 }
+const departureDialog=document.getElementById("departureDialog");
+document.getElementById("departureCloseBtn")?.addEventListener("click",closeDepartureDialog);
+document.getElementById("departureCancelBtn")?.addEventListener("click",closeDepartureDialog);
+departureDialog?.addEventListener("cancel",event=>{event.preventDefault();closeDepartureDialog();});
+document.getElementById("departureConfirmBtn")?.addEventListener("click",async()=>{
+  if(!DEPARTURE_PLAYER_ID)return;
+  if(!portalCanWrite()){viewerBlocked("archive roster players");return;}
+  const p=TEAM_ROSTER.find(x=>String(x.id)===String(DEPARTURE_PLAYER_ID));if(!p)return;
+  const type=document.querySelector('input[name="departureType"]:checked')?.value||"eligible_to_return";
+  const note=document.getElementById("departureNote")?.value.trim()||null;
+  const label=type==="do_not_reactivate"?"Do Not Reactivate":"Eligible to Return";
+  if(!confirm(`Archive #${p.jersey_number} ${p.full_name} as "${label}"?\n\n#${p.jersey_number} will immediately become available to another current player.`))return;
+  const btn=document.getElementById("departureConfirmBtn"),old=btn.textContent;btn.disabled=true;btn.textContent="Archiving…";
+  try{
+    const {data,error}=await sb.rpc("captain_depart_roster_player",{p_roster_player_id:p.id,p_departure_status:type,p_note:note});
+    if(error)throw error;
+    const result=Array.isArray(data)?data[0]:data;
+    window.SKORLineup?.removePermanentPlayer?.(p.player_key||p.id);
+    closeDepartureDialog();
+    await loadTeamRoster(false);
+    const cleanup=[];
+    if(Number(result?.variations_cleaned||0))cleanup.push(`${result.variations_cleaned} future/Tinker lineup plan${Number(result.variations_cleaned)===1?"":"s"} cleaned`);
+    if(Number(result?.future_rsvps_removed||0))cleanup.push(`${result.future_rsvps_removed} future RSVP${Number(result.future_rsvps_removed)===1?"":"s"} removed`);
+    setRosterStatus(`${p.full_name} is now a former player (${label}). #${p.jersey_number} is released, Player Portal access is disabled, and historical match data is preserved.${cleanup.length?" "+cleanup.join(" · ")+".":""}`,true);
+  }catch(err){setRosterStatus(`Could not archive ${p.full_name}: ${err?.message||err}`,false);}
+  finally{btn.disabled=false;btn.textContent=old;}
+});
+
 if(refreshRosterBtn)refreshRosterBtn.addEventListener("click",()=>loadTeamRoster(true));
 if(rosterForm)rosterForm.addEventListener("submit",async e=>{
   e.preventDefault();
