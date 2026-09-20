@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.34-auto-potential-positions" />
+  <meta name="skor-build" content="lineup-admin-v51.35-saved-potential-position-backfill" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -2631,6 +2631,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function normalizeState(value){
     const rawFormation=value?.formation;
     const formation=(rawFormation===FREEFORM||formations[rawFormation])?rawFormation:"4-2-3-1";
+    const slots=(value?.slots&&typeof value.slots==="object")?value.slots:{};
     const depth={};
     if(value?.depth && typeof value.depth==="object"){
       Object.entries(value.depth).forEach(([key,raw])=>{
@@ -2640,6 +2641,12 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     depthPositionsForFormation(formation).forEach(pos=>{
       if(!Array.isArray(depth[pos.key]))depth[pos.key]=[];
     });
+    if(!isFreeform(formation)){
+      Object.entries(slots).forEach(([position,rawPid])=>{
+        const pid=String(rawPid||"");
+        if(pid&&Array.isArray(depth[position])&&!depth[position].includes(pid))depth[position].push(pid);
+      });
+    }
     const freeform={};
     if(value?.freeform && typeof value.freeform==="object"){
       Object.entries(value.freeform).forEach(([pid,pt])=>{
@@ -2652,7 +2659,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const hasStoredSecondHalf=normalizedSubs.secondHalf.some(row=>(row.out||[]).length||(row.in||[]).length);
     return {
       formation,
-      slots:(value?.slots&&typeof value.slots==="object")?value.slots:{},
+      slots,
       freeform,
       bench:Array.isArray(value?.bench)?value.bench.filter(Boolean):[],
       depth,
@@ -3879,8 +3886,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       .subscribe();
   }
 
-  function renderCore(){ renderPitch(); renderPool(); renderBench(); bindDrags(); }
-  function renderAll(){ renderCore(); renderDepth(); renderSubPlan(); renderVariations(); renderGameplanPreview(); }
+  function renderCore(){ renderPitch(); renderPool(); renderBench(); renderDepth(); bindDrags(); }
+  function renderAll(){ renderCore(); renderSubPlan(); renderVariations(); renderGameplanPreview(); }
   function renderEventOptions(){
     const sel=document.getElementById('lineupEvent'); if(!sel) return;
     const current=sel.value||'tinker';
