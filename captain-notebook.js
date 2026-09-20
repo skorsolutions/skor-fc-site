@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.2
+/* SKOR FC Captain Notebook v52.3
    Kept in a separate file so the existing lineup, Game Day, and portal engines remain isolated. */
 (function(){
   "use strict";
@@ -22,6 +22,7 @@
     user:null,
     matches:[],
     players:[],
+    captains:[],
     notes:[],
     debriefs:[],
     assessments:[],
@@ -113,15 +114,15 @@
       else if(upcoming[0])el("notebookPregameMatch").value=upcoming[0].id;
     }
     if(el("notebookPlayer"))el("notebookPlayer").innerHTML='<option value="">No specific player</option>'+playerOptions;
-    populateCaptainSuggestions();
+    populateCaptainSelect();
   }
 
-  function populateCaptainSuggestions(){
-    const names=new Set([captainName()]);
-    state.notes.forEach(note=>{if(text(note.attributed_captain_name))names.add(text(note.attributed_captain_name));if(text(note.created_by_name))names.add(text(note.created_by_name));});
-    state.debriefs.forEach(row=>{if(text(row.captain_name))names.add(text(row.captain_name));});
-    const list=el("notebookCaptainNames");
-    if(list)list.innerHTML=[...names].filter(Boolean).sort((a,b)=>a.localeCompare(b)).map(name=>`<option value="${esc(name)}"></option>`).join("");
+  function populateCaptainSelect(){
+    const select=el("notebookAttributedCaptain");if(!select)return;
+    const current=select.value;
+    const names=[...new Set(state.captains.map(row=>text(row.display_name)).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    select.innerHTML='<option value="">Select captain…</option>'+names.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join("");
+    if(names.includes(current))select.value=current;
   }
 
   function updateDashboardPrompt(){
@@ -228,19 +229,21 @@
       const userResult=await client.auth.getUser();
       if(userResult.error||!userResult.data?.user)throw new Error(userResult.error?.message||"Captain session not found.");
       state.user=userResult.data.user;
-      const [matchesResult,playersResult,notesResult,debriefsResult,assessmentsResult]=await Promise.all([
+      const [matchesResult,playersResult,captainsResult,notesResult,debriefsResult,assessmentsResult]=await Promise.all([
         client.from("matches").select("id,kickoff,home_team,away_team,status,published").order("kickoff",{ascending:false}).limit(40),
         client.from("team_roster").select("id,full_name,preferred_name,jersey_number,position,active").eq("active",true).order("jersey_number",{ascending:true}),
+        client.rpc("get_notebook_captain_directory"),
         client.from(NOTE_TABLE).select("id,entry_type,category,title,body,match_id,player_id,visibility,created_by,created_by_name,source,attributed_captain_name,source_occurred_at,ai_organized,created_at,updated_at").order("created_at",{ascending:false}).limit(100),
         client.from(DEBRIEF_TABLE).select("id,match_id,captain_id,captain_name,status,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at,created_at,updated_at").order("updated_at",{ascending:false}).limit(80),
         client.from(ASSESSMENT_TABLE).select("id,debrief_id,match_id,player_id,tags,observation,created_at,updated_at").limit(500)
       ]);
-      const setupError=[notesResult,debriefsResult,assessmentsResult].find(result=>result.error)?.error;
+      const setupError=[captainsResult,notesResult,debriefsResult,assessmentsResult].find(result=>result.error)?.error;
       if(setupError){setSetupPending(setupError);return;}
       if(matchesResult.error)throw matchesResult.error;
       if(playersResult.error)throw playersResult.error;
       state.matches=matchesResult.data||[];
       state.players=playersResult.data||[];
+      state.captains=captainsResult.data||[];
       state.notes=notesResult.data||[];
       state.debriefs=debriefsResult.data||[];
       state.assessments=assessmentsResult.data||[];
@@ -360,7 +363,19 @@
   }
 
   const PREGAME_CATEGORY_LABELS={progress:"Progress to Reinforce",priority:"Match Priority",tactical:"Tactical Detail",mentality:"Mentality",set_piece:"Set Piece"};
-  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",ai_strategy:"AI Soccer Suggestion"};
+  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
+
+  function selectedPlayerInputs(){
+    const rows=window.SKORGetAiPlayerComments?.();
+    return Array.isArray(rows)?rows.slice(0,12):[];
+  }
+
+  function renderSelectedPlayerInputs(){
+    const host=el("notebookPlayerInputList"),clear=el("notebookClearPlayerInputsBtn");if(!host)return;
+    const rows=selectedPlayerInputs();
+    if(clear)clear.hidden=!rows.length;
+    host.innerHTML=rows.length?rows.map(item=>`<div class="notebook-player-input-item"><strong>#${esc(item.jersey_number)} ${esc(item.player_name||"Player")}</strong><span class="notebook-player-input-visibility ${item.visibility==="captains"?"private":""}">${item.visibility==="captains"?"Private to Captains":"Team Comment"}</span><p>${esc(text(item.comment).slice(0,220))}</p></div>`).join(""):'<span>No player comments selected. Use <strong>Use with AI</strong> in Game Day → RSVP &amp; Player Feedback.</span>';
+  }
 
   function normalizePregameBrief(raw){
     const bullets=Array.isArray(raw?.bullets)?raw.bullets.slice(0,8).map(item=>({
@@ -422,6 +437,7 @@
     if(state.pregameGenerating)return;
     const matchId=el("notebookPregameMatch")?.value;
     if(!matchId)return setStatus("notebookPregameStatus","Choose an upcoming match first.",false);
+    const playerInputs=selectedPlayerInputs();
     const button=el("notebookGeneratePregameBtn"),original=button.textContent;
     state.pregameGenerating=true;button.disabled=true;button.textContent="Generating…";
     setStatus("notebookPregameStatus","Reviewing recent captain debriefs and building the talk…",true);
@@ -431,7 +447,8 @@
         tone:el("notebookPregameTone")?.value||"balanced",
         speech_length:el("notebookPregameLength")?.value||"standard",
         formation_context:text(el("notebookPregameFormation")?.value),
-        captain_focus:text(el("notebookPregameFocus")?.value)
+        captain_focus:text(el("notebookPregameFocus")?.value),
+        selected_player_comments:playerInputs.map(item=>({comment_id:item.comment_id,match_id:item.match_id}))
       }});
       if(error){
         let message=error.message||"The AI generator could not be reached.";
@@ -440,7 +457,8 @@
       }
       if(!data?.brief)throw new Error(data?.error||"The AI generator returned no pregame talk.");
       renderPregameBrief(data.brief);
-      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"} plus selected-game attendance. Private notes, drafts, and player assessments were not sent to AI. Review and edit before sharing.`,true);
+      const playerCount=Number(data.context?.player_comment_count||0);
+      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, drafts, and unselected player comments were not sent to AI. Review and edit before sharing.`,true);
     }catch(error){
       setStatus("notebookPregameStatus","Could not generate talk: "+(error.message||error),false);
     }finally{state.pregameGenerating=false;button.disabled=false;button.textContent=original;}
@@ -682,6 +700,8 @@
     el("notebookSaveDraftBtn")?.addEventListener("click",()=>saveDebrief("draft"));
     el("notebookCompleteDebriefBtn")?.addEventListener("click",()=>saveDebrief("completed"));
     el("notebookGeneratePregameBtn")?.addEventListener("click",generatePregameTalk);
+    el("notebookClearPlayerInputsBtn")?.addEventListener("click",()=>window.SKORClearAiPlayerComments?.());
+    window.addEventListener("skor:ai-player-comments-changed",renderSelectedPlayerInputs);
     el("notebookCopyPregameBtn")?.addEventListener("click",copyPregameTalk);
     el("notebookPrintPregameBtn")?.addEventListener("click",printPregameTalk);
     el("notebookSavePregameBtn")?.addEventListener("click",savePregameTalk);
@@ -691,6 +711,7 @@
     if(state.initialized)return;
     state.initialized=true;
     bindEvents();
+    renderSelectedPlayerInputs();
     await refreshData({quiet:true});
   }
 

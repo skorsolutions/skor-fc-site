@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.2 — isolated from the existing portal styles. */
+/* SKOR FC Captain Notebook v52.3 — isolated from the existing portal styles. */
 body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-dashboard-prompt{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;border-color:#d8bdc6;background:linear-gradient(135deg,#fff 0%,#fbf1f4 100%)}
 .notebook-dashboard-prompt[hidden]{display:none!important}
@@ -35,7 +35,7 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-import-banner{display:grid;gap:3px;border-left:3px solid #8a2948;padding-left:10px;color:#4b3039;font-size:.65rem;line-height:1.45}
 .notebook-import-banner strong{color:#711934;font-size:.72rem}
 .notebook-import-fields label{display:block;margin-bottom:5px;font-size:.68rem;font-weight:900;color:#363940}
-.notebook-import-fields input{width:100%}
+.notebook-import-fields input,.notebook-import-fields select{width:100%}
 .notebook-import-ai{display:flex;align-items:center;gap:10px;border:1px dashed #d8c5cc;border-radius:11px;background:#fcfafb;padding:10px}
 .notebook-import-ai span{color:#6f737a;font-size:.61rem;line-height:1.4}
 .notebook-import-ai .btn{flex:0 0 auto;padding:7px 10px;font-size:.62rem}
@@ -67,6 +67,16 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-pregame-controls label,.notebook-pregame-output label{display:block;margin-bottom:6px;font-size:.68rem;font-weight:900;color:#363940}
 .notebook-pregame-controls input,.notebook-pregame-controls select,.notebook-pregame-controls textarea{width:100%}
 .notebook-pregame-controls .btn{justify-self:start}
+.notebook-player-inputs{display:grid;gap:7px;border:1px solid #d8dfe8;border-radius:11px;background:#f8fafc;padding:10px}
+.notebook-player-inputs-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.notebook-player-inputs-head label{margin:0}
+.notebook-player-inputs-head .mini-btn{font-size:.55rem}
+.notebook-player-input-list{display:grid;gap:6px;color:#68707a;font-size:.61rem;line-height:1.4}
+.notebook-player-input-item{border:1px solid #dfe4eb;border-radius:9px;background:#fff;padding:8px}
+.notebook-player-input-item strong{color:#343a43;font-size:.65rem}
+.notebook-player-input-item p{margin:5px 0 0;color:#555d67}
+.notebook-player-input-visibility{display:inline-flex;margin-left:6px;border-radius:999px;background:#e7f0ea;color:#356249;padding:2px 5px;font-size:.49rem;font-weight:900;text-transform:uppercase}
+.notebook-player-input-visibility.private{background:#f4e5e9;color:#8a2942}
 .notebook-ai-note{border-left:3px solid #b06980;padding:7px 0 7px 10px;color:#71757c;font-size:.62rem;line-height:1.45}
 .notebook-pregame-output{min-width:0;border:1px solid #e2dadd;border-radius:14px;background:#fff;padding:14px}
 .notebook-pregame-empty{display:grid;place-items:center;min-height:280px;border:1px dashed #d7c9ce;border-radius:12px;background:#fcfafb;color:#777b82;text-align:center;padding:24px;font-size:.75rem;line-height:1.5}

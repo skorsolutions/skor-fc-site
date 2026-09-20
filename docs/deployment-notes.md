@@ -1,3 +1,15 @@
+## v52.3 — Captain dropdown and player-input AI controls
+
+- Replaces the unreliable captain-name datalist with a true dropdown populated from the active captain and super-admin list.
+- The new get_notebook_captain_directory() RPC exposes display names only, requires an authenticated approved captain, and does not expose captain emails or roles.
+- Adds **Use with AI** to team-visible and private-to-captains player comments in Game Day.
+- Player comments are included only when a captain selects them, remain selected only for the current browser session, and are re-fetched server-side before AI use.
+- The AI receives those entries explicitly as player input—not captain conclusions—without the player's name or jersey number.
+- Private player comments are generalized so the generated talk cannot reveal the author or that the source was private.
+- **SQL needed:** Yes.
+- **Database changes performed:** Added one restricted, names-only captain-directory RPC. No tables, existing notes, player comments, or other data were changed.
+- Updated assets: `admin.html`, `captain-notebook.css`, `captain-notebook.js`, and `generate-pregame-talk`.
+
 ## v52.2 — Historical WhatsApp note imports
 
 - Adds an **Import WhatsApp Note** workflow to the Captain Notebook for older game discussions.

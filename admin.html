@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v52.2-whatsapp-note-import" />
+  <meta name="skor-build" content="captain-portal-v52.3-player-input-ai" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <style>
@@ -1727,6 +1727,10 @@
     .captain-chat-send{align-self:stretch;min-width:76px}
     .captain-chat-status{min-height:14px;margin-top:5px;font-size:.62rem;color:var(--muted)}
     .captain-chat-status.error{color:#9a2942}
+    .feedback-comment-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:5px}
+    .feedback-comment-source{min-width:0}
+    .feedback-ai-select{flex:0 0 auto;white-space:nowrap;border-color:#cdb7bf;color:#761a37;background:#fff8fa}
+    .feedback-ai-select.selected{border-color:#315f4a;background:#e5f1e9;color:#315f4a}
     @media(max-width:650px){
       .captain-chat-compose{grid-template-columns:1fr}
       .captain-chat-send{width:100%;min-height:38px}
@@ -2246,7 +2250,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div class="notebook-import-fields" id="notebookImportFields" hidden>
               <div class="notebook-import-banner"><strong>Historical WhatsApp import</strong><span>The original captain receives credit for the message. Your login is retained separately as the importer.</span></div>
               <div class="fieldrow">
-                <div><label for="notebookAttributedCaptain">Note from captain</label><input id="notebookAttributedCaptain" list="notebookCaptainNames" maxlength="160" placeholder="Start typing a captain's name" autocomplete="off" disabled><datalist id="notebookCaptainNames"></datalist></div>
+                <div><label for="notebookAttributedCaptain">Note from captain</label><select id="notebookAttributedCaptain" disabled><option value="">Select captain…</option></select></div>
                 <div><label for="notebookSourceDate">Original message date and time</label><input id="notebookSourceDate" type="datetime-local" disabled></div>
               </div>
             </div>
@@ -2301,6 +2305,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             </div>
             <div><label for="notebookPregameFormation">Formation or game-plan context (optional)</label><input id="notebookPregameFormation" maxlength="300" placeholder="Example: 4-2-3-1, stay compact, attack through the wings"></div>
             <div><label for="notebookPregameFocus">Anything the captains want emphasized? (optional)</label><textarea id="notebookPregameFocus" maxlength="1200" rows="4" placeholder="Example: Strong start, communicate through midfield, do not concede early set pieces."></textarea></div>
+            <div class="notebook-player-inputs">
+              <div class="notebook-player-inputs-head"><label>Player comments selected for AI</label><button class="mini-btn" type="button" id="notebookClearPlayerInputsBtn" hidden>Clear All</button></div>
+              <div class="notebook-player-input-list" id="notebookPlayerInputList"><span>No player comments selected. Use <strong>Use with AI</strong> in Game Day → RSVP &amp; Player Feedback.</span></div>
+            </div>
             <button class="btn btn-primary" type="button" id="notebookGeneratePregameBtn">Generate Pregame Talk</button>
             <div class="form-status" id="notebookPregameStatus"></div>
             <div class="notebook-ai-note">The AI may suggest soccer tactics, but it must separate those suggestions from observations recorded by captains. Review every point before sharing it with players.</div>
@@ -4816,6 +4824,7 @@ let TEAM_ATTENDANCE_BY_PLAYER=[];
 let TEAM_ATTENDANCE_MATRIX=[];
 let PLAYER_PORTAL_ACTIVITY=[];
 let DASHBOARD_FEEDBACK=[];
+const AI_PLAYER_COMMENT_SELECTION=new Map();
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
 let PRODUCTION_GAMEPLAN=null;
@@ -5288,6 +5297,42 @@ async function loadPlayerActivity(showMessage=false){
 }
 function feedbackOpponent(row){return row.opponent||"Opponent";}
 function feedbackPreview(value,max=180){const s=String(value||"").trim();return s.length>max?s.slice(0,max-1)+"…":s;}
+function aiPlayerCommentSelected(commentId){return AI_PLAYER_COMMENT_SELECTION.has(String(commentId||""));}
+function notifyAiPlayerCommentSelection(){
+  window.dispatchEvent(new CustomEvent("skor:ai-player-comments-changed",{detail:{count:AI_PLAYER_COMMENT_SELECTION.size}}));
+}
+function updateAiPlayerCommentButton(button,selected){
+  if(!button)return;
+  button.classList.toggle("selected",selected);
+  button.textContent=selected?"Selected for AI ✓":"Use with AI";
+  button.setAttribute("aria-pressed",selected?"true":"false");
+}
+function toggleAiPlayerComment(comment,matchId,button){
+  const key=String(comment?.id||"");if(!key)return;
+  if(AI_PLAYER_COMMENT_SELECTION.has(key)){
+    AI_PLAYER_COMMENT_SELECTION.delete(key);
+    updateAiPlayerCommentButton(button,false);
+  }else{
+    if(AI_PLAYER_COMMENT_SELECTION.size>=12){alert("Select up to 12 player comments for one AI briefing.");return;}
+    AI_PLAYER_COMMENT_SELECTION.set(key,{
+      comment_id:key,
+      match_id:String(matchId||""),
+      player_name:String(comment.display_name||"Player"),
+      jersey_number:comment.jersey_number,
+      visibility:comment.visibility==="captains"?"captains":"team",
+      comment:String(comment.comment||""),
+      created_at:comment.created_at||null
+    });
+    updateAiPlayerCommentButton(button,true);
+  }
+  notifyAiPlayerCommentSelection();
+}
+window.SKORGetAiPlayerComments=()=>[...AI_PLAYER_COMMENT_SELECTION.values()].map(item=>({...item}));
+window.SKORClearAiPlayerComments=()=>{
+  AI_PLAYER_COMMENT_SELECTION.clear();
+  document.querySelectorAll("[data-ai-player-comment]").forEach(button=>updateAiPlayerCommentButton(button,false));
+  notifyAiPlayerCommentSelection();
+};
 async function openFeedbackFromDashboard(matchId){
   openView("gameday");
   await loadGameDayMatches(matchId);
@@ -5992,6 +6037,7 @@ async function sendCaptainPrivateReply(commentId,textarea,button,statusEl){
 
 function renderCaptainFeedbackThread(comment,replies){
   const isPrivate=comment.visibility==="captains";
+  const selectedForAi=aiPlayerCommentSelected(comment.id);
   const threadReplies=(replies||[]).filter(r=>String(r.source_comment_id)===String(comment.id));
   const repliesHtml=isPrivate?threadReplies.map(r=>`
     <div class="captain-chat-reply">
@@ -6006,7 +6052,7 @@ function renderCaptainFeedbackThread(comment,replies){
     </div>
     <div class="captain-chat-status" data-private-reply-status="${gdEsc(comment.id)}"></div>`:"";
   return `<div class="engagement-item ${isPrivate?'feedback-private':'feedback-team'}">
-    <strong>${gdEsc(`#${comment.jersey_number} ${comment.display_name}`)}</strong> · ${isPrivate?'Captains Only':'Team'}
+    <div class="feedback-comment-head"><div class="feedback-comment-source"><strong>${gdEsc(`#${comment.jersey_number} ${comment.display_name}`)}</strong> · ${isPrivate?'Captains Only':'Team'}</div><button class="mini-btn feedback-ai-select ${selectedForAi?'selected':''}" type="button" data-ai-player-comment="${gdEsc(comment.id)}" aria-pressed="${selectedForAi?'true':'false'}">${selectedForAi?'Selected for AI ✓':'Use with AI'}</button></div>
     <div>${gdEsc(comment.comment)}</div>
     <small>${new Date(comment.created_at).toLocaleString()}</small>
     ${isPrivate?`<div class="captain-chat-thread">${repliesHtml||'<div class="sub">No captain replies yet.</div>'}${composer}</div>`:""}
@@ -6049,6 +6095,11 @@ async function loadPlayerEngagement(){
   if(chat.error && comments.some(x=>x.visibility==='captains')){
     feedback.insertAdjacentHTML('afterbegin','<div class="engagement-item feedback-private"><strong>Private chat replies unavailable</strong><div>Run the v51.33 SQL migration to enable captain replies.</div></div>');
   }
+
+  feedback.querySelectorAll('[data-ai-player-comment]').forEach(btn=>btn.addEventListener('click',()=>{
+    const comment=comments.find(item=>String(item.id)===String(btn.dataset.aiPlayerComment));
+    if(comment)toggleAiPlayerComment(comment,matchId,btn);
+  }));
 
   feedback.querySelectorAll('[data-private-reply-send]').forEach(btn=>btn.addEventListener('click',()=>{
     const id=btn.dataset.privateReplySend;

@@ -36,7 +36,7 @@ const outputSchema = {
         required: ["category", "source", "text"],
         properties: {
           category: { type: "string", enum: ["progress", "priority", "tactical", "mentality", "set_piece"] },
-          source: { type: "string", enum: ["last_game", "attendance", "captain_priority", "ai_strategy"] },
+          source: { type: "string", enum: ["last_game", "attendance", "captain_priority", "player_input", "ai_strategy"] },
           text: { type: "string", description: "One direct, spoken bullet point with an actionable message." },
         },
       },
@@ -89,9 +89,22 @@ Deno.serve(async (req: Request) => {
   const speechLength = input.speech_length === "quick" ? "quick" : "standard";
   const formationContext = clean(input.formation_context, 300);
   const captainFocus = clean(input.captain_focus, 1200);
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const selectedPlayerRefs: Array<{ comment_id: string; match_id: string }> = [];
+  const seenCommentIds = new Set<string>();
+  for (const raw of Array.isArray(input.selected_player_comments) ? input.selected_player_comments : []) {
+    const row = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+    const commentId = clean(row.comment_id, 64);
+    const commentMatchId = clean(row.match_id, 64);
+    if (!uuidPattern.test(commentId) || !uuidPattern.test(commentMatchId) || seenCommentIds.has(commentId)) continue;
+    selectedPlayerRefs.push({ comment_id: commentId, match_id: commentMatchId });
+    seenCommentIds.add(commentId);
+    if (selectedPlayerRefs.length >= 12) break;
+  }
 
   // Approved AI scope: the selected match, its attendance/availability, completed
-  // captain-shared debriefs, and the captain's current generator inputs only.
+  // captain-shared debriefs, captain-selected player comments, and the captain's
+  // current generator inputs only.
   const [matchResult, debriefResult, attendanceResult] = await Promise.all([
     client.from("matches").select("id,kickoff,home_team,away_team,location,status").eq("id", matchId).single(),
     client.from("captain_match_debriefs")
@@ -103,7 +116,26 @@ Deno.serve(async (req: Request) => {
   if (debriefResult.error || attendanceResult.error) return json({ error: "Approved team context could not be loaded." }, 500, origin);
 
   const debriefs = (debriefResult.data ?? []).slice(0, 6);
-  const previousMatchIds = [...new Set(debriefs.map((row) => row.match_id).filter(Boolean))];
+  const selectedCommentMatchIds = [...new Set(selectedPlayerRefs.map((row) => row.match_id))];
+  const selectedCommentResults = await Promise.all(selectedCommentMatchIds.map(async (commentMatchId) => ({
+    match_id: commentMatchId,
+    result: await client.rpc("get_player_match_comments", { p_match_id: commentMatchId }),
+  })));
+  if (selectedCommentResults.some((item) => item.result.error)) {
+    return json({ error: "The selected player comments could not be verified." }, 500, origin);
+  }
+  const verifiedComments = new Map<string, Record<string, unknown>>();
+  selectedCommentResults.forEach(({ match_id: commentMatchId, result }) => {
+    (result.data ?? []).forEach((row: Record<string, unknown>) => verifiedComments.set(`${commentMatchId}:${row.id}`, row));
+  });
+  const selectedPlayerComments = selectedPlayerRefs.flatMap((ref) => {
+    const row = verifiedComments.get(`${ref.match_id}:${ref.comment_id}`);
+    return row ? [{ ...row, match_id: ref.match_id }] : [];
+  });
+  const previousMatchIds = [...new Set([
+    ...debriefs.map((row) => row.match_id).filter(Boolean),
+    ...selectedPlayerComments.map((row) => row.match_id).filter(Boolean),
+  ])];
   const previousMatchResult = previousMatchIds.length
     ? await client.from("matches").select("id,kickoff,home_team,away_team").in("id", previousMatchIds)
     : { data: [], error: null };
@@ -131,6 +163,14 @@ Deno.serve(async (req: Request) => {
     rsvp_status: clean(row.rsvp_status, 20) || "no_response",
     attendance_status: clean(row.attendance_status, 20) || "unmarked",
   }));
+  const playerCommentContext = selectedPlayerComments.map((row) => ({
+    source: "player_input",
+    author_role: "player",
+    visibility: row.visibility === "captains" ? "private_to_captains" : "team_visible",
+    match: matchMap.get(row.match_id) ?? { id: row.match_id },
+    comment: clean(row.comment, 1500),
+    created_at: row.created_at,
+  }));
 
   const context = {
     target_match: matchResult.data,
@@ -140,6 +180,7 @@ Deno.serve(async (req: Request) => {
     captain_priority: captainFocus,
     completed_debriefs: debriefContext,
     selected_match_attendance: attendanceContext,
+    captain_selected_player_comments: playerCommentContext,
   };
 
   const instructions = `You are assisting the captains of SKOR FC, an adult competitive soccer team, with a pregame team talk.
@@ -148,6 +189,8 @@ Use completed captain-shared debriefs and selected-match attendance as evidence.
 Use your general soccer knowledge only for clearly labeled tactical suggestions. Never invent an observation about SKOR FC, the opponent, or a player.
 Build on recorded improvements as well as problems. Reinforce what improved and identify what caused that progress when the debriefs support it.
 Use attendance only for practical availability, unit-balance, and substitution-aware suggestions. Do not mention a player's RSVP or attendance status in the talk unless the captain's current request explicitly asks for it.
+Captain-selected player comments are player opinions or suggestions, not captain observations and not established facts. If you use one, assign the source player_input and phrase the point as something the team can consider—not something the captains already concluded.
+Never identify the player who wrote a selected comment in the team talk. Generalize captains-only comments so private feedback cannot reveal its author or private status.
 Do not publicly single out a player for criticism or present sensitive observations as facts to the whole team. Convert weaknesses into constructive team or unit instructions.
 Produce ${speechLength === "quick" ? "six concise bullets for roughly a 60-second talk" : "six to eight concise bullets for roughly a two-minute talk"}.
 Keep each bullet direct, positive, specific, and actionable. Separate evidence-based observations from AI soccer suggestions using the required source field.`;
@@ -187,6 +230,6 @@ Keep each bullet direct, positive, specific, and actionable. Separate evidence-b
 
   return json({
     brief,
-    context: { debrief_count: debriefContext.length, attendance_count: attendanceContext.length },
+    context: { debrief_count: debriefContext.length, attendance_count: attendanceContext.length, player_comment_count: playerCommentContext.length },
   }, 200, origin);
 });
