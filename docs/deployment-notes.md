@@ -1,3 +1,16 @@
+## v52.2 — Historical WhatsApp note imports
+
+- Adds an **Import WhatsApp Note** workflow to the Captain Notebook for older game discussions.
+- Records the original captain name and original message date/time separately from the authenticated user who performs the import.
+- Requires every WhatsApp import to be attached to a game and clearly labels imported entries in the Notebook feed.
+- Adds a WhatsApp-only feed filter plus visible **WhatsApp** and **AI organized** labels.
+- Captain names are suggested from existing Notebook and debrief history while still allowing an older or unlisted captain name.
+- The optional **Organize with AI** action runs only after an authorized captain deliberately presses the button. It sends only the selected pasted text to OpenAI, uses `store: false`, and is instructed to preserve the captain's meaning without inventing tactical claims.
+- The authenticated `organize-whatsapp-note` Supabase Edge Function requires JWT verification and checks `is_skor_captain()` again inside the function.
+- **SQL needed:** Yes.
+- **Database changes performed:** Added `source`, `attributed_captain_name`, `source_occurred_at`, and `ai_organized` to `captain_notebook_entries`, with constraints requiring game, captain, and timestamp attribution for WhatsApp imports. Existing notes were preserved and default to `source = 'manual'`.
+- Affected files: `admin.html`, `captain-notebook.css`, `captain-notebook.js`, `supabase/functions/organize-whatsapp-note/index.ts`, `supabase/migrations/20260920124706_add_whatsapp_notebook_attribution.sql`, and this deployment note.
+
 ## v52.1 — AI Pregame Talk and improved debriefs
 
 - Adds an editable **Pregame Talk** generator to the Captain Notebook for a selected upcoming match, with tone, length, formation context, and captain-priority controls.

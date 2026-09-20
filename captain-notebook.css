@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.1 — isolated from the existing portal styles. */
+/* SKOR FC Captain Notebook v52.2 — isolated from the existing portal styles. */
 body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-dashboard-prompt{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;border-color:#d8bdc6;background:linear-gradient(135deg,#fff 0%,#fbf1f4 100%)}
 .notebook-dashboard-prompt[hidden]{display:none!important}
@@ -28,6 +28,17 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 
 .notebook-top-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:18px;align-items:start}
 .notebook-compose-panel,.notebook-feed-panel{min-width:0}
+.notebook-compose-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.notebook-import-toggle{padding:7px 10px;font-size:.62rem}
+.notebook-import-fields{display:grid;gap:11px;border:1px solid #d9bcc7;border-radius:13px;background:#fff8fa;padding:12px}
+.notebook-import-fields[hidden],.notebook-import-ai[hidden]{display:none!important}
+.notebook-import-banner{display:grid;gap:3px;border-left:3px solid #8a2948;padding-left:10px;color:#4b3039;font-size:.65rem;line-height:1.45}
+.notebook-import-banner strong{color:#711934;font-size:.72rem}
+.notebook-import-fields label{display:block;margin-bottom:5px;font-size:.68rem;font-weight:900;color:#363940}
+.notebook-import-fields input{width:100%}
+.notebook-import-ai{display:flex;align-items:center;gap:10px;border:1px dashed #d8c5cc;border-radius:11px;background:#fcfafb;padding:10px}
+.notebook-import-ai span{color:#6f737a;font-size:.61rem;line-height:1.4}
+.notebook-import-ai .btn{flex:0 0 auto;padding:7px 10px;font-size:.62rem}
 .notebook-form-footer,.notebook-debrief-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .notebook-form-footer .form-status,.notebook-debrief-actions .form-status{flex:1;min-width:180px}
 .notebook-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
@@ -41,6 +52,8 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-note-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 .notebook-note-tag{display:inline-flex;align-items:center;border-radius:999px;background:#f0eaec;color:#771a38;padding:3px 7px;font-size:.55rem;font-weight:900;letter-spacing:.03em;text-transform:uppercase}
 .notebook-note-tag.private{background:#f4eddf;color:#765a27}
+.notebook-note-tag.whatsapp{background:#e2f3e9;color:#276246}
+.notebook-note-tag.ai-organized{background:#e7edf7;color:#425a7b}
 .notebook-note-body{white-space:pre-wrap;margin-top:10px;color:#41464d;font-size:.73rem;line-height:1.5}
 .notebook-note-context{margin-top:9px;color:#777c83;font-size:.61rem;line-height:1.35}
 .notebook-note-delete{border:0;background:transparent;color:#9a556a;cursor:pointer;font-weight:900;font-size:.68rem;padding:3px}
@@ -134,6 +147,8 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
   .notebook-metrics .metric{padding:12px}
   .notebook-metrics .metric strong{font-size:1.2rem}
   .notebook-panel-head{align-items:stretch;flex-direction:column}
+  .notebook-compose-head{align-items:stretch;flex-direction:column}.notebook-import-toggle{width:100%}
+  .notebook-import-ai{align-items:stretch;flex-direction:column}.notebook-import-ai .btn{width:100%}
   .notebook-pregame-result-head{align-items:stretch;flex-direction:column}
   .notebook-pregame-actions{justify-content:stretch}.notebook-pregame-actions .btn{flex:1}
   .notebook-panel-head select{max-width:none;width:100%}
