@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.33-desktop-roster-private-chat" />
+  <meta name="skor-build" content="lineup-admin-v51.34-auto-potential-positions" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -372,6 +372,7 @@
     .formation-slot{position:absolute;transform:translate(-50%,-50%);width:86px;min-height:76px;border:2px dashed rgba(255,255,255,.5);border-radius:14px;display:grid;place-items:center;text-align:center;color:#fff;cursor:pointer;transition:.15s;background:rgba(0,0,0,.08);z-index:3}
     .formation-slot:hover,.formation-slot.dragover{border-color:#fff;background:rgba(255,255,255,.13)}
     .slot-label{font-size:.66rem;font-weight:950;letter-spacing:.08em;text-shadow:0 1px 3px rgba(0,0,0,.45)}
+    .formation-slot.has-player .slot-label{position:absolute;top:3px;left:5px;z-index:2;padding:2px 4px;border-radius:5px;background:rgba(15,16,19,.68);font-size:.52rem;line-height:1;pointer-events:none}
     .player-peg{width:78px;display:grid;justify-items:center;gap:2px;cursor:grab;user-select:none}
     .player-peg:active{cursor:grabbing}.player-peg.compact{width:68px}
     .jersey{position:relative;width:52px;height:46px;background:var(--maroon);clip-path:polygon(20% 0,35% 7%,65% 7%,80% 0,100% 19%,85% 34%,78% 28%,78% 100%,22% 100%,22% 28%,15% 34%,0 19%);display:grid;place-items:center;color:#fff;font-size:1rem;font-weight:950;filter:drop-shadow(0 4px 4px rgba(0,0,0,.25))}
@@ -3131,15 +3132,25 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     }
   }
 
+  function addPotentialPositionForAssignment(slot,pid){
+    if(!slot||!pid)return false;
+    ensureDepthPositions(state);
+    if(!Array.isArray(state.depth[slot]))state.depth[slot]=[];
+    if(state.depth[slot].includes(pid))return false;
+    state.depth[slot].push(pid);
+    return true;
+  }
+
   function assign(slot,pid){
     if(!pid)return;
     removeFromField(pid);
     state.bench=state.bench.filter(x=>x!==pid);
     state.slots[slot]=pid;
+    const addedToDepth=addPotentialPositionForAssignment(slot,pid);
     selectedPlayer=null;
     persistDraft();
     renderCore();
-    markStatus((player(pid)?.name||"Player")+" assigned to "+slot+". Unsaved changes are only on this device.");
+    markStatus((player(pid)?.name||"Player")+" assigned to "+slot+(addedToDepth?" and added to that Potential Position.":".")+" Unsaved changes are only on this device.");
   }
   function placeFreeform(pid,x,y){
     if(!pid)return;
@@ -3208,13 +3219,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     } else {
       (formations[state.formation]||formations['4-2-3-1']).forEach(([label,x,y])=>{
         const slot=document.createElement('button');
+        const p=player(state.slots[label]);
         slot.type='button';
-        slot.className='formation-slot dynamic-pitch-item '+modeClass();
+        slot.className='formation-slot dynamic-pitch-item '+modeClass()+(p?' has-player':'');
         slot.dataset.v28Slot=label;
         slot.style.left=x+'%';
         slot.style.top=y+'%';
-        const p=player(state.slots[label]);
-        slot.innerHTML=p?peg(p,false,true):'<div class="slot-label">'+label+'</div>';
+        slot.innerHTML=p?'<div class="slot-label">'+esc(label)+'</div>'+peg(p,false,true):'<div class="slot-label">'+esc(label)+'</div>';
         slot.addEventListener('click',()=>{
           if(selectedPlayer){ assign(label,selectedPlayer); return; }
           if(p){
