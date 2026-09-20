@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v52.9-whatsapp-batch-import" />
+  <meta name="skor-build" content="captain-portal-v52.10-match-squad-subs" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <style>
@@ -2705,7 +2705,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
         <div class="panel">
           <h2>Planned Substitutions</h2>
-          <div class="sub">Plan as many substitution waves as you want for the first half and second half. Give any wave an optional name such as Defensive Subs, Forwards, or Wingers, then tap player chips to build the group change.</div>
+          <div class="sub">Plan as many substitution waves as you want for the first half and second half. Choices include only players currently on the field or in Substitutes. Give any wave an optional name such as Defensive Subs, Forwards, or Wingers, then tap player chips to build the group change.</div>
           <div class="sub-plan" id="lineupSubPlan"></div>
           <div class="sub-plan-actions"><button class="btn btn-light" id="addFirstHalfSubBtn" type="button">+ Add first-half sub</button><button class="btn btn-light" id="addSecondHalfSubBtn" type="button">+ Add second-half sub</button></div>
         </div>
@@ -3041,10 +3041,37 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
   function draftKey(){ return `${DRAFT_PREFIX}:${captainKey}:${eventKey()}`; }
   function sbClient(){ return window.SKORSupabase||null; }
+  function fieldPlayerIds(snapshot=state){
+    const s=snapshot||state;
+    return isFreeform(s.formation)
+      ? Object.keys(s.freeform||{}).filter(Boolean).map(String)
+      : Object.values(s.slots||{}).filter(Boolean).map(String);
+  }
   function allFieldPlayerIds(){
-    return isFreeform(state.formation)
-      ? Object.keys(state.freeform||{})
-      : Object.values(state.slots||{}).filter(Boolean);
+    return fieldPlayerIds(state);
+  }
+  function matchSquadPlayerIds(snapshot=state){
+    const s=snapshot||state;
+    return [...new Set([...fieldPlayerIds(s), ...(s.bench||[]).filter(Boolean).map(String)])];
+  }
+  function matchSquadPlayers(snapshot=state){
+    return matchSquadPlayerIds(snapshot).map(pid=>player(pid)).filter(Boolean);
+  }
+  function restrictPlannedSubsToMatchSquad(snapshot=state){
+    const s=snapshot||state;
+    const allowed=new Set(matchSquadPlayerIds(s));
+    s.subs=normalizeSubs(s.subs);
+    let removed=0;
+    ["firstHalf","secondHalf"].forEach(phase=>{
+      s.subs[phase].forEach(row=>{
+        ["out","in"].forEach(side=>{
+          const before=Array.isArray(row[side])?row[side]:[];
+          row[side]=before.filter(pid=>allowed.has(String(pid))&&player(String(pid)));
+          removed+=before.length-row[side].length;
+        });
+      });
+    });
+    return removed;
   }
   function removeFromField(pid){
     Object.keys(state.slots||{}).forEach(k=>{ if(state.slots[k]===pid) delete state.slots[k]; });
@@ -3474,7 +3501,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const addedToDepth=addPotentialPositionForAssignment(slot,pid);
     selectedPlayer=null;
     persistDraft();
-    renderCore();
+    renderSquadChange();
     markStatus((player(pid)?.name||"Player")+" assigned to "+slot+(addedToDepth?" and added to that Potential Position.":".")+" Unsaved changes are only on this device.");
   }
   function placeFreeform(pid,x,y){
@@ -3484,7 +3511,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     state.freeform[pid]={x:clamp(x,5,95),y:clamp(y,8,92)};
     selectedPlayer=null;
     persistDraft();
-    renderCore();
+    renderSquadChange();
     markStatus((player(pid)?.name||"Player")+" placed on the custom board. Unsaved changes are only on this device.");
   }
   function convertSlotsToFreeform(){
@@ -3717,7 +3744,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         removeFromField(draggedPlayer);
         if(!state.bench.includes(draggedPlayer)) state.bench.push(draggedPlayer);
         const moved=draggedPlayer;
-        selectedPlayer=null; persistDraft(); renderCore();
+        selectedPlayer=null; persistDraft(); renderSquadChange();
         markStatus((player(moved)?.name||"Player")+' moved to bench. Unsaved changes are only on this device.');
       });
       bench.addEventListener('click',()=>{
@@ -3725,7 +3752,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         const pid=selectedPlayer;
         removeFromField(pid);
         if(!state.bench.includes(pid)) state.bench.push(pid);
-        selectedPlayer=null; persistDraft(); renderCore();
+        selectedPlayer=null; persistDraft(); renderSquadChange();
         markStatus((player(pid)?.name||"Player")+' moved to bench. Unsaved changes are only on this device.');
       });
     }
@@ -3774,15 +3801,17 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
   function subChipListHTML(selectedIds,phase,index,side){
     const selected=new Set(Array.isArray(selectedIds)?selectedIds:[]);
+    const choices=matchSquadPlayers();
+    const choiceButtons=choices.map(p=>{
+      const pid=id(p),active=selected.has(pid);
+      return '<button type="button" class="sub-player-chip '+side+(p.temp?' temp-player':'')+(active?' selected':'')+'" aria-pressed="'+(active?'true':'false')+'" data-sub-chip="1" data-sub-side="'+side+'" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" data-sub-player="'+esc(pid)+'">'+esc(playerListLabel(p))+'</button>';
+    }).join('');
     return '<div class="sub-chip-side">'+
       '<div class="sub-chip-side-head"><span class="sub-chip-side-title">'+(side==="out"?"Players Out":"Players In")+'</span><span class="sub-chip-count">'+selected.size+'</span></div>'+
       '<div class="sub-chip-list">'+
-        selectableRoster().map(p=>{
-          const pid=id(p),active=selected.has(pid);
-          return '<button type="button" class="sub-player-chip '+side+(p.temp?' temp-player':'')+(active?' selected':'')+'" aria-pressed="'+(active?'true':'false')+'" data-sub-chip="1" data-sub-side="'+side+'" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" data-sub-player="'+esc(pid)+'">'+esc(playerListLabel(p))+'</button>';
-        }).join('')+
+        (choiceButtons||'<span class="sub-wave-bench-empty">Add players to the field or Substitutes area first.</span>')+
       '</div>'+
-      '<div class="sub-multi-help">'+(side==="out"?"Tap everyone leaving in this change.":"Tap everyone entering in this change.")+'</div>'+
+      '<div class="sub-multi-help">'+(side==="out"?"Tap a match-squad player leaving in this change.":"Tap a match-squad player entering in this change.")+'</div>'+
     '</div>';
   }
   function benchAfterWave(phase,index,snapshot=state){
@@ -3883,6 +3912,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function renderSubPlan(){
     const box=document.getElementById('lineupSubPlan'); if(!box)return;
     state.subs=normalizeSubs(state.subs);
+    if(restrictPlannedSubsToMatchSquad(state))persistDraft();
     box.innerHTML=
       subPhaseHTML('First Half Subs','1st, 2nd, 3rd, 4th... planned changes before halftime','firstHalf',state.subs.firstHalf)+
       subPhaseHTML('Second Half Subs','1st, 2nd, 3rd, 4th... planned changes after halftime','secondHalf',state.subs.secondHalf);
@@ -4291,6 +4321,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
 
   function renderCore(){ renderPitch(); renderPool(); renderBench(); renderDepth(); bindDrags(); }
+  function renderSquadChange(){ renderCore(); renderSubPlan(); renderGameplanPreview(); }
   function renderAll(){ renderCore(); renderSubPlan(); renderVariations(); renderGameplanPreview(); }
   function renderEventOptions(){
     const sel=document.getElementById('lineupEvent'); if(!sel) return;
@@ -4613,10 +4644,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   if(exportJpgBtn) exportJpgBtn.addEventListener('click',()=>exportGameplanAs('jpg'));
   if(refreshBtn) refreshBtn.addEventListener('click',()=>refreshVariations(true));
   if(clearBtn) clearBtn.addEventListener('click',()=>{
-    if(!confirm('Clear the starting XI / custom board and substitutes?')) return;
+    if(!confirm('Clear the starting XI / custom board and substitutes? Planned-sub player selections will also be cleared.')) return;
     state.slots={}; state.freeform={}; state.bench=[]; selectedPlayer=null;
-    persistDraft(); renderCore();
-    markStatus('Pitch/custom board and substitutes cleared. Depth chart and sub plan were kept.');
+    persistDraft(); renderSquadChange();
+    markStatus('Pitch/custom board and substitutes cleared. Wave names and Potential Positions were kept; planned-sub player selections were cleared.');
   });
   if(addFirstHalfSubBtn) addFirstHalfSubBtn.addEventListener('click',()=>{
     state.subs=normalizeSubs(state.subs);

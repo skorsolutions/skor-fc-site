@@ -1,3 +1,14 @@
+## v52.10 — Match-squad-only planned substitutions
+
+- Planned-substitution choices now include only players currently assigned to the field or the **Substitutes** area.
+- Moving a player onto the field or bench immediately makes that player available in every wave.
+- Removing a player from both areas automatically removes stale selections for that player from first- and second-half waves.
+- The existing **Absent** action now removes the player from the wave selections and, because the player is no longer in the match squad, from all wave choices.
+- Clearing the field and substitutes keeps wave names but clears their player selections.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Affected file: `admin.html`.
+
 ## v52.6 — Captain-confirmed player nickname memory
 
 - Notes and debriefs now run a player-name check when a captain saves them.
