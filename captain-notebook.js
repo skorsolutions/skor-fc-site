@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.4
+/* SKOR FC Captain Notebook v52.6
    Kept in a separate file so the existing lineup, Game Day, and portal engines remain isolated. */
 (function(){
   "use strict";
@@ -6,6 +6,7 @@
   const NOTE_TABLE="captain_notebook_entries";
   const DEBRIEF_TABLE="captain_match_debriefs";
   const ASSESSMENT_TABLE="captain_player_assessments";
+  const ALIAS_TABLE="captain_player_name_aliases";
   const PLAYER_TAGS=[
     ["strong_game","Strong Game"],
     ["improving","Improving"],
@@ -34,7 +35,11 @@
     pregameGenerating:false,
     importMode:false,
     importAiOrganized:false,
-    importOrganizing:false
+    importOrganizing:false,
+    aliasChecking:false,
+    aliasReviewResolve:null,
+    aliasMentions:[],
+    checkedNameTexts:new Set()
   };
 
   const el=id=>document.getElementById(id);
@@ -85,6 +90,89 @@
     const notice=el("notebookSetupNotice");
     if(notice)notice.hidden=true;
     ["notebookSaveEntryBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn","notebookGeneratePregameBtn","notebookSavePregameBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=false;});
+  }
+
+  function aliasPlayerOptions(selectedId=""){
+    const options=[...state.players]
+      .sort((a,b)=>Number(a.jersey_number)-Number(b.jersey_number))
+      .map(player=>`<option value="${esc(player.id)}" ${String(player.id)===String(selectedId)?"selected":""}>#${esc(player.jersey_number)} ${esc(displayName(player))}</option>`)
+      .join("");
+    return '<option value="">Choose a player…</option>'+options+'<option value="__not_player__">Not a player · do not ask again</option>';
+  }
+
+  function settleAliasReview(accepted){
+    if(state.aliasChecking&&!accepted)return;
+    const dialog=el("notebookAliasDialog"),resolve=state.aliasReviewResolve;
+    state.aliasReviewResolve=null;
+    state.aliasMentions=[];
+    if(dialog?.open)dialog.close();
+    if(resolve)resolve(accepted);
+  }
+
+  function openAliasReview(mentions){
+    const dialog=el("notebookAliasDialog"),list=el("notebookAliasList");
+    if(!dialog||!list)return Promise.resolve(false);
+    state.aliasMentions=mentions;
+    list.innerHTML=mentions.map((item,index)=>`<div class="notebook-alias-row" data-alias-row="${index}">
+      <div class="notebook-alias-mention"><strong>“${esc(item.mention)}”</strong><small>${esc(item.reason||"Possible player nickname or alternate name.")}</small></div>
+      <select data-alias-choice="${index}" aria-label="Match ${esc(item.mention)} to a player">${aliasPlayerOptions(item.suggested_player_id)}</select>
+    </div>`).join("");
+    setStatus("notebookAliasStatus","Choose a roster player or mark the term as not a player.",true);
+    return new Promise(resolve=>{
+      state.aliasReviewResolve=resolve;
+      dialog.showModal();
+    });
+  }
+
+  async function confirmAliasReview(){
+    if(state.aliasChecking||!state.aliasReviewResolve)return;
+    const choices=[...el("notebookAliasList").querySelectorAll("[data-alias-choice]")];
+    if(choices.some(select=>!select.value))return setStatus("notebookAliasStatus","Match every name or choose “Not a player.”",false);
+    const records=choices.map(select=>{
+      const mention=state.aliasMentions[Number(select.dataset.aliasChoice)]?.mention||"";
+      const notPlayer=select.value==="__not_player__";
+      return {
+        alias:mention,
+        player_id:notPlayer?null:select.value,
+        resolution:notPlayer?"not_player":"player",
+        confirmed_by:state.user.id,
+        updated_at:new Date().toISOString()
+      };
+    });
+    const button=el("notebookAliasConfirmBtn"),original=button.textContent;
+    state.aliasChecking=true;button.disabled=true;button.textContent="Remembering…";
+    try{
+      const result=await sb().from(ALIAS_TABLE).upsert(records,{onConflict:"normalized_alias"});
+      if(result.error)throw result.error;
+      settleAliasReview(true);
+    }catch(error){
+      setStatus("notebookAliasStatus","Could not remember player names: "+(error.message||error),false);
+    }finally{
+      state.aliasChecking=false;button.disabled=false;button.textContent=original;
+    }
+  }
+
+  async function checkPlayerNames(value,statusId){
+    const content=text(value);
+    if(!content||state.checkedNameTexts.has(content))return true;
+    setStatus(statusId,"Checking player names and remembered nicknames…",true);
+    try{
+      const {data,error}=await sb().functions.invoke("check-player-names",{body:{text:content}});
+      if(error){
+        let detail=error.message||"The player name check could not be reached.";
+        try{const body=await error.context?.json?.();if(body?.error)detail=body.error;}catch{}
+        throw new Error(detail);
+      }
+      const mentions=Array.isArray(data?.mentions)?data.mentions.slice(0,8):[];
+      if(!mentions.length){state.checkedNameTexts.add(content);return true;}
+      const accepted=await openAliasReview(mentions);
+      if(accepted)state.checkedNameTexts.add(content);
+      return accepted;
+    }catch(error){
+      console.error("Player name check failed:",error);
+      setStatus(statusId,"Player name check unavailable: "+(error.message||error),false);
+      return window.confirm("The player name check is unavailable. Save without checking names?");
+    }
   }
 
   function populateReferenceSelects(){
@@ -270,8 +358,11 @@
     if(state.importMode&&!el("notebookMatch")?.value)return setStatus("notebookEntryStatus","Choose the game this WhatsApp note belongs to.",false);
     if(state.importMode&&!importName)return setStatus("notebookEntryStatus","Add the captain who originally wrote the message.",false);
     if(state.importMode&&(!sourceDate||Number.isNaN(new Date(sourceDate).valueOf())))return setStatus("notebookEntryStatus","Add the original WhatsApp message date and time.",false);
-    const button=el("notebookSaveEntryBtn");button.disabled=true;button.textContent="Saving…";
+    const button=el("notebookSaveEntryBtn"),original=button.textContent;button.disabled=true;button.textContent="Checking names…";
     try{
+      const namesReady=await checkPlayerNames(`${title}\n${body}`,"notebookEntryStatus");
+      if(!namesReady){setStatus("notebookEntryStatus","Save canceled so player names can be reviewed.",false);return;}
+      button.textContent="Saving…";
       const payload={
         entry_type:el("notebookEntryType").value,
         category:el("notebookCategory").value,
@@ -293,7 +384,7 @@
       setStatus("notebookEntryStatus",payload.source==="whatsapp"?"WhatsApp note imported with original captain attribution.":payload.visibility==="private"?"Private note saved.":"Note saved for the captains.",true);
       await refreshData({quiet:true});
     }catch(error){setStatus("notebookEntryStatus","Could not save note: "+(error.message||error),false);}
-    finally{button.disabled=false;button.textContent="Save Note";}
+    finally{button.disabled=false;button.textContent=original;}
   }
 
   function setImportMode(enabled){
@@ -527,19 +618,41 @@
       [...state.playerDrafts.values()].some(item=>item.tags.size||text(item.observation));
   }
 
+  function debriefNameCheckText(payload){
+    const teamFields=[
+      payload.team_performance,
+      payload.improvements_since_last_game,
+      payload.standouts,
+      payload.tactical_observations,
+      payload.issues,
+      payload.position_changes,
+      payload.practice_focus,
+      payload.additional_notes
+    ].filter(value=>text(value));
+    const playerFields=state.players.flatMap(player=>{
+      const observation=text(state.playerDrafts.get(String(player.id))?.observation);
+      return observation?[`#${player.jersey_number} ${displayName(player)}: ${observation}`]:[];
+    });
+    return [...teamFields,...playerFields].join("\n");
+  }
+
   async function saveDebrief(requestedStatus){
     if(!state.ready)return setStatus("notebookDebriefStatus","Notebook database setup is still pending.",false);
     if(state.readOnly)return;
     const matchId=el("notebookDebriefMatch").value;
     if(!matchId)return setStatus("notebookDebriefStatus","Choose a match first.",false);
+    readPlayerDraftInputs();
     const status=state.currentDebrief?.status==="completed"?"completed":requestedStatus;
     const payload=collectDebriefPayload(status);
     if(status==="completed"&&!debriefHasContent(payload))return setStatus("notebookDebriefStatus","Add at least one team or player observation before completing the debrief.",false);
     const draftButton=el("notebookSaveDraftBtn"),completeButton=el("notebookCompleteDebriefBtn");
     draftButton.disabled=true;completeButton.disabled=true;
     const activeButton=requestedStatus==="completed"?completeButton:draftButton,oldText=activeButton.textContent;
-    activeButton.textContent="Saving…";
+    activeButton.textContent="Checking names…";
     try{
+      const namesReady=await checkPlayerNames(debriefNameCheckText(payload),"notebookDebriefStatus");
+      if(!namesReady){setStatus("notebookDebriefStatus","Save canceled so player names can be reviewed.",false);return;}
+      activeButton.textContent="Saving…";
       const result=await sb().from(DEBRIEF_TABLE).upsert(payload,{onConflict:"match_id,captain_id"}).select().single();
       if(result.error)throw result.error;
       const debrief=result.data;
@@ -708,6 +821,10 @@
     el("notebookCopyPregameBtn")?.addEventListener("click",copyPregameTalk);
     el("notebookPrintPregameBtn")?.addEventListener("click",printPregameTalk);
     el("notebookSavePregameBtn")?.addEventListener("click",savePregameTalk);
+    el("notebookAliasConfirmBtn")?.addEventListener("click",confirmAliasReview);
+    el("notebookAliasCancelBtn")?.addEventListener("click",()=>settleAliasReview(false));
+    el("notebookAliasCancelXBtn")?.addEventListener("click",()=>settleAliasReview(false));
+    el("notebookAliasDialog")?.addEventListener("cancel",event=>{event.preventDefault();settleAliasReview(false);});
   }
 
   async function init(){

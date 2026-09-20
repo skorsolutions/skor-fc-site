@@ -105,15 +105,19 @@ Deno.serve(async (req: Request) => {
   // Approved AI scope: the selected match, its attendance/availability, completed
   // captain-shared debriefs, captain-selected player comments, and the captain's
   // current generator inputs only.
-  const [matchResult, debriefResult, attendanceResult] = await Promise.all([
+  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult] = await Promise.all([
     client.from("matches").select("id,kickoff,home_team,away_team,location,status").eq("id", matchId).single(),
     client.from("captain_match_debriefs")
       .select("id,match_id,captain_name,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at")
       .eq("status", "completed").order("completed_at", { ascending: false }).limit(6),
     client.rpc("get_match_rsvp_attendance", { p_match_id: matchId }),
+    client.from("team_roster").select("id,full_name,preferred_name,jersey_number").eq("active", true).order("jersey_number", { ascending: true }),
+    client.from("captain_player_name_aliases").select("alias,player_id").eq("resolution", "player"),
   ]);
   if (matchResult.error) return json({ error: "The selected match could not be loaded." }, 400, origin);
-  if (debriefResult.error || attendanceResult.error) return json({ error: "Approved team context could not be loaded." }, 500, origin);
+  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error) {
+    return json({ error: "Approved team context could not be loaded." }, 500, origin);
+  }
 
   const debriefs = (debriefResult.data ?? []).slice(0, 6);
   const selectedCommentMatchIds = [...new Set(selectedPlayerRefs.map((row) => row.match_id))];
@@ -181,6 +185,19 @@ Deno.serve(async (req: Request) => {
       created_at: row.created_at,
     };
   });
+  const aliasesByPlayer = new Map<string, string[]>();
+  (aliasResult.data ?? []).forEach((row) => {
+    const playerId = clean(row.player_id, 64), alias = clean(row.alias, 80);
+    if (!playerId || !alias) return;
+    if (!aliasesByPlayer.has(playerId)) aliasesByPlayer.set(playerId, []);
+    aliasesByPlayer.get(playerId)?.push(alias);
+  });
+  const playerIdentityGuide = (rosterResult.data ?? []).map((row) => ({
+    player_id: row.id,
+    first_name: (clean(row.preferred_name, 80) || clean(row.full_name, 160).split(/\s+/)[0] || "Player").split(/\s+/)[0],
+    jersey_number: row.jersey_number,
+    confirmed_aliases: aliasesByPlayer.get(String(row.id)) ?? [],
+  }));
 
   const context = {
     target_match: matchResult.data,
@@ -191,6 +208,7 @@ Deno.serve(async (req: Request) => {
     completed_debriefs: debriefContext,
     selected_match_attendance: attendanceContext,
     captain_selected_player_comments: playerCommentContext,
+    player_identity_guide: playerIdentityGuide,
   };
 
   const instructions = `You are assisting the captains of SKOR FC, an adult competitive soccer team, with a pregame team talk.
@@ -203,6 +221,7 @@ Captain-selected player comments are player opinions or suggestions, not captain
 Every selected player comment includes a related_game with its matchup and date. Keep the comment tied to that game as historical context, and never imply it came from the target match unless the game IDs match.
 The player's first/preferred name and jersey number are included for useful coaching context. Team-visible input may support constructive player-specific coaching when relevant.
 For private_to_captains input, never reveal or imply who authored the comment. Generalize its concern so the team talk cannot expose the author or the comment's private status.
+Use player_identity_guide to resolve captain-confirmed nicknames in debriefs and notes. Never guess that an unfamiliar name belongs to a player when no confirmed mapping exists.
 Do not publicly single out a player for criticism or present sensitive observations as facts to the whole team. Convert weaknesses into constructive team or unit instructions.
 Produce ${speechLength === "quick" ? "six concise bullets for roughly a 60-second talk" : "six to eight concise bullets for roughly a two-minute talk"}.
 Keep each bullet direct, positive, specific, and actionable. Separate evidence-based observations from AI soccer suggestions using the required source field.`;

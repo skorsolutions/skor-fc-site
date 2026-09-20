@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.4 — isolated from the existing portal styles. */
+/* SKOR FC Captain Notebook v52.6 — isolated from the existing portal styles. */
 body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-dashboard-prompt{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;border-color:#d8bdc6;background:linear-gradient(135deg,#fff 0%,#fbf1f4 100%)}
 .notebook-dashboard-prompt[hidden]{display:none!important}
@@ -39,6 +39,7 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-import-ai{display:flex;align-items:center;gap:10px;border:1px dashed #d8c5cc;border-radius:11px;background:#fcfafb;padding:10px}
 .notebook-import-ai span{color:#6f737a;font-size:.61rem;line-height:1.4}
 .notebook-import-ai .btn{flex:0 0 auto;padding:7px 10px;font-size:.62rem}
+.notebook-name-check-note{border-left:3px solid #8797ad;padding:6px 0 6px 9px;color:#68717c;font-size:.59rem;line-height:1.4}
 .notebook-form-footer,.notebook-debrief-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .notebook-form-footer .form-status,.notebook-debrief-actions .form-status{flex:1;min-width:180px}
 .notebook-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
@@ -138,6 +139,27 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-history-meta{margin-top:4px;color:#777c83;font-size:.61rem}
 .notebook-history-summary{margin-top:7px;color:#444950;font-size:.68rem;line-height:1.4}
 .notebook-history-open{white-space:nowrap}
+
+.notebook-alias-dialog{width:min(92vw,680px);max-height:88vh;margin:auto;border:0;border-radius:18px;background:transparent;padding:0;box-shadow:0 24px 70px rgba(22,11,16,.34)}
+.notebook-alias-dialog::backdrop{background:rgba(18,20,25,.68);backdrop-filter:blur(2px)}
+.notebook-alias-dialog-card{display:grid;gap:14px;background:#fff;border:1px solid #dfcbd2;border-radius:18px;padding:20px}
+.notebook-alias-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.notebook-alias-dialog-head h2{margin:9px 0 0;font-size:1.15rem;color:#2c1820}
+.notebook-alias-close{border:0;background:transparent;color:#7d5160;cursor:pointer;font-size:1.55rem;line-height:1;padding:2px 5px}
+.notebook-alias-intro{margin:0;color:#5d6269;font-size:.72rem;line-height:1.5}
+.notebook-alias-list{display:grid;gap:9px;max-height:44vh;overflow:auto}
+.notebook-alias-row{display:grid;grid-template-columns:minmax(0,.9fr) minmax(190px,1.1fr);gap:10px;align-items:center;border:1px solid #e1d9dc;border-radius:12px;background:#fcfafb;padding:11px}
+.notebook-alias-mention strong{display:block;color:#701a36;font-size:.78rem}
+.notebook-alias-mention small{display:block;margin-top:4px;color:#72777e;font-size:.58rem;line-height:1.35}
+.notebook-alias-row select{width:100%}
+.notebook-alias-privacy{border-left:3px solid #8797ad;padding:7px 0 7px 10px;color:#68717c;font-size:.6rem;line-height:1.45}
+.notebook-alias-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+@media(max-width:650px){
+  .notebook-alias-dialog-card{padding:15px}
+  .notebook-alias-row{grid-template-columns:1fr}
+  .notebook-alias-actions .btn{flex:1}
+}
 
 @media(max-width:1050px){
   .notebook-top-grid{grid-template-columns:1fr}

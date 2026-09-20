@@ -1,3 +1,15 @@
+## v52.6 — Captain-confirmed player nickname memory
+
+- Notes and debriefs now run a player-name check when a captain saves them.
+- Unfamiliar likely player names open a confirmation dialog where the captain can match the name to an active roster player or mark it as not a player.
+- Confirmed mappings are shared captain memory, so later AI requests can understand nicknames consistently.
+- Historical WhatsApp organization and Pregame Talk generation receive only active-player first/preferred names, jersey numbers, and captain-confirmed aliases.
+- The name checker sends only the current saved text plus that limited identity guide to OpenAI with `store: false`.
+- The authenticated `check-player-names` Edge Function requires JWT verification and confirms captain access inside the function.
+- **SQL needed:** Yes.
+- **Database changes performed:** Added `captain_player_name_aliases` with normalized unique aliases, optional remembered non-player terms, roster and confirmer foreign keys, indexes, captain-only RLS, and least-privilege grants. No existing roster, notes, comments, or debriefs were changed.
+- Updated assets: `admin.html`, `captain-notebook.css`, `captain-notebook.js`, `generate-pregame-talk`, `organize-whatsapp-note`, the new `check-player-names` function, and the alias migration.
+
 ## v52.5 — Useful player identity in AI context
 
 - Captain-selected player comments now include the player's jersey number and first/preferred name in the protected AI context.

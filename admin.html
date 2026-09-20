@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v52.5-player-identity-ai" />
+  <meta name="skor-build" content="captain-portal-v52.6-player-alias-memory" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <style>
@@ -2265,6 +2265,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div><label for="notebookCategory">Coaching category</label><select id="notebookCategory"><option value="observation">Observation</option><option value="position">Position / Role</option><option value="tactical">Tactical</option><option value="technical">Technical</option><option value="fitness">Fitness</option><option value="communication">Communication</option><option value="chemistry">Chemistry</option><option value="development">Development</option><option value="opponent">Opponent</option></select></div>
             <div><label for="notebookTitle">Title</label><input id="notebookTitle" maxlength="140" placeholder="Short description of what you noticed" required></div>
             <div><label for="notebookBody" id="notebookBodyLabel">Captain note</label><textarea id="notebookBody" maxlength="5000" rows="6" placeholder="Example: Our left side was exposed when the winger pushed high. Try keeping the left central midfielder deeper during that phase." required></textarea></div>
+            <div class="notebook-name-check-note">When you save, AI checks for unfamiliar player names. Nothing is remembered until a captain confirms the roster match.</div>
             <div class="notebook-import-ai" id="notebookImportAi" hidden>
               <button class="btn btn-light" type="button" id="notebookOrganizeWhatsAppBtn">Organize with AI</button>
               <span>AI can organize only what the captain wrote. It will not invent or add tactical claims to their note.</span>
@@ -2340,7 +2341,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div>
             <span class="pill">Guided Review</span>
             <h2 style="margin:12px 0 4px">Post-Game Debrief</h2>
-            <div class="sub">Each captain can draft independently. Completed debriefs become visible to the other captains.</div>
+            <div class="sub">Each captain can draft independently. Completed debriefs become visible to the other captains. Saving also checks unfamiliar player names before remembering them.</div>
           </div>
           <div class="notebook-match-control"><label for="notebookDebriefMatch">Choose match</label><select id="notebookDebriefMatch"><option value="">Select a completed or past match…</option></select></div>
         </div>
@@ -2382,6 +2383,23 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </div>
         <div class="notebook-history" id="notebookDebriefHistory"><div class="sub">No debriefs loaded.</div></div>
       </div>
+
+      <dialog class="notebook-alias-dialog" id="notebookAliasDialog" aria-labelledby="notebookAliasTitle">
+        <div class="notebook-alias-dialog-card">
+          <div class="notebook-alias-dialog-head">
+            <div><span class="pill">Player Name Memory</span><h2 id="notebookAliasTitle">Match unfamiliar player names</h2></div>
+            <button class="notebook-alias-close" type="button" id="notebookAliasCancelXBtn" aria-label="Cancel player name review">×</button>
+          </div>
+          <p class="notebook-alias-intro">AI noticed names that do not yet match the roster or a remembered nickname. Confirm each one so future captain notes use the same player identity.</p>
+          <div class="notebook-alias-list" id="notebookAliasList"></div>
+          <div class="notebook-alias-privacy">Only this text, active-player first names and jersey numbers, and confirmed aliases are checked. OpenAI storage is disabled.</div>
+          <div class="form-status" id="notebookAliasStatus"></div>
+          <div class="notebook-alias-actions">
+            <button class="btn btn-light" type="button" id="notebookAliasCancelBtn">Cancel Save</button>
+            <button class="btn btn-primary" type="button" id="notebookAliasConfirmBtn">Remember &amp; Continue</button>
+          </div>
+        </div>
+      </dialog>
     </section>
 
     <section class="view" id="announcements">
