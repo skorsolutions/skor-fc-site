@@ -36,7 +36,7 @@ const outputSchema = {
         required: ["category", "source", "text"],
         properties: {
           category: { type: "string", enum: ["progress", "priority", "tactical", "mentality", "set_piece"] },
-          source: { type: "string", enum: ["last_game", "attendance", "captain_priority", "lineup_plan", "player_input", "ai_strategy"] },
+          source: { type: "string", enum: ["last_game", "attendance", "captain_priority", "captain_whatsapp", "lineup_plan", "player_input", "ai_strategy"] },
           text: { type: "string", description: "One direct, spoken bullet point with an actionable message." },
         },
       },
@@ -91,9 +91,10 @@ Deno.serve(async (req: Request) => {
   const captainFocus = clean(input.captain_focus, 1200);
 
   // Approved AI scope: the selected match, its attendance/availability, completed
-  // captain-shared debriefs, its Production/Final lineup plan, the persistent
-  // captain-curated player reference library, and current generator inputs only.
-  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult, playerRefResult, lineupResult, tempPlayerResult] = await Promise.all([
+  // captain-shared debriefs, its Production/Final lineup plan, captain-visible
+  // WhatsApp history for this match, the persistent player reference library,
+  // and current generator inputs only.
+  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult, playerRefResult, lineupResult, tempPlayerResult, whatsappResult] = await Promise.all([
     client.from("matches").select("id,kickoff,home_team,away_team,location,status").eq("id", matchId).single(),
     client.from("captain_match_debriefs")
       .select("id,match_id,captain_name,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at")
@@ -104,9 +105,13 @@ Deno.serve(async (req: Request) => {
     client.from("captain_ai_player_comment_refs").select("comment_id,match_id,created_at").order("created_at", { ascending: false }),
     client.rpc("get_production_lineup", { p_match_id: matchId }),
     client.from("match_temp_players").select("id,display_name,jersey_number,active").eq("match_id", matchId),
+    client.from("captain_notebook_entries")
+      .select("id,attributed_captain_name,body,source_occurred_at,source_batch_id,source_sequence")
+      .eq("source", "whatsapp").eq("visibility", "captains").eq("match_id", matchId)
+      .order("source_occurred_at", { ascending: false }).order("source_sequence", { ascending: false }).limit(60),
   ]);
   if (matchResult.error) return json({ error: "The selected match could not be loaded." }, 400, origin);
-  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error || playerRefResult.error || lineupResult.error || tempPlayerResult.error) {
+  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error || playerRefResult.error || lineupResult.error || tempPlayerResult.error || whatsappResult.error) {
     return json({ error: "Approved team context could not be loaded." }, 500, origin);
   }
 
@@ -180,6 +185,15 @@ Deno.serve(async (req: Request) => {
       created_at: row.created_at,
     };
   });
+  const whatsappContext = [...(whatsappResult.data ?? [])].reverse().map((row) => ({
+    source: "captain_whatsapp",
+    author_role: "captain",
+    captain: clean(row.attributed_captain_name, 160) || "Captain",
+    occurred_at: row.source_occurred_at,
+    thread_id: row.source_batch_id,
+    sequence: row.source_sequence,
+    message: clean(row.body, 1200),
+  }));
   const aliasesByPlayer = new Map<string, string[]>();
   (aliasResult.data ?? []).forEach((row) => {
     const playerId = clean(row.player_id, 64), alias = clean(row.alias, 80);
@@ -284,6 +298,7 @@ Deno.serve(async (req: Request) => {
     captain_priority: captainFocus,
     completed_debriefs: debriefContext,
     selected_match_attendance: attendanceContext,
+    target_match_captain_whatsapp: whatsappContext,
     production_lineup: productionLineupContext,
     captain_selected_player_comments: playerCommentContext,
     player_identity_guide: playerIdentityGuide,
@@ -295,6 +310,8 @@ Use completed captain-shared debriefs and selected-match attendance as evidence.
 Use your general soccer knowledge only for clearly labeled tactical suggestions. Never invent an observation about SKOR FC, the opponent, or a player.
 Build on recorded improvements as well as problems. Reinforce what improved and identify what caused that progress when the debriefs support it.
 Use attendance only for practical availability, unit-balance, and substitution-aware suggestions. Do not mention a player's RSVP or attendance status in the talk unless the captain's current request explicitly asks for it.
+target_match_captain_whatsapp contains captain-authored messages explicitly assigned to this target match. Read them in timestamp and sequence order so replies retain their conversational meaning. Treat them as captain priorities or discussion, not as verified game observations. Points grounded in them must use the source captain_whatsapp.
+Only captain-visible WhatsApp messages are supplied. Historical lineup images are stored separately for captain review and are not present in this text context; never infer an image's contents from an attachment marker.
 When production_lineup is present, treat it as the captains' current authoritative plan for this target match. Use its formation, position assignments, bench, ranked depth chart, substitution order, field captain, and game-plan notes together—not as isolated facts. Points drawn directly from this plan must use the source lineup_plan.
 The depth chart is ranked coverage by position, not a second starting lineup. Planned substitutions are ordered waves; preserve their phase and order. Second-half waves remain valid saved planning context even when second_half_waves_visible_on_export is false.
 Do not casually contradict the Production/Final plan. You may identify a coverage, workload, transition, or communication risk and offer a clearly labeled ai_strategy contingency. If production_lineup is null, do not invent lineup assignments or substitution plans.
@@ -347,6 +364,7 @@ Keep each bullet direct, positive, specific, and actionable. Separate evidence-b
       debrief_count: debriefContext.length,
       attendance_count: attendanceContext.length,
       player_comment_count: playerCommentContext.length,
+      whatsapp_message_count: whatsappContext.length,
       lineup_included: productionLineupContext !== null,
       lineup_name: productionLineupContext?.name ?? null,
       lineup_starter_count: productionLineupContext?.starting_lineup.length ?? 0,

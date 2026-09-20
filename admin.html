@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v52.8-ai-lineup-context" />
+  <meta name="skor-build" content="captain-portal-v52.9-whatsapp-batch-import" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <style>
@@ -2242,18 +2242,44 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="panel notebook-compose-panel">
           <div class="notebook-compose-head">
             <span class="pill" id="notebookComposePill">Quick Note</span>
-            <button class="btn btn-light notebook-import-toggle" type="button" id="notebookImportWhatsAppBtn">Import WhatsApp Note</button>
+            <button class="btn btn-light notebook-import-toggle" type="button" id="notebookImportWhatsAppBtn">Import WhatsApp Thread</button>
           </div>
           <h2 id="notebookComposeTitle" style="margin:12px 0 4px">Record an observation</h2>
           <div class="sub" id="notebookComposeSub">Write naturally. Match, player, category, and visibility fields keep the note useful later.</div>
-          <form class="form" id="notebookEntryForm">
-            <div class="notebook-import-fields" id="notebookImportFields" hidden>
-              <div class="notebook-import-banner"><strong>Historical WhatsApp import</strong><span>The original captain receives credit for the message. Your login is retained separately as the importer.</span></div>
-              <div class="fieldrow">
-                <div><label for="notebookAttributedCaptain">Note from captain</label><select id="notebookAttributedCaptain" disabled><option value="">Select captain…</option></select></div>
-                <div><label for="notebookSourceDate">Original message date and time</label><input id="notebookSourceDate" type="datetime-local" disabled></div>
+          <div class="notebook-whatsapp-batch" id="notebookWhatsAppBatch" hidden>
+            <div class="notebook-import-banner"><strong>WhatsApp conversation import</strong><span>Paste the exported thread. The review step keeps the original author, date, and message order before anything is saved.</span></div>
+            <div>
+              <label for="notebookWhatsAppPaste">Paste WhatsApp thread</label>
+              <textarea id="notebookWhatsAppPaste" maxlength="100000" rows="9" placeholder="Example: [9/20/26, 8:15 PM] Eddy: Let's stay compact through midfield..."></textarea>
+              <small>Works with the standard Android and iPhone WhatsApp export formats. Multiline messages stay together.</small>
+            </div>
+            <div class="notebook-whatsapp-parse-actions">
+              <button class="btn btn-primary" type="button" id="notebookParseWhatsAppBtn">Review Messages</button>
+              <button class="btn btn-light" type="button" id="notebookClearWhatsAppBtn">Clear</button>
+            </div>
+            <div class="form-status" id="notebookWhatsAppParseStatus"></div>
+            <div class="notebook-whatsapp-review" id="notebookWhatsAppReview" hidden>
+              <div class="notebook-whatsapp-review-toolbar">
+                <div>
+                  <strong id="notebookWhatsAppReviewSummary">0 messages found</strong>
+                  <span>Each message is assigned to the next scheduled game after its timestamp. Change any game before importing.</span>
+                </div>
+                <div class="notebook-whatsapp-review-controls">
+                  <label for="notebookWhatsAppVisibility">Visibility</label>
+                  <select id="notebookWhatsAppVisibility"><option value="captains">All Captains</option><option value="private">Only Me</option></select>
+                  <button class="btn btn-light" type="button" id="notebookWhatsAppSelectAllBtn">Include All</button>
+                  <button class="btn btn-light" type="button" id="notebookWhatsAppSelectNoneBtn">Include None</button>
+                </div>
+              </div>
+              <datalist id="notebookCaptainNameOptions"></datalist>
+              <div class="notebook-whatsapp-review-list" id="notebookWhatsAppReviewList"></div>
+              <div class="notebook-whatsapp-import-footer">
+                <span class="form-status" id="notebookWhatsAppImportStatus"></span>
+                <button class="btn btn-primary" type="button" id="notebookImportSelectedWhatsAppBtn">Import Selected Messages</button>
               </div>
             </div>
+          </div>
+          <form class="form" id="notebookEntryForm">
             <div class="fieldrow">
               <div><label for="notebookEntryType">Note type</label><select id="notebookEntryType"><option value="general">General</option><option value="match">Match</option><option value="player">Player</option><option value="practice">Practice</option><option value="tactics">Tactics</option><option value="opponent">Opponent</option></select></div>
               <div><label for="notebookVisibility">Visibility</label><select id="notebookVisibility"><option value="captains">All Captains</option><option value="private">Only Me</option></select></div>
@@ -2264,13 +2290,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             </div>
             <div><label for="notebookCategory">Coaching category</label><select id="notebookCategory"><option value="observation">Observation</option><option value="position">Position / Role</option><option value="tactical">Tactical</option><option value="technical">Technical</option><option value="fitness">Fitness</option><option value="communication">Communication</option><option value="chemistry">Chemistry</option><option value="development">Development</option><option value="opponent">Opponent</option></select></div>
             <div><label for="notebookTitle">Title</label><input id="notebookTitle" maxlength="140" placeholder="Short description of what you noticed" required></div>
-            <div><label for="notebookBody" id="notebookBodyLabel">Captain note</label><textarea id="notebookBody" maxlength="5000" rows="6" placeholder="Example: Our left side was exposed when the winger pushed high. Try keeping the left central midfielder deeper during that phase." required></textarea></div>
+            <div><label for="notebookBody">Captain note</label><textarea id="notebookBody" maxlength="5000" rows="6" placeholder="Example: Our left side was exposed when the winger pushed high. Try keeping the left central midfielder deeper during that phase." required></textarea></div>
             <div class="notebook-name-check-note">When you save, AI checks for unfamiliar player names. Nothing is remembered until a captain confirms the roster match.</div>
-            <div class="notebook-import-ai" id="notebookImportAi" hidden>
-              <button class="btn btn-light" type="button" id="notebookOrganizeWhatsAppBtn">Organize with AI</button>
-              <span>AI can organize only what the captain wrote. It will not invent or add tactical claims to their note.</span>
-            </div>
-            <div class="form-status" id="notebookImportAiStatus"></div>
             <div class="notebook-form-footer">
               <span class="form-status" id="notebookEntryStatus"></span>
               <button class="btn btn-primary" type="submit" id="notebookSaveEntryBtn">Save Note</button>
@@ -2292,7 +2313,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div>
             <span class="pill">AI Match Preparation</span>
             <h2 style="margin:12px 0 4px">Pregame Talk</h2>
-            <div class="sub">Turn completed captain debriefs, selected-game attendance, and your current priorities into a short, editable team talk before kickoff.</div>
+            <div class="sub">Turn completed captain debriefs, captain-visible WhatsApp discussion for the game, selected-game attendance, and your current priorities into a short, editable team talk before kickoff.</div>
           </div>
           <span class="notebook-ai-badge">AI-assisted · Captain approved</span>
         </div>
@@ -6672,6 +6693,7 @@ loadAnnouncements();
 
 </script>
 
+<script src="whatsapp-import.js"></script>
 <script src="captain-notebook.js"></script>
 
 <!-- Legacy v18 lineup bootstrap removed in v20 -->

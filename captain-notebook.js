@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.8
+/* SKOR FC Captain Notebook v52.9
    Kept in a separate file so the existing lineup, Game Day, and portal engines remain isolated. */
 (function(){
   "use strict";
@@ -7,6 +7,8 @@
   const DEBRIEF_TABLE="captain_match_debriefs";
   const ASSESSMENT_TABLE="captain_player_assessments";
   const ALIAS_TABLE="captain_player_name_aliases";
+  const ATTACHMENT_TABLE="captain_notebook_attachments";
+  const MEDIA_BUCKET="captain-notebook-media";
   const PLAYER_TAGS=[
     ["strong_game","Strong Game"],
     ["improving","Improving"],
@@ -25,6 +27,8 @@
     players:[],
     captains:[],
     notes:[],
+    attachments:[],
+    attachmentUrls:new Map(),
     debriefs:[],
     assessments:[],
     attendance:new Set(),
@@ -34,8 +38,8 @@
     pregameBrief:null,
     pregameGenerating:false,
     importMode:false,
-    importAiOrganized:false,
-    importOrganizing:false,
+    whatsappDrafts:[],
+    whatsappImporting:false,
     aliasChecking:false,
     aliasReviewResolve:null,
     aliasMentions:[],
@@ -77,7 +81,7 @@
     state.ready=false;
     const notice=el("notebookSetupNotice");
     if(notice)notice.hidden=false;
-    ["notebookSaveEntryBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn","notebookGeneratePregameBtn","notebookSavePregameBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=true;});
+    ["notebookSaveEntryBtn","notebookImportSelectedWhatsAppBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn","notebookGeneratePregameBtn","notebookSavePregameBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=true;});
     el("notebookEntryCount").textContent="Setup";
     el("notebookDebriefCount").textContent="Setup";
     el("notebookPlayerCount").textContent="Setup";
@@ -89,7 +93,7 @@
     state.ready=true;
     const notice=el("notebookSetupNotice");
     if(notice)notice.hidden=true;
-    ["notebookSaveEntryBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn","notebookGeneratePregameBtn","notebookSavePregameBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=false;});
+    ["notebookSaveEntryBtn","notebookImportSelectedWhatsAppBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn","notebookGeneratePregameBtn","notebookSavePregameBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=false;});
   }
 
   function aliasPlayerOptions(selectedId="",mention=null){
@@ -240,11 +244,9 @@
   }
 
   function populateCaptainSelect(){
-    const select=el("notebookAttributedCaptain");if(!select)return;
-    const current=select.value;
     const names=[...new Set(state.captains.map(row=>text(row.display_name)).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-    select.innerHTML='<option value="">Select captain…</option>'+names.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join("");
-    if(names.includes(current))select.value=current;
+    const list=el("notebookCaptainNameOptions");
+    if(list)list.innerHTML=names.map(name=>`<option value="${esc(name)}"></option>`).join("");
   }
 
   function updateDashboardPrompt(){
@@ -286,6 +288,80 @@
     return parts.join(" · ");
   }
 
+  const noteAttachments=noteId=>state.attachments.filter(item=>String(item.notebook_entry_id)===String(noteId));
+
+  function renderAttachmentImages(noteId){
+    const rows=noteAttachments(noteId);
+    if(!rows.length)return "";
+    return `<div class="notebook-whatsapp-image-list">${rows.map(item=>{
+      const url=state.attachmentUrls.get(String(item.id));
+      if(!url)return `<span class="notebook-whatsapp-image"><span>Historical lineup image unavailable</span></span>`;
+      return `<a class="notebook-whatsapp-image" href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(url)}" alt="Historical lineup image"><span>${esc(item.original_file_name||"Historical lineup")}</span></a>`;
+    }).join("")}</div>`;
+  }
+
+  function renderRegularNote(note,uid){
+    const mine=note.created_by===uid;
+    return `<article class="notebook-note ${note.visibility==="private"?"private":""}">
+      <div class="notebook-note-head">
+        <div class="notebook-note-title">
+          <strong>${esc(note.title)}</strong>
+          <div class="notebook-note-meta">
+            <span class="notebook-note-tag">${esc(String(note.entry_type||"general").replace(/_/g," "))}</span>
+            <span class="notebook-note-tag">${esc(String(note.category||"observation").replace(/_/g," "))}</span>
+            ${note.ai_organized?'<span class="notebook-note-tag ai-organized">AI organized</span>':""}
+            <span class="notebook-note-tag ${note.visibility==="private"?"private":""}">${note.visibility==="private"?"Only Me":"Captains"}</span>
+          </div>
+        </div>
+        ${mine?`<button class="notebook-note-delete" type="button" data-notebook-delete="${esc(note.id)}" title="Delete this note">Delete</button>`:""}
+      </div>
+      <div class="notebook-note-body">${esc(note.body)}</div>
+      <div class="notebook-note-context">${esc(noteContext(note))}</div>
+    </article>`;
+  }
+
+  function renderWhatsAppGroups(rows,uid){
+    const byGame=new Map();
+    rows.forEach(note=>{
+      const gameKey=String(note.match_id||"unassigned");
+      if(!byGame.has(gameKey))byGame.set(gameKey,[]);
+      byGame.get(gameKey).push(note);
+    });
+    const groups=[...byGame.entries()].sort(([,a],[,b])=>{
+      const aTime=new Date(matchById(a[0]?.match_id)?.kickoff||a[0]?.source_occurred_at||0).valueOf();
+      const bTime=new Date(matchById(b[0]?.match_id)?.kickoff||b[0]?.source_occurred_at||0).valueOf();
+      return bTime-aTime;
+    });
+    return groups.map(([gameKey,gameRows],groupIndex)=>{
+      const threads=new Map();
+      gameRows.forEach(note=>{
+        const threadKey=String(note.source_batch_id||`legacy:${note.id}`);
+        if(!threads.has(threadKey))threads.set(threadKey,[]);
+        threads.get(threadKey).push(note);
+      });
+      const orderedThreads=[...threads.values()].map(thread=>thread.sort((a,b)=>
+        Number(a.source_sequence??0)-Number(b.source_sequence??0)||new Date(a.source_occurred_at)-new Date(b.source_occurred_at)
+      )).sort((a,b)=>new Date(a[0]?.source_occurred_at)-new Date(b[0]?.source_occurred_at));
+      const match=gameKey==="unassigned"?null:matchById(gameKey);
+      return `<details class="notebook-whatsapp-game-group" ${groupIndex===0?"open":""}>
+        <summary><div class="notebook-whatsapp-game-heading"><strong>${esc(match?matchLabel(match):"Unassigned WhatsApp messages")}</strong><span>${gameRows.length} message${gameRows.length===1?"":"s"} · ${orderedThreads.length} conversation${orderedThreads.length===1?"":"s"}</span></div></summary>
+        <div class="notebook-whatsapp-threads">${orderedThreads.map(thread=>{
+          const first=thread[0],last=thread[thread.length-1];
+          const range=thread.length>1?`${isoDateTime(first.source_occurred_at)} – ${isoDateTime(last.source_occurred_at)}`:isoDateTime(first.source_occurred_at);
+          return `<article class="notebook-whatsapp-thread">
+            <div class="notebook-whatsapp-thread-head"><span>WhatsApp conversation · ${thread.length} message${thread.length===1?"":"s"}</span><span>${esc(range)}</span></div>
+            <div class="notebook-whatsapp-thread-messages">${thread.map(note=>`<div class="notebook-whatsapp-message ${note.visibility==="private"?"private":""}">
+              <div class="notebook-whatsapp-message-head"><span class="notebook-whatsapp-message-author">${esc(note.attributed_captain_name||"Captain")}</span><span class="notebook-whatsapp-message-date">${esc(isoDateTime(note.source_occurred_at))}</span></div>
+              <div class="notebook-whatsapp-message-body">${esc(note.body)}</div>
+              ${renderAttachmentImages(note.id)}
+              <div class="notebook-whatsapp-message-meta"><span class="notebook-note-tag whatsapp">WhatsApp</span><span class="notebook-note-tag ${note.visibility==="private"?"private":""}">${note.visibility==="private"?"Only Me":"Captains"}</span><span class="notebook-whatsapp-message-date">Imported by ${esc(note.created_by_name||"Captain")}</span>${note.created_by===uid?`<button class="notebook-note-delete" type="button" data-notebook-delete="${esc(note.id)}">Delete</button>`:""}</div>
+            </div>`).join("")}</div>
+          </article>`;
+        }).join("")}</div>
+      </details>`;
+    }).join("");
+  }
+
   function renderNotes(){
     const host=el("notebookFeed");if(!host)return;
     const filter=el("notebookFeedFilter")?.value||"all";
@@ -297,26 +373,11 @@
       return note.entry_type===filter;
     });
     if(!rows.length){host.innerHTML='<div class="notebook-empty">No notebook entries match this filter.</div>';return;}
-    host.innerHTML=rows.map(note=>{
-      const mine=note.created_by===uid;
-      return `<article class="notebook-note ${note.visibility==="private"?"private":""}">
-        <div class="notebook-note-head">
-          <div class="notebook-note-title">
-            <strong>${esc(note.title)}</strong>
-            <div class="notebook-note-meta">
-              <span class="notebook-note-tag">${esc(String(note.entry_type||"general").replace(/_/g," "))}</span>
-              <span class="notebook-note-tag">${esc(String(note.category||"observation").replace(/_/g," "))}</span>
-              ${note.source==="whatsapp"?'<span class="notebook-note-tag whatsapp">WhatsApp</span>':""}
-              ${note.ai_organized?'<span class="notebook-note-tag ai-organized">AI organized</span>':""}
-              <span class="notebook-note-tag ${note.visibility==="private"?"private":""}">${note.visibility==="private"?"Only Me":"Captains"}</span>
-            </div>
-          </div>
-          ${mine?`<button class="notebook-note-delete" type="button" data-notebook-delete="${esc(note.id)}" title="Delete this note">Delete</button>`:""}
-        </div>
-        <div class="notebook-note-body">${esc(note.body)}</div>
-        <div class="notebook-note-context">${esc(noteContext(note))}</div>
-      </article>`;
-    }).join("");
+    const regular=rows.filter(note=>note.source!=="whatsapp"),whatsapp=rows.filter(note=>note.source==="whatsapp");
+    const sections=[];
+    if(regular.length)sections.push(`${whatsapp.length?'<div class="notebook-notes-section-title"><span>Captain Notes</span><span>'+regular.length+'</span></div>':""}${regular.map(note=>renderRegularNote(note,uid)).join("")}`);
+    if(whatsapp.length)sections.push(`<div class="notebook-notes-section-title"><span>WhatsApp Conversations</span><span>${whatsapp.length}</span></div>${renderWhatsAppGroups(whatsapp,uid)}`);
+    host.innerHTML=sections.join("");
     host.querySelectorAll("[data-notebook-delete]").forEach(button=>button.addEventListener("click",()=>deleteNote(button.dataset.notebookDelete)));
   }
 
@@ -342,6 +403,15 @@
     host.querySelectorAll("[data-debrief-open]").forEach(button=>button.addEventListener("click",()=>openDebriefById(button.dataset.debriefOpen)));
   }
 
+  async function loadAttachmentUrls(){
+    state.attachmentUrls=new Map();
+    await Promise.all(state.attachments.map(async item=>{
+      const result=await sb().storage.from(MEDIA_BUCKET).createSignedUrl(item.storage_path,3600);
+      if(result.error){console.warn("Could not sign Notebook image:",result.error);return;}
+      if(result.data?.signedUrl)state.attachmentUrls.set(String(item.id),result.data.signedUrl);
+    }));
+  }
+
   async function refreshData({quiet=false}={}){
     if(state.loading)return;
     state.loading=true;
@@ -351,15 +421,16 @@
       const userResult=await client.auth.getUser();
       if(userResult.error||!userResult.data?.user)throw new Error(userResult.error?.message||"Captain session not found.");
       state.user=userResult.data.user;
-      const [matchesResult,playersResult,captainsResult,notesResult,debriefsResult,assessmentsResult]=await Promise.all([
+      const [matchesResult,playersResult,captainsResult,notesResult,attachmentsResult,debriefsResult,assessmentsResult]=await Promise.all([
         client.from("matches").select("id,kickoff,home_team,away_team,status,published").order("kickoff",{ascending:false}).limit(40),
         client.from("team_roster").select("id,full_name,preferred_name,jersey_number,position,active").eq("active",true).order("jersey_number",{ascending:true}),
         client.rpc("get_notebook_captain_directory"),
-        client.from(NOTE_TABLE).select("id,entry_type,category,title,body,match_id,player_id,visibility,created_by,created_by_name,source,attributed_captain_name,source_occurred_at,ai_organized,created_at,updated_at").order("created_at",{ascending:false}).limit(100),
+        client.from(NOTE_TABLE).select("id,entry_type,category,title,body,match_id,player_id,visibility,created_by,created_by_name,source,attributed_captain_name,source_occurred_at,source_batch_id,source_sequence,ai_organized,created_at,updated_at").order("created_at",{ascending:false}).limit(250),
+        client.from(ATTACHMENT_TABLE).select("id,notebook_entry_id,storage_path,attachment_type,original_file_name,mime_type,file_size_bytes,created_by,created_at").order("created_at",{ascending:true}).limit(500),
         client.from(DEBRIEF_TABLE).select("id,match_id,captain_id,captain_name,status,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at,created_at,updated_at").order("updated_at",{ascending:false}).limit(80),
         client.from(ASSESSMENT_TABLE).select("id,debrief_id,match_id,player_id,tags,observation,created_at,updated_at").limit(500)
       ]);
-      const setupError=[captainsResult,notesResult,debriefsResult,assessmentsResult].find(result=>result.error)?.error;
+      const setupError=[captainsResult,notesResult,attachmentsResult,debriefsResult,assessmentsResult].find(result=>result.error)?.error;
       if(setupError){setSetupPending(setupError);return;}
       if(matchesResult.error)throw matchesResult.error;
       if(playersResult.error)throw playersResult.error;
@@ -367,8 +438,10 @@
       state.players=playersResult.data||[];
       state.captains=captainsResult.data||[];
       state.notes=notesResult.data||[];
+      state.attachments=attachmentsResult.data||[];
       state.debriefs=debriefsResult.data||[];
       state.assessments=assessmentsResult.data||[];
+      await loadAttachmentUrls();
       populateReferenceSelects();
       updateMetrics();
       renderNotes();
@@ -390,10 +463,6 @@
     if(!window.SKORPortalCanWrite?.())return window.SKORViewerBlocked?.("save captain notes");
     let title=text(el("notebookTitle")?.value),body=text(el("notebookBody")?.value);
     if(!title||!body)return setStatus("notebookEntryStatus","Add a title and captain note.",false);
-    const importName=text(el("notebookAttributedCaptain")?.value),sourceDate=el("notebookSourceDate")?.value;
-    if(state.importMode&&!el("notebookMatch")?.value)return setStatus("notebookEntryStatus","Choose the game this WhatsApp note belongs to.",false);
-    if(state.importMode&&!importName)return setStatus("notebookEntryStatus","Add the captain who originally wrote the message.",false);
-    if(state.importMode&&(!sourceDate||Number.isNaN(new Date(sourceDate).valueOf())))return setStatus("notebookEntryStatus","Add the original WhatsApp message date and time.",false);
     const button=el("notebookSaveEntryBtn"),original=button.textContent;button.disabled=true;button.textContent="Checking names…";
     try{
       const nameReview=await checkPlayerNames(`${title}\n${body}`,"notebookEntryStatus");
@@ -411,16 +480,15 @@
         visibility:el("notebookVisibility").value,
         created_by:state.user.id,
         created_by_name:captainName(),
-        source:state.importMode?"whatsapp":"manual",
-        attributed_captain_name:state.importMode?importName:null,
-        source_occurred_at:state.importMode?new Date(sourceDate).toISOString():null,
-        ai_organized:state.importMode&&state.importAiOrganized
+        source:"manual",
+        attributed_captain_name:null,
+        source_occurred_at:null,
+        ai_organized:false
       };
       const result=await sb().from(NOTE_TABLE).insert(payload);
       if(result.error)throw result.error;
       el("notebookEntryForm").reset();
-      setImportMode(false);
-      setStatus("notebookEntryStatus",payload.source==="whatsapp"?"WhatsApp note imported with original captain attribution.":payload.visibility==="private"?"Private note saved.":"Note saved for the captains.",true);
+      setStatus("notebookEntryStatus",payload.visibility==="private"?"Private note saved.":"Note saved for the captains.",true);
       await refreshData({quiet:true});
     }catch(error){setStatus("notebookEntryStatus","Could not save note: "+(error.message||error),false);}
     finally{button.disabled=false;button.textContent=original;}
@@ -428,72 +496,234 @@
 
   function setImportMode(enabled){
     state.importMode=!!enabled;
-    state.importAiOrganized=false;
-    const fields=el("notebookImportFields"),ai=el("notebookImportAi"),author=el("notebookAttributedCaptain"),date=el("notebookSourceDate");
-    if(fields)fields.hidden=!state.importMode;
-    if(ai)ai.hidden=!state.importMode;
-    if(author){author.disabled=!state.importMode;author.required=state.importMode;if(!state.importMode)author.value="";}
-    if(date){date.disabled=!state.importMode;date.required=state.importMode;if(!state.importMode)date.value="";}
-    if(el("notebookImportWhatsAppBtn"))el("notebookImportWhatsAppBtn").textContent=state.importMode?"Cancel WhatsApp Import":"Import WhatsApp Note";
+    if(el("notebookWhatsAppBatch"))el("notebookWhatsAppBatch").hidden=!state.importMode;
+    if(el("notebookEntryForm"))el("notebookEntryForm").hidden=state.importMode;
+    if(el("notebookImportWhatsAppBtn"))el("notebookImportWhatsAppBtn").textContent=state.importMode?"Back to Quick Note":"Import WhatsApp Thread";
     if(el("notebookComposePill"))el("notebookComposePill").textContent=state.importMode?"WhatsApp Match Inbox":"Quick Note";
-    if(el("notebookComposeTitle"))el("notebookComposeTitle").textContent=state.importMode?"Import a captain's message":"Record an observation";
-    if(el("notebookComposeSub"))el("notebookComposeSub").textContent=state.importMode?"Attach an older WhatsApp message to its game while preserving who wrote it and who imported it.":"Write naturally. Match, player, category, and visibility fields keep the note useful later.";
-    if(el("notebookMatchLabel"))el("notebookMatchLabel").textContent=state.importMode?"Game":"Match (optional)";
-    if(el("notebookBodyLabel"))el("notebookBodyLabel").textContent=state.importMode?"WhatsApp message":"Captain note";
-    if(el("notebookBody"))el("notebookBody").placeholder=state.importMode?"Paste the captain's WhatsApp message here.":"Example: Our left side was exposed when the winger pushed high. Try keeping the left central midfielder deeper during that phase.";
-    if(el("notebookSaveEntryBtn"))el("notebookSaveEntryBtn").textContent=state.importMode?"Save Imported Note":"Save Note";
-    if(state.importMode){
-      el("notebookEntryType").value="match";
-      el("notebookVisibility").value="captains";
-    }
-    setStatus("notebookImportAiStatus","",true);
+    if(el("notebookComposeTitle"))el("notebookComposeTitle").textContent=state.importMode?"Import a WhatsApp conversation":"Record an observation";
+    if(el("notebookComposeSub"))el("notebookComposeSub").textContent=state.importMode?"Paste a thread, review each message, then keep only the conversation that belongs in the season memory.":"Write naturally. Match, player, category, and visibility fields keep the note useful later.";
   }
 
-  async function organizeWhatsAppNote(){
-    if(!state.importMode||state.importOrganizing)return;
-    if(!state.ready)return setStatus("notebookImportAiStatus","Notebook database setup is still pending.",false);
-    const message=text(el("notebookBody")?.value),captain=text(el("notebookAttributedCaptain")?.value),matchId=el("notebookMatch")?.value;
-    if(!captain)return setStatus("notebookImportAiStatus","Add the original captain's name first.",false);
-    if(!matchId)return setStatus("notebookImportAiStatus","Choose the game first.",false);
-    if(!message)return setStatus("notebookImportAiStatus","Paste the WhatsApp message first.",false);
-    const button=el("notebookOrganizeWhatsAppBtn"),original=button.textContent;
-    state.importOrganizing=true;button.disabled=true;button.textContent="Organizing…";
-    setStatus("notebookImportAiStatus","Organizing the message without adding new claims…",true);
+  function dateTimeLocal(value){
+    const date=new Date(value);if(Number.isNaN(date.valueOf()))return "";
+    const pad=number=>String(number).padStart(2,"0");
+    return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  function whatsappMatchOptions(selected=""){
+    return '<option value="">Choose game…</option>'+state.matches.map(match=>`<option value="${esc(match.id)}" ${String(match.id)===String(selected)?"selected":""}>${esc(matchLabel(match))}</option>`).join("");
+  }
+
+  function clearWhatsAppFiles(){
+    state.whatsappDrafts.forEach(draft=>(draft.files||[]).forEach(item=>{try{URL.revokeObjectURL(item.url);}catch{}}));
+  }
+
+  function clearWhatsAppBatch(){
+    clearWhatsAppFiles();
+    state.whatsappDrafts=[];
+    if(el("notebookWhatsAppPaste"))el("notebookWhatsAppPaste").value="";
+    if(el("notebookWhatsAppReview"))el("notebookWhatsAppReview").hidden=true;
+    if(el("notebookWhatsAppReviewList"))el("notebookWhatsAppReviewList").innerHTML="";
+    setStatus("notebookWhatsAppParseStatus","",true);
+    setStatus("notebookWhatsAppImportStatus","",true);
+  }
+
+  function updateWhatsAppReviewSummary(){
+    const selected=state.whatsappDrafts.filter(item=>item.included);
+    const games=new Set(selected.map(item=>item.matchId).filter(Boolean));
+    const images=selected.reduce((sum,item)=>sum+(item.files?.length||0),0);
+    if(el("notebookWhatsAppReviewSummary"))el("notebookWhatsAppReviewSummary").textContent=`${selected.length} of ${state.whatsappDrafts.length} messages selected · ${games.size} game${games.size===1?"":"s"}${images?` · ${images} lineup image${images===1?"":"s"}`:""}`;
+  }
+
+  function renderWhatsAppDraftFiles(draft,index){
+    if(!draft.files?.length)return "";
+    return `<div class="notebook-whatsapp-files">${draft.files.map((item,fileIndex)=>`<div class="notebook-whatsapp-file"><img src="${esc(item.url)}" alt="Historical lineup preview"><span>${esc(item.file.name)}</span><button type="button" data-wa-remove-file="${index}:${fileIndex}">Remove</button></div>`).join("")}</div>`;
+  }
+
+  function renderWhatsAppReview(){
+    const host=el("notebookWhatsAppReviewList"),review=el("notebookWhatsAppReview");if(!host||!review)return;
+    const groups=new Map();
+    state.whatsappDrafts.forEach((draft,index)=>{
+      const key=String(draft.matchId||"unassigned");
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push({draft,index});
+    });
+    host.innerHTML=[...groups.entries()].map(([matchId,rows])=>{
+      const match=matchId==="unassigned"?null:matchById(matchId);
+      return `<section class="notebook-whatsapp-review-group">
+        <div class="notebook-whatsapp-review-group-head"><strong>${esc(match?matchLabel(match):"Game needs review")}</strong><span>${rows.length} message${rows.length===1?"":"s"}</span></div>
+        <div class="notebook-whatsapp-review-messages">${rows.map(({draft,index})=>`<article class="notebook-whatsapp-review-message ${draft.included?"":"excluded"}" data-wa-row="${index}">
+          <div class="notebook-whatsapp-review-message-head"><label class="notebook-whatsapp-include"><input type="checkbox" data-wa-include="${index}" ${draft.included?"checked":""}> Include this message</label><span class="notebook-whatsapp-sequence">Conversation #${draft.sequence+1}</span></div>
+          <div class="notebook-whatsapp-message-fields">
+            <div><label for="waAuthor${index}">Person</label><input id="waAuthor${index}" list="notebookCaptainNameOptions" maxlength="160" value="${esc(draft.author)}" data-wa-author="${index}"></div>
+            <div><label for="waDate${index}">Original date and time</label><input id="waDate${index}" type="datetime-local" value="${esc(dateTimeLocal(draft.occurredAt))}" data-wa-date="${index}"></div>
+            <div><label for="waMatch${index}">Related game</label><select id="waMatch${index}" data-wa-match="${index}">${whatsappMatchOptions(draft.matchId)}</select></div>
+          </div>
+          <div><label for="waBody${index}">Message</label><textarea id="waBody${index}" class="notebook-whatsapp-message-body" maxlength="5000" data-wa-body="${index}">${esc(draft.body)}</textarea></div>
+          <div class="notebook-whatsapp-media-prompt ${draft.hasMediaMarker?"flagged":""}"><div><strong>${draft.hasMediaMarker?"WhatsApp image marker found":"Historical lineup image"}</strong><span>${draft.hasMediaMarker?"Attach the omitted lineup picture to keep it with this point in the conversation.":"If this message included an old lineup, attach it here."}</span></div><label class="notebook-whatsapp-file-label">Add Image<input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple data-wa-files="${index}"></label></div>
+          ${renderWhatsAppDraftFiles(draft,index)}
+        </article>`).join("")}</div>
+      </section>`;
+    }).join("");
+    review.hidden=false;
+    host.querySelectorAll("[data-wa-include]").forEach(input=>input.addEventListener("change",()=>{const draft=state.whatsappDrafts[Number(input.dataset.waInclude)];if(!draft)return;draft.included=input.checked;input.closest("[data-wa-row]")?.classList.toggle("excluded",!draft.included);updateWhatsAppReviewSummary();}));
+    host.querySelectorAll("[data-wa-author]").forEach(input=>input.addEventListener("input",()=>{state.whatsappDrafts[Number(input.dataset.waAuthor)].author=input.value;}));
+    host.querySelectorAll("[data-wa-body]").forEach(input=>input.addEventListener("input",()=>{state.whatsappDrafts[Number(input.dataset.waBody)].body=input.value;}));
+    host.querySelectorAll("[data-wa-date]").forEach(input=>input.addEventListener("change",()=>{const draft=state.whatsappDrafts[Number(input.dataset.waDate)],date=new Date(input.value);if(draft&&!Number.isNaN(date.valueOf()))draft.occurredAt=date.toISOString();}));
+    host.querySelectorAll("[data-wa-match]").forEach(input=>input.addEventListener("change",()=>{state.whatsappDrafts[Number(input.dataset.waMatch)].matchId=input.value;renderWhatsAppReview();}));
+    host.querySelectorAll("[data-wa-files]").forEach(input=>input.addEventListener("change",()=>addWhatsAppFiles(Number(input.dataset.waFiles),input.files)));
+    host.querySelectorAll("[data-wa-remove-file]").forEach(button=>button.addEventListener("click",()=>{const [draftIndex,fileIndex]=button.dataset.waRemoveFile.split(":").map(Number),draft=state.whatsappDrafts[draftIndex],item=draft?.files?.[fileIndex];if(item){try{URL.revokeObjectURL(item.url);}catch{}draft.files.splice(fileIndex,1);renderWhatsAppReview();}}));
+    updateWhatsAppReviewSummary();
+  }
+
+  function addWhatsAppFiles(index,fileList){
+    const draft=state.whatsappDrafts[index];if(!draft)return;
+    const allowed=new Set(["image/jpeg","image/png","image/webp","image/heic","image/heif"]),files=[...(fileList||[])];
+    const invalid=files.find(file=>!allowed.has(attachmentMimeType(file))||file.size<1||file.size>8388608);
+    if(invalid)return setStatus("notebookWhatsAppImportStatus",`“${invalid.name}” must be a JPG, PNG, WebP, HEIC, or HEIF image no larger than 8 MB.`,false);
+    const existingCount=state.whatsappDrafts.reduce((sum,item)=>sum+(item.files?.length||0),0);
+    if(existingCount+files.length>20)return setStatus("notebookWhatsAppImportStatus","Import up to 20 lineup images in one batch.",false);
+    files.forEach(file=>draft.files.push({file,mimeType:attachmentMimeType(file),url:URL.createObjectURL(file)}));
+    setStatus("notebookWhatsAppImportStatus","Historical lineup image added to the message. It will not upload until you import the batch.",true);
+    renderWhatsAppReview();
+  }
+
+  function parseWhatsAppBatch(){
+    const parser=window.SKORWhatsAppImport;
+    if(!parser?.parseWhatsAppThread)return setStatus("notebookWhatsAppParseStatus","WhatsApp parser could not be loaded. Refresh and try again.",false);
+    const source=el("notebookWhatsAppPaste")?.value||"";
+    if(!text(source))return setStatus("notebookWhatsAppParseStatus","Paste the WhatsApp conversation first.",false);
+    const parsed=parser.parseWhatsAppThread(source);
+    if(!parsed.messages?.length)return setStatus("notebookWhatsAppParseStatus","No WhatsApp timestamps were found. Paste an exported thread that includes date, time, person, and message.",false);
+    clearWhatsAppFiles();
+    state.whatsappDrafts=parsed.messages.slice(0,200).map(item=>({
+      sequence:item.sequence,
+      included:true,
+      author:text(item.author).slice(0,160),
+      occurredAt:item.occurredAt.toISOString(),
+      body:String(item.body||"").slice(0,5000),
+      hasMediaMarker:!!item.hasMediaMarker,
+      matchId:parser.suggestMatchId(item.occurredAt,state.matches),
+      files:[]
+    }));
+    renderWhatsAppReview();
+    const warnings=[...(parsed.warnings||[])];
+    if(parsed.messages.length>200)warnings.push("Only the first 200 messages are shown per batch.");
+    setStatus("notebookWhatsAppParseStatus",`${state.whatsappDrafts.length} messages found and kept in conversation order.${warnings.length?" "+warnings.join(" "):""}`,true);
+  }
+
+  async function checkWhatsAppPlayerNames(drafts){
+    const chunks=[];let current="";
+    drafts.forEach(draft=>{
+      const value=text(draft.body);if(!value)return;
+      if(current&&current.length+value.length+2>10000){chunks.push(current);current="";}
+      current+=(current?"\n\n":"")+value;
+    });
+    if(current)chunks.push(current);
+    const replacements=[];
+    for(const chunk of chunks){
+      const review=await checkPlayerNames(chunk,"notebookWhatsAppImportStatus");
+      if(!review.ok)return false;
+      replacements.push(...(review.replacements||[]));
+    }
+    drafts.forEach(draft=>{draft.body=applyPlayerNameReplacements(draft.body,replacements);});
+    return true;
+  }
+
+  function attachmentExtension(file){
+    const fromName=(file.name.split(".").pop()||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+    if(["jpg","jpeg","png","webp","heic","heif"].includes(fromName))return fromName;
+    return ({"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/heic":"heic","image/heif":"heif"})[file.type]||"jpg";
+  }
+
+  function attachmentMimeType(file){
+    if(file.type==="image/jpg")return "image/jpeg";
+    if(file.type)return file.type;
+    const extension=(file.name.split(".").pop()||"").toLowerCase();
+    return ({jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",heic:"image/heic",heif:"image/heif"})[extension]||"";
+  }
+
+  async function importWhatsAppBatch(){
+    if(state.whatsappImporting)return;
+    if(!state.ready)return setStatus("notebookWhatsAppImportStatus","Notebook database setup is still pending.",false);
+    if(!window.SKORPortalCanWrite?.())return window.SKORViewerBlocked?.("import WhatsApp messages");
+    const selected=state.whatsappDrafts.filter(item=>item.included);
+    if(!selected.length)return setStatus("notebookWhatsAppImportStatus","Select at least one message to import.",false);
+    const invalid=selected.find(item=>!text(item.author)||!item.matchId||Number.isNaN(new Date(item.occurredAt).valueOf())||(!text(item.body)&&!item.files.length));
+    if(invalid)return setStatus("notebookWhatsAppImportStatus","Every selected message needs a person, valid date, related game, and message or lineup image.",false);
+    const button=el("notebookImportSelectedWhatsAppBtn"),original=button.textContent,visibility=el("notebookWhatsAppVisibility")?.value==="private"?"private":"captains";
+    state.whatsappImporting=true;button.disabled=true;button.textContent="Checking names…";
+    const uploadedPaths=[];
+    let batchId="";
     try{
-      const {data,error}=await sb().functions.invoke("organize-whatsapp-note",{body:{
-        match_id:matchId,captain_name:captain,message,
-        category_hint:el("notebookCategory")?.value||"observation"
-      }});
-      if(error){
-        let detail=error.message||"The AI organizer could not be reached.";
-        try{const body=await error.context?.json?.();if(body?.error)detail=body.error;}catch{}
-        throw new Error(detail);
+      if(!await checkWhatsAppPlayerNames(selected)){setStatus("notebookWhatsAppImportStatus","Import canceled so player names can be reviewed.",false);return;}
+      button.textContent="Importing…";
+      batchId=crypto.randomUUID();
+      const payloads=selected.map(item=>({
+        entry_type:"match",
+        category:/lineup|formation|shape|press|position|midfield|defen|attack|wing|substitut|tactic/i.test(item.body)||item.files.length?"tactical":"observation",
+        title:`WhatsApp · ${text(item.author)} · ${isoDate(item.occurredAt)}`.slice(0,140),
+        body:(text(item.body)||"Historical lineup image.").slice(0,5000),
+        match_id:item.matchId,
+        player_id:null,
+        visibility,
+        created_by:state.user.id,
+        created_by_name:captainName(),
+        source:"whatsapp",
+        attributed_captain_name:text(item.author).slice(0,160),
+        source_occurred_at:new Date(item.occurredAt).toISOString(),
+        source_batch_id:batchId,
+        source_sequence:item.sequence,
+        ai_organized:false
+      }));
+      const noteResult=await sb().from(NOTE_TABLE).insert(payloads).select("id,source_sequence");
+      if(noteResult.error)throw noteResult.error;
+      const entryBySequence=new Map((noteResult.data||[]).map(row=>[Number(row.source_sequence),row.id]));
+      for(const item of selected){
+        const entryId=entryBySequence.get(Number(item.sequence));
+        if(!entryId)throw new Error("An imported message could not be matched to its saved entry.");
+        for(const media of item.files){
+          const file=media.file,path=`${state.user.id}/${entryId}/${crypto.randomUUID()}.${attachmentExtension(file)}`;
+          const upload=await sb().storage.from(MEDIA_BUCKET).upload(path,file,{cacheControl:"3600",contentType:media.mimeType,upsert:false});
+          if(upload.error)throw upload.error;
+          uploadedPaths.push(path);
+          const attachment=await sb().from(ATTACHMENT_TABLE).insert({
+            notebook_entry_id:entryId,
+            storage_path:path,
+            attachment_type:"historical_lineup",
+            original_file_name:String(file.name||"historical-lineup").slice(0,255),
+            mime_type:media.mimeType,
+            file_size_bytes:file.size,
+            created_by:state.user.id
+          });
+          if(attachment.error)throw attachment.error;
+        }
       }
-      const organized=data?.organized;
-      if(!organized?.title||!organized?.body)throw new Error(data?.error||"The AI organizer returned an incomplete note.");
-      el("notebookTitle").value=text(organized.title).slice(0,140);
-      el("notebookBody").value=text(organized.body).slice(0,5000);
-      const allowedCategories=[...el("notebookCategory").options].map(option=>option.value);
-      const allowedTypes=[...el("notebookEntryType").options].map(option=>option.value);
-      if(allowedCategories.includes(organized.category))el("notebookCategory").value=organized.category;
-      if(allowedTypes.includes(organized.entry_type))el("notebookEntryType").value=organized.entry_type;
-      state.importAiOrganized=true;
-      setStatus("notebookImportAiStatus","AI organized the draft. Review and edit it before saving.",true);
-    }catch(error){setStatus("notebookImportAiStatus","Could not organize note: "+(error.message||error),false);}
-    finally{state.importOrganizing=false;button.disabled=false;button.textContent=original;}
+      const gameCount=new Set(selected.map(item=>item.matchId)).size,imageCount=selected.reduce((sum,item)=>sum+item.files.length,0);
+      clearWhatsAppBatch();
+      setImportMode(false);
+      await refreshData({quiet:true});
+      setStatus("notebookEntryStatus",`${selected.length} WhatsApp message${selected.length===1?"":"s"} imported in conversation order across ${gameCount} game${gameCount===1?"":"s"}${imageCount?`, with ${imageCount} historical lineup image${imageCount===1?"":"s"}`:""}.`,true);
+    }catch(error){
+      if(uploadedPaths.length)await sb().storage.from(MEDIA_BUCKET).remove(uploadedPaths);
+      if(batchId)await sb().from(NOTE_TABLE).delete().eq("source_batch_id",batchId).eq("created_by",state.user.id);
+      setStatus("notebookWhatsAppImportStatus","Could not import conversation: "+(error.message||error),false);
+    }finally{state.whatsappImporting=false;button.disabled=false;button.textContent=original;}
   }
 
   async function deleteNote(id){
     const note=state.notes.find(item=>item.id===id);if(!note)return;
     if(!confirm(`Delete “${note.title}”? This cannot be undone.`))return;
+    const mediaPaths=noteAttachments(id).map(item=>item.storage_path).filter(Boolean);
     const result=await sb().from(NOTE_TABLE).delete().eq("id",id).eq("created_by",state.user.id);
     if(result.error)return setStatus("notebookEntryStatus","Could not delete note: "+result.error.message,false);
-    setStatus("notebookEntryStatus","Note deleted.",true);
+    const storageResult=mediaPaths.length?await sb().storage.from(MEDIA_BUCKET).remove(mediaPaths):{error:null};
+    setStatus("notebookEntryStatus",storageResult.error?"Note deleted, but its stored image could not be cleaned up automatically.":"Note deleted.",!storageResult.error);
     await refreshData({quiet:true});
   }
 
   const PREGAME_CATEGORY_LABELS={progress:"Progress to Reinforce",priority:"Match Priority",tactical:"Tactical Detail",mentality:"Mentality",set_piece:"Set Piece"};
-  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",lineup_plan:"Saved Lineup Plan",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
+  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",captain_whatsapp:"Captain WhatsApp",lineup_plan:"Saved Lineup Plan",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
 
   function selectedPlayerInputs(){
     const rows=window.SKORGetAiPlayerComments?.();
@@ -611,10 +841,11 @@
       if(!data?.brief)throw new Error(data?.error||"The AI generator returned no pregame talk.");
       renderPregameBrief(data.brief);
       const playerCount=Number(data.context?.player_comment_count||0);
+      const whatsappCount=Number(data.context?.whatsapp_message_count||0);
       const lineupName=text(data.context?.lineup_name),lineupIncluded=data.context?.lineup_included===true;
       const lineupDetail=lineupIncluded?`, Production/Final lineup “${lineupName||"Saved Lineup"}” with ${Number(data.context?.lineup_starter_count||0)} starters and ${Number(data.context?.lineup_substitution_wave_count||0)} planned wave${Number(data.context?.lineup_substitution_wave_count||0)===1?"":"s"}`:"";
       const lineupWarning=lineupIncluded?"":" No Production/Final lineup was found for this game, so lineup assignments were not sent.";
-      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${lineupDetail}${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, drafts, and unselected player comments were not sent to AI.${lineupWarning} Review and edit before sharing.`,true);
+      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${lineupDetail}${whatsappCount?`, ${whatsappCount} captain WhatsApp message${whatsappCount===1?"":"s"}`:""}${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, private WhatsApp messages, drafts, and unselected player comments were not sent to AI.${lineupWarning} Review and edit before sharing.`,true);
     }catch(error){
       setStatus("notebookPregameStatus","Could not generate talk: "+(error.message||error),false);
     }finally{state.pregameGenerating=false;button.disabled=false;button.textContent=original;}
@@ -865,7 +1096,11 @@
   function bindEvents(){
     el("notebookEntryForm")?.addEventListener("submit",saveNote);
     el("notebookImportWhatsAppBtn")?.addEventListener("click",()=>setImportMode(!state.importMode));
-    el("notebookOrganizeWhatsAppBtn")?.addEventListener("click",organizeWhatsAppNote);
+    el("notebookParseWhatsAppBtn")?.addEventListener("click",parseWhatsAppBatch);
+    el("notebookClearWhatsAppBtn")?.addEventListener("click",clearWhatsAppBatch);
+    el("notebookWhatsAppSelectAllBtn")?.addEventListener("click",()=>{state.whatsappDrafts.forEach(item=>{item.included=true;});renderWhatsAppReview();});
+    el("notebookWhatsAppSelectNoneBtn")?.addEventListener("click",()=>{state.whatsappDrafts.forEach(item=>{item.included=false;});renderWhatsAppReview();});
+    el("notebookImportSelectedWhatsAppBtn")?.addEventListener("click",importWhatsAppBatch);
     el("notebookFeedFilter")?.addEventListener("change",renderNotes);
     el("notebookRefreshBtn")?.addEventListener("click",()=>refreshData());
     el("notebookJumpDebriefBtn")?.addEventListener("click",()=>el("notebookDebriefPanel")?.scrollIntoView({behavior:"smooth",block:"start"}));

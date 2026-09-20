@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.8 — isolated from the existing portal styles. */
+/* SKOR FC Captain Notebook v52.9 — isolated from the existing portal styles. */
 body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-dashboard-prompt{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;border-color:#d8bdc6;background:linear-gradient(135deg,#fff 0%,#fbf1f4 100%)}
 .notebook-dashboard-prompt[hidden]{display:none!important}
@@ -39,6 +39,49 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-import-ai{display:flex;align-items:center;gap:10px;border:1px dashed #d8c5cc;border-radius:11px;background:#fcfafb;padding:10px}
 .notebook-import-ai span{color:#6f737a;font-size:.61rem;line-height:1.4}
 .notebook-import-ai .btn{flex:0 0 auto;padding:7px 10px;font-size:.62rem}
+.notebook-whatsapp-batch{display:grid;gap:12px;margin-top:14px;border:1px solid #d9bcc7;border-radius:14px;background:#fffafb;padding:13px}
+.notebook-whatsapp-batch[hidden],.notebook-whatsapp-review[hidden]{display:none!important}
+.notebook-whatsapp-batch label{display:block;margin-bottom:5px;font-size:.68rem;font-weight:900;color:#363940}
+.notebook-whatsapp-batch textarea,.notebook-whatsapp-batch select,.notebook-whatsapp-batch input{width:100%}
+.notebook-whatsapp-batch>div>small{display:block;margin-top:5px;color:#767b82;font-size:.58rem;line-height:1.4}
+.notebook-whatsapp-parse-actions{display:flex;gap:8px;flex-wrap:wrap}
+.notebook-whatsapp-review{display:grid;gap:12px;padding-top:12px;border-top:1px solid #e4d6db}
+.notebook-whatsapp-review-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:14px}
+.notebook-whatsapp-review-toolbar>div:first-child{display:grid;gap:3px;max-width:520px}
+.notebook-whatsapp-review-toolbar strong{font-size:.75rem;color:#35383e}
+.notebook-whatsapp-review-toolbar span{font-size:.59rem;line-height:1.4;color:#747980}
+.notebook-whatsapp-review-controls{display:grid;grid-template-columns:minmax(120px,1fr) auto auto;align-items:end;gap:6px;min-width:355px}
+.notebook-whatsapp-review-controls label{grid-column:1/-1;margin:0}
+.notebook-whatsapp-review-controls .btn{padding:7px 8px;font-size:.57rem;white-space:nowrap}
+.notebook-whatsapp-review-list{display:grid;gap:11px;max-height:780px;overflow:auto;padding-right:3px}
+.notebook-whatsapp-review-group{overflow:hidden;border:1px solid #dfe2e6;border-radius:12px;background:#fff}
+.notebook-whatsapp-review-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;background:#f5f7f9;border-bottom:1px solid #e4e6e9}
+.notebook-whatsapp-review-group-head strong{font-size:.7rem;color:#333941}
+.notebook-whatsapp-review-group-head span{font-size:.55rem;color:#777d85}
+.notebook-whatsapp-review-messages{display:grid;gap:8px;padding:9px;background:#fbfcfd}
+.notebook-whatsapp-review-message{display:grid;gap:8px;border:1px solid #dfe2e6;border-radius:11px;background:#fff;padding:10px;transition:.16s ease}
+.notebook-whatsapp-review-message.excluded{opacity:.55;background:#f5f5f5}
+.notebook-whatsapp-review-message-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.notebook-whatsapp-include{display:flex!important;align-items:center;gap:7px;margin:0!important;color:#6c1733!important;font-size:.66rem!important}
+.notebook-whatsapp-include input{width:auto!important}
+.notebook-whatsapp-sequence{font-size:.55rem;color:#868b92;font-weight:850}
+.notebook-whatsapp-message-fields{display:grid;grid-template-columns:minmax(125px,.7fr) minmax(170px,1fr) minmax(180px,1.15fr);gap:7px}
+.notebook-whatsapp-message-fields label{font-size:.58rem}
+.notebook-whatsapp-message-fields input,.notebook-whatsapp-message-fields select{font-size:.64rem;padding:7px}
+.notebook-whatsapp-message-body{min-height:76px!important;font-size:.68rem;line-height:1.45;resize:vertical}
+.notebook-whatsapp-media-prompt{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px dashed #d6c7cc;border-radius:9px;background:#fcfafb;padding:8px}
+.notebook-whatsapp-media-prompt.flagged{border-color:#be8da0;background:#fff7fa}
+.notebook-whatsapp-media-prompt>div{display:grid;gap:2px;color:#626870;font-size:.58rem;line-height:1.35}
+.notebook-whatsapp-media-prompt strong{color:#6f1735;font-size:.63rem}
+.notebook-whatsapp-file-label{display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 auto;margin:0!important;border:1px solid #d7c1c9;border-radius:8px;background:#fff;color:#751a38!important;padding:6px 8px;cursor:pointer;font-size:.57rem!important;font-weight:900}
+.notebook-whatsapp-file-label input{position:absolute;width:1px!important;height:1px;opacity:0;pointer-events:none}
+.notebook-whatsapp-files{display:flex;gap:7px;flex-wrap:wrap}
+.notebook-whatsapp-file{display:grid;grid-template-columns:45px minmax(0,1fr) auto;align-items:center;gap:7px;max-width:260px;border:1px solid #e0e2e5;border-radius:9px;background:#fff;padding:6px}
+.notebook-whatsapp-file img{width:45px;height:42px;object-fit:cover;border-radius:6px;background:#eee}
+.notebook-whatsapp-file span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#565c64;font-size:.55rem}
+.notebook-whatsapp-file button{border:0;background:transparent;color:#8e2948;cursor:pointer;font-size:.56rem;font-weight:900}
+.notebook-whatsapp-import-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:4px}
+.notebook-whatsapp-import-footer .form-status{flex:1}
 .notebook-name-check-note{border-left:3px solid #8797ad;padding:6px 0 6px 9px;color:#68717c;font-size:.59rem;line-height:1.4}
 .notebook-form-footer,.notebook-debrief-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .notebook-form-footer .form-status,.notebook-debrief-actions .form-status{flex:1;min-width:180px}
@@ -59,6 +102,30 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-note-context{margin-top:9px;color:#777c83;font-size:.61rem;line-height:1.35}
 .notebook-note-delete{border:0;background:transparent;color:#9a556a;cursor:pointer;font-weight:900;font-size:.68rem;padding:3px}
 .notebook-empty{border:1px dashed #d9dadd;border-radius:12px;padding:22px;text-align:center;color:#777b82;font-size:.75rem}
+.notebook-notes-section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 1px;color:#5f2639;font-size:.65rem;font-weight:950;text-transform:uppercase;letter-spacing:.06em}
+.notebook-whatsapp-game-group{overflow:hidden;border:1px solid #dce2df;border-radius:13px;background:#fff}
+.notebook-whatsapp-game-group summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;padding:12px 14px;background:#f6faf8}
+.notebook-whatsapp-game-group summary::-webkit-details-marker{display:none}
+.notebook-whatsapp-game-group summary::after{content:"+";display:grid;place-items:center;flex:0 0 22px;width:22px;height:22px;border-radius:7px;background:#dfede5;color:#356149;font-size:.8rem;font-weight:950}
+.notebook-whatsapp-game-group[open] summary::after{content:"−"}
+.notebook-whatsapp-game-heading{min-width:0}
+.notebook-whatsapp-game-heading strong{display:block;color:#2f3b34;font-size:.76rem}
+.notebook-whatsapp-game-heading span{display:block;margin-top:3px;color:#758078;font-size:.58rem}
+.notebook-whatsapp-threads{display:grid;gap:10px;padding:10px;border-top:1px solid #e3e9e5;background:#fbfdfc}
+.notebook-whatsapp-thread{overflow:hidden;border:1px solid #dde3df;border-radius:11px;background:#fff}
+.notebook-whatsapp-thread-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:#f6f8f7;color:#667069;font-size:.57rem;font-weight:850}
+.notebook-whatsapp-thread-messages{display:grid}
+.notebook-whatsapp-message{display:grid;gap:6px;padding:10px;border-top:1px solid #ecefed}
+.notebook-whatsapp-message:first-child{border-top:0}
+.notebook-whatsapp-message-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.notebook-whatsapp-message-author{color:#2f684a;font-size:.69rem;font-weight:950}
+.notebook-whatsapp-message-date{color:#80868d;font-size:.55rem}
+.notebook-whatsapp-message-body{white-space:pre-wrap;color:#41484f;font-size:.69rem;line-height:1.48}
+.notebook-whatsapp-message-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.notebook-whatsapp-image-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:2px}
+.notebook-whatsapp-image{display:grid;gap:4px;width:116px;color:#6c737a;font-size:.51rem;text-decoration:none}
+.notebook-whatsapp-image img{width:116px;height:86px;object-fit:cover;border:1px solid #dfe2e4;border-radius:8px;background:#eef0f1}
+.notebook-whatsapp-image span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .notebook-pregame-panel{margin-top:18px;border-color:#d9c4cc;background:linear-gradient(180deg,#fff 0%,#fdfafb 100%)}
 .notebook-pregame-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px}
@@ -197,6 +264,12 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
   .notebook-panel-head{align-items:stretch;flex-direction:column}
   .notebook-compose-head{align-items:stretch;flex-direction:column}.notebook-import-toggle{width:100%}
   .notebook-import-ai{align-items:stretch;flex-direction:column}.notebook-import-ai .btn{width:100%}
+  .notebook-whatsapp-review-toolbar,.notebook-whatsapp-import-footer{align-items:stretch;flex-direction:column}
+  .notebook-whatsapp-review-controls{grid-template-columns:1fr 1fr;min-width:0;width:100%}
+  .notebook-whatsapp-review-controls label,.notebook-whatsapp-review-controls select{grid-column:1/-1}
+  .notebook-whatsapp-message-fields{grid-template-columns:1fr}
+  .notebook-whatsapp-media-prompt{align-items:stretch;flex-direction:column}.notebook-whatsapp-file-label{width:100%}
+  .notebook-whatsapp-parse-actions .btn,.notebook-whatsapp-import-footer .btn{width:100%}
   .notebook-pregame-result-head{align-items:stretch;flex-direction:column}
   .notebook-pregame-actions{justify-content:stretch}.notebook-pregame-actions .btn{flex:1}
   .notebook-panel-head select{max-width:none;width:100%}
