@@ -20,6 +20,7 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-hero .btn-primary{background:#801a3d;border-color:#a94e6d}
 
 .notebook-setup{display:flex;align-items:flex-start;gap:8px;flex-direction:column;margin:0 0 18px;padding:13px 15px;border:1px solid #e6c98c;border-radius:12px;background:#fff7e5;color:#6d531f;font-size:.76rem;line-height:1.45}
+.notebook-setup[hidden]{display:none!important}
 .notebook-setup strong{font-size:.82rem}
 .notebook-metrics{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}
 .notebook-metrics .metric strong{font-size:1.55rem}
