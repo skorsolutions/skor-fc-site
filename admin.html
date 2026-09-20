@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.38-export-all-waves" />
+  <meta name="skor-build" content="lineup-admin-v51.39-reorder-sub-waves" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1354,7 +1354,7 @@
     .sub-wave-head{
       grid-column:1/-1;
       display:grid;
-      grid-template-columns:auto minmax(150px,280px);
+      grid-template-columns:auto minmax(150px,280px) auto;
       align-items:center;
       gap:9px;
       margin-bottom:1px;
@@ -1369,9 +1369,19 @@
       font-weight:800;
       background:#fff;
     }
+    .sub-wave-order{display:flex;align-items:center;gap:5px;justify-self:end}
+    .sub-wave-order .sub-move{
+      min-height:30px;
+      padding:5px 8px;
+      font-size:.64rem;
+      white-space:nowrap;
+    }
+    .sub-wave-order .sub-move:disabled{opacity:.35;cursor:not-allowed}
     @media(max-width:650px){
-      #lineups .sub-wave-head{grid-template-columns:1fr;gap:5px}
-      #lineups .sub-wave-name{width:100%;font-size:.66rem!important;min-height:32px!important}
+      #lineups .sub-wave-head{grid-template-columns:1fr auto;gap:5px}
+      #lineups .sub-wave-name{grid-column:1/-1;width:100%;font-size:.66rem!important;min-height:32px!important}
+      #lineups .sub-wave-order{grid-column:2;grid-row:1}
+      #lineups .sub-wave-order .sub-move{padding:5px 7px;font-size:.61rem}
     }
 
     .sub-event-number{
@@ -1445,7 +1455,7 @@
     body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete{display:none!important}
     body.viewer-mode #gameday #statusControls,body.viewer-mode #gameday .event-buttons,body.viewer-mode #gameday #eventEditor,body.viewer-mode #gameday #saveMotmBtn,body.viewer-mode #gameday #clearMotmBtn{display:none!important}
     body.viewer-mode #gameday #motmPlayer,body.viewer-mode #gameday #motmReason,body.viewer-mode #gameday #motmManualName,body.viewer-mode #gameday #motmManualNumber,body.viewer-mode #gameday #motmMatchNumber{pointer-events:none;opacity:.72}
-    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups #updateProductionFromCurrentBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups .variation-final,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
+    body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups #updateProductionFromCurrentBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups .variation-final,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .sub-move,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
     body.viewer-mode #lineups .player-pool,body.viewer-mode #lineups .soccer-pitch,body.viewer-mode #lineups .bench-zone,body.viewer-mode #lineups .depth-grid,body.viewer-mode #lineups .sub-plan{pointer-events:none}
     body.viewer-mode #lineups .player-card,body.viewer-mode #lineups .depth-chip,body.viewer-mode #lineups .sub-player-chip{cursor:default!important}
     @media(max-width:650px){.portal-role-badge{order:3}.viewer-banner{align-items:flex-start;flex-direction:column}}
@@ -3562,15 +3572,33 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function subRowHTML(record,phase,index=null,removable=false){
     const suffix=index===null?phase:phase+'-'+index;
     const waveLabel=String(record?.label||"");
+    const rowCount=Array.isArray(state.subs?.[phase])?state.subs[phase].length:0;
+    const canMoveUp=Number.isInteger(index)&&index>0;
+    const canMoveDown=Number.isInteger(index)&&index<rowCount-1;
+    const orderControls='<div class="sub-wave-order">'+
+      '<button class="mini-btn sub-move" type="button" data-sub-move="-1" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" title="Move this wave earlier" aria-label="Move this substitution wave up"'+(canMoveUp?'':' disabled')+'>↑ Up</button>'+
+      '<button class="mini-btn sub-move" type="button" data-sub-move="1" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" title="Move this wave later" aria-label="Move this substitution wave down"'+(canMoveDown?'':' disabled')+'>↓ Down</button>'+
+      '</div>';
     return '<div class="sub-row multi-sub" data-sub-row="'+esc(suffix)+'">'+
       '<div class="sub-wave-head"><div class="sub-event-number">'+ordinal(index+1)+' planned sub</div>'+
-      '<input class="sub-wave-name" type="text" maxlength="40" placeholder="Optional wave name — e.g. Defensive Subs" value="'+esc(waveLabel)+'" data-sub-wave-name="1" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'"></div>'+
+      '<input class="sub-wave-name" type="text" maxlength="40" placeholder="Optional wave name — e.g. Defensive Subs" value="'+esc(waveLabel)+'" data-sub-wave-name="1" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'">'+
+      orderControls+'</div>'+
       subChipListHTML(record.out,phase,index,'out')+
       '<span class="sub-arrow">→</span>'+
       subChipListHTML(record.in,phase,index,'in')+
       (removable?'<button class="mini-btn sub-remove" type="button" data-sub-remove="'+index+'" data-sub-phase="'+esc(phase)+'" title="Remove this planned sub">×</button>':'<span></span>')+
       subWaveBenchHTML(phase,index)+
       '</div>';
+  }
+
+  function moveSubWave(phase,index,direction){
+    const rows=state.subs?.[phase];
+    const from=Number(index),step=Number(direction);
+    const target=from+step;
+    if(!Array.isArray(rows)||!Number.isInteger(from)||![ -1,1 ].includes(step)||target<0||target>=rows.length)return -1;
+    const [moved]=rows.splice(from,1);
+    rows.splice(target,0,moved);
+    return target;
   }
 
   function firstHalfBenchCoverage(snapshot=state){
@@ -3646,6 +3674,18 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       persistDraft();
       renderSubPlan();
       markStatus('Sub plan changed. Save a variation to share it.');
+    }));
+    box.querySelectorAll('[data-sub-move]').forEach(btn=>btn.addEventListener('click',()=>{
+      const phase=btn.dataset.subPhase;
+      const idx=+btn.dataset.subIndex;
+      const direction=+btn.dataset.subMove;
+      const moved=state.subs?.[phase]?.[idx];
+      const target=moveSubWave(phase,idx,direction);
+      if(target<0)return;
+      persistDraft();
+      renderSubPlan();
+      const label=String(moved?.label||"").trim();
+      markStatus((label?'"'+label+'"':'Substitution wave')+' moved '+(direction<0?'earlier':'later')+'. Save the variation to share the new order.');
     }));
     box.querySelectorAll('[data-sub-remove]').forEach(btn=>btn.addEventListener('click',()=>{
       const phase=btn.dataset.subPhase;

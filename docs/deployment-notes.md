@@ -1,3 +1,15 @@
+## v51.39 — Reorder substitution waves
+
+- Every first-half and second-half substitution wave now has **↑ Up** and **↓ Down** controls.
+- Captains can add a new wave at the end and move it between existing waves.
+- Reordering stays within the selected half and immediately renumbers all waves.
+- The **Bench after this wave** calculations and lineup export order update immediately after a move.
+- First and last waves disable unavailable move directions.
+- Existing saved lineup data remains compatible because waves were already stored as ordered arrays.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Affected file: `admin.html`.
+
 ## v51.38 — Show every substitution wave on export
 
 - The lineup image export no longer limits each half to four substitution waves.
