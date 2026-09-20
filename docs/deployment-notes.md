@@ -1,3 +1,13 @@
+## v52.4 — Game context for selected player comments
+
+- Every team or private player comment selected with **Use with AI** now shows its related matchup and game date in the Captain Notebook.
+- The protected AI payload includes a structured `related_game` object with the match ID, kickoff date, home team, and away team for each selected comment.
+- The AI is explicitly instructed to keep each player suggestion tied to that historical game and not confuse it with the upcoming target match.
+- Player names and jersey numbers remain excluded from the AI payload.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Updated assets: `admin.html`, `captain-notebook.css`, `captain-notebook.js`, and `generate-pregame-talk`.
+
 ## v52.3 — Captain dropdown and player-input AI controls
 
 - Replaces the unreliable captain-name datalist with a true dropdown populated from the active captain and super-admin list.

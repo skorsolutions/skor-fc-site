@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v52.3-player-input-ai" />
+  <meta name="skor-build" content="captain-portal-v52.4-player-input-game-context" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <style>
@@ -5314,9 +5314,13 @@ function toggleAiPlayerComment(comment,matchId,button){
     updateAiPlayerCommentButton(button,false);
   }else{
     if(AI_PLAYER_COMMENT_SELECTION.size>=12){alert("Select up to 12 player comments for one AI briefing.");return;}
+    const relatedMatch=gameDayMatches.find(item=>String(item.id)===String(matchId))||{};
     AI_PLAYER_COMMENT_SELECTION.set(key,{
       comment_id:key,
       match_id:String(matchId||""),
+      kickoff:relatedMatch.kickoff||null,
+      home_team:String(relatedMatch.home_team||""),
+      away_team:String(relatedMatch.away_team||""),
       player_name:String(comment.display_name||"Player"),
       jersey_number:comment.jersey_number,
       visibility:comment.visibility==="captains"?"captains":"team",

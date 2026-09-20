@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.3 — isolated from the existing portal styles. */
+/* SKOR FC Captain Notebook v52.4 — isolated from the existing portal styles. */
 body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-dashboard-prompt{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;border-color:#d8bdc6;background:linear-gradient(135deg,#fff 0%,#fbf1f4 100%)}
 .notebook-dashboard-prompt[hidden]{display:none!important}
@@ -74,6 +74,8 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-player-input-list{display:grid;gap:6px;color:#68707a;font-size:.61rem;line-height:1.4}
 .notebook-player-input-item{border:1px solid #dfe4eb;border-radius:9px;background:#fff;padding:8px}
 .notebook-player-input-item strong{color:#343a43;font-size:.65rem}
+.notebook-player-input-match{margin-top:6px;color:#596574;font-size:.57rem}
+.notebook-player-input-match strong{font-size:inherit}
 .notebook-player-input-item p{margin:5px 0 0;color:#555d67}
 .notebook-player-input-visibility{display:inline-flex;margin-left:6px;border-radius:999px;background:#e7f0ea;color:#356249;padding:2px 5px;font-size:.49rem;font-weight:900;text-transform:uppercase}
 .notebook-player-input-visibility.private{background:#f4e5e9;color:#8a2942}

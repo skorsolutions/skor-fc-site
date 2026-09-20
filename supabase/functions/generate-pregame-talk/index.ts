@@ -163,14 +163,22 @@ Deno.serve(async (req: Request) => {
     rsvp_status: clean(row.rsvp_status, 20) || "no_response",
     attendance_status: clean(row.attendance_status, 20) || "unmarked",
   }));
-  const playerCommentContext = selectedPlayerComments.map((row) => ({
-    source: "player_input",
-    author_role: "player",
-    visibility: row.visibility === "captains" ? "private_to_captains" : "team_visible",
-    match: matchMap.get(row.match_id) ?? { id: row.match_id },
-    comment: clean(row.comment, 1500),
-    created_at: row.created_at,
-  }));
+  const playerCommentContext = selectedPlayerComments.map((row) => {
+    const relatedMatch = matchMap.get(row.match_id);
+    return {
+      source: "player_input",
+      author_role: "player",
+      visibility: row.visibility === "captains" ? "private_to_captains" : "team_visible",
+      related_game: relatedMatch ? {
+        id: relatedMatch.id,
+        date: relatedMatch.kickoff,
+        home_team: relatedMatch.home_team,
+        away_team: relatedMatch.away_team,
+      } : { id: row.match_id },
+      comment: clean(row.comment, 1500),
+      created_at: row.created_at,
+    };
+  });
 
   const context = {
     target_match: matchResult.data,
@@ -190,6 +198,7 @@ Use your general soccer knowledge only for clearly labeled tactical suggestions.
 Build on recorded improvements as well as problems. Reinforce what improved and identify what caused that progress when the debriefs support it.
 Use attendance only for practical availability, unit-balance, and substitution-aware suggestions. Do not mention a player's RSVP or attendance status in the talk unless the captain's current request explicitly asks for it.
 Captain-selected player comments are player opinions or suggestions, not captain observations and not established facts. If you use one, assign the source player_input and phrase the point as something the team can consider—not something the captains already concluded.
+Every selected player comment includes a related_game with its matchup and date. Keep the comment tied to that game as historical context, and never imply it came from the target match unless the game IDs match.
 Never identify the player who wrote a selected comment in the team talk. Generalize captains-only comments so private feedback cannot reveal its author or private status.
 Do not publicly single out a player for criticism or present sensitive observations as facts to the whole team. Convert weaknesses into constructive team or unit instructions.
 Produce ${speechLength === "quick" ? "six concise bullets for roughly a 60-second talk" : "six to eight concise bullets for roughly a two-minute talk"}.

@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.3
+/* SKOR FC Captain Notebook v52.4
    Kept in a separate file so the existing lineup, Game Day, and portal engines remain isolated. */
 (function(){
   "use strict";
@@ -374,7 +374,10 @@
     const host=el("notebookPlayerInputList"),clear=el("notebookClearPlayerInputsBtn");if(!host)return;
     const rows=selectedPlayerInputs();
     if(clear)clear.hidden=!rows.length;
-    host.innerHTML=rows.length?rows.map(item=>`<div class="notebook-player-input-item"><strong>#${esc(item.jersey_number)} ${esc(item.player_name||"Player")}</strong><span class="notebook-player-input-visibility ${item.visibility==="captains"?"private":""}">${item.visibility==="captains"?"Private to Captains":"Team Comment"}</span><p>${esc(text(item.comment).slice(0,220))}</p></div>`).join(""):'<span>No player comments selected. Use <strong>Use with AI</strong> in Game Day → RSVP &amp; Player Feedback.</span>';
+    host.innerHTML=rows.length?rows.map(item=>{
+      const relatedMatch=matchById(item.match_id)||item;
+      return `<div class="notebook-player-input-item"><strong>#${esc(item.jersey_number)} ${esc(item.player_name||"Player")}</strong><span class="notebook-player-input-visibility ${item.visibility==="captains"?"private":""}">${item.visibility==="captains"?"Private to Captains":"Team Comment"}</span><div class="notebook-player-input-match"><strong>Game:</strong> ${esc(matchLabel(relatedMatch))}</div><p>${esc(text(item.comment).slice(0,220))}</p></div>`;
+    }).join(""):'<span>No player comments selected. Use <strong>Use with AI</strong> in Game Day → RSVP &amp; Player Feedback.</span>';
   }
 
   function normalizePregameBrief(raw){
