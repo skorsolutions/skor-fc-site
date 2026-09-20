@@ -36,7 +36,7 @@ const outputSchema = {
         required: ["category", "source", "text"],
         properties: {
           category: { type: "string", enum: ["progress", "priority", "tactical", "mentality", "set_piece"] },
-          source: { type: "string", enum: ["last_game", "attendance", "captain_priority", "player_input", "ai_strategy"] },
+          source: { type: "string", enum: ["last_game", "attendance", "captain_priority", "lineup_plan", "player_input", "ai_strategy"] },
           text: { type: "string", description: "One direct, spoken bullet point with an actionable message." },
         },
       },
@@ -91,20 +91,22 @@ Deno.serve(async (req: Request) => {
   const captainFocus = clean(input.captain_focus, 1200);
 
   // Approved AI scope: the selected match, its attendance/availability, completed
-  // captain-shared debriefs, the persistent captain-curated player reference
-  // library, and the captain's current generator inputs only.
-  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult, playerRefResult] = await Promise.all([
+  // captain-shared debriefs, its Production/Final lineup plan, the persistent
+  // captain-curated player reference library, and current generator inputs only.
+  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult, playerRefResult, lineupResult, tempPlayerResult] = await Promise.all([
     client.from("matches").select("id,kickoff,home_team,away_team,location,status").eq("id", matchId).single(),
     client.from("captain_match_debriefs")
       .select("id,match_id,captain_name,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at")
       .eq("status", "completed").order("completed_at", { ascending: false }).limit(6),
     client.rpc("get_match_rsvp_attendance", { p_match_id: matchId }),
-    client.from("team_roster").select("id,full_name,preferred_name,jersey_number").eq("active", true).order("jersey_number", { ascending: true }),
+    client.from("team_roster").select("id,player_key,full_name,preferred_name,jersey_number,active").order("jersey_number", { ascending: true }),
     client.from("captain_player_name_aliases").select("alias,player_id").eq("resolution", "player"),
     client.from("captain_ai_player_comment_refs").select("comment_id,match_id,created_at").order("created_at", { ascending: false }),
+    client.rpc("get_production_lineup", { p_match_id: matchId }),
+    client.from("match_temp_players").select("id,display_name,jersey_number,active").eq("match_id", matchId),
   ]);
   if (matchResult.error) return json({ error: "The selected match could not be loaded." }, 400, origin);
-  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error || playerRefResult.error) {
+  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error || playerRefResult.error || lineupResult.error || tempPlayerResult.error) {
     return json({ error: "Approved team context could not be loaded." }, 500, origin);
   }
 
@@ -185,12 +187,94 @@ Deno.serve(async (req: Request) => {
     if (!aliasesByPlayer.has(playerId)) aliasesByPlayer.set(playerId, []);
     aliasesByPlayer.get(playerId)?.push(alias);
   });
-  const playerIdentityGuide = (rosterResult.data ?? []).map((row) => ({
+  const playerIdentityGuide = (rosterResult.data ?? []).filter((row) => row.active !== false).map((row) => ({
     player_id: row.id,
     first_name: (clean(row.preferred_name, 80) || clean(row.full_name, 160).split(/\s+/)[0] || "Player").split(/\s+/)[0],
     jersey_number: row.jersey_number,
     confirmed_aliases: aliasesByPlayer.get(String(row.id)) ?? [],
   }));
+
+  const savedLineup = Array.isArray(lineupResult.data) ? lineupResult.data[0] : lineupResult.data;
+  const savedState = savedLineup?.state && typeof savedLineup.state === "object"
+    ? savedLineup.state as Record<string, unknown>
+    : null;
+  const playerBySavedKey = new Map<string, { first_name: string; jersey_number: unknown; temporary: boolean }>();
+  (rosterResult.data ?? []).forEach((row) => {
+    const identity = {
+      first_name: (clean(row.preferred_name, 80) || clean(row.full_name, 160).split(/\s+/)[0] || "Player").split(/\s+/)[0],
+      jersey_number: row.jersey_number,
+      temporary: false,
+    };
+    [row.id, row.player_key].map((value) => clean(value, 160)).filter(Boolean)
+      .forEach((key) => playerBySavedKey.set(key, identity));
+  });
+  (tempPlayerResult.data ?? []).forEach((row) => {
+    const identity = {
+      first_name: clean(row.display_name, 80).split(/\s+/)[0] || "TEMP",
+      jersey_number: row.jersey_number,
+      temporary: true,
+    };
+    playerBySavedKey.set(`temp:${row.id}`, identity);
+  });
+  const lineupPlayer = (raw: unknown) => {
+    const key = clean(raw, 160);
+    return playerBySavedKey.get(key) ?? { first_name: "Unresolved saved player", jersey_number: null, temporary: key.startsWith("temp:") };
+  };
+  const objectValue = (raw: unknown) => raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
+  const playerList = (raw: unknown) => (Array.isArray(raw) ? raw : []).map(lineupPlayer);
+  const substitutionRows = (raw: unknown, phase: "first_half" | "second_half") => (Array.isArray(raw) ? raw : []).flatMap((item, index) => {
+    const row = objectValue(item);
+    const playersOut = playerList(row.out), playersIn = playerList(row.in);
+    if (!playersOut.length && !playersIn.length) return [];
+    return [{
+      phase,
+      order: index + 1,
+      label: clean(row.label, 80),
+      players_out: playersOut,
+      players_in: playersIn,
+    }];
+  });
+  const productionLineupContext = savedState ? (() => {
+    const formation = clean(savedState.formation, 40) || "Unspecified";
+    const slots = objectValue(savedState.slots);
+    const freeform = objectValue(savedState.freeform);
+    const depth = objectValue(savedState.depth);
+    const subs = objectValue(savedState.subs);
+    const startingLineup = formation === "Freeform"
+      ? Object.entries(freeform).map(([key, rawPoint]) => {
+        const point = objectValue(rawPoint);
+        return {
+          position: "freeform_board",
+          player: lineupPlayer(key),
+          board_x_percent: Number.isFinite(Number(point.x)) ? Number(point.x) : null,
+          board_y_percent: Number.isFinite(Number(point.y)) ? Number(point.y) : null,
+        };
+      })
+      : Object.entries(slots).filter(([, key]) => clean(key, 160)).map(([position, key]) => ({
+        position: clean(position, 40),
+        player: lineupPlayer(key),
+      }));
+    return {
+      status: "production_final",
+      name: clean(savedLineup?.name, 140),
+      updated_at: savedLineup?.updated_at ?? savedLineup?.created_at ?? null,
+      formation,
+      starting_lineup: startingLineup,
+      bench: playerList(savedState.bench),
+      depth_chart: Object.entries(depth).map(([position, rawPlayers]) => ({
+        position: clean(position, 40),
+        ranked_players: playerList(rawPlayers),
+      })),
+      planned_substitutions: [
+        ...substitutionRows(subs.firstHalf, "first_half"),
+        ...substitutionRows(subs.secondHalf, "second_half"),
+      ],
+      second_half_waves_visible_on_export: savedState.showSecondHalfSubs === true,
+      field_captain: clean(savedState.captainId, 160) ? lineupPlayer(savedState.captainId) : null,
+      captain_quote: clean(savedState.quote, 200),
+      gameplan_notes: clean(savedState.notes, 1200),
+    };
+  })() : null;
 
   const context = {
     target_match: matchResult.data,
@@ -200,6 +284,7 @@ Deno.serve(async (req: Request) => {
     captain_priority: captainFocus,
     completed_debriefs: debriefContext,
     selected_match_attendance: attendanceContext,
+    production_lineup: productionLineupContext,
     captain_selected_player_comments: playerCommentContext,
     player_identity_guide: playerIdentityGuide,
   };
@@ -210,6 +295,9 @@ Use completed captain-shared debriefs and selected-match attendance as evidence.
 Use your general soccer knowledge only for clearly labeled tactical suggestions. Never invent an observation about SKOR FC, the opponent, or a player.
 Build on recorded improvements as well as problems. Reinforce what improved and identify what caused that progress when the debriefs support it.
 Use attendance only for practical availability, unit-balance, and substitution-aware suggestions. Do not mention a player's RSVP or attendance status in the talk unless the captain's current request explicitly asks for it.
+When production_lineup is present, treat it as the captains' current authoritative plan for this target match. Use its formation, position assignments, bench, ranked depth chart, substitution order, field captain, and game-plan notes together—not as isolated facts. Points drawn directly from this plan must use the source lineup_plan.
+The depth chart is ranked coverage by position, not a second starting lineup. Planned substitutions are ordered waves; preserve their phase and order. Second-half waves remain valid saved planning context even when second_half_waves_visible_on_export is false.
+Do not casually contradict the Production/Final plan. You may identify a coverage, workload, transition, or communication risk and offer a clearly labeled ai_strategy contingency. If production_lineup is null, do not invent lineup assignments or substitution plans.
 Captain-selected player comments are player opinions or suggestions, not captain observations and not established facts. If you use one, assign the source player_input and phrase the point as something the team can consider—not something the captains already concluded.
 Every selected player comment includes a related_game with its matchup and date. Keep the comment tied to that game as historical context, and never imply it came from the target match unless the game IDs match.
 The player's first/preferred name and jersey number are included for useful coaching context. Team-visible input may support constructive player-specific coaching when relevant.
@@ -255,6 +343,14 @@ Keep each bullet direct, positive, specific, and actionable. Separate evidence-b
 
   return json({
     brief,
-    context: { debrief_count: debriefContext.length, attendance_count: attendanceContext.length, player_comment_count: playerCommentContext.length },
+    context: {
+      debrief_count: debriefContext.length,
+      attendance_count: attendanceContext.length,
+      player_comment_count: playerCommentContext.length,
+      lineup_included: productionLineupContext !== null,
+      lineup_name: productionLineupContext?.name ?? null,
+      lineup_starter_count: productionLineupContext?.starting_lineup.length ?? 0,
+      lineup_substitution_wave_count: productionLineupContext?.planned_substitutions.length ?? 0,
+    },
   }, 200, origin);
 });

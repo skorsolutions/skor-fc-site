@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.7 — isolated from the existing portal styles. */
+/* SKOR FC Captain Notebook v52.8 — isolated from the existing portal styles. */
 body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-dashboard-prompt{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;border-color:#d8bdc6;background:linear-gradient(135deg,#fff 0%,#fbf1f4 100%)}
 .notebook-dashboard-prompt[hidden]{display:none!important}

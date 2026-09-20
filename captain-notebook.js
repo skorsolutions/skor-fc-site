@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.7
+/* SKOR FC Captain Notebook v52.8
    Kept in a separate file so the existing lineup, Game Day, and portal engines remain isolated. */
 (function(){
   "use strict";
@@ -493,7 +493,7 @@
   }
 
   const PREGAME_CATEGORY_LABELS={progress:"Progress to Reinforce",priority:"Match Priority",tactical:"Tactical Detail",mentality:"Mentality",set_piece:"Set Piece"};
-  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
+  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",lineup_plan:"Saved Lineup Plan",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
 
   function selectedPlayerInputs(){
     const rows=window.SKORGetAiPlayerComments?.();
@@ -611,7 +611,10 @@
       if(!data?.brief)throw new Error(data?.error||"The AI generator returned no pregame talk.");
       renderPregameBrief(data.brief);
       const playerCount=Number(data.context?.player_comment_count||0);
-      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, drafts, and unselected player comments were not sent to AI. Review and edit before sharing.`,true);
+      const lineupName=text(data.context?.lineup_name),lineupIncluded=data.context?.lineup_included===true;
+      const lineupDetail=lineupIncluded?`, Production/Final lineup “${lineupName||"Saved Lineup"}” with ${Number(data.context?.lineup_starter_count||0)} starters and ${Number(data.context?.lineup_substitution_wave_count||0)} planned wave${Number(data.context?.lineup_substitution_wave_count||0)===1?"":"s"}`:"";
+      const lineupWarning=lineupIncluded?"":" No Production/Final lineup was found for this game, so lineup assignments were not sent.";
+      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${lineupDetail}${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, drafts, and unselected player comments were not sent to AI.${lineupWarning} Review and edit before sharing.`,true);
     }catch(error){
       setStatus("notebookPregameStatus","Could not generate talk: "+(error.message||error),false);
     }finally{state.pregameGenerating=false;button.disabled=false;button.textContent=original;}
