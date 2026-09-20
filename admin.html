@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.39-reorder-sub-waves" />
+  <meta name="skor-build" content="lineup-admin-v51.40-match-announcement-drafts" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -350,6 +350,8 @@
     .schedule-item-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
     .schedule-item h3{margin:0 0 4px;font-size:1rem}.schedule-item p{margin:3px 0;color:var(--muted);font-size:.88rem}
     .schedule-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+    .match-announcement-btn{border-color:#d5b7c1;background:#fff8fa;color:var(--maroon)}
+    .match-announcement-btn:hover{border-color:var(--maroon);background:#fff}
     .schedule-badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:.72rem;font-weight:900;background:#f2f3f5;color:#444}
     .schedule-badge.live{background:#f8e9ee;color:#8b1e3f}
     .form-status{display:none;margin:10px 0 0;padding:10px 12px;border-radius:10px;font-size:.86rem}
@@ -2200,6 +2202,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <h2>Create announcement</h2>
         <div class="sub">Publish team updates directly to the SKOR FC homepage.</div>
         <div class="notice">Live mode: announcements are stored in Supabase and published to skorfc.net.</div>
+        <div class="form-status" id="announcementDraftStatus"></div>
         <form class="form" id="announcementForm">
           <div class="fieldrow">
             <div><label>Type</label><select id="aType"><option>Team</option><option>Practice</option><option>Match</option><option>Fees</option><option>Field Change</option></select></div>
@@ -6125,10 +6128,61 @@ function syncPracticeLocation(){const sel=document.getElementById("practiceLocat
 document.getElementById("practiceLocation").addEventListener("change",syncPracticeLocation);syncPracticeLocation();
 practiceForm.addEventListener("submit",async e=>{e.preventDefault();if(!portalCanWrite()){viewerBlocked("save practices");return;}const id=document.getElementById("practiceId").value;const title=document.getElementById("practiceTitle").value.trim()||"SKOR FC Practice",date=document.getElementById("practiceDate").value,time=document.getElementById("practiceTime").value,locationChoice=document.getElementById("practiceLocation").value,location=(locationChoice==="other"?document.getElementById("practiceOtherLocation").value.trim():locationChoice),notes=document.getElementById("practiceNotes").value.trim();if(!date||!time||!location)return alert("Add the practice date, start time and location.");const starts_at=localIso(date,time);const {data:{user}}=await sb.auth.getUser();const payload={title,starts_at,location,notes:notes||null,published:true};const result=id?await sb.from("practices").update(payload).eq("id",id):await sb.from("practices").insert({...payload,created_by:user?.id||null});if(result.error){setScheduleMessage("practiceStatus","Could not save practice: "+result.error.message,false);return;}setScheduleMessage("practiceStatus",id?"Practice updated and published.":"Practice published to the homepage.",true);resetPracticeForm();{const sel=document.getElementById("practiceLocation");const preferred=[...sel.options].find(o=>fieldKey(o.value).includes("sweet apple park"));sel.value=preferred?.value||sel.options[0]?.value||"other";}document.getElementById("practiceOtherLocation").value="";syncPracticeLocation();await loadScheduleManager();});
 
+function matchArrivalTime(match){
+  const kickoff=new Date(match?.kickoff);
+  const arrival=match?.arrival_at?new Date(match.arrival_at):new Date(kickoff.getTime()-45*60*1000);
+  return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"}).format(arrival);
+}
+function matchAnnouncementDraft(match){
+  const home=String(match?.home_team||"Home Team").trim()||"Home Team";
+  const away=String(match?.away_team||"Away Team").trim()||"Away Team";
+  const kickoff=new Date(match?.kickoff);
+  const kickoffText=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"long",month:"long",day:"numeric",hour:"numeric",minute:"2-digit"}).format(kickoff);
+  const arrivalText=matchArrivalTime(match);
+  const skorSide=home.toLowerCase()==="skor fc"?"HOME":"AWAY";
+  const location=String(match?.location||"Location TBD").trim()||"Location TBD";
+  return {
+    type:"Match",
+    publishDate:localParts(new Date().toISOString()).date,
+    title:"Upcoming Match: "+home+" vs "+away,
+    body:[
+      home+" vs "+away,
+      "Kickoff: "+kickoffText,
+      "Arrive: "+arrivalText,
+      "Location: "+location,
+      "SKOR FC is "+skorSide+".",
+      "Bring BOTH KITS.",
+      "",
+      "Additional notes:"
+    ].join("\n")
+  };
+}
+window.createMatchAnnouncement=function(id){
+  if(!portalCanWrite()){viewerBlocked("create match announcements");return;}
+  const match=scheduleMatches.find(x=>String(x.id)===String(id));
+  if(!match)return;
+  const draft=matchAnnouncementDraft(match);
+  document.getElementById("aType").value=draft.type;
+  document.getElementById("aDate").value=draft.publishDate;
+  document.getElementById("aTitle").value=draft.title;
+  const body=document.getElementById("aBody");
+  body.value=draft.body;
+  const status=document.getElementById("announcementDraftStatus");
+  if(status){
+    status.textContent="Game details added. Review the announcement, add any extra notes, then publish when ready.";
+    status.className="form-status ok";
+  }
+  openView("announcements");
+  window.setTimeout(()=>{
+    document.getElementById("announcementForm")?.scrollIntoView({behavior:"smooth",block:"start"});
+    body.focus();
+    body.setSelectionRange(body.value.length,body.value.length);
+  },180);
+};
 function renderMatchManager(){
   const now=Date.now()-6*60*60*1000;
   const rows=scheduleMatches.filter(m=>new Date(m.kickoff).getTime()>=now || m.status!=="final");
-  matchScheduleList.innerHTML=rows.length?rows.map(m=>`<div class="schedule-item"><div class="schedule-item-head"><div><h3>${scheduleEsc(m.home_team)} vs ${scheduleEsc(m.away_team)}</h3><p><strong>${scheduleEsc(displayScheduleDate(m.kickoff))}</strong></p><p>${scheduleEsc(m.location||"")}</p><p><strong>Arrive ${scheduleEsc(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"}).format(new Date(new Date(m.kickoff).getTime()-45*60*1000)))}</strong> · Bring BOTH KITS</p></div><span class="schedule-badge ${m.published?"live":""}">${m.published?"PUBLISHED":"HIDDEN"}</span></div><div class="schedule-actions"><button class="btn btn-light" type="button" onclick="editScheduledMatch('${m.id}')">Edit</button><button class="btn btn-light" type="button" onclick="toggleScheduledMatch('${m.id}',${!m.published})">${m.published?"Hide":"Publish"}</button><button class="btn btn-light" type="button" onclick="deleteScheduledMatch('${m.id}')">Delete</button></div></div>`).join(""):'<div class="sub">No matches scheduled.</div>';
+  matchScheduleList.innerHTML=rows.length?rows.map(m=>`<div class="schedule-item"><div class="schedule-item-head"><div><h3>${scheduleEsc(m.home_team)} vs ${scheduleEsc(m.away_team)}</h3><p><strong>${scheduleEsc(displayScheduleDate(m.kickoff))}</strong></p><p>${scheduleEsc(m.location||"")}</p><p><strong>Arrive ${scheduleEsc(matchArrivalTime(m))}</strong> · Bring BOTH KITS</p></div><span class="schedule-badge ${m.published?"live":""}">${m.published?"PUBLISHED":"HIDDEN"}</span></div><div class="schedule-actions"><button class="btn btn-light match-announcement-btn" type="button" onclick="createMatchAnnouncement('${m.id}')">Create Announcement</button><button class="btn btn-light" type="button" onclick="editScheduledMatch('${m.id}')">Edit</button><button class="btn btn-light" type="button" onclick="toggleScheduledMatch('${m.id}',${!m.published})">${m.published?"Hide":"Publish"}</button><button class="btn btn-light" type="button" onclick="deleteScheduledMatch('${m.id}')">Delete</button></div></div>`).join(""):'<div class="sub">No matches scheduled.</div>';
 }
 function setMatchDropdown(selectId,otherWrapId,otherInputId,value){const sel=document.getElementById(selectId),wrap=document.getElementById(otherWrapId),other=document.getElementById(otherInputId);const has=[...sel.options].some(o=>o.value===value&&o.value!=="other");if(has){sel.value=value;other.value="";wrap.style.display="none";}else{sel.value="other";other.value=value||"";wrap.style.display="block";}}
 function getMatchDropdownValue(selectId,otherInputId){const sel=document.getElementById(selectId);return sel.value==="other"?document.getElementById(otherInputId).value.trim():sel.value;}
@@ -6240,6 +6294,8 @@ form.addEventListener("submit",async e=>{
 
   form.reset();
   document.getElementById("aDate").valueAsDate=new Date();
+  const draftStatus=document.getElementById("announcementDraftStatus");
+  if(draftStatus){draftStatus.textContent="";draftStatus.className="form-status";}
   await loadAnnouncements();
 });
 

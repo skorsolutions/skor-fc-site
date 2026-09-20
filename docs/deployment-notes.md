@@ -1,3 +1,14 @@
+## v51.40 — Create announcements from scheduled games
+
+- Each scheduled game now includes a **Create Announcement** action.
+- The action opens the existing announcement editor and prefills the match type, current publish date, matchup, kickoff, arrival time, location, home/away status, and the reminder to bring both kits.
+- The message ends with an **Additional notes** area and remains fully editable before publication.
+- Creating the draft does not publish anything; the captain must still review it and press **Publish Announcement**.
+- The scheduled match's saved arrival time is used when available, with the existing 45-minute fallback otherwise.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Affected file: `admin.html`.
+
 ## v51.39 — Reorder substitution waves
 
 - Every first-half and second-half substitution wave now has **↑ Up** and **↓ Down** controls.
