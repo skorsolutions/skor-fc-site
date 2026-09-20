@@ -168,6 +168,8 @@ Deno.serve(async (req: Request) => {
     return {
       source: "player_input",
       author_role: "player",
+      player_first_name: clean(row.display_name, 80).split(/\s+/)[0] || "Player",
+      jersey_number: row.jersey_number,
       visibility: row.visibility === "captains" ? "private_to_captains" : "team_visible",
       related_game: relatedMatch ? {
         id: relatedMatch.id,
@@ -199,7 +201,8 @@ Build on recorded improvements as well as problems. Reinforce what improved and 
 Use attendance only for practical availability, unit-balance, and substitution-aware suggestions. Do not mention a player's RSVP or attendance status in the talk unless the captain's current request explicitly asks for it.
 Captain-selected player comments are player opinions or suggestions, not captain observations and not established facts. If you use one, assign the source player_input and phrase the point as something the team can consider—not something the captains already concluded.
 Every selected player comment includes a related_game with its matchup and date. Keep the comment tied to that game as historical context, and never imply it came from the target match unless the game IDs match.
-Never identify the player who wrote a selected comment in the team talk. Generalize captains-only comments so private feedback cannot reveal its author or private status.
+The player's first/preferred name and jersey number are included for useful coaching context. Team-visible input may support constructive player-specific coaching when relevant.
+For private_to_captains input, never reveal or imply who authored the comment. Generalize its concern so the team talk cannot expose the author or the comment's private status.
 Do not publicly single out a player for criticism or present sensitive observations as facts to the whole team. Convert weaknesses into constructive team or unit instructions.
 Produce ${speechLength === "quick" ? "six concise bullets for roughly a 60-second talk" : "six to eight concise bullets for roughly a two-minute talk"}.
 Keep each bullet direct, positive, specific, and actionable. Separate evidence-based observations from AI soccer suggestions using the required source field.`;

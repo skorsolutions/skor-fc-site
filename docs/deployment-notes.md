@@ -1,3 +1,13 @@
+## v52.5 — Useful player identity in AI context
+
+- Captain-selected player comments now include the player's jersey number and first/preferred name in the protected AI context.
+- Full names, email addresses, and other roster contact information remain excluded.
+- Team-visible input may support constructive player-specific coaching when relevant.
+- Private-to-captains input retains its protection: the generated team talk must not identify or imply who authored it.
+- **SQL needed:** No.
+- **Database changes performed:** None. Persistent nickname matching remains pending separate database approval.
+- Updated assets: `admin.html` and `generate-pregame-talk`.
+
 ## v52.4 — Game context for selected player comments
 
 - Every team or private player comment selected with **Use with AI** now shows its related matchup and game date in the Captain Notebook.
