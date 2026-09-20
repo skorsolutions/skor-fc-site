@@ -1,3 +1,13 @@
+## v51.37 — Overwrite same-name lineup variations
+
+- Saving a lineup now updates the newest existing variation when the selected game and trimmed lineup name match.
+- Name matching is case-insensitive, so `Balanced` and `balanced` are treated as the same lineup within one game.
+- The same lineup name can still exist independently under different games.
+- The rule applies to both **Save Variation** and **Copy Current to Game**.
+- Existing historical duplicate rows are preserved; this change prevents new duplicates during normal captain saves.
+- No Supabase schema, policy, or direct data changes were made.
+- Affected file: `admin.html`.
+
 ## v51.36 — Bench tracker beneath substitution waves
 
 - Each planned substitution wave now shows a compact **Bench after this wave** panel directly beneath it.

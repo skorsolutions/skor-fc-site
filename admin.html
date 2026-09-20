@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.36-wave-bench-tracker" />
+  <meta name="skor-build" content="lineup-admin-v51.37-overwrite-same-name" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -3771,6 +3771,33 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     lineupCopyContext=null;
   }
 
+  function normalizedVariationName(value){
+    return String(value||"").trim().toLowerCase();
+  }
+
+  async function saveOrOverwriteVariation(sb,payload){
+    const targetEventKey=String(payload?.event_key||"tinker");
+    const targetName=normalizedVariationName(payload?.name);
+    const {data:existingRows,error:lookupError}=await sb.from("lineup_variations")
+      .select("id,name,is_production,created_at")
+      .eq("event_key",targetEventKey)
+      .order("created_at",{ascending:false});
+    if(lookupError)throw lookupError;
+
+    const existing=(existingRows||[]).find(row=>normalizedVariationName(row.name)===targetName);
+    if(existing){
+      const {error:updateError}=await sb.from("lineup_variations")
+        .update({...payload,updated_at:new Date().toISOString()})
+        .eq("id",existing.id);
+      if(updateError)throw updateError;
+      return {overwritten:true,id:existing.id,isProduction:existing.is_production===true};
+    }
+
+    const {error:insertError}=await sb.from("lineup_variations").insert(payload);
+    if(insertError)throw insertError;
+    return {overwritten:false,id:null,isProduction:false};
+  }
+
   async function confirmCopyLineup(){
     if(!lineupCopyContext)return;
     if(!window.SKORPortalCanWrite?.()){
@@ -3803,13 +3830,15 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         created_by_name:fullName,
         created_by_email:user.email||null
       };
-      const {error}=await sb.from("lineup_variations").insert(payload);
-      if(error)throw error;
+      const saveResult=await saveOrOverwriteVariation(sb,payload);
 
       const sourceName=lineupCopyContext?.sourceName||name;
       closeCopyLineupDialog();
       await refreshVariations(false);
-      markStatus('Copied "'+sourceName+'" to '+formatMatch(target)+' as "'+name+'".'+(removed.length?' '+removed.length+' TEMP player'+(removed.length===1?' was':'s were')+' removed from the copy.':''));
+      markStatus((saveResult.overwritten
+        ? 'Updated existing lineup "'+name+'" for '+formatMatch(target)+'.'
+        : 'Copied "'+sourceName+'" to '+formatMatch(target)+' as "'+name+'".')+
+        (removed.length?' '+removed.length+' TEMP player'+(removed.length===1?' was':'s were')+' removed from the copy.':''));
     }catch(err){
       markStatus("Could not copy lineup: "+(err?.message||err),false);
     }finally{
@@ -4273,14 +4302,17 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         created_by_name:fullName,
         created_by_email:user.email||null
       };
-      const {error}=await sb.from('lineup_variations').insert(payload);
-      if(error) throw error;
+      const saveResult=await saveOrOverwriteVariation(sb,payload);
       persistDraft();
       await refreshVariations(false);
       if(eventKey()==='tinker') await refreshTinkerVariations();
-      markStatus(eventKey()==='tinker'
-        ? 'Saved shared Tinker board "'+name+'". Every captain can now load it.'
-        : 'Saved shared variation "'+name+'". Every captain can now see it.');
+      markStatus(saveResult.overwritten
+        ? (eventKey()==='tinker'
+          ? 'Updated existing shared Tinker board "'+name+'".'
+          : 'Updated existing shared variation "'+name+'".')
+        : (eventKey()==='tinker'
+          ? 'Saved shared Tinker board "'+name+'". Every captain can now load it.'
+          : 'Saved shared variation "'+name+'". Every captain can now see it.'));
     }catch(err){
       markStatus('Could not save shared variation: '+(err?.message||err),false);
     }finally{
