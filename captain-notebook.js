@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.6
+/* SKOR FC Captain Notebook v52.7
    Kept in a separate file so the existing lineup, Game Day, and portal engines remain isolated. */
 (function(){
   "use strict";
@@ -92,21 +92,23 @@
     ["notebookSaveEntryBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn","notebookGeneratePregameBtn","notebookSavePregameBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=false;});
   }
 
-  function aliasPlayerOptions(selectedId=""){
-    const options=[...state.players]
+  function aliasPlayerOptions(selectedId="",mention=null){
+    const candidateIds=new Set((mention?.candidate_player_ids||[]).map(String));
+    const players=candidateIds.size?state.players.filter(player=>candidateIds.has(String(player.id))):state.players;
+    const options=[...players]
       .sort((a,b)=>Number(a.jersey_number)-Number(b.jersey_number))
       .map(player=>`<option value="${esc(player.id)}" ${String(player.id)===String(selectedId)?"selected":""}>#${esc(player.jersey_number)} ${esc(displayName(player))}</option>`)
       .join("");
-    return '<option value="">Choose a player…</option>'+options+'<option value="__not_player__">Not a player · do not ask again</option>';
+    return '<option value="">Choose a player…</option>'+options+(mention?.ambiguity?'':'<option value="__not_player__">Not a player · do not ask again</option>');
   }
 
-  function settleAliasReview(accepted){
-    if(state.aliasChecking&&!accepted)return;
+  function settleAliasReview(result){
+    if(state.aliasChecking&&!result)return;
     const dialog=el("notebookAliasDialog"),resolve=state.aliasReviewResolve;
     state.aliasReviewResolve=null;
     state.aliasMentions=[];
     if(dialog?.open)dialog.close();
-    if(resolve)resolve(accepted);
+    if(resolve)resolve(result);
   }
 
   function openAliasReview(mentions){
@@ -115,9 +117,13 @@
     state.aliasMentions=mentions;
     list.innerHTML=mentions.map((item,index)=>`<div class="notebook-alias-row" data-alias-row="${index}">
       <div class="notebook-alias-mention"><strong>“${esc(item.mention)}”</strong><small>${esc(item.reason||"Possible player nickname or alternate name.")}</small></div>
-      <select data-alias-choice="${index}" aria-label="Match ${esc(item.mention)} to a player">${aliasPlayerOptions(item.suggested_player_id)}</select>
+      <select data-alias-choice="${index}" aria-label="Match ${esc(item.mention)} to a player">${aliasPlayerOptions(item.suggested_player_id,item)}</select>
     </div>`).join("");
-    setStatus("notebookAliasStatus","Choose a roster player or mark the term as not a player.",true);
+    const hasAmbiguity=mentions.some(item=>item.ambiguity);
+    if(el("notebookAliasTitle"))el("notebookAliasTitle").textContent=hasAmbiguity?"Clarify player names":"Match unfamiliar player names";
+    if(el("notebookAliasIntro"))el("notebookAliasIntro").textContent=hasAmbiguity?"More than one active player uses the same first name. Choose the jersey number so the saved note and future AI suggestions refer to the right player.":"AI noticed names that do not yet match the roster or a remembered nickname. Confirm each one so future captain notes use the same player identity.";
+    if(el("notebookAliasConfirmBtn"))el("notebookAliasConfirmBtn").textContent=hasAmbiguity?"Clarify & Continue":"Remember & Continue";
+    setStatus("notebookAliasStatus",hasAmbiguity?"Choose the jersey number for every ambiguous name. The saved note will be clarified.":"Choose a roster player or mark the term as not a player.",true);
     return new Promise(resolve=>{
       state.aliasReviewResolve=resolve;
       dialog.showModal();
@@ -127,24 +133,33 @@
   async function confirmAliasReview(){
     if(state.aliasChecking||!state.aliasReviewResolve)return;
     const choices=[...el("notebookAliasList").querySelectorAll("[data-alias-choice]")];
-    if(choices.some(select=>!select.value))return setStatus("notebookAliasStatus","Match every name or choose “Not a player.”",false);
-    const records=choices.map(select=>{
-      const mention=state.aliasMentions[Number(select.dataset.aliasChoice)]?.mention||"";
+    if(choices.some(select=>!select.value))return setStatus("notebookAliasStatus",state.aliasMentions.some(item=>item.ambiguity)?"Choose the correct jersey number for every ambiguous name.":"Match every name or choose “Not a player.”",false);
+    const records=[],replacements=[];
+    choices.forEach(select=>{
+      const item=state.aliasMentions[Number(select.dataset.aliasChoice)]||{};
+      const mention=item.mention||"";
       const notPlayer=select.value==="__not_player__";
-      return {
+      if(item.ambiguity){
+        const player=playerById(select.value);
+        if(player)replacements.push({mention,replacement:`#${player.jersey_number} ${displayName(player)}`,candidate_jerseys:(item.candidate_jersey_numbers||[]).map(String)});
+        return;
+      }
+      records.push({
         alias:mention,
         player_id:notPlayer?null:select.value,
         resolution:notPlayer?"not_player":"player",
         confirmed_by:state.user.id,
         updated_at:new Date().toISOString()
-      };
+      });
     });
     const button=el("notebookAliasConfirmBtn"),original=button.textContent;
-    state.aliasChecking=true;button.disabled=true;button.textContent="Remembering…";
+    state.aliasChecking=true;button.disabled=true;button.textContent=records.length?"Remembering…":"Clarifying…";
     try{
-      const result=await sb().from(ALIAS_TABLE).upsert(records,{onConflict:"normalized_alias"});
-      if(result.error)throw result.error;
-      settleAliasReview(true);
+      if(records.length){
+        const result=await sb().from(ALIAS_TABLE).upsert(records,{onConflict:"normalized_alias"});
+        if(result.error)throw result.error;
+      }
+      settleAliasReview({accepted:true,replacements});
     }catch(error){
       setStatus("notebookAliasStatus","Could not remember player names: "+(error.message||error),false);
     }finally{
@@ -152,9 +167,28 @@
     }
   }
 
+  function applyPlayerNameReplacements(value,replacements){
+    let result=String(value??"");
+    (replacements||[]).forEach(item=>{
+      const mention=text(item.mention),replacement=text(item.replacement);if(!mention||!replacement)return;
+      const escaped=mention.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+      const jerseys=(item.candidate_jerseys||[]).map(value=>String(value).replace(/\D/g,"")).filter(Boolean);
+      const jerseyPattern=jerseys.length?jerseys.join("|"):"\\d+";
+      const pattern=new RegExp(`(^|[^\\p{L}\\p{N}_])(${escaped})(?![\\p{L}\\p{N}_])`,"giu");
+      result=result.replace(pattern,(whole,prefix,found,offset,source)=>{
+        const nameStart=Number(offset)+String(prefix).length;
+        const before=source.slice(Math.max(0,nameStart-10),nameStart);
+        const after=source.slice(nameStart+String(found).length,nameStart+String(found).length+10);
+        const alreadyNumbered=new RegExp(`(?:#\\s*)?(?:${jerseyPattern})\\s*$`,"i").test(before)||new RegExp(`^\\s*(?:#\\s*)?(?:${jerseyPattern})(?!\\d)`,"i").test(after);
+        return alreadyNumbered?whole:`${prefix}${replacement}`;
+      });
+    });
+    return result;
+  }
+
   async function checkPlayerNames(value,statusId){
     const content=text(value);
-    if(!content||state.checkedNameTexts.has(content))return true;
+    if(!content||state.checkedNameTexts.has(content))return {ok:true,replacements:[]};
     setStatus(statusId,"Checking player names and remembered nicknames…",true);
     try{
       const {data,error}=await sb().functions.invoke("check-player-names",{body:{text:content}});
@@ -164,14 +198,14 @@
         throw new Error(detail);
       }
       const mentions=Array.isArray(data?.mentions)?data.mentions.slice(0,8):[];
-      if(!mentions.length){state.checkedNameTexts.add(content);return true;}
-      const accepted=await openAliasReview(mentions);
-      if(accepted)state.checkedNameTexts.add(content);
-      return accepted;
+      if(!mentions.length){state.checkedNameTexts.add(content);return {ok:true,replacements:[]};}
+      const review=await openAliasReview(mentions);
+      if(review?.accepted)state.checkedNameTexts.add(content);
+      return {ok:!!review?.accepted,replacements:review?.replacements||[]};
     }catch(error){
       console.error("Player name check failed:",error);
       setStatus(statusId,"Player name check unavailable: "+(error.message||error),false);
-      return window.confirm("The player name check is unavailable. Save without checking names?");
+      return {ok:window.confirm("The player name check is unavailable. Save without checking names?"),replacements:[]};
     }
   }
 
@@ -340,6 +374,8 @@
       renderNotes();
       renderHistory();
       updateDashboardPrompt();
+      await window.SKORLoadAiPlayerComments?.({force:true});
+      renderSelectedPlayerInputs();
       setReady();
       if(!quiet)setStatus("notebookEntryStatus","Notebook refreshed.",true);
     }catch(error){
@@ -352,7 +388,7 @@
     event.preventDefault();
     if(!state.ready)return setStatus("notebookEntryStatus","Notebook database setup is still pending.",false);
     if(!window.SKORPortalCanWrite?.())return window.SKORViewerBlocked?.("save captain notes");
-    const title=text(el("notebookTitle")?.value),body=text(el("notebookBody")?.value);
+    let title=text(el("notebookTitle")?.value),body=text(el("notebookBody")?.value);
     if(!title||!body)return setStatus("notebookEntryStatus","Add a title and captain note.",false);
     const importName=text(el("notebookAttributedCaptain")?.value),sourceDate=el("notebookSourceDate")?.value;
     if(state.importMode&&!el("notebookMatch")?.value)return setStatus("notebookEntryStatus","Choose the game this WhatsApp note belongs to.",false);
@@ -360,8 +396,11 @@
     if(state.importMode&&(!sourceDate||Number.isNaN(new Date(sourceDate).valueOf())))return setStatus("notebookEntryStatus","Add the original WhatsApp message date and time.",false);
     const button=el("notebookSaveEntryBtn"),original=button.textContent;button.disabled=true;button.textContent="Checking names…";
     try{
-      const namesReady=await checkPlayerNames(`${title}\n${body}`,"notebookEntryStatus");
-      if(!namesReady){setStatus("notebookEntryStatus","Save canceled so player names can be reviewed.",false);return;}
+      const nameReview=await checkPlayerNames(`${title}\n${body}`,"notebookEntryStatus");
+      if(!nameReview.ok){setStatus("notebookEntryStatus","Save canceled so player names can be reviewed.",false);return;}
+      title=applyPlayerNameReplacements(title,nameReview.replacements);
+      body=applyPlayerNameReplacements(body,nameReview.replacements);
+      el("notebookTitle").value=title;el("notebookBody").value=body;
       button.textContent="Saving…";
       const payload={
         entry_type:el("notebookEntryType").value,
@@ -458,17 +497,39 @@
 
   function selectedPlayerInputs(){
     const rows=window.SKORGetAiPlayerComments?.();
-    return Array.isArray(rows)?rows.slice(0,12):[];
+    return Array.isArray(rows)?rows:[];
   }
 
   function renderSelectedPlayerInputs(){
-    const host=el("notebookPlayerInputList"),clear=el("notebookClearPlayerInputsBtn");if(!host)return;
+    const host=el("notebookPlayerInputList"),summary=el("notebookPlayerInputSummary"),count=el("notebookAiLibraryCount");if(!host)return;
     const rows=selectedPlayerInputs();
-    if(clear)clear.hidden=!rows.length;
-    host.innerHTML=rows.length?rows.map(item=>{
-      const relatedMatch=matchById(item.match_id)||item;
-      return `<div class="notebook-player-input-item"><strong>#${esc(item.jersey_number)} ${esc(item.player_name||"Player")}</strong><span class="notebook-player-input-visibility ${item.visibility==="captains"?"private":""}">${item.visibility==="captains"?"Private to Captains":"Team Comment"}</span><div class="notebook-player-input-match"><strong>Game:</strong> ${esc(matchLabel(relatedMatch))}</div><p>${esc(text(item.comment).slice(0,220))}</p></div>`;
-    }).join(""):'<span>No player comments selected. Use <strong>Use with AI</strong> in Game Day → RSVP &amp; Player Feedback.</span>';
+    const label=`${rows.length} saved comment${rows.length===1?"":"s"}`;
+    if(summary)summary.innerHTML=`<strong>${esc(label)}</strong><span>${rows.length?"These persistent references are automatically available to AI.":'Use <strong>Use with AI</strong> in Game Day to add persistent player context.'}</span>`;
+    if(count)count.textContent=label;
+    if(!rows.length){host.innerHTML='<div class="notebook-empty">No player comments saved yet. Use <strong>Use with AI</strong> in Game Day → RSVP &amp; Player Feedback.</div>';return;}
+    const groups=new Map();
+    rows.forEach(item=>{
+      const key=String(item.match_id||"unknown");
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push(item);
+    });
+    const grouped=[...groups.entries()].sort(([,a],[,b])=>new Date((matchById(b[0].match_id)||b[0]).kickoff||b[0].selected_at||0)-new Date((matchById(a[0].match_id)||a[0]).kickoff||a[0].selected_at||0));
+    host.innerHTML=grouped.map(([matchId,items])=>{
+      const relatedMatch=matchById(matchId)||items[0];
+      const newest=items.map(item=>new Date(item.selected_at||item.created_at||0).valueOf()).sort((a,b)=>b-a)[0];
+      return `<details class="notebook-ai-game-group">
+        <summary><span class="notebook-ai-game-title"><strong>${esc(matchLabel(relatedMatch))}</strong><span>${items.length} saved player comment${items.length===1?"":"s"}${newest?` · Updated ${esc(isoDate(newest))}`:""}</span></span></summary>
+        <div class="notebook-ai-game-items">${items.map(item=>`<article class="notebook-player-input-item">
+          <div class="notebook-player-input-main"><strong>#${esc(item.jersey_number)} ${esc(item.player_name||"Player")}</strong><span class="notebook-player-input-visibility ${item.visibility==="captains"?"private":""}">${item.visibility==="captains"?"Private to Captains":"Team Comment"}</span><p>${esc(text(item.comment))}</p><div class="notebook-player-input-meta">Commented ${esc(isoDateTime(item.created_at))}</div></div>
+          <button class="notebook-player-input-remove" type="button" data-ai-library-remove="${esc(item.comment_id)}">Remove from AI</button>
+        </article>`).join("")}</div>
+      </details>`;
+    }).join("");
+    host.querySelectorAll("[data-ai-library-remove]").forEach(button=>button.addEventListener("click",async()=>{
+      const original=button.textContent;button.disabled=true;button.textContent="Removing…";
+      try{await window.SKORRemoveAiPlayerComment?.(button.dataset.aiLibraryRemove);setStatus("notebookAiLibraryStatus","Player comment removed from the AI reference library.",true);}
+      catch(error){button.disabled=false;button.textContent=original;setStatus("notebookAiLibraryStatus","Could not remove the player comment: "+(error.message||error),false);}
+    }));
   }
 
   function normalizePregameBrief(raw){
@@ -531,7 +592,6 @@
     if(state.pregameGenerating)return;
     const matchId=el("notebookPregameMatch")?.value;
     if(!matchId)return setStatus("notebookPregameStatus","Choose an upcoming match first.",false);
-    const playerInputs=selectedPlayerInputs();
     const button=el("notebookGeneratePregameBtn"),original=button.textContent;
     state.pregameGenerating=true;button.disabled=true;button.textContent="Generating…";
     setStatus("notebookPregameStatus","Reviewing recent captain debriefs and building the talk…",true);
@@ -541,8 +601,7 @@
         tone:el("notebookPregameTone")?.value||"balanced",
         speech_length:el("notebookPregameLength")?.value||"standard",
         formation_context:text(el("notebookPregameFormation")?.value),
-        captain_focus:text(el("notebookPregameFocus")?.value),
-        selected_player_comments:playerInputs.map(item=>({comment_id:item.comment_id,match_id:item.match_id}))
+        captain_focus:text(el("notebookPregameFocus")?.value)
       }});
       if(error){
         let message=error.message||"The AI generator could not be reached.";
@@ -650,8 +709,15 @@
     const activeButton=requestedStatus==="completed"?completeButton:draftButton,oldText=activeButton.textContent;
     activeButton.textContent="Checking names…";
     try{
-      const namesReady=await checkPlayerNames(debriefNameCheckText(payload),"notebookDebriefStatus");
-      if(!namesReady){setStatus("notebookDebriefStatus","Save canceled so player names can be reviewed.",false);return;}
+      const nameReview=await checkPlayerNames(debriefNameCheckText(payload),"notebookDebriefStatus");
+      if(!nameReview.ok){setStatus("notebookDebriefStatus","Save canceled so player names can be reviewed.",false);return;}
+      const fieldIds={team_performance:"debriefTeamPerformance",improvements_since_last_game:"debriefImprovements",standouts:"debriefStandouts",tactical_observations:"debriefObservations",issues:"debriefIssues",position_changes:"debriefPositionChanges",practice_focus:"debriefPracticeFocus",additional_notes:"debriefAdditionalNotes"};
+      Object.entries(fieldIds).forEach(([key,id])=>{
+        payload[key]=applyPlayerNameReplacements(payload[key],nameReview.replacements)||null;
+        if(el(id))el(id).value=payload[key]||"";
+      });
+      state.playerDrafts.forEach(item=>{item.observation=applyPlayerNameReplacements(item.observation,nameReview.replacements);});
+      el("notebookPlayerGrid")?.querySelectorAll("[data-player-note]").forEach(input=>{input.value=state.playerDrafts.get(String(input.dataset.playerNote))?.observation||"";});
       activeButton.textContent="Saving…";
       const result=await sb().from(DEBRIEF_TABLE).upsert(payload,{onConflict:"match_id,captain_id"}).select().single();
       if(result.error)throw result.error;
@@ -816,7 +882,6 @@
     el("notebookSaveDraftBtn")?.addEventListener("click",()=>saveDebrief("draft"));
     el("notebookCompleteDebriefBtn")?.addEventListener("click",()=>saveDebrief("completed"));
     el("notebookGeneratePregameBtn")?.addEventListener("click",generatePregameTalk);
-    el("notebookClearPlayerInputsBtn")?.addEventListener("click",()=>window.SKORClearAiPlayerComments?.());
     window.addEventListener("skor:ai-player-comments-changed",renderSelectedPlayerInputs);
     el("notebookCopyPregameBtn")?.addEventListener("click",copyPregameTalk);
     el("notebookPrintPregameBtn")?.addEventListener("click",printPregameTalk);

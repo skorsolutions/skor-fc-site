@@ -89,23 +89,11 @@ Deno.serve(async (req: Request) => {
   const speechLength = input.speech_length === "quick" ? "quick" : "standard";
   const formationContext = clean(input.formation_context, 300);
   const captainFocus = clean(input.captain_focus, 1200);
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  const selectedPlayerRefs: Array<{ comment_id: string; match_id: string }> = [];
-  const seenCommentIds = new Set<string>();
-  for (const raw of Array.isArray(input.selected_player_comments) ? input.selected_player_comments : []) {
-    const row = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
-    const commentId = clean(row.comment_id, 64);
-    const commentMatchId = clean(row.match_id, 64);
-    if (!uuidPattern.test(commentId) || !uuidPattern.test(commentMatchId) || seenCommentIds.has(commentId)) continue;
-    selectedPlayerRefs.push({ comment_id: commentId, match_id: commentMatchId });
-    seenCommentIds.add(commentId);
-    if (selectedPlayerRefs.length >= 12) break;
-  }
 
   // Approved AI scope: the selected match, its attendance/availability, completed
-  // captain-shared debriefs, captain-selected player comments, and the captain's
-  // current generator inputs only.
-  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult] = await Promise.all([
+  // captain-shared debriefs, the persistent captain-curated player reference
+  // library, and the captain's current generator inputs only.
+  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult, playerRefResult] = await Promise.all([
     client.from("matches").select("id,kickoff,home_team,away_team,location,status").eq("id", matchId).single(),
     client.from("captain_match_debriefs")
       .select("id,match_id,captain_name,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at")
@@ -113,13 +101,18 @@ Deno.serve(async (req: Request) => {
     client.rpc("get_match_rsvp_attendance", { p_match_id: matchId }),
     client.from("team_roster").select("id,full_name,preferred_name,jersey_number").eq("active", true).order("jersey_number", { ascending: true }),
     client.from("captain_player_name_aliases").select("alias,player_id").eq("resolution", "player"),
+    client.from("captain_ai_player_comment_refs").select("comment_id,match_id,created_at").order("created_at", { ascending: false }),
   ]);
   if (matchResult.error) return json({ error: "The selected match could not be loaded." }, 400, origin);
-  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error) {
+  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error || playerRefResult.error) {
     return json({ error: "Approved team context could not be loaded." }, 500, origin);
   }
 
   const debriefs = (debriefResult.data ?? []).slice(0, 6);
+  const selectedPlayerRefs = (playerRefResult.data ?? []).map((row) => ({
+    comment_id: clean(row.comment_id, 64),
+    match_id: clean(row.match_id, 64),
+  })).filter((row) => row.comment_id && row.match_id);
   const selectedCommentMatchIds = [...new Set(selectedPlayerRefs.map((row) => row.match_id))];
   const selectedCommentResults = await Promise.all(selectedCommentMatchIds.map(async (commentMatchId) => ({
     match_id: commentMatchId,
@@ -222,6 +215,7 @@ Every selected player comment includes a related_game with its matchup and date.
 The player's first/preferred name and jersey number are included for useful coaching context. Team-visible input may support constructive player-specific coaching when relevant.
 For private_to_captains input, never reveal or imply who authored the comment. Generalize its concern so the team talk cannot expose the author or the comment's private status.
 Use player_identity_guide to resolve captain-confirmed nicknames in debriefs and notes. Never guess that an unfamiliar name belongs to a player when no confirmed mapping exists.
+When multiple roster entries share the same first_name, a bare first name is ambiguous. Do not attribute it to either player unless a jersey number or a confirmed unique alias identifies the player.
 Do not publicly single out a player for criticism or present sensitive observations as facts to the whole team. Convert weaknesses into constructive team or unit instructions.
 Produce ${speechLength === "quick" ? "six concise bullets for roughly a 60-second talk" : "six to eight concise bullets for roughly a two-minute talk"}.
 Keep each bullet direct, positive, specific, and actionable. Separate evidence-based observations from AI soccer suggestions using the required source field.`;

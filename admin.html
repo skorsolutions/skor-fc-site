@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v52.6-player-alias-memory" />
+  <meta name="skor-build" content="captain-portal-v52.7-persistent-ai-references" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <style>
@@ -2307,8 +2307,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div><label for="notebookPregameFormation">Formation or game-plan context (optional)</label><input id="notebookPregameFormation" maxlength="300" placeholder="Example: 4-2-3-1, stay compact, attack through the wings"></div>
             <div><label for="notebookPregameFocus">Anything the captains want emphasized? (optional)</label><textarea id="notebookPregameFocus" maxlength="1200" rows="4" placeholder="Example: Strong start, communicate through midfield, do not concede early set pieces."></textarea></div>
             <div class="notebook-player-inputs">
-              <div class="notebook-player-inputs-head"><label>Player comments selected for AI</label><button class="mini-btn" type="button" id="notebookClearPlayerInputsBtn" hidden>Clear All</button></div>
-              <div class="notebook-player-input-list" id="notebookPlayerInputList"><span>No player comments selected. Use <strong>Use with AI</strong> in Game Day → RSVP &amp; Player Feedback.</span></div>
+              <label>AI player reference library</label>
+              <div class="notebook-player-input-summary" id="notebookPlayerInputSummary"><strong>0 saved comments</strong><span>Use <strong>Use with AI</strong> in Game Day to add persistent player context.</span></div>
             </div>
             <button class="btn btn-primary" type="button" id="notebookGeneratePregameBtn">Generate Pregame Talk</button>
             <div class="form-status" id="notebookPregameStatus"></div>
@@ -2334,6 +2334,19 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="panel notebook-ai-library-panel" id="notebookAiLibraryPanel">
+        <div class="notebook-panel-head">
+          <div>
+            <span class="pill">Persistent AI Context</span>
+            <h2 style="margin:12px 0 4px">Player reference library</h2>
+            <div class="sub">Captain-selected player comments stay available to AI and are grouped by the game they came from.</div>
+          </div>
+          <span class="notebook-library-count" id="notebookAiLibraryCount">0 saved</span>
+        </div>
+        <div class="form-status" id="notebookAiLibraryStatus"></div>
+        <div class="notebook-ai-library" id="notebookPlayerInputList"><div class="notebook-empty">No player comments saved yet. Use <strong>Use with AI</strong> in Game Day → RSVP &amp; Player Feedback.</div></div>
       </div>
 
       <div class="panel notebook-debrief-panel" id="notebookDebriefPanel">
@@ -2390,7 +2403,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div><span class="pill">Player Name Memory</span><h2 id="notebookAliasTitle">Match unfamiliar player names</h2></div>
             <button class="notebook-alias-close" type="button" id="notebookAliasCancelXBtn" aria-label="Cancel player name review">×</button>
           </div>
-          <p class="notebook-alias-intro">AI noticed names that do not yet match the roster or a remembered nickname. Confirm each one so future captain notes use the same player identity.</p>
+          <p class="notebook-alias-intro" id="notebookAliasIntro">AI noticed names that do not yet match the roster or a remembered nickname. Confirm each one so future captain notes use the same player identity.</p>
           <div class="notebook-alias-list" id="notebookAliasList"></div>
           <div class="notebook-alias-privacy">Only this text, active-player first names and jersey numbers, and confirmed aliases are checked. OpenAI storage is disabled.</div>
           <div class="form-status" id="notebookAliasStatus"></div>
@@ -4732,6 +4745,7 @@ googleLogin.addEventListener("click", async ()=>{
 
 logoutBtn.addEventListener("click", async ()=>{
   await sb.auth.signOut();
+  AI_PLAYER_COMMENT_SELECTION.clear();
   showLogin();
 });
 
@@ -4842,7 +4856,9 @@ let TEAM_ATTENDANCE_BY_PLAYER=[];
 let TEAM_ATTENDANCE_MATRIX=[];
 let PLAYER_PORTAL_ACTIVITY=[];
 let DASHBOARD_FEEDBACK=[];
+const AI_PLAYER_COMMENT_TABLE="captain_ai_player_comment_refs";
 const AI_PLAYER_COMMENT_SELECTION=new Map();
+let AI_PLAYER_COMMENT_LOADING=null;
 const EXTRA_JERSEY_NUMBERS=[23,26,44,55,66,69,77,88];
 let gameDayMatches=[],gameDayEvents=[],gameDaySelected=null,currentEventType=null,editingEventId=null,gameDayReady=false;
 let PRODUCTION_GAMEPLAN=null;
@@ -5317,6 +5333,7 @@ function feedbackOpponent(row){return row.opponent||"Opponent";}
 function feedbackPreview(value,max=180){const s=String(value||"").trim();return s.length>max?s.slice(0,max-1)+"…":s;}
 function aiPlayerCommentSelected(commentId){return AI_PLAYER_COMMENT_SELECTION.has(String(commentId||""));}
 function notifyAiPlayerCommentSelection(){
+  document.querySelectorAll("[data-ai-player-comment]").forEach(button=>updateAiPlayerCommentButton(button,aiPlayerCommentSelected(button.dataset.aiPlayerComment)));
   window.dispatchEvent(new CustomEvent("skor:ai-player-comments-changed",{detail:{count:AI_PLAYER_COMMENT_SELECTION.size}}));
 }
 function updateAiPlayerCommentButton(button,selected){
@@ -5325,36 +5342,84 @@ function updateAiPlayerCommentButton(button,selected){
   button.textContent=selected?"Selected for AI ✓":"Use with AI";
   button.setAttribute("aria-pressed",selected?"true":"false");
 }
-function toggleAiPlayerComment(comment,matchId,button){
-  const key=String(comment?.id||"");if(!key)return;
-  if(AI_PLAYER_COMMENT_SELECTION.has(key)){
-    AI_PLAYER_COMMENT_SELECTION.delete(key);
-    updateAiPlayerCommentButton(button,false);
-  }else{
-    if(AI_PLAYER_COMMENT_SELECTION.size>=12){alert("Select up to 12 player comments for one AI briefing.");return;}
-    const relatedMatch=gameDayMatches.find(item=>String(item.id)===String(matchId))||{};
-    AI_PLAYER_COMMENT_SELECTION.set(key,{
-      comment_id:key,
-      match_id:String(matchId||""),
-      kickoff:relatedMatch.kickoff||null,
-      home_team:String(relatedMatch.home_team||""),
-      away_team:String(relatedMatch.away_team||""),
-      player_name:String(comment.display_name||"Player"),
-      jersey_number:comment.jersey_number,
-      visibility:comment.visibility==="captains"?"captains":"team",
-      comment:String(comment.comment||""),
-      created_at:comment.created_at||null
+function aiPlayerCommentRecord(comment,matchId,selectedAt=null){
+  const relatedMatch=gameDayMatches.find(item=>String(item.id)===String(matchId))||{};
+  return {
+    comment_id:String(comment?.id||comment?.comment_id||""),
+    match_id:String(matchId||""),
+    kickoff:relatedMatch.kickoff||null,
+    home_team:String(relatedMatch.home_team||""),
+    away_team:String(relatedMatch.away_team||""),
+    player_name:String(comment?.display_name||comment?.player_name||"Player"),
+    jersey_number:comment?.jersey_number,
+    visibility:comment?.visibility==="captains"?"captains":"team",
+    comment:String(comment?.comment||""),
+    created_at:comment?.created_at||null,
+    selected_at:selectedAt||null
+  };
+}
+async function loadAiPlayerCommentSelection({force=false}={}){
+  if(!portalCanWrite())return [];
+  if(AI_PLAYER_COMMENT_LOADING&&!force)return AI_PLAYER_COMMENT_LOADING;
+  const load=async()=>{
+    const refsResult=await sb.from(AI_PLAYER_COMMENT_TABLE).select("comment_id,match_id,created_at").order("created_at",{ascending:false});
+    if(refsResult.error){
+      console.error("Could not load persistent AI player references:",refsResult.error);
+      return [];
+    }
+    const refs=refsResult.data||[],matchIds=[...new Set(refs.map(row=>String(row.match_id||"")).filter(Boolean))];
+    const commentResults=await Promise.all(matchIds.map(async matchId=>({
+      matchId,
+      result:await sb.rpc("get_player_match_comments",{p_match_id:matchId})
+    })));
+    const comments=new Map();
+    commentResults.forEach(({matchId,result})=>{
+      if(result.error){console.error("Could not load AI player references for match",matchId,result.error);return;}
+      (result.data||[]).forEach(comment=>comments.set(`${matchId}:${comment.id}`,comment));
     });
-    updateAiPlayerCommentButton(button,true);
-  }
+    AI_PLAYER_COMMENT_SELECTION.clear();
+    refs.forEach(ref=>{
+      const matchId=String(ref.match_id||""),comment=comments.get(`${matchId}:${ref.comment_id}`);
+      if(comment)AI_PLAYER_COMMENT_SELECTION.set(String(ref.comment_id),aiPlayerCommentRecord(comment,matchId,ref.created_at));
+    });
+    notifyAiPlayerCommentSelection();
+    return [...AI_PLAYER_COMMENT_SELECTION.values()];
+  };
+  AI_PLAYER_COMMENT_LOADING=load();
+  try{return await AI_PLAYER_COMMENT_LOADING;}finally{AI_PLAYER_COMMENT_LOADING=null;}
+}
+async function removeAiPlayerComment(commentId){
+  const key=String(commentId||"");if(!key)return false;
+  const result=await sb.from(AI_PLAYER_COMMENT_TABLE).delete().eq("comment_id",key);
+  if(result.error)throw result.error;
+  AI_PLAYER_COMMENT_SELECTION.delete(key);
   notifyAiPlayerCommentSelection();
+  return true;
+}
+async function toggleAiPlayerComment(comment,matchId,button){
+  const key=String(comment?.id||"");if(!key)return;
+  const wasSelected=AI_PLAYER_COMMENT_SELECTION.has(key),oldText=button?.textContent||"Use with AI";
+  if(button){button.disabled=true;button.textContent=wasSelected?"Removing…":"Saving…";}
+  try{
+    if(wasSelected)await removeAiPlayerComment(key);
+    else{
+      const {data:{user}}=await sb.auth.getUser();
+      if(!user)throw new Error("Captain session not found.");
+      const result=await sb.from(AI_PLAYER_COMMENT_TABLE).insert({comment_id:key,match_id:String(matchId||""),selected_by:user.id});
+      if(result.error&&result.error.code!=="23505")throw result.error;
+      AI_PLAYER_COMMENT_SELECTION.set(key,aiPlayerCommentRecord(comment,matchId,new Date().toISOString()));
+      notifyAiPlayerCommentSelection();
+    }
+  }catch(error){
+    console.error("Could not update AI player reference:",error);
+    alert("Could not update the AI reference library: "+(error.message||error));
+  }finally{
+    if(button){button.disabled=false;updateAiPlayerCommentButton(button,AI_PLAYER_COMMENT_SELECTION.has(key));if(!button.textContent)button.textContent=oldText;}
+  }
 }
 window.SKORGetAiPlayerComments=()=>[...AI_PLAYER_COMMENT_SELECTION.values()].map(item=>({...item}));
-window.SKORClearAiPlayerComments=()=>{
-  AI_PLAYER_COMMENT_SELECTION.clear();
-  document.querySelectorAll("[data-ai-player-comment]").forEach(button=>updateAiPlayerCommentButton(button,false));
-  notifyAiPlayerCommentSelection();
-};
+window.SKORLoadAiPlayerComments=loadAiPlayerCommentSelection;
+window.SKORRemoveAiPlayerComment=removeAiPlayerComment;
 async function openFeedbackFromDashboard(matchId){
   openView("gameday");
   await loadGameDayMatches(matchId);
@@ -6238,7 +6303,7 @@ async function loadGameDayMatches(preferredId=null){
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v14";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
-  gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;window.SKORLineup?.setEvents(gameDayMatches,false);await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
+  gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;window.SKORLineup?.setEvents(gameDayMatches,false);await loadAiPlayerCommentSelection({force:true});await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}

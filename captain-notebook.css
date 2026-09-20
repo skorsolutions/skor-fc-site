@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.6 — isolated from the existing portal styles. */
+/* SKOR FC Captain Notebook v52.7 — isolated from the existing portal styles. */
 body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-dashboard-prompt{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px;border-color:#d8bdc6;background:linear-gradient(135deg,#fff 0%,#fbf1f4 100%)}
 .notebook-dashboard-prompt[hidden]{display:none!important}
@@ -69,15 +69,9 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-pregame-controls input,.notebook-pregame-controls select,.notebook-pregame-controls textarea{width:100%}
 .notebook-pregame-controls .btn{justify-self:start}
 .notebook-player-inputs{display:grid;gap:7px;border:1px solid #d8dfe8;border-radius:11px;background:#f8fafc;padding:10px}
-.notebook-player-inputs-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.notebook-player-inputs-head label{margin:0}
-.notebook-player-inputs-head .mini-btn{font-size:.55rem}
-.notebook-player-input-list{display:grid;gap:6px;color:#68707a;font-size:.61rem;line-height:1.4}
-.notebook-player-input-item{border:1px solid #dfe4eb;border-radius:9px;background:#fff;padding:8px}
-.notebook-player-input-item strong{color:#343a43;font-size:.65rem}
-.notebook-player-input-match{margin-top:6px;color:#596574;font-size:.57rem}
-.notebook-player-input-match strong{font-size:inherit}
-.notebook-player-input-item p{margin:5px 0 0;color:#555d67}
+.notebook-player-inputs>label{margin:0}
+.notebook-player-input-summary{display:grid;gap:3px;color:#68707a;font-size:.61rem;line-height:1.4}
+.notebook-player-input-summary>strong{color:#343a43;font-size:.69rem}
 .notebook-player-input-visibility{display:inline-flex;margin-left:6px;border-radius:999px;background:#e7f0ea;color:#356249;padding:2px 5px;font-size:.49rem;font-weight:900;text-transform:uppercase}
 .notebook-player-input-visibility.private{background:#f4e5e9;color:#8a2942}
 .notebook-ai-note{border-left:3px solid #b06980;padding:7px 0 7px 10px;color:#71757c;font-size:.62rem;line-height:1.45}
@@ -97,6 +91,26 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-pregame-bullet-tag{display:inline-flex;border-radius:999px;background:#efe8eb;color:#711934;padding:3px 6px;font-size:.52rem;font-weight:950;text-transform:uppercase;letter-spacing:.035em}
 .notebook-pregame-bullet-source{display:inline-flex;border-radius:999px;background:#edf2f7;color:#435368;padding:3px 6px;font-size:.52rem;font-weight:850}
 .notebook-pregame-bullet textarea{min-height:62px;font-size:.69rem;line-height:1.45}
+
+.notebook-ai-library-panel{margin-top:18px;border-color:#d8dfe8}
+.notebook-library-count{display:inline-flex;align-items:center;white-space:nowrap;border-radius:999px;background:#edf2f7;color:#435368;padding:6px 9px;font-size:.57rem;font-weight:950;text-transform:uppercase;letter-spacing:.04em}
+.notebook-ai-library{display:grid;gap:9px}
+.notebook-ai-game-group{overflow:hidden;border:1px solid #dde1e7;border-radius:13px;background:#fff}
+.notebook-ai-game-group summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;padding:12px 14px;background:#f8fafc}
+.notebook-ai-game-group summary::-webkit-details-marker{display:none}
+.notebook-ai-game-group summary::after{content:"+";display:grid;place-items:center;flex:0 0 22px;width:22px;height:22px;border-radius:7px;background:#e7ebf1;color:#465466;font-size:.8rem;font-weight:950}
+.notebook-ai-game-group[open] summary::after{content:"−"}
+.notebook-ai-game-title{min-width:0}
+.notebook-ai-game-title strong{display:block;color:#2f343b;font-size:.76rem}
+.notebook-ai-game-title span{display:block;margin-top:3px;color:#777e88;font-size:.58rem}
+.notebook-ai-game-items{display:grid;gap:8px;padding:10px;border-top:1px solid #e7e9ed;background:#fbfcfd}
+.notebook-player-input-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;border:1px solid #dfe4eb;border-radius:10px;background:#fff;padding:10px}
+.notebook-player-input-main{min-width:0}
+.notebook-player-input-item strong{color:#343a43;font-size:.68rem}
+.notebook-player-input-item p{margin:6px 0 0;color:#555d67;font-size:.66rem;line-height:1.45;white-space:pre-wrap}
+.notebook-player-input-meta{margin-top:5px;color:#777e88;font-size:.55rem}
+.notebook-player-input-remove{align-self:start;border:1px solid #e1ccd3;border-radius:8px;background:#fff8fa;color:#842545;cursor:pointer;padding:6px 8px;font-size:.56rem;font-weight:900}
+.notebook-player-input-remove:disabled{cursor:wait;opacity:.65}
 
 .notebook-debrief-panel{margin-top:18px}
 .notebook-debrief-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:15px}
@@ -189,6 +203,8 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
   .notebook-question{padding:10px}
   .notebook-history-item{grid-template-columns:1fr}
   .notebook-history-open{justify-self:start}
+  .notebook-player-input-item{grid-template-columns:1fr}
+  .notebook-player-input-remove{justify-self:start}
   .notebook-form-footer,.notebook-debrief-actions{align-items:stretch;flex-direction:column}
   .notebook-form-footer .btn,.notebook-debrief-actions>div,.notebook-debrief-actions .btn{width:100%}
   .notebook-debrief-actions>div{display:grid}
