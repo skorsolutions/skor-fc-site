@@ -1,4 +1,4 @@
-/* SKOR FC Captain Notebook v52.0
+/* SKOR FC Captain Notebook v52.1
    Kept in a separate file so the existing lineup, Game Day, and portal engines remain isolated. */
 (function(){
   "use strict";
@@ -28,7 +28,9 @@
     attendance:new Set(),
     playerDrafts:new Map(),
     currentDebrief:null,
-    readOnly:false
+    readOnly:false,
+    pregameBrief:null,
+    pregameGenerating:false
   };
 
   const el=id=>document.getElementById(id);
@@ -61,7 +63,7 @@
     state.ready=false;
     const notice=el("notebookSetupNotice");
     if(notice)notice.hidden=false;
-    ["notebookSaveEntryBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=true;});
+    ["notebookSaveEntryBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn","notebookGeneratePregameBtn","notebookSavePregameBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=true;});
     el("notebookEntryCount").textContent="Setup";
     el("notebookDebriefCount").textContent="Setup";
     el("notebookPlayerCount").textContent="Setup";
@@ -73,12 +75,13 @@
     state.ready=true;
     const notice=el("notebookSetupNotice");
     if(notice)notice.hidden=true;
-    ["notebookSaveEntryBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=false;});
+    ["notebookSaveEntryBtn","notebookSaveDraftBtn","notebookCompleteDebriefBtn","notebookGeneratePregameBtn","notebookSavePregameBtn"].forEach(id=>{const node=el(id);if(node)node.disabled=false;});
   }
 
   function populateReferenceSelects(){
     const currentNoteMatch=el("notebookMatch")?.value||"";
     const currentDebriefMatch=el("notebookDebriefMatch")?.value||"";
+    const currentPregameMatch=el("notebookPregameMatch")?.value||"";
     const matchOptions=state.matches.map(match=>`<option value="${esc(match.id)}">${esc(matchLabel(match))}</option>`).join("");
     const debriefCutoff=Date.now()-(2*60*60*1000);
     const debriefOptions=state.matches
@@ -92,6 +95,14 @@
     if(el("notebookDebriefMatch")){
       el("notebookDebriefMatch").innerHTML='<option value="">Select a completed or past match…</option>'+debriefOptions;
       if([...el("notebookDebriefMatch").options].some(option=>option.value===currentDebriefMatch))el("notebookDebriefMatch").value=currentDebriefMatch;
+    }
+    if(el("notebookPregameMatch")){
+      const upcoming=state.matches
+        .filter(match=>match.status!=="final"&&new Date(match.kickoff).valueOf()>=Date.now()-(6*60*60*1000))
+        .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+      el("notebookPregameMatch").innerHTML='<option value="">Select an upcoming match…</option>'+upcoming.map(match=>`<option value="${esc(match.id)}">${esc(matchLabel(match))}</option>`).join("");
+      if([...el("notebookPregameMatch").options].some(option=>option.value===currentPregameMatch))el("notebookPregameMatch").value=currentPregameMatch;
+      else if(upcoming[0])el("notebookPregameMatch").value=upcoming[0].id;
     }
     if(el("notebookPlayer"))el("notebookPlayer").innerHTML='<option value="">No specific player</option>'+playerOptions;
   }
@@ -195,7 +206,7 @@
         client.from("matches").select("id,kickoff,home_team,away_team,status,published").order("kickoff",{ascending:false}).limit(40),
         client.from("team_roster").select("id,full_name,preferred_name,jersey_number,position,active").eq("active",true).order("jersey_number",{ascending:true}),
         client.from(NOTE_TABLE).select("id,entry_type,category,title,body,match_id,player_id,visibility,created_by,created_by_name,created_at,updated_at").order("created_at",{ascending:false}).limit(100),
-        client.from(DEBRIEF_TABLE).select("id,match_id,captain_id,captain_name,status,team_performance,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at,created_at,updated_at").order("updated_at",{ascending:false}).limit(80),
+        client.from(DEBRIEF_TABLE).select("id,match_id,captain_id,captain_name,status,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at,created_at,updated_at").order("updated_at",{ascending:false}).limit(80),
         client.from(ASSESSMENT_TABLE).select("id,debrief_id,match_id,player_id,tags,observation,created_at,updated_at").limit(500)
       ]);
       const setupError=[notesResult,debriefsResult,assessmentsResult].find(result=>result.error)?.error;
@@ -256,6 +267,129 @@
     await refreshData({quiet:true});
   }
 
+  const PREGAME_CATEGORY_LABELS={progress:"Progress to Reinforce",priority:"Match Priority",tactical:"Tactical Detail",mentality:"Mentality",set_piece:"Set Piece"};
+  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",ai_strategy:"AI Soccer Suggestion"};
+
+  function normalizePregameBrief(raw){
+    const bullets=Array.isArray(raw?.bullets)?raw.bullets.slice(0,8).map(item=>({
+      category:PREGAME_CATEGORY_LABELS[item?.category]?item.category:"priority",
+      source:PREGAME_SOURCE_LABELS[item?.source]?item.source:"ai_strategy",
+      text:text(item?.text).slice(0,600)
+    })).filter(item=>item.text):[];
+    return {
+      title:text(raw?.title).slice(0,140)||"SKOR FC Pregame Talk",
+      opening:text(raw?.opening).slice(0,800),
+      bullets,
+      closing:text(raw?.closing).slice(0,500)
+    };
+  }
+
+  function renderPregameBrief(raw){
+    const brief=normalizePregameBrief(raw);state.pregameBrief=brief;
+    el("notebookPregameEmpty").hidden=true;
+    el("notebookPregameResult").hidden=false;
+    el("notebookPregameTitle").value=brief.title;
+    el("notebookPregameOpening").value=brief.opening;
+    el("notebookPregameClosing").value=brief.closing;
+    el("notebookPregameBullets").innerHTML=brief.bullets.map((item,index)=>`<div class="notebook-pregame-bullet" data-pregame-item="${index}" data-category="${esc(item.category)}" data-source="${esc(item.source)}">
+      <span class="notebook-pregame-bullet-number">${index+1}</span>
+      <div class="notebook-pregame-bullet-main">
+        <div class="notebook-pregame-bullet-meta"><span class="notebook-pregame-bullet-tag">${esc(PREGAME_CATEGORY_LABELS[item.category])}</span><span class="notebook-pregame-bullet-source">${esc(PREGAME_SOURCE_LABELS[item.source])}</span></div>
+        <textarea maxlength="600" aria-label="Pregame point ${index+1}">${esc(item.text)}</textarea>
+      </div>
+    </div>`).join("");
+  }
+
+  function collectPregameBrief(){
+    if(!state.pregameBrief)return null;
+    return normalizePregameBrief({
+      title:el("notebookPregameTitle")?.value,
+      opening:el("notebookPregameOpening")?.value,
+      closing:el("notebookPregameClosing")?.value,
+      bullets:[...el("notebookPregameBullets").querySelectorAll("[data-pregame-item]")].map(item=>({
+        category:item.dataset.category,
+        source:item.dataset.source,
+        text:item.querySelector("textarea")?.value
+      }))
+    });
+  }
+
+  function pregameBriefText(brief=collectPregameBrief()){
+    if(!brief)return "";
+    const lines=[brief.title];
+    if(brief.opening)lines.push("",brief.opening);
+    if(brief.bullets.length){
+      lines.push("");
+      brief.bullets.forEach(item=>lines.push(`• ${item.text}`));
+    }
+    if(brief.closing)lines.push("",brief.closing);
+    return lines.join("\n");
+  }
+
+  async function generatePregameTalk(){
+    if(state.pregameGenerating)return;
+    const matchId=el("notebookPregameMatch")?.value;
+    if(!matchId)return setStatus("notebookPregameStatus","Choose an upcoming match first.",false);
+    const button=el("notebookGeneratePregameBtn"),original=button.textContent;
+    state.pregameGenerating=true;button.disabled=true;button.textContent="Generating…";
+    setStatus("notebookPregameStatus","Reviewing recent captain debriefs and building the talk…",true);
+    try{
+      const {data,error}=await sb().functions.invoke("generate-pregame-talk",{body:{
+        match_id:matchId,
+        tone:el("notebookPregameTone")?.value||"balanced",
+        speech_length:el("notebookPregameLength")?.value||"standard",
+        formation_context:text(el("notebookPregameFormation")?.value),
+        captain_focus:text(el("notebookPregameFocus")?.value)
+      }});
+      if(error){
+        let message=error.message||"The AI generator could not be reached.";
+        try{const detail=await error.context?.json?.();if(detail?.error)message=detail.error;}catch{}
+        throw new Error(message);
+      }
+      if(!data?.brief)throw new Error(data?.error||"The AI generator returned no pregame talk.");
+      renderPregameBrief(data.brief);
+      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"} plus selected-game attendance. Private notes, drafts, and player assessments were not sent to AI. Review and edit before sharing.`,true);
+    }catch(error){
+      setStatus("notebookPregameStatus","Could not generate talk: "+(error.message||error),false);
+    }finally{state.pregameGenerating=false;button.disabled=false;button.textContent=original;}
+  }
+
+  async function copyPregameTalk(){
+    const value=pregameBriefText();if(!value)return;
+    try{
+      await navigator.clipboard.writeText(value);
+      setStatus("notebookPregameStatus","Pregame talk copied.",true);
+    }catch{
+      const area=document.createElement("textarea");area.value=value;document.body.appendChild(area);area.select();document.execCommand("copy");area.remove();
+      setStatus("notebookPregameStatus","Pregame talk copied.",true);
+    }
+  }
+
+  function printPregameTalk(){
+    const brief=collectPregameBrief();if(!brief)return;
+    const match=matchById(el("notebookPregameMatch")?.value),popup=window.open("","_blank","width=760,height=900");
+    if(!popup)return setStatus("notebookPregameStatus","Allow pop-ups to print the pregame talk.",false);
+    popup.opener=null;
+    popup.document.write(`<!doctype html><html><head><title>${esc(brief.title)}</title><style>body{font-family:Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 24px;color:#202124}h1{color:#741a39;margin-bottom:4px}.match{color:#666;margin-bottom:24px}.opening,.closing{font-size:18px;line-height:1.5}.closing{margin-top:24px;font-weight:700}li{margin:0 0 13px;line-height:1.45}.tag{display:inline-block;margin-right:7px;color:#741a39;font-size:11px;font-weight:700;text-transform:uppercase}@media print{body{margin:0}}</style></head><body><h1>${esc(brief.title)}</h1><div class="match">${esc(matchLabel(match))}</div><p class="opening">${esc(brief.opening)}</p><ol>${brief.bullets.map(item=>`<li><span class="tag">${esc(PREGAME_CATEGORY_LABELS[item.category])}</span>${esc(item.text)}</li>`).join("")}</ol><p class="closing">${esc(brief.closing)}</p><script>window.onload=()=>window.print()<\/script></body></html>`);
+    popup.document.close();
+  }
+
+  async function savePregameTalk(){
+    const brief=collectPregameBrief(),body=pregameBriefText(brief),matchId=el("notebookPregameMatch")?.value;
+    if(!brief||!body||!matchId)return setStatus("notebookPregameStatus","Generate a talk and select its match before saving.",false);
+    const button=el("notebookSavePregameBtn"),original=button.textContent;button.disabled=true;button.textContent="Saving…";
+    try{
+      const result=await sb().from(NOTE_TABLE).insert({
+        entry_type:"match",category:"tactical",title:brief.title,body:body.slice(0,5000),match_id:matchId,player_id:null,
+        visibility:"captains",created_by:state.user.id,created_by_name:captainName()
+      });
+      if(result.error)throw result.error;
+      setStatus("notebookPregameStatus","Pregame talk saved for all captains in the Notebook.",true);
+      await refreshData({quiet:true});
+    }catch(error){setStatus("notebookPregameStatus","Could not save talk: "+(error.message||error),false);}
+    finally{button.disabled=false;button.textContent=original;}
+  }
+
   function collectDebriefPayload(status){
     return {
       match_id:el("notebookDebriefMatch").value,
@@ -263,6 +397,7 @@
       captain_name:captainName(),
       status,
       team_performance:text(el("debriefTeamPerformance").value)||null,
+      improvements_since_last_game:text(el("debriefImprovements").value)||null,
       standouts:text(el("debriefStandouts").value)||null,
       tactical_observations:text(el("debriefObservations").value)||null,
       issues:text(el("debriefIssues").value)||null,
@@ -275,7 +410,7 @@
   }
 
   function debriefHasContent(payload){
-    return ["team_performance","standouts","tactical_observations","issues","position_changes","practice_focus","additional_notes"].some(key=>text(payload[key]))||
+    return ["team_performance","improvements_since_last_game","standouts","tactical_observations","issues","position_changes","practice_focus","additional_notes"].some(key=>text(payload[key]))||
       [...state.playerDrafts.values()].some(item=>item.tags.size||text(item.observation));
   }
 
@@ -367,7 +502,7 @@
 
   function setDebriefReadOnly(readOnly){
     state.readOnly=readOnly;
-    ["debriefTeamPerformance","debriefStandouts","debriefObservations","debriefIssues","debriefPositionChanges","debriefPracticeFocus","debriefAdditionalNotes"].forEach(id=>{const node=el(id);if(node)node.readOnly=readOnly;});
+    ["debriefTeamPerformance","debriefImprovements","debriefStandouts","debriefObservations","debriefIssues","debriefPositionChanges","debriefPracticeFocus","debriefAdditionalNotes"].forEach(id=>{const node=el(id);if(node)node.readOnly=readOnly;});
     el("notebookSaveDraftBtn").hidden=readOnly||state.currentDebrief?.status==="completed";
     el("notebookCompleteDebriefBtn").hidden=readOnly;
     if(!readOnly)el("notebookCompleteDebriefBtn").textContent=state.currentDebrief?.status==="completed"?"Update Completed Debrief":"Complete & Share with Captains";
@@ -376,6 +511,7 @@
   function fillDebrief(row){
     el("notebookDebriefId").value=row?.id||"";
     el("debriefTeamPerformance").value=row?.team_performance||"";
+    el("debriefImprovements").value=row?.improvements_since_last_game||"";
     el("debriefStandouts").value=row?.standouts||"";
     el("debriefObservations").value=row?.tactical_observations||"";
     el("debriefIssues").value=row?.issues||"";
@@ -451,6 +587,10 @@
     el("notebookPlayerSearch")?.addEventListener("input",renderPlayerCards);
     el("notebookSaveDraftBtn")?.addEventListener("click",()=>saveDebrief("draft"));
     el("notebookCompleteDebriefBtn")?.addEventListener("click",()=>saveDebrief("completed"));
+    el("notebookGeneratePregameBtn")?.addEventListener("click",generatePregameTalk);
+    el("notebookCopyPregameBtn")?.addEventListener("click",copyPregameTalk);
+    el("notebookPrintPregameBtn")?.addEventListener("click",printPregameTalk);
+    el("notebookSavePregameBtn")?.addEventListener("click",savePregameTalk);
   }
 
   async function init(){

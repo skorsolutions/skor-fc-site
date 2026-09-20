@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v52.0-notebook" />
+  <meta name="skor-build" content="captain-portal-v52.1-ai-pregame-talk" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <style>
@@ -1830,7 +1830,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v52.0</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v52.1</div>
   </aside>
 
   <main>
@@ -2267,6 +2267,51 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </div>
       </div>
 
+      <div class="panel notebook-pregame-panel" id="notebookPregamePanel">
+        <div class="notebook-pregame-head">
+          <div>
+            <span class="pill">AI Match Preparation</span>
+            <h2 style="margin:12px 0 4px">Pregame Talk</h2>
+            <div class="sub">Turn recent debriefs and captain notes into a short, editable set of points for the team talk before kickoff.</div>
+          </div>
+          <span class="notebook-ai-badge">AI-assisted · Captain approved</span>
+        </div>
+
+        <div class="notebook-pregame-grid">
+          <div class="notebook-pregame-controls">
+            <div><label for="notebookPregameMatch">Upcoming match</label><select id="notebookPregameMatch"><option value="">Select an upcoming match…</option></select></div>
+            <div class="fieldrow">
+              <div><label for="notebookPregameTone">Tone</label><select id="notebookPregameTone"><option value="balanced">Balanced</option><option value="motivational">Motivational</option><option value="tactical">Tactical</option><option value="calm">Calm and focused</option></select></div>
+              <div><label for="notebookPregameLength">Length</label><select id="notebookPregameLength"><option value="quick">Quick · about 60 seconds</option><option value="standard" selected>Standard · about 2 minutes</option></select></div>
+            </div>
+            <div><label for="notebookPregameFormation">Formation or game-plan context (optional)</label><input id="notebookPregameFormation" maxlength="300" placeholder="Example: 4-2-3-1, stay compact, attack through the wings"></div>
+            <div><label for="notebookPregameFocus">Anything the captains want emphasized? (optional)</label><textarea id="notebookPregameFocus" maxlength="1200" rows="4" placeholder="Example: Strong start, communicate through midfield, do not concede early set pieces."></textarea></div>
+            <button class="btn btn-primary" type="button" id="notebookGeneratePregameBtn">Generate Pregame Talk</button>
+            <div class="form-status" id="notebookPregameStatus"></div>
+            <div class="notebook-ai-note">The AI may suggest soccer tactics, but it must separate those suggestions from observations recorded by captains. Review every point before sharing it with players.</div>
+          </div>
+
+          <div class="notebook-pregame-output">
+            <div class="notebook-pregame-empty" id="notebookPregameEmpty">Choose the next match and generate a talk. The finished points remain editable by the captains.</div>
+            <div id="notebookPregameResult" hidden>
+              <div class="notebook-pregame-result-head">
+                <input id="notebookPregameTitle" maxlength="140" aria-label="Pregame talk title">
+                <div class="notebook-pregame-actions">
+                  <button class="btn btn-light" type="button" id="notebookCopyPregameBtn">Copy</button>
+                  <button class="btn btn-light" type="button" id="notebookPrintPregameBtn">Print</button>
+                  <button class="btn btn-light" type="button" id="notebookSavePregameBtn">Save to Notebook</button>
+                </div>
+              </div>
+              <label for="notebookPregameOpening">Opening</label>
+              <textarea id="notebookPregameOpening" maxlength="800" rows="3"></textarea>
+              <div class="notebook-pregame-bullets" id="notebookPregameBullets"></div>
+              <label for="notebookPregameClosing">Closing line</label>
+              <textarea id="notebookPregameClosing" maxlength="500" rows="2"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="panel notebook-debrief-panel" id="notebookDebriefPanel">
         <div class="notebook-debrief-head">
           <div>
@@ -2283,6 +2328,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="notebook-draft-banner" id="notebookDraftBanner">New private draft</div>
           <div class="notebook-question-grid">
             <div class="notebook-question"><label for="debriefTeamPerformance">How did the team perform overall?</label><textarea id="debriefTeamPerformance" maxlength="3000" placeholder="How well did the team execute the plan? What changed during the game?"></textarea></div>
+            <div class="notebook-question notebook-improvement-question"><label for="debriefImprovements">What improved from the previous match, and what caused it?</label><textarea id="debriefImprovements" maxlength="3000" placeholder="Identify specific progress in shape, communication, decision-making, effort, or execution—and what helped create it."></textarea></div>
             <div class="notebook-question"><label for="debriefStandouts">Who did well, and why?</label><textarea id="debriefStandouts" maxlength="3000" placeholder="Name the players and the specific actions, decisions, or behaviors that stood out."></textarea></div>
             <div class="notebook-question"><label for="debriefObservations">What stood out tactically?</label><textarea id="debriefObservations" maxlength="3000" placeholder="Shape, buildup, pressing, transitions, set pieces, opponent tendencies…"></textarea></div>
             <div class="notebook-question"><label for="debriefIssues">What issues did you see?</label><textarea id="debriefIssues" maxlength="3000" placeholder="Repeated breakdowns, communication, fitness, decision-making, matchup problems…"></textarea></div>

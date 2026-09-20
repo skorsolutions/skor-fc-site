@@ -1,3 +1,15 @@
+## v52.1 — AI Pregame Talk and improved debriefs
+
+- Adds an editable **Pregame Talk** generator to the Captain Notebook for a selected upcoming match, with tone, length, formation context, and captain-priority controls.
+- Grounds suggestions in completed captain-shared debriefs, selected-game attendance/availability, the current generator inputs, and general soccer strategy.
+- Private Notebook notes, debrief drafts, RSVP notes, and individual player assessments are not sent to OpenAI.
+- AI requests run through the authenticated `generate-pregame-talk` Supabase Edge Function. The OpenAI key remains server-side, JWT verification is enabled, captain access is checked again inside the function, and model output uses a strict JSON schema.
+- Generated talks remain editable and can be copied, printed, or saved into the existing Captain Notebook.
+- Adds the debrief question **What improved from the previous match, and what caused it?**
+- **SQL needed:** Yes.
+- **Database changes performed:** Added the nullable `captain_match_debriefs.improvements_since_last_game` text column with a 3,000-character check constraint. No existing debrief rows were changed or backfilled.
+- Affected files: `admin.html`, `captain-notebook.css`, `captain-notebook.js`, `supabase/functions/generate-pregame-talk/index.ts`, `supabase/migrations/20260920050804_add_debrief_improvements_since_last_game.sql`, and this deployment note.
+
 ## v52.0 — Captain Notebook
 
 - Adds an isolated **Captain Notebook** view to the Captain Portal without rewriting the existing Lineups, Game Day, Announcements, Roster, or Player Portal engines.
