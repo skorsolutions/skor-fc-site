@@ -1,3 +1,14 @@
+## v51.38 — Show every substitution wave on export
+
+- The lineup image export no longer limits each half to four substitution waves.
+- Every first-half wave is rendered in full; every second-half wave is also rendered when second-half export visibility is enabled.
+- The substitutions card and total image height now grow dynamically so additional waves do not overlap the quote or gameplan notes.
+- The previous `+ N more ... planned` summary is removed.
+- The existing second-half export visibility toggle is preserved.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Affected file: `admin.html`.
+
 ## v51.37 — Overwrite same-name lineup variations
 
 - Saving a lineup now updates the newest existing variation when the selected game and trimmed lineup name match.

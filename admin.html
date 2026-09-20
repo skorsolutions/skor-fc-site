@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.37-overwrite-same-name" />
+  <meta name="skor-build" content="lineup-admin-v51.38-export-all-waves" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -3000,10 +3000,20 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       return sum+depthBaseRowH+(continuationCount*(depthInnerGap+depthContinuationH))+depthPositionGap;
     },0);
     const depthNeededHeight=Math.max(560,98+depthRowsHeight+18);
-    const lowerCardExtra=Math.max(0,depthNeededHeight-560);
-    const lowerCardH=560+lowerCardExtra;
-    H+=lowerCardExtra;
     const showSecondHalfExport=state.showSecondHalfSubs===true;
+    const planRowStep=54;
+    const firstHalfRowsY=1170;
+    const firstHalfRowCount=Math.max(1,firstHalfSubs.length);
+    const secondHalfTitleY=firstHalfRowsY+(firstHalfRowCount*planRowStep)+20;
+    const secondHalfRowsY=secondHalfTitleY+28;
+    const secondHalfRowCount=showSecondHalfExport?Math.max(1,secondHalfSubs.length):0;
+    const planContentBottom=showSecondHalfExport
+      ? secondHalfRowsY+(secondHalfRowCount*planRowStep)-6
+      : firstHalfRowsY+(firstHalfRowCount*planRowStep)-6;
+    const planNeededHeight=Math.max(560,(planContentBottom+18)-1064);
+    const lowerCardH=Math.max(depthNeededHeight,planNeededHeight);
+    const lowerCardExtra=lowerCardH-560;
+    H+=lowerCardExtra;
 
     const header = `
       <rect x="0" y="0" width="${W}" height="${H}" fill="#13161d"/>
@@ -3089,7 +3099,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     })() : `<rect x="${depthCardX+20}" y="${depthCardY+104}" width="${depthCardW-40}" height="44" rx="22" ry="22" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${depthCardX+40}" y="${depthCardY+133}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No potential positions assigned.</text>`;
 
     const renderPlanRows=(rows,startY,labelColor)=>{
-      return rows.slice(0,4).map((entry, idx)=>{
+      return rows.map((entry, idx)=>{
         const bubbleY = startY + idx*54;
         const outText = prettyPlayers(entry.out, true);
         const inText = prettyPlayers(entry.in, true);
@@ -3109,10 +3119,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       }).join("");
     };
 
-    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, 1170, '#801A3D') : `<rect x="${planCardX+20}" y="1170" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="1200" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
-    const secondHalfRows = !showSecondHalfExport ? '' : (secondHalfSubs.length ? renderPlanRows(secondHalfSubs, 1404, '#234b74') : `<rect x="${planCardX+20}" y="1404" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="1434" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`);
-    const firstHalfExtra = firstHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1394" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${firstHalfSubs.length-4} more first-half planned</text>` : '';
-    const secondHalfExtra = showSecondHalfExport&&secondHalfSubs.length>4 ? `<text x="${planCardX+24}" y="1628" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">+ ${secondHalfSubs.length-4} more second-half planned</text>` : '';
+    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, firstHalfRowsY, '#801A3D') : `<rect x="${planCardX+20}" y="${firstHalfRowsY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="${firstHalfRowsY+30}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
+    const secondHalfRows = !showSecondHalfExport ? '' : (secondHalfSubs.length ? renderPlanRows(secondHalfSubs, secondHalfRowsY, '#234b74') : `<rect x="${planCardX+20}" y="${secondHalfRowsY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="${secondHalfRowsY+30}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`);
 
     const messageY=1648+lowerCardExtra;
     const quoteBlock = state.quote ? `
@@ -3141,8 +3149,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <text x="${planCardX+24}" y="${planCardY+44}" font-size="27" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Substitutions</text>
       <text x="${planCardX+24}" y="1142" font-size="19" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
       ${firstHalfRows}
-      ${firstHalfExtra}
-      ${showSecondHalfExport?`<text x="${planCardX+24}" y="1376" font-size="19" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>${secondHalfRows}${secondHalfExtra}`:''}
+      ${showSecondHalfExport?`<text x="${planCardX+24}" y="${secondHalfTitleY}" font-size="19" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>${secondHalfRows}`:''}
 
       ${quoteBlock}
       ${notesBlock}
