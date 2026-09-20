@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.35-saved-potential-position-backfill" />
+  <meta name="skor-build" content="lineup-admin-v51.36-wave-bench-tracker" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <style>
     :root{
@@ -1224,6 +1224,65 @@
       color:var(--muted);
       font-weight:700;
       line-height:1.25;
+    }
+    .sub-wave-bench{
+      grid-column:1/-1;
+      margin-top:3px;
+      padding:8px 9px;
+      border:1px solid #dfe2e7;
+      border-radius:10px;
+      background:#f7f8fa;
+    }
+    .sub-wave-bench-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:6px;
+    }
+    .sub-wave-bench-title{
+      font-size:.65rem;
+      font-weight:950;
+      color:#4f555d;
+      text-transform:uppercase;
+      letter-spacing:.055em;
+    }
+    .sub-wave-bench-count{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:22px;
+      height:19px;
+      padding:0 6px;
+      border-radius:999px;
+      background:#e3e6ea;
+      color:#4f555d;
+      font-size:.58rem;
+      font-weight:950;
+    }
+    .sub-wave-bench-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:5px;
+      max-height:74px;
+      overflow-y:auto;
+    }
+    .sub-wave-bench-chip{
+      display:inline-flex;
+      align-items:center;
+      padding:5px 7px;
+      border:1px solid #d5d9df;
+      border-radius:999px;
+      background:#fff;
+      color:#30343a;
+      font-size:.64rem;
+      font-weight:850;
+      line-height:1;
+    }
+    .sub-wave-bench-empty{
+      color:var(--muted);
+      font-size:.64rem;
+      font-weight:750;
     }
 
 
@@ -3467,6 +3526,32 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       '<div class="sub-multi-help">'+(side==="out"?"Tap everyone leaving in this change.":"Tap everyone entering in this change.")+'</div>'+
     '</div>';
   }
+  function benchAfterWave(phase,index,snapshot=state){
+    const s=normalizeState(snapshot||{});
+    const bench=new Set((s.bench||[]).filter(Boolean).map(pid=>String(pid)));
+    const phases=phase==="secondHalf"?["firstHalf","secondHalf"]:["firstHalf"];
+    phases.forEach(currentPhase=>{
+      const rows=Array.isArray(s.subs?.[currentPhase])?s.subs[currentPhase]:[];
+      const stop=currentPhase===phase?Math.min(Number(index),rows.length-1):rows.length-1;
+      for(let i=0;i<=stop;i++){
+        const row=rows[i]||{};
+        (Array.isArray(row.out)?row.out:[]).filter(Boolean).forEach(pid=>bench.add(String(pid)));
+        (Array.isArray(row.in)?row.in:[]).filter(Boolean).forEach(pid=>bench.delete(String(pid)));
+      }
+    });
+    return [...bench].filter(pid=>player(pid));
+  }
+  function subWaveBenchHTML(phase,index){
+    const bench=benchAfterWave(phase,index);
+    const chips=bench.map(pid=>{
+      const p=player(pid);
+      return p?'<span class="sub-wave-bench-chip'+(p.temp?' temp-player':'')+'">'+esc(playerListLabel(p))+'</span>':'';
+    }).join('');
+    return '<div class="sub-wave-bench">'+
+      '<div class="sub-wave-bench-head"><span class="sub-wave-bench-title">Bench after this wave</span><span class="sub-wave-bench-count">'+bench.length+'</span></div>'+
+      '<div class="sub-wave-bench-list">'+(chips||'<span class="sub-wave-bench-empty">No players on the bench after this wave.</span>')+'</div>'+
+      '</div>';
+  }
   function subRowHTML(record,phase,index=null,removable=false){
     const suffix=index===null?phase:phase+'-'+index;
     const waveLabel=String(record?.label||"");
@@ -3477,6 +3562,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       '<span class="sub-arrow">→</span>'+
       subChipListHTML(record.in,phase,index,'in')+
       (removable?'<button class="mini-btn sub-remove" type="button" data-sub-remove="'+index+'" data-sub-phase="'+esc(phase)+'" title="Remove this planned sub">×</button>':'<span></span>')+
+      subWaveBenchHTML(phase,index)+
       '</div>';
   }
 

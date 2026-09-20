@@ -1,3 +1,12 @@
+## v51.36 — Bench tracker beneath substitution waves
+
+- Each planned substitution wave now shows a compact **Bench after this wave** panel directly beneath it.
+- The bench is calculated cumulatively: players entering are removed from the bench, players leaving are added, and each later wave starts from the prior wave's result.
+- Second-half wave calculations continue from the completed first-half plan.
+- Bench chips include the same player labels and jersey numbers used elsewhere in the lineup builder.
+- This is a lineup-planning UI change only; no Supabase schema or saved-state changes are required.
+- Affected file: `admin.html`.
+
 ## v51.35 — Restore Potential Positions in saved lineups
 
 - The Potential Positions panel now redraws immediately after a player is assigned or moved on the formation board.
