@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="lineup-admin-v51.40-match-announcement-drafts" />
+  <meta name="skor-build" content="captain-portal-v52.0-notebook" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
+  <link rel="stylesheet" href="captain-notebook.css" />
   <style>
     :root{
       --maroon:#741f35;
@@ -1817,6 +1818,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     <div class="nav">
       <button class="active" data-view="dashboard">⌂ <span>Dashboard</span></button>
       <button data-view="gameday">⚽ <span>Game Day</span></button>
+      <button data-view="notebook">▤ <span>Notebook</span></button>
       <button data-view="attendance">✓ <span>Attendance</span></button>
       <button data-view="activity">◉ <span>Player Activity</span></button>
       <button data-view="announcements">✦ <span>Announcements</span></button>
@@ -1828,7 +1830,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v51.33</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v52.0</div>
   </aside>
 
   <main>
@@ -1875,6 +1877,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <button class="action" onclick="openView('gameday')">⚽ Open Game Day</button>
             <button class="action" onclick="openView('attendance')">✓ Attendance</button>
             <button class="action" onclick="openCrowdScoring()">👥 Crowd Scoring</button>
+            <button class="action" onclick="openView('notebook')">▤ Captain Notebook</button>
             <button class="action" onclick="openView('announcements')">＋ New announcement</button>
             <button class="action" onclick="openView('schedule')">＋ Add practice</button>
             <button class="action" onclick="openView('schedule')">⚽ Add match</button>
@@ -1912,6 +1915,15 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="sub dashboard-announcement-body" id="dashboardAnnouncementBody">Checking Supabase.</div>
           <button class="btn btn-light" type="button" onclick="openView('announcements')">Manage Announcements</button>
         </div>
+      </div>
+
+      <div class="panel notebook-dashboard-prompt" id="notebookDashboardPrompt" hidden>
+        <div>
+          <span class="pill dashboard-pill">Post-Game Debrief</span>
+          <h2 id="notebookDashboardPromptTitle" style="margin:12px 0 4px">Captain review ready</h2>
+          <div class="sub" id="notebookDashboardPromptMeta">Capture what stood out while the match is still fresh.</div>
+        </div>
+        <button class="btn btn-primary" type="button" id="notebookDashboardPromptBtn">Start Debrief</button>
       </div>
 
       <div class="panel dashboard-feedback-panel" id="dashboardFeedbackPanel">
@@ -2194,6 +2206,112 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <button class="btn btn-light" id="refreshPlayerActivityBtn" type="button">Refresh</button>
         </div>
         <div class="player-activity-list" id="playerActivityList"><div class="sub">Loading player activity…</div></div>
+      </div>
+    </section>
+
+    <section class="view" id="notebook">
+      <div class="notebook-hero">
+        <div>
+          <span class="notebook-kicker">PRIVATE COACHING WORKSPACE</span>
+          <h2>Captain Notebook</h2>
+          <p>Capture what captains see during the season, complete guided post-game reviews, and build the trusted coaching history that future AI suggestions will use.</p>
+        </div>
+        <div class="notebook-hero-actions">
+          <button class="btn btn-light" type="button" id="notebookRefreshBtn">Refresh</button>
+          <button class="btn btn-primary" type="button" id="notebookJumpDebriefBtn">Start Post-Game Debrief</button>
+        </div>
+      </div>
+
+      <div class="notebook-setup" id="notebookSetupNotice" hidden>
+        <strong>Notebook database setup is pending.</strong>
+        <span>The portal design is ready, but notes cannot be saved until the approved Supabase migration is installed.</span>
+      </div>
+
+      <div class="grid notebook-metrics">
+        <div class="metric"><span>Notebook Entries</span><strong id="notebookEntryCount">—</strong></div>
+        <div class="metric"><span>Completed Debriefs</span><strong id="notebookDebriefCount">—</strong></div>
+        <div class="metric"><span>Players Observed</span><strong id="notebookPlayerCount">—</strong></div>
+        <div class="metric"><span>Latest Entry</span><strong id="notebookLatestDate">—</strong></div>
+      </div>
+
+      <div class="notebook-top-grid">
+        <div class="panel notebook-compose-panel">
+          <span class="pill">Quick Note</span>
+          <h2 style="margin:12px 0 4px">Record an observation</h2>
+          <div class="sub">Write naturally. Match, player, category, and visibility fields keep the note useful later.</div>
+          <form class="form" id="notebookEntryForm">
+            <div class="fieldrow">
+              <div><label for="notebookEntryType">Note type</label><select id="notebookEntryType"><option value="general">General</option><option value="match">Match</option><option value="player">Player</option><option value="practice">Practice</option><option value="tactics">Tactics</option><option value="opponent">Opponent</option></select></div>
+              <div><label for="notebookVisibility">Visibility</label><select id="notebookVisibility"><option value="captains">All Captains</option><option value="private">Only Me</option></select></div>
+            </div>
+            <div class="fieldrow">
+              <div><label for="notebookMatch">Match (optional)</label><select id="notebookMatch"><option value="">No specific match</option></select></div>
+              <div><label for="notebookPlayer">Player (optional)</label><select id="notebookPlayer"><option value="">No specific player</option></select></div>
+            </div>
+            <div><label for="notebookCategory">Coaching category</label><select id="notebookCategory"><option value="observation">Observation</option><option value="position">Position / Role</option><option value="tactical">Tactical</option><option value="technical">Technical</option><option value="fitness">Fitness</option><option value="communication">Communication</option><option value="chemistry">Chemistry</option><option value="development">Development</option><option value="opponent">Opponent</option></select></div>
+            <div><label for="notebookTitle">Title</label><input id="notebookTitle" maxlength="140" placeholder="Short description of what you noticed" required></div>
+            <div><label for="notebookBody">Captain note</label><textarea id="notebookBody" maxlength="5000" rows="6" placeholder="Example: Our left side was exposed when the winger pushed high. Try keeping the left central midfielder deeper during that phase." required></textarea></div>
+            <div class="notebook-form-footer">
+              <span class="form-status" id="notebookEntryStatus"></span>
+              <button class="btn btn-primary" type="submit" id="notebookSaveEntryBtn">Save Note</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel notebook-feed-panel">
+          <div class="notebook-panel-head">
+            <div><span class="pill">Season Memory</span><h2 style="margin:12px 0 4px">Recent notes</h2></div>
+            <select id="notebookFeedFilter" aria-label="Filter notebook notes"><option value="all">All Notes</option><option value="mine">My Notes</option><option value="match">Match Notes</option><option value="player">Player Notes</option><option value="tactics">Tactical Notes</option></select>
+          </div>
+          <div class="notebook-feed" id="notebookFeed"><div class="sub">Open Notebook to load captain notes.</div></div>
+        </div>
+      </div>
+
+      <div class="panel notebook-debrief-panel" id="notebookDebriefPanel">
+        <div class="notebook-debrief-head">
+          <div>
+            <span class="pill">Guided Review</span>
+            <h2 style="margin:12px 0 4px">Post-Game Debrief</h2>
+            <div class="sub">Each captain can draft independently. Completed debriefs become visible to the other captains.</div>
+          </div>
+          <div class="notebook-match-control"><label for="notebookDebriefMatch">Choose match</label><select id="notebookDebriefMatch"><option value="">Select a completed or past match…</option></select></div>
+        </div>
+
+        <div class="notebook-debrief-empty" id="notebookDebriefEmpty">Choose a match to begin or continue its guided review.</div>
+        <form id="notebookDebriefForm" hidden>
+          <input type="hidden" id="notebookDebriefId">
+          <div class="notebook-draft-banner" id="notebookDraftBanner">New private draft</div>
+          <div class="notebook-question-grid">
+            <div class="notebook-question"><label for="debriefTeamPerformance">How did the team perform overall?</label><textarea id="debriefTeamPerformance" maxlength="3000" placeholder="How well did the team execute the plan? What changed during the game?"></textarea></div>
+            <div class="notebook-question"><label for="debriefStandouts">Who did well, and why?</label><textarea id="debriefStandouts" maxlength="3000" placeholder="Name the players and the specific actions, decisions, or behaviors that stood out."></textarea></div>
+            <div class="notebook-question"><label for="debriefObservations">What stood out tactically?</label><textarea id="debriefObservations" maxlength="3000" placeholder="Shape, buildup, pressing, transitions, set pieces, opponent tendencies…"></textarea></div>
+            <div class="notebook-question"><label for="debriefIssues">What issues did you see?</label><textarea id="debriefIssues" maxlength="3000" placeholder="Repeated breakdowns, communication, fitness, decision-making, matchup problems…"></textarea></div>
+            <div class="notebook-question"><label for="debriefPositionChanges">Any positions or roles to reconsider?</label><textarea id="debriefPositionChanges" maxlength="3000" placeholder="Players to test elsewhere, role adjustments, or combinations to avoid or repeat."></textarea></div>
+            <div class="notebook-question"><label for="debriefPracticeFocus">What should the next practice emphasize?</label><textarea id="debriefPracticeFocus" maxlength="3000" placeholder="Choose the most useful technical or tactical priorities from this game."></textarea></div>
+          </div>
+          <div class="notebook-question notebook-additional"><label for="debriefAdditionalNotes">Anything else captains should remember?</label><textarea id="debriefAdditionalNotes" maxlength="4000" placeholder="Context, opponent notes, substitution lessons, or something to revisit before the next game."></textarea></div>
+
+          <div class="notebook-player-review-head">
+            <div><h3>Player-by-player observations</h3><div class="sub">Use quick tags and add only the detail that will be useful later. Players marked Present in Attendance are shown first.</div></div>
+            <div class="notebook-player-search"><label for="notebookPlayerSearch">Find player</label><input id="notebookPlayerSearch" type="search" placeholder="Name or number"></div>
+          </div>
+          <div class="notebook-player-grid" id="notebookPlayerGrid"></div>
+
+          <div class="notebook-debrief-actions">
+            <span class="form-status" id="notebookDebriefStatus"></span>
+            <div>
+              <button class="btn btn-light" type="button" id="notebookSaveDraftBtn">Save Private Draft</button>
+              <button class="btn btn-primary" type="button" id="notebookCompleteDebriefBtn">Complete &amp; Share with Captains</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel notebook-history-panel">
+        <div class="notebook-panel-head">
+          <div><span class="pill">Debrief History</span><h2 style="margin:12px 0 4px">Captain reviews</h2></div>
+        </div>
+        <div class="notebook-history" id="notebookDebriefHistory"><div class="sub">No debriefs loaded.</div></div>
       </div>
     </section>
 
@@ -4476,6 +4594,8 @@ function showDashboard(user,access){
   loadTeamFields().then(()=>loadScheduleManager());
   loadGameDayMatches();
   loadDashboardFeedback();
+  window.SKORNotebook?.init();
+  window.dispatchEvent(new CustomEvent("skor:portal-ready"));
 }
 async function captainIsApproved(user){
   if(!user?.email) return null;
@@ -4540,6 +4660,7 @@ sb.auth.onAuthStateChange((_event, session)=>{
 const meta = {
   dashboard:["Captain Dashboard","Manage the team without touching the website code."],
   gameday:["Game Day","Track live score, goals, assists and cards from the sideline."],
+  notebook:["Captain Notebook","Capture season observations and complete guided post-game reviews."],
   attendance:["Attendance","Review player attendance across the season and past matches."],
   activity:["Player Activity","Review the five most recent Player Portal sessions for each player."],
   announcements:["Announcements","Publish team updates to the homepage."],
@@ -4552,6 +4673,7 @@ const meta = {
   sponsors:["Sponsors","Manage sponsor information and website links."]
 };
 function openView(id){
+  if(id==="notebook"&&!portalCanWrite()){viewerBlocked("open the Captain Notebook");return;}
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -4561,6 +4683,7 @@ function openView(id){
   document.getElementById("pageSub").textContent=meta[id][1];
   if(id==="attendance")loadAttendancePage();
   if(id==="activity")loadPlayerActivity();
+  if(id==="notebook")window.SKORNotebook?.activate();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function openCrowdScoring(){
@@ -6349,6 +6472,8 @@ loadAnnouncements();
 // The independent v37 builder above is the only lineup engine.
 
 </script>
+
+<script src="captain-notebook.js"></script>
 
 <!-- Legacy v18 lineup bootstrap removed in v20 -->
 

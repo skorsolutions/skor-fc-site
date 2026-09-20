@@ -1,3 +1,15 @@
+## v52.0 — Captain Notebook
+
+- Adds an isolated **Captain Notebook** view to the Captain Portal without rewriting the existing Lineups, Game Day, Announcements, Roster, or Player Portal engines.
+- Captains can record private or captain-shared notes and associate them with a match, player, and coaching category.
+- Adds guided post-game debriefs covering overall performance, standout players, tactical observations, issues, position changes, and practice priorities.
+- Adds a Captain Dashboard prompt for the newest past/final match that the signed-in captain has not completed a debrief for; private drafts can be resumed directly.
+- Adds structured player-by-player observations with quick coaching tags and optional written detail. Confirmed match attendees are shown first when attendance is available.
+- Each captain drafts independently. Drafts remain private to their author; completed reviews become readable by other approved captains.
+- The portal detects a missing Notebook schema and shows a safe setup-pending state instead of affecting other live portal features.
+- New isolated assets: `captain-notebook.css` and `captain-notebook.js`.
+- SQL applied: `create_captain_notebook` plus `tighten_captain_notebook_grants`. The three new tables use RLS, author ownership checks, captain-only sharing, and least-privilege authenticated grants.
+
 ## v51.40 — Create announcements from scheduled games
 
 - Each scheduled game now includes a **Create Announcement** action.
