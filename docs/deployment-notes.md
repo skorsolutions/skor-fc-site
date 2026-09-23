@@ -1,3 +1,17 @@
+## v53.0 — Jersey inventory and TEMP assignments
+
+- Adds a dedicated **Jerseys** area to the Captain Portal for physical walk-on/TEMP kit inventory.
+- Captains can manage configurable kits, starting with **Maroon** and **White**, including kit names, color labels, display colors, and archived status.
+- Every physical jersey records its kit, number, size, availability, captain custodian, and optional condition/storage notes.
+- Jersey choices in Lineup Builder now come only from active kits and inventory marked **On Hand**.
+- One inventory jersey can be assigned to each TEMP player for a match; the physical jersey number automatically becomes the TEMP player's lineup and Game Day number.
+- The same physical jersey—or another kit jersey with the same number—cannot be assigned to two active TEMP players in the same match.
+- Existing TEMP players and historical manual jersey numbers remain compatible.
+- View-only portal users can review inventory; only captains and super admins can add or change kits and jerseys.
+- **SQL needed:** Yes.
+- **Approved database changes:** Added `team_kits`, `jersey_inventory`, and nullable `match_temp_players.jersey_inventory_id`, with indexes, synchronization triggers, captain-only write policies, approved-portal read policies, and least-privilege grants.
+- Affected assets: `admin.html`, `jerseys.css`, `jerseys.js`, and `supabase/migrations/20260923171652_add_jersey_inventory.sql`.
+
 ## v52.10 — Match-squad-only planned substitutions
 
 - Planned-substitution choices now include only players currently assigned to the field or the **Substitutes** area.

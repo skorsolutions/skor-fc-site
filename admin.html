@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v52.10-match-squad-subs" />
+  <meta name="skor-build" content="captain-portal-v53.0-jersey-inventory" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
+  <link rel="stylesheet" href="jerseys.css" />
   <style>
     :root{
       --maroon:#741f35;
@@ -1828,13 +1829,14 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="announcements">✦ <span>Announcements</span></button>
       <button data-view="schedule">◷ <span>Schedule</span></button>
       <button data-view="roster">♟ <span>Roster</span></button>
+      <button data-view="jerseys">◫ <span>Jerseys</span></button>
       <button data-view="lineups">▦ <span>Lineups</span></button>
       <button data-view="fields">⌖ <span>Fields</span></button>
       <button data-view="join">＋ <span>Join Requests</span></button>
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v52.1</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v53.0</div>
   </aside>
 
   <main>
@@ -2611,6 +2613,68 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </section>
 
 
+    <section class="view" id="jerseys">
+      <div class="jersey-shell">
+        <div class="panel">
+          <div class="jersey-heading-row">
+            <div><h2>Jersey Inventory</h2><div class="sub">Track every physical TEMP jersey by kit, number, size, availability, and the captain who has it.</div></div>
+            <button class="mini-btn" id="refreshJerseysBtn" type="button">Refresh inventory</button>
+          </div>
+          <div class="jersey-schema-notice" id="jerseySchemaNotice">Jersey database setup is pending.</div>
+        </div>
+
+        <div class="grid jersey-metrics">
+          <div class="metric"><span>Active Jerseys</span><strong id="jerseyMetricTotal">0</strong></div>
+          <div class="metric"><span>On Hand</span><strong id="jerseyMetricOnHand">0</strong></div>
+          <div class="metric"><span>Held by Captains</span><strong id="jerseyMetricHeld">0</strong></div>
+          <div class="metric"><span>Unavailable</span><strong id="jerseyMetricUnavailable">0</strong></div>
+        </div>
+
+        <div class="jersey-setup-grid">
+          <div class="panel">
+            <div class="jersey-panel-head"><div><h2>Kits</h2><div class="sub">Maroon and White are the starting kits. Rename, recolor, archive, or add another kit at any time.</div></div></div>
+            <form class="form jersey-write-only" id="kitForm">
+              <input id="kitEditId" type="hidden">
+              <div class="jersey-form-grid">
+                <div><label for="kitName">Kit name</label><input id="kitName" maxlength="80" placeholder="Maroon, White, Goalkeeper…" required></div>
+                <div class="jersey-color-row"><div><label for="kitColorName">Color name</label><input id="kitColorName" maxlength="40" placeholder="Maroon" required></div><div><label for="kitColorHex">Color</label><input id="kitColorHex" type="color" value="#741f35" aria-label="Kit color"></div></div>
+              </div>
+              <div class="jersey-form-actions"><button class="btn btn-primary" id="saveKitBtn" type="submit">Add Kit</button><button class="btn btn-light" id="cancelKitEditBtn" type="button" style="display:none">Cancel Edit</button></div>
+            </form>
+            <div class="kit-card-list" id="jerseyKitList"></div>
+          </div>
+
+          <div class="panel">
+            <div class="jersey-panel-head"><div><h2>Add / Update Jersey</h2><div class="sub">Each row represents one physical jersey available for a walk-on or TEMP player.</div></div></div>
+            <form class="form jersey-write-only" id="jerseyForm">
+              <input id="jerseyEditId" type="hidden">
+              <div class="jersey-form-grid">
+                <div><label for="jerseyKit">Kit</label><select id="jerseyKit" required><option value="">Select kit…</option></select></div>
+                <div><label for="jerseyNumber">Jersey number</label><input id="jerseyNumber" type="number" min="1" max="99" inputmode="numeric" required></div>
+                <div><label for="jerseySize">Size</label><input id="jerseySize" list="jerseySizeOptions" maxlength="20" placeholder="M, L, XL…" required><datalist id="jerseySizeOptions"><option value="YS"><option value="YM"><option value="YL"><option value="XS"><option value="S"><option value="M"><option value="L"><option value="XL"><option value="2XL"><option value="3XL"><option value="4XL"></datalist></div>
+                <div><label for="jerseyStatus">Availability</label><select id="jerseyStatus"><option value="on_hand">On hand</option><option value="unavailable">Unavailable</option><option value="retired">Retired</option></select></div>
+                <div><label for="jerseyHolder">Captain holding jersey</label><select id="jerseyHolder"><option value="">No captain assigned</option></select></div>
+                <div class="wide"><label for="jerseyNotes">Notes</label><textarea id="jerseyNotes" maxlength="500" rows="3" placeholder="Condition, storage location, replacement needed…"></textarea></div>
+              </div>
+              <div class="jersey-form-actions"><button class="btn btn-primary" id="saveJerseyBtn" type="submit">Add Jersey</button><button class="btn btn-light" id="cancelJerseyEditBtn" type="button" style="display:none">Cancel Edit</button></div>
+              <div class="form-status" id="jerseyFormStatus"></div>
+            </form>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="jersey-panel-head"><div><h2>Inventory</h2><div class="sub">Only active kits with jerseys marked On Hand appear in the TEMP-player assignment list.</div></div></div>
+          <div class="jersey-filters">
+            <div><label for="jerseySearch">Search</label><input id="jerseySearch" placeholder="Number, size, captain, notes…"></div>
+            <div><label for="jerseyKitFilter">Kit</label><select id="jerseyKitFilter"><option value="all">All kits</option></select></div>
+            <div><label for="jerseyStatusFilter">Status</label><select id="jerseyStatusFilter"><option value="active">Active inventory</option><option value="on_hand">On hand</option><option value="unavailable">Unavailable</option><option value="retired">Retired</option><option value="all">All statuses</option></select></div>
+          </div>
+          <div class="jersey-table-wrap"><table class="table jersey-table"><thead><tr><th>Number / Size</th><th>Kit</th><th>Status</th><th>Held By</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="jerseyInventoryBody"><tr><td colspan="6"><div class="jersey-empty">Loading jersey inventory…</div></td></tr></tbody></table></div>
+        </div>
+      </div>
+    </section>
+
+
     <dialog class="departure-dialog" id="departureDialog">
       <div class="departure-shell">
         <div class="departure-head"><div><h3>Remove Player from Current Squad</h3><div class="sub">Archive the roster identity instead of deleting it.</div></div><button class="departure-close" id="departureCloseBtn" type="button" aria-label="Close">×</button></div>
@@ -2682,10 +2746,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
             <div class="mini-panel temp-player-manager" id="tempPlayerManager">
               <h4>Match Fill-ins / TEMP Players</h4>
-              <div class="temp-help">For one-game fill-ins. Name is required; jersey number is optional until you know which spare shirt fits. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
+              <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
               <div class="temp-player-form">
                 <div><label for="tempPlayerName">Name</label><input id="tempPlayerName" maxlength="80" placeholder="Fill-in player name"></div>
-                <div><label for="tempPlayerJersey">Jersey #</label><input id="tempPlayerJersey" type="number" min="1" max="99" inputmode="numeric" placeholder="TEMP"></div>
+                <div><label for="tempPlayerJersey">Available jersey</label><select id="tempPlayerJersey"><option value="">No jersey assigned yet</option></select></div>
                 <button class="mini-btn" id="saveTempPlayerBtn" type="button">Add TEMP</button>
               </div>
               <input id="tempPlayerEditId" type="hidden">
@@ -4366,6 +4430,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       player_key:"temp:"+String(r.id),
       id:"temp:"+String(r.id),
       temp_id:String(r.id),
+      jersey_inventory_id:r.jersey_inventory_id?String(r.jersey_inventory_id):"",
       number:r.jersey_number===null||r.jersey_number===undefined?null:Number(r.jersey_number),
       name:String(r.display_name||"Fill-in"),
       temp:true,
@@ -4385,9 +4450,18 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     });
     if(state.captainId===pid)state.captainId="";
   }
+  function renderTempJerseyOptions(editingTempId="",currentInventoryId=""){
+    const select=document.getElementById("tempPlayerJersey");if(!select)return;
+    const assigned=matchTempPlayers
+      .filter(p=>!p.archived&&String(p.temp_id)!==String(editingTempId||"")&&p.jersey_inventory_id)
+      .map(p=>p.jersey_inventory_id);
+    const choices=window.SKORJerseys?.availableOptions?.(currentInventoryId,assigned)||[];
+    select.innerHTML='<option value="">No jersey assigned yet</option>'+choices.map(choice=>'<option value="'+esc(choice.id)+'">'+esc(choice.label)+'</option>').join('');
+    if(currentInventoryId&&[...select.options].some(option=>option.value===String(currentInventoryId)))select.value=String(currentInventoryId);
+  }
   function resetTempPlayerForm(){
     const idEl=document.getElementById("tempPlayerEditId"),nameEl=document.getElementById("tempPlayerName"),jerseyEl=document.getElementById("tempPlayerJersey"),save=document.getElementById("saveTempPlayerBtn"),cancel=document.getElementById("cancelTempPlayerEditBtn");
-    if(idEl)idEl.value="";if(nameEl)nameEl.value="";if(jerseyEl)jerseyEl.value="";
+    if(idEl)idEl.value="";if(nameEl)nameEl.value="";renderTempJerseyOptions("","");if(jerseyEl)jerseyEl.value="";
     if(save)save.textContent="Add TEMP";if(cancel)cancel.style.display="none";
   }
   function renderTempPlayerManager(){
@@ -4401,14 +4475,17 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     }
     if(name)name.disabled=!canWrite;if(jersey)jersey.disabled=!canWrite;if(save)save.disabled=!canWrite;
     const active=matchTempPlayers.filter(p=>!p.archived);
-    context.textContent=active.length?active.length+" match fill-in"+(active.length===1?"":"s")+" available for this game.":"No fill-ins added for this match yet. Jersey number can stay blank until game day.";
+    const editingId=document.getElementById("tempPlayerEditId")?.value||"";
+    const editingPlayer=active.find(p=>p.temp_id===editingId);
+    renderTempJerseyOptions(editingId,editingPlayer?.jersey_inventory_id||"");
+    context.textContent=active.length?active.length+" match fill-in"+(active.length===1?"":"s")+" available for this game. Jersey choices come from current On Hand inventory.":"No fill-ins added for this match yet. A jersey can stay unassigned until game day.";
     list.innerHTML=active.length?active.map(p=>
-      '<div class="temp-player-row"><strong><span class="temp-pill">TEMP</span> '+esc(p.name)+' · '+esc(jerseyLabel(p)==="TEMP"?"Jersey TBD":"#"+jerseyLabel(p))+'</strong>'+
+      '<div class="temp-player-row"><strong><span class="temp-pill">TEMP</span><span>'+esc(p.name)+' · '+esc(jerseyLabel(p)==="TEMP"?"Jersey TBD":"#"+jerseyLabel(p))+(p.jersey_inventory_id?'<small class="temp-jersey-detail">'+esc(window.SKORJerseys?.labelFor?.(p.jersey_inventory_id)||"")+'</small>':'')+'</span></strong>'+
       '<div class="temp-player-actions">'+(canWrite?'<button class="mini-btn" type="button" data-temp-edit="'+esc(p.temp_id)+'">Edit</button><button class="mini-btn" type="button" data-temp-remove="'+esc(p.temp_id)+'">Remove</button>':'')+'</div></div>'
     ).join(""):'';
     list.querySelectorAll("[data-temp-edit]").forEach(btn=>btn.addEventListener("click",()=>{
       const p=matchTempPlayers.find(x=>x.temp_id===btn.dataset.tempEdit);if(!p)return;
-      document.getElementById("tempPlayerEditId").value=p.temp_id;document.getElementById("tempPlayerName").value=p.name;document.getElementById("tempPlayerJersey").value=jerseyLabel(p)==="TEMP"?"":jerseyLabel(p);
+      document.getElementById("tempPlayerEditId").value=p.temp_id;document.getElementById("tempPlayerName").value=p.name;renderTempJerseyOptions(p.temp_id,p.jersey_inventory_id);document.getElementById("tempPlayerJersey").value=p.jersey_inventory_id||"";
       document.getElementById("saveTempPlayerBtn").textContent="Update TEMP";document.getElementById("cancelTempPlayerEditBtn").style.display="inline-block";
     }));
     list.querySelectorAll("[data-temp-remove]").forEach(btn=>btn.addEventListener("click",async()=>{
@@ -4426,7 +4503,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     if(!matchId){matchTempPlayers=[];rebuildCombinedRoster();renderTempPlayerManager();renderAll();return;}
     const sb=sbClient();
     if(!sb){matchTempPlayers=[];rebuildCombinedRoster();renderTempPlayerManager();renderAll();return;}
-    const {data,error}=await sb.from("match_temp_players").select("id,match_id,display_name,jersey_number,active,created_at,updated_at").eq("match_id",matchId).order("active",{ascending:false}).order("display_name",{ascending:true});
+    const {data,error}=await sb.from("match_temp_players").select("id,match_id,display_name,jersey_number,jersey_inventory_id,active,created_at,updated_at").eq("match_id",matchId).order("active",{ascending:false}).order("display_name",{ascending:true});
     if(error){matchTempPlayers=[];rebuildCombinedRoster();renderTempPlayerManager();renderAll();if(showMessage)markStatus("Match fill-ins unavailable: "+error.message,false);return;}
     matchTempPlayers=(data||[]).map(tempPlayerFromRow);rebuildCombinedRoster();renderTempPlayerManager();renderAll();window.SKORGameDayTempPlayersChanged?.(matchId);
     if(showMessage)markStatus(matchTempPlayers.filter(p=>!p.archived).length+" match fill-in(s) loaded.");
@@ -4527,16 +4604,17 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("manage match fill-ins");return;}
     const matchId=selectedRealMatchId();if(!matchId){markStatus("Select a scheduled match before adding a TEMP player.",false);return;}
     const sb=sbClient();if(!sb){markStatus("Supabase is not connected.",false);return;}
-    const name=(document.getElementById("tempPlayerName").value||"").trim(),raw=(document.getElementById("tempPlayerJersey").value||"").trim(),jersey=raw===""?null:Number(raw),editId=(document.getElementById("tempPlayerEditId").value||"").trim();
+    const name=(document.getElementById("tempPlayerName").value||"").trim(),jerseyInventoryId=(document.getElementById("tempPlayerJersey").value||"").trim(),editId=(document.getElementById("tempPlayerEditId").value||"").trim();
     if(!name){markStatus("Enter the fill-in player's name.",false);return;}
-    if(jersey!==null&&(!Number.isInteger(jersey)||jersey<1||jersey>99)){markStatus("TEMP jersey number must be 1–99 or left blank.",false);return;}
     saveTempPlayerBtn.disabled=true;saveTempPlayerBtn.textContent="Saving…";
     try{
       let result;
-      if(editId)result=await sb.from("match_temp_players").update({display_name:name,jersey_number:jersey,active:true,updated_at:new Date().toISOString()}).eq("id",editId).eq("match_id",matchId);
-      else{const {data:{user}}=await sb.auth.getUser();result=await sb.from("match_temp_players").insert({match_id:matchId,display_name:name,jersey_number:jersey,active:true,created_by:user?.id||null});}
+      const payload={display_name:name,jersey_inventory_id:jerseyInventoryId||null,jersey_number:null,active:true,updated_at:new Date().toISOString()};
+      if(editId)result=await sb.from("match_temp_players").update(payload).eq("id",editId).eq("match_id",matchId);
+      else{const {data:{user}}=await sb.auth.getUser();result=await sb.from("match_temp_players").insert({...payload,match_id:matchId,created_by:user?.id||null});}
       if(result.error)throw result.error;
-      resetTempPlayerForm();await refreshTempPlayers(false);markStatus(name+" saved as a match TEMP player"+(jersey?" wearing #"+jersey:" with jersey TBD")+".");
+      const assignedLabel=jerseyInventoryId?window.SKORJerseys?.labelFor?.(jerseyInventoryId):"";
+      resetTempPlayerForm();await refreshTempPlayers(false);markStatus(name+" saved as a match TEMP player"+(assignedLabel?" with "+assignedLabel:" with jersey TBD")+".");
     }catch(err){const msg=String(err?.message||err);markStatus(msg.toLowerCase().includes("duplicate")?"That active TEMP name or jersey number is already in use for this match.":"Could not save TEMP player: "+msg,false);}
     finally{saveTempPlayerBtn.disabled=false;if(document.getElementById("tempPlayerEditId").value==="")saveTempPlayerBtn.textContent="Add TEMP";}
   });
@@ -4674,6 +4752,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     setCaptain,
     refreshVariations,
     refreshTempPlayers,
+    jerseysChanged:()=>renderTempPlayerManager(),
     findVariation:id=>allSharedVariations.find(v=>String(v.id)===String(id))||null,
     loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
     removePermanentPlayer:pid=>{removePlayerEverywhere(String(pid));if(selectedPlayer===String(pid))selectedPlayer=null;persistDraft();renderAll();},
@@ -4686,6 +4765,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="jerseys.js"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -4746,6 +4826,7 @@ function showDashboard(user,access){
   loadTeamFields().then(()=>loadScheduleManager());
   loadGameDayMatches();
   loadDashboardFeedback();
+  window.SKORJerseys?.init();
   window.SKORNotebook?.init();
   window.dispatchEvent(new CustomEvent("skor:portal-ready"));
 }
@@ -4819,6 +4900,7 @@ const meta = {
   announcements:["Announcements","Publish team updates to the homepage."],
   schedule:["Schedule","Create games, practices and team events."],
   roster:["Roster","Manage players, numbers, positions and status."],
+  jerseys:["Jerseys","Manage kit colors, physical jersey stock, sizes and captain custody."],
   lineups:["Lineups","Build match lineups and practice formations."],
   fields:["Fields","Store field locations, maps and parking notes."],
   join:["Join Requests","Review prospective players."],
@@ -4836,6 +4918,7 @@ function openView(id){
   document.getElementById("pageSub").textContent=meta[id][1];
   if(id==="attendance")loadAttendancePage();
   if(id==="activity")loadPlayerActivity();
+  if(id==="jerseys")window.SKORJerseys?.activate();
   if(id==="notebook")window.SKORNotebook?.activate();
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -4944,7 +5027,7 @@ function refreshGameDayRosterOptions(){
 async function loadGameDayTempPlayers(matchId){
   MATCH_TEMP_PLAYERS=[];
   if(!matchId){refreshGameDayRosterOptions();return;}
-  const {data,error}=await sb.from("match_temp_players").select("id,match_id,display_name,jersey_number,active").eq("match_id",matchId).eq("active",true).order("display_name",{ascending:true});
+  const {data,error}=await sb.from("match_temp_players").select("id,match_id,display_name,jersey_number,jersey_inventory_id,active").eq("match_id",matchId).eq("active",true).order("display_name",{ascending:true});
   if(error){console.warn("Could not load match TEMP players:",error);refreshGameDayRosterOptions();return;}
   MATCH_TEMP_PLAYERS=data||[];refreshGameDayRosterOptions();
 }
@@ -5908,8 +5991,10 @@ function parsePlayerChoice(value){
 function syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap=null,matchInput=null,keepValues=false){
   const choice=parsePlayerChoice(selectEl.value);
   const manual=!!choice?.manual;
+  const inventoryTemp=choice?.kind==="temp"&&MATCH_TEMP_PLAYERS.some(player=>String(player.id)===String(choice.id)&&player.jersey_inventory_id);
   wrap.classList.toggle("open",manual);
-  if(matchWrap)matchWrap.classList.toggle("open",!!choice && ["roster","temp"].includes(choice.kind));
+  if(matchWrap)matchWrap.classList.toggle("open",!!choice && ["roster","temp"].includes(choice.kind)&&!inventoryTemp);
+  if(matchInput)matchInput.disabled=!!inventoryTemp;
   if(!keepValues){
     nameInput.value=manual?(choice?.name||""):"";
     numberInput.value=manual?(choice?.number||""):"";
@@ -5929,7 +6014,8 @@ function selectedPlayerData(selectEl,nameInput,numberInput,matchNumberInput=null
   if(choice.kind==="temp"){
     const worn=String(matchNumberInput?.value||"").trim(),temp=MATCH_TEMP_PLAYERS.find(p=>String(p.id)===String(choice.id));
     if(!temp)return null;
-    return{name:temp.display_name,number:worn||temp.jersey_number||null,rosterNumber:null,playerKey:null,manual:false,tempId:temp.id,matchNumberOverride:worn||null};
+    const locked=!!temp.jersey_inventory_id;
+    return{name:temp.display_name,number:(locked?temp.jersey_number:worn||temp.jersey_number)||null,rosterNumber:null,playerKey:null,manual:false,tempId:temp.id,matchNumberOverride:locked?null:(worn||null),jerseyInventoryId:temp.jersey_inventory_id||null};
   }
   const name=nameInput.value.trim();
   const number=numberInput.value.trim()||choice.number;
@@ -5940,7 +6026,7 @@ function setPlayerEditorValue(selectEl,wrap,nameInput,numberInput,matchWrap,matc
   const roster=(rosterKey?ROSTER.find(p=>String(p.player_key)===String(rosterKey)):null)||ROSTER.find(p=>String(p.number)===String(rosterNumber??number??"")&&p.name===name);
   if(roster){selectEl.value=playerValue(roster);syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value=String(number??"")!==String(roster.number)?String(number??""):"";return;}
   const temp=MATCH_TEMP_PLAYERS.find(p=>String(p.display_name||"").trim().toLowerCase()===String(name||"").trim().toLowerCase());
-  if(temp){selectEl.value=tempPlayerValue(temp);syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value=String(number??"")!==String(temp.jersey_number??"")?String(number??""):"";return;}
+  if(temp){selectEl.value=tempPlayerValue(temp);syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);nameInput.value="";numberInput.value="";if(matchInput)matchInput.value=temp.jersey_inventory_id?"":(String(number??"")!==String(temp.jersey_number??"")?String(number??""):"");return;}
   const num=String(number??"");
   selectEl.value=EXTRA_JERSEY_NUMBERS.map(String).includes(num)?`extra|${num}|`:'manual||';
   syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap,matchInput,true);
