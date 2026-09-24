@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v53.0-jersey-inventory" />
+  <meta name="skor-build" content="captain-portal-v53.1-formation-4-5-1" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
@@ -1836,7 +1836,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v53.0</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v53.1</div>
   </aside>
 
   <main>
@@ -2705,7 +2705,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
             <div><label>Game / Shared Tinker Board</label><select id="lineupEvent"><option value="tinker">Tinker / New Board</option></select></div>
-            <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>3-5-2</option><option>Freeform / Custom</option></select></div><div><label>Player Labels</label><select id="lineupLabelMode"><option value="names">Names + Numbers</option><option value="numbers">Numbers Only</option></select></div>
+            <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>4-5-1</option><option>3-5-2</option><option>Freeform / Custom</option></select></div><div><label>Player Labels</label><select id="lineupLabelMode"><option value="names">Names + Numbers</option><option value="numbers">Numbers Only</option></select></div>
             <div><label>Variation name</label><input id="lineupVariationName" value="Balanced" placeholder="Balanced, Aggressive, Protect Lead..."></div>
             <div><label>Captain</label><select id="lineupCaptain"><option value="">Select captain…</option></select></div>
             <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button><button class="btn btn-light" id="copyCurrentLineupBtn" type="button">Copy Current to Game</button><button class="btn btn-light" id="updateProductionFromCurrentBtn" type="button" style="display:none">Publish Current Board to Final</button>
@@ -2907,6 +2907,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
     "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
     "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
+    "4-5-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",15,57],["LCM",37,60],["RCM",63,60],["RM",85,57],["CAM",50,43],["ST",50,23]],
     "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
   };
   const FREEFORM = "Freeform / Custom";
@@ -6358,6 +6359,7 @@ function officialFormationSlots(formation){
     "4-2-3-1":["GK","LB","LCB","RCB","RB","LDM","RDM","LW","CAM","RW","ST"],
     "4-3-3":["GK","LB","LCB","RCB","RB","LCM","CM","RCM","LW","ST","RW"],
     "4-4-2":["GK","LB","LCB","RCB","RB","LM","LCM","RCM","RM","LST","RST"],
+    "4-5-1":["GK","LB","LCB","RCB","RB","LM","LCM","RCM","RM","CAM","ST"],
     "3-5-2":["GK","LCB","CB","RCB","LWB","LCM","CM","RCM","RWB","LST","RST"]
   };
   return map[formation]||Object.keys(PRODUCTION_GAMEPLAN?.state?.slots||{});

@@ -1,3 +1,12 @@
+## v53.1 — 4-5-1 lineup formation
+
+- Adds **4-5-1** to the Lineup Builder formation choices.
+- Uses a back four, four midfielders across, one advanced central midfielder, and one striker.
+- The formation is supported by the tactical board, Potential Positions depth chart, saved variations, exports, and the published Game Day lineup.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Affected file: `admin.html`.
+
 ## v53.0 — Jersey inventory and TEMP assignments
 
 - Adds a dedicated **Jerseys** area to the Captain Portal for physical walk-on/TEMP kit inventory.
