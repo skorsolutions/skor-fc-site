@@ -1,3 +1,13 @@
+## v53.2 — Optional depth chart and named export bench
+
+- Adds an export-only option to include or omit **Potential Positions / Depth Chart** without changing the saved lineup.
+- Adds an **Available Substitutes** section that lists the actual players currently assigned to the lineup bench, including jersey numbers and TEMP labels.
+- Reflows the export dynamically so the bench, optional depth chart, planned waves, quote, and notes cannot overlap as their contents grow.
+- Expands Planned Substitution rows when names wrap instead of allowing text to collide or hiding later waves.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Affected file: `admin.html`.
+
 ## v53.1 — 4-5-1 lineup formation
 
 - Adds **4-5-1** to the Lineup Builder formation choices.

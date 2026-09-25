@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v53.1-formation-4-5-1" />
+  <meta name="skor-build" content="captain-portal-v53.2-export-options-subs" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
@@ -1160,6 +1160,9 @@
     }
     .gameplan-message-grid label{display:block;margin-bottom:5px;font-size:.72rem;font-weight:900;color:#444}
     .gameplan-message-grid textarea{resize:vertical}
+    .gameplan-export-options{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .gameplan-export-option{display:flex;align-items:center;gap:9px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#f8f9fb;color:#30343b;font-size:.75rem;font-weight:850;cursor:pointer}
+    .gameplan-export-option input{width:18px;height:18px;margin:0;accent-color:var(--maroon)}
     @media(max-width:650px){
       #lineups .gameplan-message-grid{grid-template-columns:1fr!important}
       #lineups .captain-badge{width:15px;height:15px;right:-5px;top:-4px;font-size:.48rem}
@@ -1836,7 +1839,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v53.1</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v53.2</div>
   </aside>
 
   <main>
@@ -2778,7 +2781,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="gameplan-export-head">
             <div>
               <h2>Shareable Gameplan Export</h2>
-              <div class="sub">Load any saved variation or use the current board, then export a WhatsApp-ready PNG or JPG. Captain, quote, notes, substitute count, lineup, coverage, and grouped planned substitutions are included.</div>
+              <div class="sub">Load any saved variation or use the current board, then export a WhatsApp-ready PNG or JPG. The named substitute bench is always included; Potential Positions can be included only when you want the depth chart shared.</div>
             </div>
             <div class="gameplan-export-actions">
               <button class="btn btn-primary" id="exportGameplanPng" type="button">Export PNG</button>
@@ -2794,6 +2797,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <label>Gameplan notes</label>
               <textarea id="gameplanNotes" maxlength="280" rows="3" placeholder="Todd will call the subs.&#10;Be ready on the sideline."></textarea>
             </div>
+          </div>
+          <div class="gameplan-export-options">
+            <label class="gameplan-export-option" for="exportIncludeDepthChart"><input id="exportIncludeDepthChart" type="checkbox" checked> Include Potential Positions / Depth Chart</label>
           </div>
           <div class="gameplan-preview-shell">
             <div class="gameplan-preview" id="gameplanPreview"></div>
@@ -3256,10 +3262,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       '</text>';
   }
   function filledSecondHalfSubs(snapshot=state){
-    return (snapshot?.subs?.secondHalf||[]).filter(row=>row && (row.out || row.in));
+    return (snapshot?.subs?.secondHalf||[]).filter(row=>row && ((row.out||[]).length || (row.in||[]).length || String(row.label||"").trim()));
   }
   function filledFirstHalfSubs(snapshot=state){
-    return (snapshot?.subs?.firstHalf||[]).filter(row=>row && (row.out || row.in));
+    return (snapshot?.subs?.firstHalf||[]).filter(row=>row && ((row.out||[]).length || (row.in||[]).length || String(row.label||"").trim()));
   }
   function fieldEntries(snapshot=state){
     if(isFreeform(snapshot.formation)){
@@ -3293,6 +3299,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const firstHalfSubs=filledFirstHalfSubs();
     const secondHalfSubs=filledSecondHalfSubs();
     const substituteCount=(state.bench||[]).length;
+    const benchPlayers=(state.bench||[]).map(pid=>player(pid)).filter(Boolean);
+    const includeDepthChart=document.getElementById("exportIncludeDepthChart")?.checked!==false;
     const captain=player(state.captainId);
     const captainText=captain?playerListLabel(captain):"Not selected";
     const pitchX=70,pitchY=258,pitchW=940,pitchH=744;
@@ -3329,6 +3337,32 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       return lines;
     }
 
+    const benchCardX=50,benchCardY=1064,benchCardW=980;
+    const benchChipStartX=benchCardX+24,benchChipMaxX=benchCardX+benchCardW-24;
+    let benchChipX=benchChipStartX,benchChipY=benchCardY+78,benchRowCount=benchPlayers.length?1:0;
+    const benchChips=benchPlayers.map(p=>{
+      const label=playerListLabel(p,true);
+      const width=Math.min(270,Math.max(132,52+(label.length*10)));
+      if(benchChipX+width>benchChipMaxX&&benchChipX>benchChipStartX){
+        benchChipX=benchChipStartX;
+        benchChipY+=50;
+        benchRowCount++;
+      }
+      const x=benchChipX,y=benchChipY;
+      benchChipX+=width+10;
+      return `
+        <rect x="${x}" y="${y}" width="${width}" height="40" rx="20" ry="20" fill="#f7f8fa" stroke="#d8dbe1"/>
+        <circle cx="${x+21}" cy="${y+20}" r="14" fill="#801A3D"/>
+        <text x="${x+21}" y="${y+25}" text-anchor="middle" font-size="12" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
+        <text x="${x+42}" y="${y+26}" font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}${p.temp?' · TEMP':''}</text>
+      `;
+    }).join("");
+    const benchRowsHeight=benchRowCount?(benchRowCount*40)+((benchRowCount-1)*10):44;
+    const benchCardH=78+benchRowsHeight+20;
+    const lowerCardsY=benchCardY+benchCardH+26;
+    const depthCardX=50,depthCardY=lowerCardsY,depthCardW=480;
+    const planCardX=includeDepthChart?550:50,planCardY=lowerCardsY,planCardW=includeDepthChart?480:980;
+
     const depthForExport=depthPositionsForFormation(state.formation);
     const subsByPosition = depthForExport.map(pos=>{
       const names=(state?.depth?.[pos.key]||[])
@@ -3343,21 +3377,48 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const continuationCount=Math.max(0,(row.lines||[]).length-1);
       return sum+depthBaseRowH+(continuationCount*(depthInnerGap+depthContinuationH))+depthPositionGap;
     },0);
-    const depthNeededHeight=Math.max(560,98+depthRowsHeight+18);
+    const depthNeededHeight=includeDepthChart?Math.max(360,98+depthRowsHeight+18):0;
+
+    const planMaxChars=includeDepthChart?42:94;
+    function preparePlanRows(rows){
+      return rows.map(entry=>{
+        const lines=[];
+        const waveName=String(entry?.label||"").trim();
+        if(waveName)wrapExportLines(waveName,planMaxChars).forEach(text=>lines.push({kind:"wave",text}));
+        wrapExportLines("Out: "+prettyPlayers(entry.out,true),planMaxChars).forEach(text=>lines.push({kind:"detail",text}));
+        wrapExportLines("In: "+prettyPlayers(entry.in,true),planMaxChars).forEach(text=>lines.push({kind:"detail",text}));
+        return {entry,lines,height:Math.max(56,20+(lines.length*17))};
+      });
+    }
+    function planRowsHeight(rows){
+      return rows.length?rows.reduce((sum,row)=>sum+row.height,0)+((rows.length-1)*8):48;
+    }
+    const firstPlanRows=preparePlanRows(firstHalfSubs);
+    const secondPlanRows=preparePlanRows(secondHalfSubs);
     const showSecondHalfExport=state.showSecondHalfSubs===true;
-    const planRowStep=54;
-    const firstHalfRowsY=1170;
-    const firstHalfRowCount=Math.max(1,firstHalfSubs.length);
-    const secondHalfTitleY=firstHalfRowsY+(firstHalfRowCount*planRowStep)+20;
+    const firstHalfTitleY=planCardY+78;
+    const firstHalfRowsY=firstHalfTitleY+28;
+    const firstHalfRowsHeight=planRowsHeight(firstPlanRows);
+    const secondHalfTitleY=firstHalfRowsY+firstHalfRowsHeight+32;
     const secondHalfRowsY=secondHalfTitleY+28;
-    const secondHalfRowCount=showSecondHalfExport?Math.max(1,secondHalfSubs.length):0;
+    const secondHalfRowsHeight=showSecondHalfExport?planRowsHeight(secondPlanRows):0;
     const planContentBottom=showSecondHalfExport
-      ? secondHalfRowsY+(secondHalfRowCount*planRowStep)-6
-      : firstHalfRowsY+(firstHalfRowCount*planRowStep)-6;
-    const planNeededHeight=Math.max(560,(planContentBottom+18)-1064);
-    const lowerCardH=Math.max(depthNeededHeight,planNeededHeight);
-    const lowerCardExtra=lowerCardH-560;
-    H+=lowerCardExtra;
+      ? secondHalfRowsY+secondHalfRowsHeight
+      : firstHalfRowsY+firstHalfRowsHeight;
+    const planNeededHeight=Math.max(360,(planContentBottom-planCardY)+20);
+    const lowerCardH=includeDepthChart?Math.max(depthNeededHeight,planNeededHeight):planNeededHeight;
+    const depthCardH=lowerCardH,planCardH=lowerCardH;
+
+    const messageY=lowerCardsY+lowerCardH+24;
+    const quoteHeight=state.quote?76:0;
+    const notesY=state.quote?messageY+92:messageY;
+    const notesHeight=state.notes?(state.quote?144:236):0;
+    const contentBottom=Math.max(
+      lowerCardsY+lowerCardH,
+      quoteHeight?messageY+quoteHeight:0,
+      notesHeight?notesY+notesHeight:0
+    );
+    H=Math.max(1920,contentBottom+60);
 
     const header = `
       <rect x="0" y="0" width="${W}" height="${H}" fill="#13161d"/>
@@ -3408,9 +3469,6 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       `;
     }).join("");
 
-    const depthCardX=50, depthCardY=1064, depthCardW=480, depthCardH=lowerCardH;
-    const planCardX=550, planCardY=1064, planCardW=480, planCardH=lowerCardH;
-
     const depthRows = subsByPosition.length ? (()=>{
       let currentY = depthCardY + 98;
       const baseRowH = 34;
@@ -3443,36 +3501,34 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     })() : `<rect x="${depthCardX+20}" y="${depthCardY+104}" width="${depthCardW-40}" height="44" rx="22" ry="22" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${depthCardX+40}" y="${depthCardY+133}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No potential positions assigned.</text>`;
 
     const renderPlanRows=(rows,startY,labelColor)=>{
-      return rows.map((entry, idx)=>{
-        const bubbleY = startY + idx*54;
-        const outText = prettyPlayers(entry.out, true);
-        const inText = prettyPlayers(entry.in, true);
-        const waveName=String(entry?.label||"").trim();
-        const details = waveName
-          ? `${svgTextBlock(waveName, planCardX+78, bubbleY+13, 34, 14, 1, 'font-size="13" font-weight="950" fill="'+labelColor+'" font-family="Arial, Helvetica, sans-serif"')}
-             ${svgTextBlock('Out: '+outText, planCardX+78, bubbleY+29, 42, 15, 1, 'font-size="14" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
-             ${svgTextBlock('In: '+inText, planCardX+78, bubbleY+44, 42, 15, 1, 'font-size="14" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}`
-          : `${svgTextBlock('Out: '+outText, planCardX+78, bubbleY+19, 38, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}
-             ${svgTextBlock('In: '+inText, planCardX+78, bubbleY+39, 38, 18, 1, 'font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif"')}`;
+      let currentY=startY;
+      return rows.map((row,idx)=>{
+        const bubbleY=currentY;
+        const textLines=row.lines.map((line,lineIndex)=>{
+          const y=bubbleY+18+(lineIndex*17);
+          const attrs=line.kind==="wave"
+            ? `font-size="13" font-weight="950" fill="${labelColor}"`
+            : 'font-size="14" font-weight="850" fill="#1f2937"';
+          return `<text x="${planCardX+78}" y="${y}" ${attrs} font-family="Arial, Helvetica, sans-serif">${esc(line.text)}</text>`;
+        }).join("");
+        currentY+=row.height+8;
         return `
-          <rect x="${planCardX+20}" y="${bubbleY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/>
-          <circle cx="${planCardX+48}" cy="${bubbleY+24}" r="18" fill="${labelColor}"/>
-          <text x="${planCardX+48}" y="${bubbleY+30}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${idx+1}</text>
-          ${details}
+          <rect x="${planCardX+20}" y="${bubbleY}" width="${planCardW-40}" height="${row.height}" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/>
+          <circle cx="${planCardX+48}" cy="${bubbleY+(row.height/2)}" r="18" fill="${labelColor}"/>
+          <text x="${planCardX+48}" y="${bubbleY+(row.height/2)+6}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${idx+1}</text>
+          ${textLines}
         `;
       }).join("");
     };
 
-    const firstHalfRows = firstHalfSubs.length ? renderPlanRows(firstHalfSubs, firstHalfRowsY, '#801A3D') : `<rect x="${planCardX+20}" y="${firstHalfRowsY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="${firstHalfRowsY+30}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
-    const secondHalfRows = !showSecondHalfExport ? '' : (secondHalfSubs.length ? renderPlanRows(secondHalfSubs, secondHalfRowsY, '#234b74') : `<rect x="${planCardX+20}" y="${secondHalfRowsY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="${secondHalfRowsY+30}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`);
+    const firstHalfRows = firstPlanRows.length ? renderPlanRows(firstPlanRows,firstHalfRowsY,'#801A3D') : `<rect x="${planCardX+20}" y="${firstHalfRowsY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="${firstHalfRowsY+30}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No first-half subs planned.</text>`;
+    const secondHalfRows = !showSecondHalfExport ? '' : (secondPlanRows.length ? renderPlanRows(secondPlanRows,secondHalfRowsY,'#234b74') : `<rect x="${planCardX+20}" y="${secondHalfRowsY}" width="${planCardW-40}" height="48" rx="18" ry="18" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${planCardX+40}" y="${secondHalfRowsY+30}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No second-half subs planned.</text>`);
 
-    const messageY=1648+lowerCardExtra;
     const quoteBlock = state.quote ? `
       <rect x="50" y="${messageY}" width="980" height="76" rx="20" ry="20" fill="#801A3D"/>
       ${svgTextBlock('“'+state.quote+'”',W/2,messageY+39,68,24,2,'text-anchor="middle" font-size="24" font-style="italic" font-weight="900" fill="#ffffff" font-family="Arial, Helvetica, sans-serif"')}
     ` : "";
 
-    const notesY=state.quote ? messageY+92 : messageY;
     const notesBlock = state.notes ? `
       <rect x="50" y="${notesY}" width="980" height="${state.quote?144:236}" rx="20" ry="20" fill="#f7f8fa" stroke="#dfe2e7"/>
       <text x="74" y="${notesY+31}" font-size="18" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">GAMEPLAN NOTES</text>
@@ -3484,14 +3540,20 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       ${pitch}
       ${markerSvg}
 
-      <rect x="${depthCardX}" y="${depthCardY}" width="${depthCardW}" height="${depthCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
-      <text x="${depthCardX+24}" y="${depthCardY+44}" font-size="27" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Potential Positions</text>
-      <text x="${depthCardX+24}" y="${depthCardY+70}" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">${esc(state.formation)} positions · ${substituteCount} substitutes</text>
-      ${depthRows}
+      <rect x="${benchCardX}" y="${benchCardY}" width="${benchCardW}" height="${benchCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
+      <text x="${benchCardX+24}" y="${benchCardY+42}" font-size="27" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Available Substitutes</text>
+      <text x="${benchCardX+24}" y="${benchCardY+66}" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">${substituteCount} player${substituteCount===1?'':'s'} currently on the lineup bench</text>
+      ${benchChips||`<rect x="${benchCardX+24}" y="${benchCardY+78}" width="${benchCardW-48}" height="44" rx="22" ry="22" fill="#f7f8fa" stroke="#e2e5e9"/><text x="${benchCardX+44}" y="${benchCardY+107}" font-size="18" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">No substitutes assigned to the bench.</text>`}
 
+      ${includeDepthChart?`
+        <rect x="${depthCardX}" y="${depthCardY}" width="${depthCardW}" height="${depthCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
+        <text x="${depthCardX+24}" y="${depthCardY+44}" font-size="27" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Potential Positions</text>
+        <text x="${depthCardX+24}" y="${depthCardY+70}" font-size="15" font-weight="800" fill="#6b7280" font-family="Arial, Helvetica, sans-serif">${esc(state.formation)} depth chart</text>
+        ${depthRows}
+      `:''}
       <rect x="${planCardX}" y="${planCardY}" width="${planCardW}" height="${planCardH}" rx="24" ry="24" fill="#ffffff" stroke="#d8dbe1"/>
       <text x="${planCardX+24}" y="${planCardY+44}" font-size="27" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Planned Substitutions</text>
-      <text x="${planCardX+24}" y="1142" font-size="19" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
+      <text x="${planCardX+24}" y="${firstHalfTitleY}" font-size="19" font-weight="900" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">First Half</text>
       ${firstHalfRows}
       ${showSecondHalfExport?`<text x="${planCardX+24}" y="${secondHalfTitleY}" font-size="19" font-weight="900" fill="#234b74" font-family="Arial, Helvetica, sans-serif">Second Half</text>${secondHalfRows}`:''}
 
@@ -4532,6 +4594,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   const captainSelect=document.getElementById('lineupCaptain');
   const gameplanQuote=document.getElementById('gameplanQuote');
   const gameplanNotes=document.getElementById('gameplanNotes');
+  const exportIncludeDepthChart=document.getElementById('exportIncludeDepthChart');
   const saveBtn=document.getElementById('saveLineupVariation');
   const copyCurrentBtn=document.getElementById('copyCurrentLineupBtn');
   const updateProductionBtn=document.getElementById('updateProductionFromCurrentBtn');
@@ -4596,6 +4659,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   if(gameplanNotes) gameplanNotes.addEventListener('input',()=>{
     state.notes=gameplanNotes.value.slice(0,280);
     persistDraft();
+  });
+  if(exportIncludeDepthChart) exportIncludeDepthChart.addEventListener('change',()=>{
+    renderGameplanPreview();
+    markStatus(exportIncludeDepthChart.checked?'Potential Positions will be included in this export.':'Potential Positions will be omitted from this export.');
   });
 
   const saveTempPlayerBtn=document.getElementById("saveTempPlayerBtn");
@@ -4796,7 +4863,7 @@ function applyPortalRoleUI(){
     badge.classList.toggle("viewer",viewer);
     badge.classList.toggle("super-admin",superAdmin);
   }
-  ["lineupFormation","lineupVariationName","lineupCaptain","gameplanQuote","gameplanNotes","motmPlayer","motmReason","motmManualName","motmManualNumber","motmMatchNumber"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=viewer;});
+  ["lineupFormation","lineupVariationName","lineupCaptain","gameplanQuote","gameplanNotes","exportIncludeDepthChart","motmPlayer","motmReason","motmManualName","motmManualNumber","motmMatchNumber"].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=viewer;});
 }
 
 function showAuthError(message){
