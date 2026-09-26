@@ -283,6 +283,8 @@
     const root=$("strategyScenes");if(!root||!draft)return;
     root.innerHTML=draft.scenes.map((scene,index)=>'<button class="strategy-scene-tab '+(scene.id===draft.activeSceneId?'active':'')+'" type="button" role="tab" aria-selected="'+(scene.id===draft.activeSceneId)+'" data-scene="'+esc(scene.id)+'" data-type="'+esc(scene.type)+'"><span></span>'+(index+1)+'. '+esc(scene.name)+'</button>').join("");
     root.querySelectorAll("[data-scene]").forEach(button=>button.addEventListener("click",()=>{draft.activeSceneId=button.dataset.scene;renderAll();queuePersist();}));
+    const removeButton=$("strategyDeleteScene");
+    if(removeButton){removeButton.disabled=draft.scenes.length<=1;removeButton.title=removeButton.disabled?"A strategy must keep at least one scene.":"Remove the selected scene.";}
   }
   function renderInputs(){
     const scene=activeScene();if(!scene||!draft)return;
@@ -324,14 +326,14 @@
   }
   function homeMarkup(player){
     const x=player.x*10,y=player.y*6.8;
-    return '<g class="strategy-svg-home strategy-player-shadow" data-kind="home" data-id="'+esc(player.id)+'" transform="translate('+x+' '+y+')" filter="url(#strategyShadow)"><circle r="29" fill="#741f35" stroke="#fff" stroke-width="4"/><text y="5" text-anchor="middle" fill="#fff" font-size="19" font-weight="950">'+esc(player.number)+'</text><rect x="-39" y="32" width="78" height="24" rx="12" fill="#17181d" opacity=".94"/><text y="49" text-anchor="middle" fill="#fff" font-size="14" font-weight="850">'+esc(player.name)+'</text></g>';
+    return '<g class="strategy-svg-home strategy-player-shadow" data-kind="home" data-id="'+esc(player.id)+'" transform="translate('+x+' '+y+')" filter="url(#strategyShadow)"><circle r="44" fill="transparent"/><circle r="29" fill="#741f35" stroke="#fff" stroke-width="4"/><text y="5" text-anchor="middle" fill="#fff" font-size="19" font-weight="950">'+esc(player.number)+'</text><rect x="-39" y="32" width="78" height="24" rx="12" fill="#17181d" opacity=".94"/><text y="49" text-anchor="middle" fill="#fff" font-size="14" font-weight="850">'+esc(player.name)+'</text></g>';
   }
   function awayMarkup(player,index){
     const x=player.x*10,y=player.y*6.8;
-    return '<g class="strategy-svg-away strategy-player-shadow" data-kind="opponent" data-id="'+esc(player.id)+'" transform="translate('+x+' '+y+')" filter="url(#strategyShadow)"><circle r="25" fill="#f7f5f1" stroke="#414650" stroke-width="4"/><text y="5" text-anchor="middle" fill="#343841" font-size="14" font-weight="950">'+esc(player.label||"O"+(index+1))+'</text></g>';
+    return '<g class="strategy-svg-away strategy-player-shadow" data-kind="opponent" data-id="'+esc(player.id)+'" transform="translate('+x+' '+y+')" filter="url(#strategyShadow)"><circle r="42" fill="transparent"/><circle r="25" fill="#f7f5f1" stroke="#414650" stroke-width="4"/><text y="5" text-anchor="middle" fill="#343841" font-size="14" font-weight="950">'+esc(player.label||"O"+(index+1))+'</text></g>';
   }
   function ballMarkup(ball){
-    return '<g class="strategy-svg-ball" data-kind="ball" data-id="ball" transform="translate('+(ball.x*10)+' '+(ball.y*6.8)+')" filter="url(#strategyShadow)"><circle r="13" fill="#fff" stroke="#17181d" stroke-width="3"/><circle r="4" fill="#17181d"/></g>';
+    return '<g class="strategy-svg-ball" data-kind="ball" data-id="ball" transform="translate('+(ball.x*10)+' '+(ball.y*6.8)+')" filter="url(#strategyShadow)"><circle r="34" fill="transparent"/><circle r="13" fill="#fff" stroke="#17181d" stroke-width="3"/><circle r="4" fill="#17181d"/></g>';
   }
   function pitchMarkup(scene,options={}){
     if(!scene)return baseSvg(false);
@@ -427,6 +429,14 @@
     const scene=activeScene();if(!scene)return;
     const copy=clone(scene);copy.id=uid("scene");copy.name=(scene.name+" Copy").slice(0,50);draft.scenes.splice(draft.scenes.indexOf(scene)+1,0,copy);draft.activeSceneId=copy.id;renderAll();queuePersist();
   }
+  function renameScene(){
+    const scene=activeScene();if(!scene)return;
+    const requested=prompt("Rename selected scene",scene.name);
+    if(requested===null)return;
+    const name=requested.trim().slice(0,50);
+    if(!name){alert("Enter a scene name before saving.");return;}
+    scene.name=name;renderAll();queuePersist();
+  }
   function deleteScene(){
     if(draft.scenes.length===1){alert("Keep at least one strategy scene.");return;}
     const scene=activeScene();if(!confirm('Delete the scene "'+scene.name+'"?'))return;
@@ -454,7 +464,7 @@
     $("strategyPitch").addEventListener("pointerdown",pointerDown);$("strategyPitch").addEventListener("pointermove",pointerMove);$("strategyPitch").addEventListener("pointerup",pointerUp);$("strategyPitch").addEventListener("pointercancel",pointerUp);
     $("strategyUndo").addEventListener("click",()=>{const scene=activeScene();if(scene?.drawings.length){scene.drawings.pop();renderPitch();queuePersist();}});
     $("strategyClearMarks").addEventListener("click",()=>{const scene=activeScene();if(scene?.drawings.length&&confirm("Clear all coaching marks from this scene?")){scene.drawings=[];renderPitch();queuePersist();}});
-    $("strategyAddScene").addEventListener("click",addScene);$("strategyDuplicateScene").addEventListener("click",duplicateScene);$("strategyDeleteScene").addEventListener("click",deleteScene);
+    $("strategyAddScene").addEventListener("click",addScene);$("strategyRenameScene").addEventListener("click",renameScene);$("strategyDuplicateScene").addEventListener("click",duplicateScene);$("strategyDeleteScene").addEventListener("click",deleteScene);
     $("strategyTitle").addEventListener("input",event=>{draft.title=event.target.value.slice(0,70);queuePersist();});
     $("strategySceneTitle").addEventListener("input",event=>{const scene=activeScene();scene.name=event.target.value.slice(0,50)||"Untitled Scene";$("strategySceneName").textContent=scene.name;renderScenes();queuePersist();});
     $("strategySceneTypeSelect").addEventListener("change",event=>{const scene=activeScene();scene.type=event.target.value;$("strategySceneType").textContent=TYPE_LABELS[scene.type];renderScenes();queuePersist();});

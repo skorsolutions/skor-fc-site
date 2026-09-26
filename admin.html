@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v54.0-strategy-notebook-ai" />
+  <meta name="skor-build" content="captain-portal-v54.1-strategy-mobile-scenes" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
-  <link rel="stylesheet" href="strategy.css" />
+  <link rel="stylesheet" href="strategy.css?v=54.1" />
   <style>
     :root{
       --maroon:#741f35;
@@ -1841,7 +1841,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v54.0</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v54.1</div>
   </aside>
 
   <main>
@@ -2863,9 +2863,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="strategy-scenes-row">
           <div class="strategy-scenes" id="strategyScenes" role="tablist" aria-label="Strategy scenes"></div>
           <div class="strategy-scene-actions">
-            <button class="mini-btn" id="strategyAddScene" type="button">+ Scene</button>
+            <button class="mini-btn" id="strategyAddScene" type="button">+ New scene</button>
+            <button class="mini-btn" id="strategyRenameScene" type="button">Rename selected</button>
             <button class="mini-btn" id="strategyDuplicateScene" type="button">Duplicate</button>
-            <button class="mini-btn strategy-danger" id="strategyDeleteScene" type="button">Delete</button>
+            <button class="mini-btn strategy-danger" id="strategyDeleteScene" type="button">Remove selected</button>
           </div>
         </div>
 
@@ -2899,7 +2900,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="strategy-notes-panel">
             <label for="strategyTitle">Strategy title</label>
             <input id="strategyTitle" maxlength="70" value="Match Strategy" placeholder="Match Strategy">
-            <label for="strategySceneTitle">Scene name</label>
+            <label for="strategySceneTitle">Selected scene name</label>
             <input id="strategySceneTitle" maxlength="50" value="Build Up" placeholder="Build Up">
             <label for="strategySceneTypeSelect">Moment of the game</label>
             <select id="strategySceneTypeSelect"><option value="offense">In possession</option><option value="defense">Out of possession</option><option value="transition">Transition</option></select>
@@ -4944,7 +4945,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="jerseys.js"></script>
-<script src="strategy.js"></script>
+<script src="strategy.js?v=54.1"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";

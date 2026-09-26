@@ -1,3 +1,13 @@
+## v54.1 — Strategy scene controls and phone repair
+
+- Adds clear **Rename selected** and **Remove selected** actions beside the strategy scene tabs.
+- Keeps the editable selected-scene name field for quick inline changes and disables removal when only one scene remains.
+- Rebuilds the Strategy workspace at phone widths so scene tabs, scene actions, drawing tools, pitch, and coaching controls remain inside the viewport.
+- Adds larger invisible touch targets around players, opponent placeholders, and the ball without changing the exported tactic image.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Affected assets: `admin.html`, `strategy.css`, and `strategy.js`.
+
 ## v53.2 — Optional depth chart and named export bench
 
 - Adds an export-only option to include or omit **Potential Positions / Depth Chart** without changing the saved lineup.
