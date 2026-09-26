@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v54.2-shared-strategy-library" />
+  <meta name="skor-build" content="captain-portal-v54.3-formation-3-2-3-2" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
@@ -1841,7 +1841,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v54.2</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v54.3</div>
   </aside>
 
   <main>
@@ -2723,7 +2723,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
             <div><label>Game / Shared Tinker Board</label><select id="lineupEvent"><option value="tinker">Tinker / New Board</option></select></div>
-            <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>4-5-1</option><option>3-5-2</option><option>Freeform / Custom</option></select></div><div><label>Player Labels</label><select id="lineupLabelMode"><option value="names">Names + Numbers</option><option value="numbers">Numbers Only</option></select></div>
+            <div><label>Formation</label><select id="lineupFormation"><option>4-2-3-1</option><option>4-3-3</option><option>4-4-2</option><option>4-5-1</option><option>3-5-2</option><option>3-2-3-2</option><option>Freeform / Custom</option></select></div><div><label>Player Labels</label><select id="lineupLabelMode"><option value="names">Names + Numbers</option><option value="numbers">Numbers Only</option></select></div>
             <div><label>Variation name</label><input id="lineupVariationName" value="Balanced" placeholder="Balanced, Aggressive, Protect Lead..."></div>
             <div><label>Captain</label><select id="lineupCaptain"><option value="">Select captain…</option></select></div>
             <button class="btn btn-primary" id="saveLineupVariation" type="button">Save Variation</button><button class="btn btn-light" id="copyCurrentLineupBtn" type="button">Copy Current to Game</button><button class="btn btn-light" id="updateProductionFromCurrentBtn" type="button" style="display:none">Publish Current Board to Final</button>
@@ -2855,7 +2855,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <button class="btn btn-primary" id="strategyImportLineup" type="button">Start from lineup</button>
           <div class="strategy-field">
             <label for="strategyOpponentFormation">Opponent formation</label>
-            <select id="strategyOpponentFormation"><option>4-4-2</option><option>4-3-3</option><option>4-2-3-1</option><option>4-5-1</option><option>3-5-2</option><option>3-4-3</option><option>5-3-2</option><option value="Custom / Freeform">Custom / Freeform</option></select>
+            <select id="strategyOpponentFormation"><option>4-4-2</option><option>4-3-3</option><option>4-2-3-1</option><option>4-5-1</option><option>3-5-2</option><option>3-2-3-2</option><option>3-4-3</option><option>5-3-2</option><option value="Custom / Freeform">Custom / Freeform</option></select>
           </div>
           <label class="strategy-check"><input id="strategyShowLanes" type="checkbox" checked> Show five vertical lanes</label>
         </div>
@@ -3029,7 +3029,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
     "4-4-2":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",18,54],["LCM",40,58],["RCM",60,58],["RM",82,54],["LST",39,29],["RST",61,29]],
     "4-5-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LM",15,57],["LCM",37,60],["RCM",63,60],["RM",85,57],["CAM",50,43],["ST",50,23]],
-    "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]]
+    "3-5-2":[["GK",50,92],["LCB",25,77],["CB",50,81],["RCB",75,77],["LWB",13,55],["LCM",36,58],["CM",50,51],["RCM",64,58],["RWB",87,55],["LST",39,28],["RST",61,28]],
+    "3-2-3-2":[["GK",50,92],["LB",20,77],["CB",50,81],["RB",80,77],["LDM",38,61],["RDM",62,61],["LAM",20,42],["CAM",50,46],["RAM",80,42],["LCF",39,25],["RCF",61,25]]
   };
   const FREEFORM = "Freeform / Custom";
 
@@ -3051,10 +3052,14 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     RCM:"Right Central Midfielder",
     RM:"Right Midfielder",
     LW:"Left Wing",
+    LAM:"Left Attacking Midfielder",
     CAM:"Attacking Midfielder",
+    RAM:"Right Attacking Midfielder",
     RW:"Right Wing",
     LST:"Left Striker",
+    LCF:"Left Center Forward",
     ST:"Striker",
+    RCF:"Right Center Forward",
     RST:"Right Striker"
   };
 
@@ -4955,7 +4960,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="jerseys.js"></script>
-<script src="strategy.js?v=54.2"></script>
+<script src="strategy.js?v=54.3"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -6553,7 +6558,8 @@ function officialFormationSlots(formation){
     "4-3-3":["GK","LB","LCB","RCB","RB","LCM","CM","RCM","LW","ST","RW"],
     "4-4-2":["GK","LB","LCB","RCB","RB","LM","LCM","RCM","RM","LST","RST"],
     "4-5-1":["GK","LB","LCB","RCB","RB","LM","LCM","RCM","RM","CAM","ST"],
-    "3-5-2":["GK","LCB","CB","RCB","LWB","LCM","CM","RCM","RWB","LST","RST"]
+    "3-5-2":["GK","LCB","CB","RCB","LWB","LCM","CM","RCM","RWB","LST","RST"],
+    "3-2-3-2":["GK","LB","CB","RB","LDM","RDM","LAM","CAM","RAM","LCF","RCF"]
   };
   return map[formation]||Object.keys(PRODUCTION_GAMEPLAN?.state?.slots||{});
 }
