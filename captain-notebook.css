@@ -187,6 +187,7 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 .notebook-debrief-empty{border:1px dashed #d4d6da;border-radius:13px;padding:25px;text-align:center;background:#fafafa;color:#6d7279;font-size:.78rem}
 .notebook-draft-banner{display:inline-flex;align-items:center;margin-bottom:13px;padding:5px 9px;border-radius:999px;background:#f7e8ed;color:#7b1939;font-size:.61rem;font-weight:950;text-transform:uppercase;letter-spacing:.06em}
 .notebook-draft-banner.complete{background:#e5f1e9;color:#315f4a}
+.notebook-plan-context{display:grid;gap:11px;margin-bottom:14px;border:1px solid #dac5cc;border-radius:13px;background:linear-gradient(135deg,#fffafb,#f7f4f5);padding:13px}.notebook-plan-context[hidden]{display:none!important}.notebook-plan-context-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.notebook-plan-context-head>div{display:grid;gap:3px}.notebook-plan-context-head strong{font-size:.78rem;color:#53172b}.notebook-plan-context-head span{font-size:.61rem;color:#70747a;line-height:1.4}.notebook-plan-context-head .btn{flex:0 0 auto;padding:7px 10px;font-size:.62rem}.notebook-plan-context-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.notebook-plan-context-grid>div{display:grid;gap:3px;border:1px solid #e1dcde;border-radius:10px;background:#fff;padding:10px}.notebook-plan-context-grid span{font-size:.54rem;font-weight:950;letter-spacing:.08em;color:#822241}.notebook-plan-context-grid strong{font-size:.72rem;color:#34373c}.notebook-plan-context-grid small{font-size:.58rem;line-height:1.4;color:#73777e}
 .notebook-question-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .notebook-question{border:1px solid #e2e3e6;border-radius:12px;background:#fbfbfc;padding:12px}
 .notebook-question label{display:block;margin-bottom:7px;font-size:.72rem;font-weight:950;color:#31353b}
@@ -250,6 +251,7 @@ body.viewer-mode .nav button[data-view="notebook"]{display:none!important}
 @media(max-width:820px){
   .notebook-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .notebook-question-grid,.notebook-player-grid{grid-template-columns:1fr}
+  .notebook-plan-context-head{align-items:stretch;flex-direction:column}.notebook-plan-context-head .btn{width:100%}.notebook-plan-context-grid{grid-template-columns:1fr}
   .notebook-debrief-head,.notebook-player-review-head,.notebook-pregame-head{align-items:stretch;flex-direction:column}
   .notebook-match-control,.notebook-player-search{min-width:0;width:100%}
 }

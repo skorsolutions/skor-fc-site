@@ -8,6 +8,7 @@
   const ASSESSMENT_TABLE="captain_player_assessments";
   const ALIAS_TABLE="captain_player_name_aliases";
   const ATTACHMENT_TABLE="captain_notebook_attachments";
+  const STRATEGY_TABLE="match_strategies";
   const MEDIA_BUCKET="captain-notebook-media";
   const PLAYER_TAGS=[
     ["strong_game","Strong Game"],
@@ -31,7 +32,10 @@
     attachmentUrls:new Map(),
     debriefs:[],
     assessments:[],
+    strategies:[],
     attendance:new Set(),
+    debriefLineup:null,
+    debriefStrategy:null,
     playerDrafts:new Map(),
     currentDebrief:null,
     readOnly:false,
@@ -382,7 +386,7 @@
   }
 
   function debriefSummary(row){
-    return text(row.practice_focus)||text(row.position_changes)||text(row.tactical_observations)||text(row.team_performance)||"No summary added.";
+    return text(row.practice_focus)||text(row.strategy_execution)||text(row.lineup_execution)||text(row.position_changes)||text(row.tactical_observations)||text(row.team_performance)||"No summary added.";
   }
 
   function renderHistory(){
@@ -421,16 +425,17 @@
       const userResult=await client.auth.getUser();
       if(userResult.error||!userResult.data?.user)throw new Error(userResult.error?.message||"Captain session not found.");
       state.user=userResult.data.user;
-      const [matchesResult,playersResult,captainsResult,notesResult,attachmentsResult,debriefsResult,assessmentsResult]=await Promise.all([
+      const [matchesResult,playersResult,captainsResult,notesResult,attachmentsResult,debriefsResult,assessmentsResult,strategiesResult]=await Promise.all([
         client.from("matches").select("id,kickoff,home_team,away_team,status,published").order("kickoff",{ascending:false}).limit(40),
         client.from("team_roster").select("id,full_name,preferred_name,jersey_number,position,active").eq("active",true).order("jersey_number",{ascending:true}),
         client.rpc("get_notebook_captain_directory"),
         client.from(NOTE_TABLE).select("id,entry_type,category,title,body,match_id,player_id,visibility,created_by,created_by_name,source,attributed_captain_name,source_occurred_at,source_batch_id,source_sequence,ai_organized,created_at,updated_at").order("created_at",{ascending:false}).limit(250),
         client.from(ATTACHMENT_TABLE).select("id,notebook_entry_id,storage_path,attachment_type,original_file_name,mime_type,file_size_bytes,created_by,created_at").order("created_at",{ascending:true}).limit(500),
-        client.from(DEBRIEF_TABLE).select("id,match_id,captain_id,captain_name,status,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at,created_at,updated_at").order("updated_at",{ascending:false}).limit(80),
-        client.from(ASSESSMENT_TABLE).select("id,debrief_id,match_id,player_id,tags,observation,created_at,updated_at").limit(500)
+        client.from(DEBRIEF_TABLE).select("id,match_id,captain_id,captain_name,status,team_performance,improvements_since_last_game,lineup_execution,strategy_execution,opponent_adjustments,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at,created_at,updated_at").order("updated_at",{ascending:false}).limit(80),
+        client.from(ASSESSMENT_TABLE).select("id,debrief_id,match_id,player_id,tags,observation,created_at,updated_at").limit(500),
+        client.from(STRATEGY_TABLE).select("id,match_id,lineup_name,title,status,ai_context_enabled,opponent_formation,show_lanes,lineup_snapshot,scenes,updated_at,published_at").order("updated_at",{ascending:false}).limit(80)
       ]);
-      const setupError=[captainsResult,notesResult,attachmentsResult,debriefsResult,assessmentsResult].find(result=>result.error)?.error;
+      const setupError=[captainsResult,notesResult,attachmentsResult,debriefsResult,assessmentsResult,strategiesResult].find(result=>result.error)?.error;
       if(setupError){setSetupPending(setupError);return;}
       if(matchesResult.error)throw matchesResult.error;
       if(playersResult.error)throw playersResult.error;
@@ -441,6 +446,7 @@
       state.attachments=attachmentsResult.data||[];
       state.debriefs=debriefsResult.data||[];
       state.assessments=assessmentsResult.data||[];
+      state.strategies=strategiesResult.data||[];
       await loadAttachmentUrls();
       populateReferenceSelects();
       updateMetrics();
@@ -723,7 +729,7 @@
   }
 
   const PREGAME_CATEGORY_LABELS={progress:"Progress to Reinforce",priority:"Match Priority",tactical:"Tactical Detail",mentality:"Mentality",set_piece:"Set Piece"};
-  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",captain_whatsapp:"Captain WhatsApp",lineup_plan:"Saved Lineup Plan",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
+  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",captain_whatsapp:"Captain WhatsApp",lineup_plan:"Saved Lineup Plan",strategy_plan:"Published Strategy",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
 
   function selectedPlayerInputs(){
     const rows=window.SKORGetAiPlayerComments?.();
@@ -845,7 +851,10 @@
       const lineupName=text(data.context?.lineup_name),lineupIncluded=data.context?.lineup_included===true;
       const lineupDetail=lineupIncluded?`, Production/Final lineup “${lineupName||"Saved Lineup"}” with ${Number(data.context?.lineup_starter_count||0)} starters and ${Number(data.context?.lineup_substitution_wave_count||0)} planned wave${Number(data.context?.lineup_substitution_wave_count||0)===1?"":"s"}`:"";
       const lineupWarning=lineupIncluded?"":" No Production/Final lineup was found for this game, so lineup assignments were not sent.";
-      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${lineupDetail}${whatsappCount?`, ${whatsappCount} captain WhatsApp message${whatsappCount===1?"":"s"}`:""}${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, private WhatsApp messages, drafts, and unselected player comments were not sent to AI.${lineupWarning} Review and edit before sharing.`,true);
+      const strategyIncluded=data.context?.strategy_included===true;
+      const strategyDetail=strategyIncluded?`, published strategy “${text(data.context?.strategy_title)||"Match Strategy"}” with ${Number(data.context?.strategy_scene_count||0)} tactical scene${Number(data.context?.strategy_scene_count||0)===1?"":"s"}`:"";
+      const strategyWarning=strategyIncluded?"":" No strategy published for AI was found for this game.";
+      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${lineupDetail}${strategyDetail}${whatsappCount?`, ${whatsappCount} captain WhatsApp message${whatsappCount===1?"":"s"}`:""}${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, private WhatsApp messages, drafts, unpublished strategies, and unselected player comments were not sent to AI.${lineupWarning}${strategyWarning} Review and edit before sharing.`,true);
     }catch(error){
       setStatus("notebookPregameStatus","Could not generate talk: "+(error.message||error),false);
     }finally{state.pregameGenerating=false;button.disabled=false;button.textContent=original;}
@@ -887,6 +896,24 @@
     finally{button.disabled=false;button.textContent=original;}
   }
 
+  function renderDebriefPlanContext(){
+    const host=el("notebookPlanContext");if(!host)return;
+    host.hidden=false;
+    const lineup=state.debriefLineup;
+    const lineupState=lineup?.state&&typeof lineup.state==="object"?lineup.state:{};
+    const formation=text(lineupState.formation)||"Formation not set";
+    const starterCount=formation==="Freeform / Custom"?Object.keys(lineupState.freeform||{}).length:Object.values(lineupState.slots||{}).filter(Boolean).length;
+    const benchCount=Array.isArray(lineupState.bench)?lineupState.bench.length:0;
+    const subs=lineupState.subs&&typeof lineupState.subs==="object"?lineupState.subs:{};
+    const waveCount=[...(Array.isArray(subs.firstHalf)?subs.firstHalf:[]),...(Array.isArray(subs.secondHalf)?subs.secondHalf:[])].filter(row=>(row?.out||[]).length||(row?.in||[]).length).length;
+    el("notebookPlanLineupTitle").textContent=lineup?`${lineup.name||"Final lineup"} · ${formation}`:"No Production/Final lineup";
+    el("notebookPlanLineupMeta").textContent=lineup?`${starterCount} starters · ${benchCount} substitutes · ${waveCount} planned substitution wave${waveCount===1?"":"s"}`:"Save a Production/Final lineup for this game to anchor the review.";
+    const strategy=state.debriefStrategy,scenes=Array.isArray(strategy?.scenes)?strategy.scenes:[];
+    el("notebookPlanStrategyTitle").textContent=strategy?`${strategy.title||"Match Strategy"} · ${strategy.opponent_formation||"Opponent shape not set"}`:"No shared strategy";
+    el("notebookPlanStrategyMeta").textContent=strategy?`${scenes.length} scene${scenes.length===1?"":"s"}: ${scenes.map(scene=>text(scene.name)).filter(Boolean).join(", ")||"Unnamed scenes"} · ${strategy.status==="published"&&strategy.ai_context_enabled?"Published for AI":"Captain draft only"}`:"Build and save a game-linked Strategy to review it here after the match.";
+    const open=el("notebookOpenStrategyBtn");if(open)open.disabled=!strategy;
+  }
+
   function collectDebriefPayload(status){
     return {
       match_id:el("notebookDebriefMatch").value,
@@ -895,6 +922,9 @@
       status,
       team_performance:text(el("debriefTeamPerformance").value)||null,
       improvements_since_last_game:text(el("debriefImprovements").value)||null,
+      lineup_execution:text(el("debriefLineupExecution").value)||null,
+      strategy_execution:text(el("debriefStrategyExecution").value)||null,
+      opponent_adjustments:text(el("debriefOpponentAdjustments").value)||null,
       standouts:text(el("debriefStandouts").value)||null,
       tactical_observations:text(el("debriefObservations").value)||null,
       issues:text(el("debriefIssues").value)||null,
@@ -907,7 +937,7 @@
   }
 
   function debriefHasContent(payload){
-    return ["team_performance","improvements_since_last_game","standouts","tactical_observations","issues","position_changes","practice_focus","additional_notes"].some(key=>text(payload[key]))||
+    return ["team_performance","improvements_since_last_game","lineup_execution","strategy_execution","opponent_adjustments","standouts","tactical_observations","issues","position_changes","practice_focus","additional_notes"].some(key=>text(payload[key]))||
       [...state.playerDrafts.values()].some(item=>item.tags.size||text(item.observation));
   }
 
@@ -915,6 +945,9 @@
     const teamFields=[
       payload.team_performance,
       payload.improvements_since_last_game,
+      payload.lineup_execution,
+      payload.strategy_execution,
+      payload.opponent_adjustments,
       payload.standouts,
       payload.tactical_observations,
       payload.issues,
@@ -945,7 +978,7 @@
     try{
       const nameReview=await checkPlayerNames(debriefNameCheckText(payload),"notebookDebriefStatus");
       if(!nameReview.ok){setStatus("notebookDebriefStatus","Save canceled so player names can be reviewed.",false);return;}
-      const fieldIds={team_performance:"debriefTeamPerformance",improvements_since_last_game:"debriefImprovements",standouts:"debriefStandouts",tactical_observations:"debriefObservations",issues:"debriefIssues",position_changes:"debriefPositionChanges",practice_focus:"debriefPracticeFocus",additional_notes:"debriefAdditionalNotes"};
+      const fieldIds={team_performance:"debriefTeamPerformance",improvements_since_last_game:"debriefImprovements",lineup_execution:"debriefLineupExecution",strategy_execution:"debriefStrategyExecution",opponent_adjustments:"debriefOpponentAdjustments",standouts:"debriefStandouts",tactical_observations:"debriefObservations",issues:"debriefIssues",position_changes:"debriefPositionChanges",practice_focus:"debriefPracticeFocus",additional_notes:"debriefAdditionalNotes"};
       Object.entries(fieldIds).forEach(([key,id])=>{
         payload[key]=applyPlayerNameReplacements(payload[key],nameReview.replacements)||null;
         if(el(id))el(id).value=payload[key]||"";
@@ -1028,7 +1061,7 @@
 
   function setDebriefReadOnly(readOnly){
     state.readOnly=readOnly;
-    ["debriefTeamPerformance","debriefImprovements","debriefStandouts","debriefObservations","debriefIssues","debriefPositionChanges","debriefPracticeFocus","debriefAdditionalNotes"].forEach(id=>{const node=el(id);if(node)node.readOnly=readOnly;});
+    ["debriefTeamPerformance","debriefImprovements","debriefLineupExecution","debriefStrategyExecution","debriefOpponentAdjustments","debriefStandouts","debriefObservations","debriefIssues","debriefPositionChanges","debriefPracticeFocus","debriefAdditionalNotes"].forEach(id=>{const node=el(id);if(node)node.readOnly=readOnly;});
     el("notebookSaveDraftBtn").hidden=readOnly||state.currentDebrief?.status==="completed";
     el("notebookCompleteDebriefBtn").hidden=readOnly;
     if(!readOnly)el("notebookCompleteDebriefBtn").textContent=state.currentDebrief?.status==="completed"?"Update Completed Debrief":"Complete & Share with Captains";
@@ -1038,6 +1071,9 @@
     el("notebookDebriefId").value=row?.id||"";
     el("debriefTeamPerformance").value=row?.team_performance||"";
     el("debriefImprovements").value=row?.improvements_since_last_game||"";
+    el("debriefLineupExecution").value=row?.lineup_execution||"";
+    el("debriefStrategyExecution").value=row?.strategy_execution||"";
+    el("debriefOpponentAdjustments").value=row?.opponent_adjustments||"";
     el("debriefStandouts").value=row?.standouts||"";
     el("debriefObservations").value=row?.tactical_observations||"";
     el("debriefIssues").value=row?.issues||"";
@@ -1057,7 +1093,7 @@
     setStatus("notebookDebriefStatus","Loading review…",true);
     el("notebookDebriefEmpty").hidden=true;
     el("notebookDebriefForm").hidden=false;
-    state.attendance=new Set();state.playerDrafts=new Map();state.currentDebrief=null;state.readOnly=false;
+    state.attendance=new Set();state.playerDrafts=new Map();state.currentDebrief=null;state.debriefLineup=null;state.debriefStrategy=state.strategies.find(item=>String(item.match_id)===String(matchId))||null;state.readOnly=false;
     try{
       let row=null;
       if(debriefId){
@@ -1068,15 +1104,19 @@
         if(result.error)throw result.error;row=result.data||null;
       }
       state.currentDebrief=row;
-      const [attendanceResult,assessmentResult]=await Promise.all([
+      const [attendanceResult,assessmentResult,lineupResult]=await Promise.all([
         sb().from("player_match_attendance").select("player_id,status").eq("match_id",matchId).eq("status","present"),
-        row?sb().from(ASSESSMENT_TABLE).select("player_id,tags,observation").eq("debrief_id",row.id):Promise.resolve({data:[],error:null})
+        row?sb().from(ASSESSMENT_TABLE).select("player_id,tags,observation").eq("debrief_id",row.id):Promise.resolve({data:[],error:null}),
+        sb().rpc("get_production_lineup",{p_match_id:matchId})
       ]);
       if(attendanceResult.error)console.warn("Could not prefill Notebook attendance:",attendanceResult.error);
       else state.attendance=new Set((attendanceResult.data||[]).map(item=>String(item.player_id)));
       if(assessmentResult.error)throw assessmentResult.error;
+      if(lineupResult.error)console.warn("Could not load the Final lineup for this debrief:",lineupResult.error);
+      else state.debriefLineup=Array.isArray(lineupResult.data)?lineupResult.data[0]||null:lineupResult.data||null;
       (assessmentResult.data||[]).forEach(item=>state.playerDrafts.set(String(item.player_id),{tags:new Set(item.tags||[]),observation:item.observation||""}));
       fillDebrief(row);
+      renderDebriefPlanContext();
       setDebriefReadOnly(!!row&&row.captain_id!==state.user.id);
       renderPlayerCards();
       setStatus("notebookDebriefStatus",state.readOnly?"Viewing another captain’s completed review.":row?.status==="completed"?"Completed review loaded. You can update your observations.":row?"Private draft loaded.":"New private draft ready.",true);
@@ -1119,6 +1159,11 @@
     el("notebookPlayerSearch")?.addEventListener("input",renderPlayerCards);
     el("notebookSaveDraftBtn")?.addEventListener("click",()=>saveDebrief("draft"));
     el("notebookCompleteDebriefBtn")?.addEventListener("click",()=>saveDebrief("completed"));
+    el("notebookOpenStrategyBtn")?.addEventListener("click",()=>{
+      const matchId=el("notebookDebriefMatch")?.value;if(!matchId)return;
+      window.openView?.("strategy");
+      window.setTimeout(()=>window.SKORStrategy?.loadForMatch?.(matchId),0);
+    });
     el("notebookGeneratePregameBtn")?.addEventListener("click",generatePregameTalk);
     window.addEventListener("skor:ai-player-comments-changed",renderSelectedPlayerInputs);
     el("notebookCopyPregameBtn")?.addEventListener("click",copyPregameTalk);
@@ -1133,6 +1178,8 @@
   async function init(){
     if(state.initialized)return;
     state.initialized=true;
+    const aliasDialog=el("notebookAliasDialog");
+    if(aliasDialog&&aliasDialog.parentElement!==document.body)document.body.appendChild(aliasDialog);
     bindEvents();
     renderSelectedPlayerInputs();
     await refreshData({quiet:true});
@@ -1144,7 +1191,13 @@
     else if(!state.loading)await refreshData({quiet:true});
   }
 
-  window.SKORNotebook={init,activate,refresh:refreshData};
+  window.SKORNotebook={
+    init,
+    activate,
+    refresh:refreshData,
+    reviewPlayerNames:value=>checkPlayerNames(value,"notebookAliasStatus"),
+    applyNameReplacements:(value,replacements)=>applyPlayerNameReplacements(value,replacements)
+  };
   window.addEventListener("skor:portal-ready",()=>{if(window.SKORPortalCanWrite?.())init();});
   window.setTimeout(()=>{
     const app=el("adminApp");

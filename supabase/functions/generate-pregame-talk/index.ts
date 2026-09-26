@@ -36,7 +36,7 @@ const outputSchema = {
         required: ["category", "source", "text"],
         properties: {
           category: { type: "string", enum: ["progress", "priority", "tactical", "mentality", "set_piece"] },
-          source: { type: "string", enum: ["last_game", "attendance", "captain_priority", "captain_whatsapp", "lineup_plan", "player_input", "ai_strategy"] },
+          source: { type: "string", enum: ["last_game", "attendance", "captain_priority", "captain_whatsapp", "lineup_plan", "strategy_plan", "player_input", "ai_strategy"] },
           text: { type: "string", description: "One direct, spoken bullet point with an actionable message." },
         },
       },
@@ -94,10 +94,10 @@ Deno.serve(async (req: Request) => {
   // captain-shared debriefs, its Production/Final lineup plan, captain-visible
   // WhatsApp history for this match, the persistent player reference library,
   // and current generator inputs only.
-  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult, playerRefResult, lineupResult, tempPlayerResult, whatsappResult] = await Promise.all([
+  const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult, playerRefResult, lineupResult, tempPlayerResult, whatsappResult, strategyResult] = await Promise.all([
     client.from("matches").select("id,kickoff,home_team,away_team,location,status").eq("id", matchId).single(),
     client.from("captain_match_debriefs")
-      .select("id,match_id,captain_name,team_performance,improvements_since_last_game,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at")
+      .select("id,match_id,captain_name,team_performance,improvements_since_last_game,lineup_execution,strategy_execution,opponent_adjustments,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at")
       .eq("status", "completed").order("completed_at", { ascending: false }).limit(6),
     client.rpc("get_match_rsvp_attendance", { p_match_id: matchId }),
     client.from("team_roster").select("id,player_key,full_name,preferred_name,jersey_number,active").order("jersey_number", { ascending: true }),
@@ -109,9 +109,12 @@ Deno.serve(async (req: Request) => {
       .select("id,attributed_captain_name,body,source_occurred_at,source_batch_id,source_sequence")
       .eq("source", "whatsapp").eq("visibility", "captains").eq("match_id", matchId)
       .order("source_occurred_at", { ascending: false }).order("source_sequence", { ascending: false }).limit(60),
+    client.from("match_strategies")
+      .select("id,match_id,lineup_name,title,status,ai_context_enabled,opponent_formation,show_lanes,lineup_snapshot,scenes,updated_at,published_at")
+      .eq("match_id", matchId).eq("status", "published").eq("ai_context_enabled", true).maybeSingle(),
   ]);
   if (matchResult.error) return json({ error: "The selected match could not be loaded." }, 400, origin);
-  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error || playerRefResult.error || lineupResult.error || tempPlayerResult.error || whatsappResult.error) {
+  if (debriefResult.error || attendanceResult.error || rosterResult.error || aliasResult.error || playerRefResult.error || lineupResult.error || tempPlayerResult.error || whatsappResult.error || strategyResult.error) {
     return json({ error: "Approved team context could not be loaded." }, 500, origin);
   }
 
@@ -153,6 +156,9 @@ Deno.serve(async (req: Request) => {
     captain: clean(row.captain_name, 100),
     team_performance: clean(row.team_performance),
     improvements_since_last_game: clean(row.improvements_since_last_game),
+    lineup_execution: clean(row.lineup_execution),
+    strategy_execution: clean(row.strategy_execution),
+    opponent_adjustments: clean(row.opponent_adjustments),
     standouts: clean(row.standouts),
     tactical_observations: clean(row.tactical_observations),
     issues: clean(row.issues),
@@ -248,13 +254,15 @@ Deno.serve(async (req: Request) => {
       players_in: playersIn,
     }];
   });
-  const productionLineupContext = savedState ? (() => {
-    const formation = clean(savedState.formation, 40) || "Unspecified";
-    const slots = objectValue(savedState.slots);
-    const freeform = objectValue(savedState.freeform);
-    const depth = objectValue(savedState.depth);
-    const subs = objectValue(savedState.subs);
-    const startingLineup = formation === "Freeform"
+  const buildLineupContext = (rawState: unknown, meta: { status: string; name: string; updated_at: unknown }) => {
+    const lineupState = objectValue(rawState);
+    if (!Object.keys(lineupState).length) return null;
+    const formation = clean(lineupState.formation, 40) || "Unspecified";
+    const slots = objectValue(lineupState.slots);
+    const freeform = objectValue(lineupState.freeform);
+    const depth = objectValue(lineupState.depth);
+    const subs = objectValue(lineupState.subs);
+    const startingLineup = formation === "Freeform" || formation === "Freeform / Custom"
       ? Object.entries(freeform).map(([key, rawPoint]) => {
         const point = objectValue(rawPoint);
         return {
@@ -269,12 +277,12 @@ Deno.serve(async (req: Request) => {
         player: lineupPlayer(key),
       }));
     return {
-      status: "production_final",
-      name: clean(savedLineup?.name, 140),
-      updated_at: savedLineup?.updated_at ?? savedLineup?.created_at ?? null,
+      status: meta.status,
+      name: clean(meta.name, 140),
+      updated_at: meta.updated_at,
       formation,
       starting_lineup: startingLineup,
-      bench: playerList(savedState.bench),
+      bench: playerList(lineupState.bench),
       depth_chart: Object.entries(depth).map(([position, rawPlayers]) => ({
         position: clean(position, 40),
         ranked_players: playerList(rawPlayers),
@@ -283,12 +291,75 @@ Deno.serve(async (req: Request) => {
         ...substitutionRows(subs.firstHalf, "first_half"),
         ...substitutionRows(subs.secondHalf, "second_half"),
       ],
-      second_half_waves_visible_on_export: savedState.showSecondHalfSubs === true,
-      field_captain: clean(savedState.captainId, 160) ? lineupPlayer(savedState.captainId) : null,
-      captain_quote: clean(savedState.quote, 200),
-      gameplan_notes: clean(savedState.notes, 1200),
+      second_half_waves_visible_on_export: lineupState.showSecondHalfSubs === true,
+      field_captain: clean(lineupState.captainId, 160) ? lineupPlayer(lineupState.captainId) : null,
+      captain_quote: clean(lineupState.quote, 200),
+      gameplan_notes: clean(lineupState.notes, 1200),
     };
-  })() : null;
+  };
+  const productionLineupContext = savedState ? buildLineupContext(savedState, {
+    status: "production_final",
+    name: clean(savedLineup?.name, 140),
+    updated_at: savedLineup?.updated_at ?? savedLineup?.created_at ?? null,
+  }) : null;
+
+  const strategyRow = strategyResult.data;
+  const strategyScenes = Array.isArray(strategyRow?.scenes) ? strategyRow.scenes.slice(0, 20).map((rawScene: unknown, index: number) => {
+    const scene = objectValue(rawScene);
+    const home = Array.isArray(scene.home) ? scene.home.slice(0, 18).map((rawPlayer: unknown) => {
+      const player = objectValue(rawPlayer);
+      return {
+        first_name: clean(player.name, 80).split(/\s+/)[0] || "Player",
+        jersey_number: Number.isFinite(Number(player.number)) ? Number(player.number) : null,
+        board_x_percent: Number.isFinite(Number(player.x)) ? Number(player.x) : null,
+        board_y_percent: Number.isFinite(Number(player.y)) ? Number(player.y) : null,
+      };
+    }) : [];
+    const opponents = Array.isArray(scene.opponents) ? scene.opponents.slice(0, 18).map((rawOpponent: unknown) => {
+      const opponent = objectValue(rawOpponent);
+      return {
+        role: clean(opponent.label, 30) || "Opponent",
+        board_x_percent: Number.isFinite(Number(opponent.x)) ? Number(opponent.x) : null,
+        board_y_percent: Number.isFinite(Number(opponent.y)) ? Number(opponent.y) : null,
+      };
+    }) : [];
+    const drawings = Array.isArray(scene.drawings) ? scene.drawings.slice(0, 60).map((rawDrawing: unknown) => {
+      const drawing = objectValue(rawDrawing), type = clean(drawing.type, 20);
+      return type === "text"
+        ? { type, label: clean(drawing.text, 80), x: drawing.x, y: drawing.y }
+        : { type, x1: drawing.x1, y1: drawing.y1, x2: drawing.x2, y2: drawing.y2 };
+    }) : [];
+    const ball = objectValue(scene.ball);
+    return {
+      order: index + 1,
+      name: clean(scene.name, 80) || `Scene ${index + 1}`,
+      moment: ["offense", "defense", "transition"].includes(String(scene.type)) ? scene.type : "offense",
+      coaching_points: clean(scene.points, 800),
+      skor_positions: home,
+      opponent_positions: opponents,
+      ball: {
+        board_x_percent: Number.isFinite(Number(ball.x)) ? Number(ball.x) : null,
+        board_y_percent: Number.isFinite(Number(ball.y)) ? Number(ball.y) : null,
+      },
+      tactical_marks: drawings,
+    };
+  }) : [];
+  const publishedStrategyContext = strategyRow ? {
+    status: "captain_published_for_ai",
+    title: clean(strategyRow.title, 100),
+    lineup_name: clean(strategyRow.lineup_name, 140),
+    opponent_formation: clean(strategyRow.opponent_formation, 40),
+    five_vertical_lanes_shown: strategyRow.show_lanes === true,
+    published_at: strategyRow.published_at,
+    updated_at: strategyRow.updated_at,
+    coordinate_system: "x is left-to-right; y=0 is the opponent goal and y=100 is SKOR's own goal",
+    lineup_used_to_build_strategy: buildLineupContext(strategyRow.lineup_snapshot, {
+      status: "strategy_lineup_snapshot",
+      name: clean(strategyRow.lineup_name, 140),
+      updated_at: strategyRow.updated_at,
+    }),
+    scenes: strategyScenes,
+  } : null;
 
   const context = {
     target_match: matchResult.data,
@@ -300,6 +371,7 @@ Deno.serve(async (req: Request) => {
     selected_match_attendance: attendanceContext,
     target_match_captain_whatsapp: whatsappContext,
     production_lineup: productionLineupContext,
+    published_strategy: publishedStrategyContext,
     captain_selected_player_comments: playerCommentContext,
     player_identity_guide: playerIdentityGuide,
   };
@@ -315,6 +387,10 @@ Only captain-visible WhatsApp messages are supplied. Historical lineup images ar
 When production_lineup is present, treat it as the captains' current authoritative plan for this target match. Use its formation, position assignments, bench, ranked depth chart, substitution order, field captain, and game-plan notes together—not as isolated facts. Points drawn directly from this plan must use the source lineup_plan.
 The depth chart is ranked coverage by position, not a second starting lineup. Planned substitutions are ordered waves; preserve their phase and order. Second-half waves remain valid saved planning context even when second_half_waves_visible_on_export is false.
 Do not casually contradict the Production/Final plan. You may identify a coverage, workload, transition, or communication risk and offer a clearly labeled ai_strategy contingency. If production_lineup is null, do not invent lineup assignments or substitution plans.
+When published_strategy is present, it was explicitly approved by a captain for AI use. Treat its opponent formation, offense/defense/transition scenes, player locations, tactical marks, and coaching points as the intended tactical plan for the target match. Points drawn directly from it must use the source strategy_plan.
+Coordinates are supporting context, not certainty about exact real-world distances. Translate them into plain spoken soccer instructions. Do not expose raw coordinates in the talk.
+Use lineup_used_to_build_strategy to notice if the strategy was built from a different snapshot than production_lineup. If they conflict, prioritize production_lineup for player assignments and use published_strategy only for its tactical principles; do not invent a resolution.
+Completed debrief fields lineup_execution, strategy_execution, and opponent_adjustments are captain observations from previous games. Use them to reinforce what worked, avoid repeating failed instructions, and prepare for opponent-shape changes without claiming the next opponent will behave the same way.
 Captain-selected player comments are player opinions or suggestions, not captain observations and not established facts. If you use one, assign the source player_input and phrase the point as something the team can consider—not something the captains already concluded.
 Every selected player comment includes a related_game with its matchup and date. Keep the comment tied to that game as historical context, and never imply it came from the target match unless the game IDs match.
 The player's first/preferred name and jersey number are included for useful coaching context. Team-visible input may support constructive player-specific coaching when relevant.
@@ -369,6 +445,9 @@ Keep each bullet direct, positive, specific, and actionable. Separate evidence-b
       lineup_name: productionLineupContext?.name ?? null,
       lineup_starter_count: productionLineupContext?.starting_lineup.length ?? 0,
       lineup_substitution_wave_count: productionLineupContext?.planned_substitutions.length ?? 0,
+      strategy_included: publishedStrategyContext !== null,
+      strategy_title: publishedStrategyContext?.title ?? null,
+      strategy_scene_count: publishedStrategyContext?.scenes.length ?? 0,
     },
   }, 200, origin);
 });

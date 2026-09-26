@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v53.2-export-options-subs" />
+  <meta name="skor-build" content="captain-portal-v54.0-strategy-notebook-ai" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
+  <link rel="stylesheet" href="strategy.css" />
   <style>
     :root{
       --maroon:#741f35;
@@ -1834,12 +1835,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="roster">♟ <span>Roster</span></button>
       <button data-view="jerseys">◫ <span>Jerseys</span></button>
       <button data-view="lineups">▦ <span>Lineups</span></button>
+      <button data-view="strategy">◇ <span>Strategy</span></button>
       <button data-view="fields">⌖ <span>Fields</span></button>
       <button data-view="join">＋ <span>Join Requests</span></button>
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v53.2</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v54.0</div>
   </aside>
 
   <main>
@@ -2389,9 +2391,22 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <form id="notebookDebriefForm" hidden>
           <input type="hidden" id="notebookDebriefId">
           <div class="notebook-draft-banner" id="notebookDraftBanner">New private draft</div>
+          <div class="notebook-plan-context" id="notebookPlanContext" hidden>
+            <div class="notebook-plan-context-head">
+              <div><strong>Review the plan used for this game</strong><span>The saved Final lineup and published strategy are shown here so feedback stays tied to the actual plan.</span></div>
+              <button class="btn btn-light" id="notebookOpenStrategyBtn" type="button">Open Strategy</button>
+            </div>
+            <div class="notebook-plan-context-grid">
+              <div><span>LINEUP</span><strong id="notebookPlanLineupTitle">No Final lineup</strong><small id="notebookPlanLineupMeta">Save a Production/Final lineup to include it.</small></div>
+              <div><span>STRATEGY</span><strong id="notebookPlanStrategyTitle">No published strategy</strong><small id="notebookPlanStrategyMeta">Publish a game strategy to include it.</small></div>
+            </div>
+          </div>
           <div class="notebook-question-grid">
             <div class="notebook-question"><label for="debriefTeamPerformance">How did the team perform overall?</label><textarea id="debriefTeamPerformance" maxlength="3000" placeholder="How well did the team execute the plan? What changed during the game?"></textarea></div>
             <div class="notebook-question notebook-improvement-question"><label for="debriefImprovements">What improved from the previous match, and what caused it?</label><textarea id="debriefImprovements" maxlength="3000" placeholder="Identify specific progress in shape, communication, decision-making, effort, or execution—and what helped create it."></textarea></div>
+            <div class="notebook-question"><label for="debriefLineupExecution">How well did the lineup and substitution plan work?</label><textarea id="debriefLineupExecution" maxlength="3000" placeholder="Starting positions, player combinations, bench usage, substitution timing, and any role that worked differently than expected…"></textarea></div>
+            <div class="notebook-question"><label for="debriefStrategyExecution">Which planned strategy instructions worked—or did not?</label><textarea id="debriefStrategyExecution" maxlength="3000" placeholder="Refer to the offense, defense, or transition scenes and the coaching points players did or did not execute."></textarea></div>
+            <div class="notebook-question"><label for="debriefOpponentAdjustments">Did the opponent play as expected, and how did we adjust?</label><textarea id="debriefOpponentAdjustments" maxlength="3000" placeholder="Their actual formation, overloads, pressing, weak areas, and what we changed or should change next time…"></textarea></div>
             <div class="notebook-question"><label for="debriefStandouts">Who did well, and why?</label><textarea id="debriefStandouts" maxlength="3000" placeholder="Name the players and the specific actions, decisions, or behaviors that stood out."></textarea></div>
             <div class="notebook-question"><label for="debriefObservations">What stood out tactically?</label><textarea id="debriefObservations" maxlength="3000" placeholder="Shape, buildup, pressing, transitions, set pieces, opponent tendencies…"></textarea></div>
             <div class="notebook-question"><label for="debriefIssues">What issues did you see?</label><textarea id="debriefIssues" maxlength="3000" placeholder="Repeated breakdowns, communication, fitness, decision-making, matchup problems…"></textarea></div>
@@ -2809,6 +2824,95 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="panel" style="background:#17181d;color:#fff">
           <h2>Future: SKOR AI Lineup Assistant</h2>
           <div class="sub" style="color:#b9bbc3;margin-bottom:0">Later we can score lineup options using availability, preferred positions, captain notes, past starts, minutes, goals/assists, cards, Man of the Match selections, and eventually player ratings/performance. The data structures in this builder are designed so AI can recommend—not silently overwrite—a captain's lineup.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="strategy">
+      <div class="strategy-shell">
+        <div class="strategy-hero">
+          <div>
+            <div class="strategy-eyebrow">PHASE 1 · CAPTAIN WORKSPACE</div>
+            <h2>Turn a lineup into a visual game plan</h2>
+            <p>Start from the current board or a saved lineup, then show the team what changes in possession, out of possession, and through transitions.</p>
+          </div>
+          <div class="strategy-privacy">● Private captain draft</div>
+        </div>
+
+        <div class="strategy-pipeline" aria-label="Strategy publishing pipeline">
+          <div class="strategy-pipeline-step complete"><span>1</span><strong>Choose lineup</strong><small>Current or saved</small></div>
+          <div class="strategy-pipeline-join"></div>
+          <div class="strategy-pipeline-step active"><span>2</span><strong>Build strategy</strong><small>Scenes + coaching marks</small></div>
+          <div class="strategy-pipeline-join muted"></div>
+          <div class="strategy-pipeline-step future"><span>3</span><strong>Share safely</strong><small>PNG now · Player Portal later</small></div>
+        </div>
+
+        <div class="panel strategy-setup-panel">
+          <div class="strategy-field">
+            <label for="strategyLineupSource">Lineup source</label>
+            <select id="strategyLineupSource"><option value="current">Current working lineup</option></select>
+          </div>
+          <button class="btn btn-primary" id="strategyImportLineup" type="button">Start from lineup</button>
+          <div class="strategy-field">
+            <label for="strategyOpponentFormation">Opponent formation</label>
+            <select id="strategyOpponentFormation"><option>4-4-2</option><option>4-3-3</option><option>4-2-3-1</option><option>4-5-1</option><option>3-5-2</option><option>3-4-3</option><option>5-3-2</option><option value="Custom / Freeform">Custom / Freeform</option></select>
+          </div>
+          <label class="strategy-check"><input id="strategyShowLanes" type="checkbox" checked> Show five vertical lanes</label>
+        </div>
+
+        <div class="strategy-scenes-row">
+          <div class="strategy-scenes" id="strategyScenes" role="tablist" aria-label="Strategy scenes"></div>
+          <div class="strategy-scene-actions">
+            <button class="mini-btn" id="strategyAddScene" type="button">+ Scene</button>
+            <button class="mini-btn" id="strategyDuplicateScene" type="button">Duplicate</button>
+            <button class="mini-btn strategy-danger" id="strategyDeleteScene" type="button">Delete</button>
+          </div>
+        </div>
+
+        <div class="strategy-workspace">
+          <div class="strategy-tools" aria-label="Strategy drawing tools">
+            <div class="strategy-tools-title">Board tools</div>
+            <button class="strategy-tool active" type="button" data-strategy-tool="move"><span>↖</span>Move</button>
+            <button class="strategy-tool" type="button" data-strategy-tool="arrow"><span>➜</span>Arrow</button>
+            <button class="strategy-tool" type="button" data-strategy-tool="line"><span>╱</span>Line</button>
+            <button class="strategy-tool" type="button" data-strategy-tool="box"><span>□</span>Zone</button>
+            <button class="strategy-tool" type="button" data-strategy-tool="text"><span>T</span>Label</button>
+            <div class="strategy-tool-divider"></div>
+            <button class="strategy-tool secondary" id="strategyUndo" type="button"><span>↶</span>Undo</button>
+            <button class="strategy-tool secondary" id="strategyClearMarks" type="button"><span>×</span>Clear marks</button>
+          </div>
+
+          <div class="strategy-board-column">
+            <div class="strategy-board-head">
+              <div>
+                <span id="strategySceneType">IN POSSESSION</span>
+                <strong id="strategySceneName">Build Up</strong>
+              </div>
+              <div class="strategy-legend"><span><i class="home"></i>SKOR</span><span><i class="away"></i>Opponent</span><span><i class="ball"></i>Ball</span></div>
+            </div>
+            <div class="strategy-board-wrap">
+              <svg id="strategyPitch" viewBox="0 0 1000 680" role="img" aria-label="Interactive soccer strategy board"></svg>
+            </div>
+            <div class="strategy-board-tip" id="strategyBoardTip">Drag players and the ball. Choose Arrow, Line, Zone, or Label to coach directly on the board.</div>
+          </div>
+
+          <div class="strategy-notes-panel">
+            <label for="strategyTitle">Strategy title</label>
+            <input id="strategyTitle" maxlength="70" value="Match Strategy" placeholder="Match Strategy">
+            <label for="strategySceneTitle">Scene name</label>
+            <input id="strategySceneTitle" maxlength="50" value="Build Up" placeholder="Build Up">
+            <label for="strategySceneTypeSelect">Moment of the game</label>
+            <select id="strategySceneTypeSelect"><option value="offense">In possession</option><option value="defense">Out of possession</option><option value="transition">Transition</option></select>
+            <label for="strategyCoachingPoints">Coaching points</label>
+            <textarea id="strategyCoachingPoints" maxlength="600" rows="8" placeholder="What should players see and remember in this moment?"></textarea>
+            <div class="strategy-save-state" id="strategySaveState">Saved locally on this device</div>
+            <div class="strategy-shared-state" id="strategySharedState">Choose a scheduled-game lineup to save this strategy for the captains and AI.</div>
+            <button class="btn btn-light" id="strategyLoadShared" type="button" hidden>Load shared game strategy</button>
+            <button class="btn btn-light" id="strategySaveShared" type="button">Save shared draft</button>
+            <button class="btn btn-primary" id="strategyPublishAi" type="button">Publish for AI</button>
+            <button class="btn btn-primary" id="strategyExportPng" type="button">Export scene for WhatsApp</button>
+            <button class="btn btn-light" id="strategyResetScene" type="button">Reset players from lineup</button>
+          </div>
         </div>
       </div>
     </section>
@@ -4425,7 +4529,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
   async function refreshVariations(showMessage=true){
     const sb=sbClient();
-    if(!sb){sharedVariations=[];allSharedVariations=[];renderVariations();if(showMessage)markStatus('Supabase is not connected yet.',false);return;}
+    if(!sb){sharedVariations=[];allSharedVariations=[];renderVariations();window.SKORStrategy?.refreshSources?.();if(showMessage)markStatus('Supabase is not connected yet.',false);return;}
     const {data,error}=await sb.from('lineup_variations')
       .select('id,event_key,event_label,name,state,is_production,created_by,created_by_name,created_by_email,created_at,updated_at')
       .order('created_at',{ascending:false});
@@ -4435,6 +4539,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     sharedTinkerVariations=allSharedVariations.filter(v=>String(v.event_key)==='tinker');
     renderEventOptions();
     renderVariations();
+    window.SKORStrategy?.refreshSources?.();
     if(showMessage)markStatus(allSharedVariations.length+' saved variation'+(allSharedVariations.length===1?'':'s')+' loaded across '+new Set(allSharedVariations.map(v=>String(v.event_key))).size+' board/game group'+(new Set(allSharedVariations.map(v=>String(v.event_key))).size===1?'':'s')+'.');
   }
   function ensureRealtime(){
@@ -4825,6 +4930,11 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
     removePermanentPlayer:pid=>{removePlayerEverywhere(String(pid));if(selectedPlayer===String(pid))selectedPlayer=null;persistDraft();renderAll();},
     getState:()=>clone(state),
+    getRoster:()=>clone(selectableRoster()),
+    listVariations:()=>clone(allSharedVariations),
+    getEventLabel:()=>eventLabel(),
+    getEventKey:()=>eventKey(),
+    getCaptainKey:()=>captainKey,
     reload:()=>{ loadDraft(); renderAll(); refreshVariations(false); }
   };
 })();
@@ -4834,6 +4944,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="jerseys.js"></script>
+<script src="strategy.js"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -4896,6 +5007,7 @@ function showDashboard(user,access){
   loadDashboardFeedback();
   window.SKORJerseys?.init();
   window.SKORNotebook?.init();
+  window.SKORStrategy?.init();
   window.dispatchEvent(new CustomEvent("skor:portal-ready"));
 }
 async function captainIsApproved(user){
@@ -4970,6 +5082,7 @@ const meta = {
   roster:["Roster","Manage players, numbers, positions and status."],
   jerseys:["Jerseys","Manage kit colors, physical jersey stock, sizes and captain custody."],
   lineups:["Lineups","Build match lineups and practice formations."],
+  strategy:["Strategy","Turn saved lineups into private visual tactics and shareable coaching scenes."],
   fields:["Fields","Store field locations, maps and parking notes."],
   join:["Join Requests","Review prospective players."],
   payments:["Payments","Post team fee links and payment details."],
@@ -4977,6 +5090,7 @@ const meta = {
 };
 function openView(id){
   if(id==="notebook"&&!portalCanWrite()){viewerBlocked("open the Captain Notebook");return;}
+  if(id==="strategy"&&!portalCanWrite()){viewerBlocked("open the private Strategy workspace");return;}
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
   document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
   document.getElementById(id).classList.add("active");
@@ -4988,6 +5102,7 @@ function openView(id){
   if(id==="activity")loadPlayerActivity();
   if(id==="jerseys")window.SKORJerseys?.activate();
   if(id==="notebook")window.SKORNotebook?.activate();
+  if(id==="strategy")window.SKORStrategy?.activate();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function openCrowdScoring(){
