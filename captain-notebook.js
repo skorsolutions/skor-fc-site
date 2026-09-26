@@ -433,7 +433,7 @@
         client.from(ATTACHMENT_TABLE).select("id,notebook_entry_id,storage_path,attachment_type,original_file_name,mime_type,file_size_bytes,created_by,created_at").order("created_at",{ascending:true}).limit(500),
         client.from(DEBRIEF_TABLE).select("id,match_id,captain_id,captain_name,status,team_performance,improvements_since_last_game,lineup_execution,strategy_execution,opponent_adjustments,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at,created_at,updated_at").order("updated_at",{ascending:false}).limit(80),
         client.from(ASSESSMENT_TABLE).select("id,debrief_id,match_id,player_id,tags,observation,created_at,updated_at").limit(500),
-        client.from(STRATEGY_TABLE).select("id,match_id,lineup_name,title,status,ai_context_enabled,opponent_formation,show_lanes,lineup_snapshot,scenes,updated_at,published_at").order("updated_at",{ascending:false}).limit(80)
+        client.from(STRATEGY_TABLE).select("id,match_id,lineup_name,title,status,ai_context_enabled,opponent_formation,show_lanes,lineup_snapshot,scenes,updated_at,published_at").eq("status","published").eq("ai_context_enabled",true).order("updated_at",{ascending:false}).limit(80)
       ]);
       const setupError=[captainsResult,notesResult,attachmentsResult,debriefsResult,assessmentsResult,strategiesResult].find(result=>result.error)?.error;
       if(setupError){setSetupPending(setupError);return;}

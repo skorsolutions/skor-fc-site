@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v54.1-strategy-mobile-scenes" />
+  <meta name="skor-build" content="captain-portal-v54.2-shared-strategy-library" />
   <title>SKOR FC Admin | Lineup Builder v51</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
-  <link rel="stylesheet" href="strategy.css?v=54.1" />
+  <link rel="stylesheet" href="strategy.css?v=54.2" />
   <style>
     :root{
       --maroon:#741f35;
@@ -1841,7 +1841,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v54.1</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v54.2</div>
   </aside>
 
   <main>
@@ -2836,7 +2836,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <h2>Turn a lineup into a visual game plan</h2>
             <p>Start from the current board or a saved lineup, then show the team what changes in possession, out of possession, and through transitions.</p>
           </div>
-          <div class="strategy-privacy">● Private captain draft</div>
+          <div class="strategy-privacy">● Captain-only workspace</div>
         </div>
 
         <div class="strategy-pipeline" aria-label="Strategy publishing pipeline">
@@ -2898,7 +2898,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           </div>
 
           <div class="strategy-notes-panel">
-            <label for="strategyTitle">Strategy title</label>
+            <label for="strategyTitle">Strategy name</label>
             <input id="strategyTitle" maxlength="70" value="Match Strategy" placeholder="Match Strategy">
             <label for="strategySceneTitle">Selected scene name</label>
             <input id="strategySceneTitle" maxlength="50" value="Build Up" placeholder="Build Up">
@@ -2906,14 +2906,24 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <select id="strategySceneTypeSelect"><option value="offense">In possession</option><option value="defense">Out of possession</option><option value="transition">Transition</option></select>
             <label for="strategyCoachingPoints">Coaching points</label>
             <textarea id="strategyCoachingPoints" maxlength="600" rows="8" placeholder="What should players see and remember in this moment?"></textarea>
-            <div class="strategy-save-state" id="strategySaveState">Saved locally on this device</div>
-            <div class="strategy-shared-state" id="strategySharedState">Choose a scheduled-game lineup to save this strategy for the captains and AI.</div>
-            <button class="btn btn-light" id="strategyLoadShared" type="button" hidden>Load shared game strategy</button>
-            <button class="btn btn-light" id="strategySaveShared" type="button">Save shared draft</button>
+            <div class="strategy-save-state" id="strategySaveState">Local recovery copy ready</div>
+            <div class="strategy-shared-state" id="strategySharedState">Save this named strategy so every captain can load it from any device.</div>
+            <button class="btn btn-light" id="strategySaveShared" type="button">Save Strategy</button>
             <button class="btn btn-primary" id="strategyPublishAi" type="button">Publish for AI</button>
             <button class="btn btn-primary" id="strategyExportPng" type="button">Export scene for WhatsApp</button>
             <button class="btn btn-light" id="strategyResetScene" type="button">Reset players from lineup</button>
           </div>
+        </div>
+
+        <div class="panel strategy-library-panel">
+          <div class="strategy-library-head">
+            <div>
+              <h2>Saved Strategies <span class="variation-count" id="strategyLibraryCount">0</span></h2>
+              <div class="sub">Shared with every captain. Saving the same name again for the same game—or Tinker—updates the existing strategy instead of creating a duplicate.</div>
+            </div>
+            <button class="mini-btn" id="strategyRefreshLibrary" type="button">Refresh</button>
+          </div>
+          <div class="strategy-library" id="strategyLibrary"><div class="strategy-library-empty">Loading saved strategies…</div></div>
         </div>
       </div>
     </section>
@@ -4945,7 +4955,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="jerseys.js"></script>
-<script src="strategy.js?v=54.1"></script>
+<script src="strategy.js?v=54.2"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";

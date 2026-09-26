@@ -1,3 +1,16 @@
+## v54.2 — Shared named Strategy library
+
+- Adds a shared **Saved Strategies** library that every approved captain can load from any device.
+- Groups strategies by scheduled game and **Tinker / No Game**, with Load, Publish for AI, and Delete controls.
+- Saving the same strategy name again within the same game or Tinker group overwrites the existing strategy using a trimmed, case-insensitive name match.
+- Allows multiple named strategies per game while enforcing one published AI strategy per scheduled game.
+- Keeps browser storage only as a recovery copy; **Save Strategy** is now the persistent captain workflow.
+- Captain Notebook and Pregame Talk continue to use only the explicitly published strategy, never drafts or Tinker strategies.
+- **SQL needed:** Yes.
+- **Approved database changes:** Expanded `match_strategies` with game/Tinker grouping fields, normalized unique names, a one-published-strategy index, and the captain-only `publish_match_strategy(uuid)` transaction. Existing strategy data was preserved.
+- Strategy migration filenames now match the exact versions recorded by Supabase so future CLI migration checks stay in sync.
+- Affected assets: `admin.html`, `strategy.css`, `strategy.js`, `captain-notebook.js`, and `supabase/migrations/20260926181753_expand_match_strategy_library.sql`.
+
 ## v54.1 — Strategy scene controls and phone repair
 
 - Adds clear **Rename selected** and **Remove selected** actions beside the strategy scene tabs.

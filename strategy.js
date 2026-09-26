@@ -1,10 +1,11 @@
-/* SKOR FC Strategy Board v1 — local drafting plus captain-only game publishing. */
+/* SKOR FC Strategy Board v2 — shared named library plus captain-only AI publishing. */
 (function(){
   "use strict";
 
   const NS="http://www.w3.org/2000/svg";
   const BOARD={w:1000,h:680,pad:26};
   const STRATEGY_TABLE="match_strategies";
+  const STRATEGY_COLUMNS="id,match_id,event_key,event_label,source_lineup_variation_id,lineup_name,title,title_key,status,ai_context_enabled,opponent_formation,show_lanes,lineup_snapshot,scenes,created_by,updated_by,created_at,updated_at,published_at";
   const HOME_FORMATIONS={
     "4-2-3-1":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LDM",38,61],["RDM",62,61],["LW",20,43],["CAM",50,46],["RW",80,43],["ST",50,24]],
     "4-3-3":[["GK",50,92],["LB",17,76],["LCB",39,79],["RCB",61,79],["RB",83,76],["LCM",29,57],["CM",50,62],["RCM",71,57],["LW",20,35],["ST",50,25],["RW",80,35]],
@@ -27,6 +28,7 @@
   let draft=null;
   let saveTimer=null;
   let sharedRecord=null;
+  let strategyLibrary=[];
   let sharedLoading=false;
 
   const $=id=>document.getElementById(id);
@@ -37,7 +39,9 @@
   const lineApi=()=>window.SKORLineup;
   const sb=()=>window.SKORSupabase;
   const isUuid=value=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value||""));
+  const normalizedTitle=value=>String(value||"").trim().toLowerCase();
   const storageKey=()=>"skorStrategyDraftV1:"+String(lineApi()?.getCaptainKey?.()||"captain");
+  const sourceEventKey=(source=draft?.source)=>String(source?.eventKey||source?.matchId||"tinker");
 
   function playerName(player){
     return String(player?.name||"Player").trim().split(/\s+/)[0]||"Player";
@@ -74,7 +78,7 @@
     return {
       version:1,
       title:"Match Strategy",
-      source:{id:source.id,label:source.label,eventLabel:source.eventLabel||"",matchId:source.matchId||null,variationId:source.variationId||null,formation:source.state?.formation||"Custom",state:clone(source.state||{}),roster:clone(source.roster||[])},
+      source:{id:source.id,label:source.label,eventKey:String(source.eventKey||source.matchId||"tinker"),eventLabel:source.eventLabel||"Tinker / No Game",matchId:source.matchId||null,variationId:source.variationId||null,formation:source.state?.formation||"Custom",state:clone(source.state||{}),roster:clone(source.roster||[])},
       opponentFormation:"4-4-2",
       showLanes:true,
       activeSceneId:"",
@@ -90,6 +94,8 @@
       const currentMatch=String(lineApi()?.getEventKey?.()||"");
       value.source.matchId=isUuid(currentMatch)?currentMatch:null;
     }
+    value.source.eventKey=String(value.source.eventKey||value.source.matchId||"tinker");
+    value.source.eventLabel=String(value.source.eventLabel||"Tinker / No Game").slice(0,180);
     value.source.variationId=isUuid(value.source.variationId)?String(value.source.variationId):null;
     value.opponentFormation=value.opponentFormation==="Custom / Freeform"||HOME_FORMATIONS[value.opponentFormation]?value.opponentFormation:"4-4-2";
     value.showLanes=value.showLanes!==false;
@@ -109,14 +115,15 @@
     draft.savedAt=new Date().toISOString();
     try{localStorage.setItem(storageKey(),JSON.stringify(draft));}catch(error){console.warn("Could not save local strategy draft",error);}
     const state=$("strategySaveState");
-    if(state){state.textContent="Saved locally · "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});}
+    if(state){state.textContent="Recovery copy updated · "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});}
   }
   function queuePersist(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,180);}
   function activeScene(){return draft?.scenes?.find(scene=>scene.id===draft.activeSceneId)||draft?.scenes?.[0]||null;}
 
   function currentSource(){
-    const eventKey=String(lineApi()?.getEventKey?.()||"");
-    return {id:"current",label:"Current working lineup",eventLabel:lineApi()?.getEventLabel?.()||"",matchId:isUuid(eventKey)?eventKey:null,variationId:null,state:lineApi()?.getState?.()||{},roster:lineApi()?.getRoster?.()||[]};
+    const rawEventKey=String(lineApi()?.getEventKey?.()||"tinker");
+    const eventKey=isUuid(rawEventKey)?rawEventKey:"tinker";
+    return {id:"current",label:"Current working lineup",eventKey,eventLabel:lineApi()?.getEventLabel?.()||"Tinker / No Game",matchId:isUuid(eventKey)?eventKey:null,variationId:null,state:lineApi()?.getState?.()||{},roster:lineApi()?.getRoster?.()||[]};
   }
   function selectedSource(){
     const value=$("strategyLineupSource")?.value||"current";
@@ -124,7 +131,8 @@
     const id=value.replace(/^saved:/,"");
     const rec=(lineApi()?.listVariations?.()||[]).find(item=>String(item.id)===id);
     if(!rec)return currentSource();
-    return {id:"saved:"+id,label:rec.name||"Saved lineup",eventLabel:rec.event_label||"",matchId:isUuid(rec.event_key)?String(rec.event_key):null,variationId:isUuid(rec.id)?String(rec.id):null,state:rec.state||{},roster:lineApi()?.getRoster?.()||[]};
+    const eventKey=isUuid(rec.event_key)?String(rec.event_key):"tinker";
+    return {id:"saved:"+id,label:rec.name||"Saved lineup",eventKey,eventLabel:rec.event_label||"Tinker / No Game",matchId:isUuid(eventKey)?eventKey:null,variationId:isUuid(rec.id)?String(rec.id):null,state:rec.state||{},roster:lineApi()?.getRoster?.()||[]};
   }
   function refreshSources(){
     const select=$("strategyLineupSource");if(!select)return;
@@ -145,77 +153,136 @@
     node.textContent=message;
     node.className="strategy-shared-state"+(tone?" "+tone:"");
   }
+  function recordIsPublished(record){return record?.status==="published"&&record?.ai_context_enabled===true;}
+  function formatStamp(value){
+    const date=new Date(value);return Number.isNaN(date.valueOf())?"Unknown time":date.toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+  }
+  function syncSharedRecord(){
+    const key=sourceEventKey(),title=normalizedTitle(draft?.title);
+    sharedRecord=strategyLibrary.find(item=>String(item.event_key)===key&&normalizedTitle(item.title)===title)||null;
+    return sharedRecord;
+  }
   function updateSharedControls(){
     const linked=!!draft?.source?.matchId;
-    const load=$("strategyLoadShared"),save=$("strategySaveShared"),publish=$("strategyPublishAi");
-    if(load)load.hidden=!sharedRecord;
-    if(save)save.disabled=!linked||sharedLoading;
+    const save=$("strategySaveShared"),publish=$("strategyPublishAi");
+    if(save)save.disabled=sharedLoading;
     if(publish)publish.disabled=!linked||sharedLoading;
     if(sharedLoading){if(save)save.textContent="Saving…";if(publish)publish.textContent="Publishing…";}
-    else{if(save)save.textContent="Save shared draft";if(publish)publish.textContent=sharedRecord?.status==="published"?"Update AI strategy":"Publish for AI";}
+    else{if(save)save.textContent="Save Strategy";if(publish)publish.textContent=recordIsPublished(sharedRecord)?"Update Published AI Strategy":"Publish for AI";}
+  }
+  function renderStrategyLibrary(){
+    const host=$("strategyLibrary"),count=$("strategyLibraryCount");if(!host)return;
+    if(count)count.textContent=String(strategyLibrary.length);
+    if(!strategyLibrary.length){host.innerHTML='<div class="strategy-library-empty">No shared strategies yet. Build one above and select <strong>Save Strategy</strong>.</div>';return;}
+    const groups=new Map();
+    strategyLibrary.forEach(record=>{
+      const key=String(record.event_key||record.match_id||"tinker"),label=record.event_label||(key==="tinker"?"Tinker / No Game":"Scheduled game");
+      if(!groups.has(key))groups.set(key,{key,label,items:[]});
+      groups.get(key).items.push(record);
+    });
+    const currentKey=sourceEventKey();
+    const ordered=[...groups.values()].sort((a,b)=>{
+      if(a.key===currentKey&&b.key!==currentKey)return -1;if(b.key===currentKey&&a.key!==currentKey)return 1;
+      if(a.key==="tinker"&&b.key!=="tinker")return 1;if(b.key==="tinker"&&a.key!=="tinker")return -1;
+      return Math.max(...b.items.map(item=>new Date(item.updated_at||0).valueOf()))-Math.max(...a.items.map(item=>new Date(item.updated_at||0).valueOf()));
+    });
+    host.innerHTML=ordered.map(group=>{
+      const cards=group.items.sort((a,b)=>new Date(b.updated_at||0)-new Date(a.updated_at||0)).map(record=>{
+        const published=recordIsPublished(record),loaded=String(sharedRecord?.id||"")===String(record.id),sceneCount=Array.isArray(record.scenes)?record.scenes.length:0;
+        return '<article class="strategy-library-card '+(published?'published ':'')+(loaded?'loaded':'')+'">'+
+          '<button class="strategy-library-load" type="button" data-strategy-load="'+esc(record.id)+'"><strong>'+esc(record.title||"Match Strategy")+'</strong>'+
+          '<span class="strategy-library-badge '+(published?'published':'')+'">'+(published?'Published for AI':'Captain draft')+'</span>'+
+          '<span class="strategy-library-meta">'+esc(record.opponent_formation||"4-4-2")+' opponent · '+sceneCount+' scene'+(sceneCount===1?'':'s')+'</span>'+
+          '<span class="strategy-library-meta">Lineup: '+esc(record.lineup_name||"Saved snapshot")+'</span>'+
+          '<span class="strategy-library-meta">Updated '+esc(formatStamp(record.updated_at))+'</span></button>'+
+          '<div class="strategy-library-actions">'+
+            '<button class="mini-btn" type="button" data-strategy-load="'+esc(record.id)+'">Load</button>'+
+            (record.match_id?'<button class="mini-btn" type="button" data-strategy-publish="'+esc(record.id)+'">'+(published?'Republish':'Publish AI')+'</button>':'')+
+            '<button class="mini-btn strategy-danger" type="button" data-strategy-remove="'+esc(record.id)+'">Delete</button></div></article>';
+      }).join("");
+      return '<section class="strategy-library-group '+(group.key===currentKey?'current':'')+'"><div class="strategy-library-group-head"><strong>'+esc(group.key==="tinker"?"Tinker / No Game":group.label)+'</strong><span>'+group.items.length+'</span></div><div class="strategy-library-cards">'+cards+'</div></section>';
+    }).join("");
+    host.querySelectorAll("[data-strategy-load]").forEach(button=>button.addEventListener("click",()=>{
+      const record=strategyLibrary.find(item=>String(item.id)===String(button.dataset.strategyLoad));if(record)loadSharedStrategy(record);
+    }));
+    host.querySelectorAll("[data-strategy-publish]").forEach(button=>button.addEventListener("click",async()=>{
+      const record=strategyLibrary.find(item=>String(item.id)===String(button.dataset.strategyPublish));if(!record)return;
+      if(!confirm('Publish "'+record.title+'" as the AI strategy for '+(record.event_label||"this game")+'?'))return;
+      loadSharedStrategy(record);await saveSharedStrategy("published");
+    }));
+    host.querySelectorAll("[data-strategy-remove]").forEach(button=>button.addEventListener("click",()=>deleteSavedStrategy(button.dataset.strategyRemove)));
+  }
+  async function refreshLibrary({quiet=false}={}){
+    if(!sb()){strategyLibrary=[];sharedRecord=null;renderStrategyLibrary();updateSharedControls();if(!quiet)setSharedStatus("Supabase is not connected. Your local recovery copy is still available.","error");return false;}
+    const {data,error}=await sb().from(STRATEGY_TABLE).select(STRATEGY_COLUMNS).order("updated_at",{ascending:false}).limit(200);
+    if(error){strategyLibrary=[];sharedRecord=null;renderStrategyLibrary();updateSharedControls();setSharedStatus("Saved Strategies are unavailable: "+error.message,"error");return false;}
+    strategyLibrary=data||[];syncSharedRecord();renderStrategyLibrary();updateSharedControls();
+    if(!quiet)setSharedStatus(strategyLibrary.length+" shared strateg"+(strategyLibrary.length===1?"y":"ies")+" loaded.","published");
+    return true;
   }
   async function refreshSharedStatus(){
-    const matchId=draft?.source?.matchId;
-    sharedRecord=null;updateSharedControls();
-    if(!matchId){setSharedStatus("This board is not linked to a scheduled game. Choose a game lineup and select Start from lineup before saving it for AI.");return;}
-    if(!sb()){setSharedStatus("Supabase is not connected, so this remains a local draft.","error");return;}
-    setSharedStatus("Checking for a shared strategy…");
-    const {data,error}=await sb().from(STRATEGY_TABLE).select("id,match_id,source_lineup_variation_id,lineup_name,title,status,ai_context_enabled,opponent_formation,show_lanes,lineup_snapshot,scenes,created_by,updated_by,created_at,updated_at,published_at").eq("match_id",matchId).maybeSingle();
-    if(error){setSharedStatus("Shared strategy storage is unavailable: "+error.message,"error");return;}
-    sharedRecord=data||null;updateSharedControls();
-    if(!sharedRecord){setSharedStatus("No shared strategy is saved for this game yet. Save a draft or publish it for AI.");return;}
-    const published=sharedRecord.status==="published"&&sharedRecord.ai_context_enabled;
-    setSharedStatus(published?"Published for AI · Updated "+new Date(sharedRecord.updated_at).toLocaleString():"Shared captain draft · Not available to AI yet · Updated "+new Date(sharedRecord.updated_at).toLocaleString(),published?"published":"");
+    if(!await refreshLibrary({quiet:true}))return;
+    const record=syncSharedRecord();renderStrategyLibrary();updateSharedControls();
+    if(!record){
+      setSharedStatus(draft?.source?.matchId?"This named strategy has not been saved yet. Save it for every captain, or publish it for AI.":"This Tinker strategy has not been saved yet. Save it so every captain can load it; Tinker strategies cannot be published for AI.");
+      return;
+    }
+    setSharedStatus(recordIsPublished(record)?"Saved and published for AI · Updated "+formatStamp(record.updated_at):"Saved for all captains · Not available to AI · Updated "+formatStamp(record.updated_at),recordIsPublished(record)?"published":"");
   }
-  function loadSharedStrategy(){
-    if(!sharedRecord)return;
+  function loadSharedStrategy(record=sharedRecord){
+    if(!record)return;
+    sharedRecord=record;
     const previousSource=draft?.source||{};
-    const sourceVariation=(lineApi()?.listVariations?.()||[]).find(item=>String(item.id)===String(sharedRecord.source_lineup_variation_id||""));
+    const sourceVariation=(lineApi()?.listVariations?.()||[]).find(item=>String(item.id)===String(record.source_lineup_variation_id||""));
     draft=normalizeDraft({
       version:1,
-      title:sharedRecord.title,
+      title:record.title,
       source:{
-        id:sharedRecord.source_lineup_variation_id?"saved:"+sharedRecord.source_lineup_variation_id:"current",
-        label:sharedRecord.lineup_name||"Saved game lineup",
-        eventLabel:sourceVariation?.event_label||(String(previousSource.matchId)===String(sharedRecord.match_id)?previousSource.eventLabel:"")||"Scheduled game",
-        matchId:sharedRecord.match_id,
-        variationId:sharedRecord.source_lineup_variation_id||null,
-        formation:sharedRecord.lineup_snapshot?.formation||"Custom",
-        state:clone(sharedRecord.lineup_snapshot||{}),
+        id:record.source_lineup_variation_id?"saved:"+record.source_lineup_variation_id:"current",
+        label:record.lineup_name||"Saved lineup snapshot",
+        eventKey:record.event_key||record.match_id||"tinker",
+        eventLabel:record.event_label||sourceVariation?.event_label||(String(previousSource.matchId)===String(record.match_id)?previousSource.eventLabel:"")||"Tinker / No Game",
+        matchId:record.match_id,
+        variationId:record.source_lineup_variation_id||null,
+        formation:record.lineup_snapshot?.formation||"Custom",
+        state:clone(record.lineup_snapshot||{}),
         roster:clone(lineApi()?.getRoster?.()||previousSource.roster||[])
       },
-      opponentFormation:sharedRecord.opponent_formation,
-      showLanes:sharedRecord.show_lanes,
-      activeSceneId:sharedRecord.scenes?.[0]?.id||"",
-      scenes:clone(sharedRecord.scenes||[]),
-      savedAt:sharedRecord.updated_at
+      opponentFormation:record.opponent_formation,
+      showLanes:record.show_lanes,
+      activeSceneId:record.scenes?.[0]?.id||"",
+      scenes:clone(record.scenes||[]),
+      savedAt:record.updated_at
     });
-    renderAll();persist();updateSharedControls();
-    setSharedStatus(sharedRecord.status==="published"?"Published strategy loaded. Changes remain local until you update the AI strategy.":"Shared captain draft loaded. Changes remain local until you save again.",sharedRecord.status==="published"?"published":"");
+    renderAll();persist();renderStrategyLibrary();updateSharedControls();
+    setSharedStatus(recordIsPublished(record)?"Published strategy loaded. Changes remain local until you save or republish.":"Saved captain strategy loaded. Changes remain local until you select Save Strategy.",recordIsPublished(record)?"published":"");
+    $("strategy")?.scrollIntoView({behavior:"smooth",block:"start"});
   }
   async function loadForMatch(matchId){
     init();
     if(!isUuid(matchId)||!sb())return;
-    const {data,error}=await sb().from(STRATEGY_TABLE).select("id,match_id,source_lineup_variation_id,lineup_name,title,status,ai_context_enabled,opponent_formation,show_lanes,lineup_snapshot,scenes,created_by,updated_by,created_at,updated_at,published_at").eq("match_id",matchId).maybeSingle();
+    const {data,error}=await sb().from(STRATEGY_TABLE).select(STRATEGY_COLUMNS).eq("match_id",matchId).eq("status","published").eq("ai_context_enabled",true).maybeSingle();
     if(error){setSharedStatus("Could not load this game's strategy: "+error.message,"error");return;}
-    if(!data){setSharedStatus("No shared strategy has been saved for this game yet.");return;}
+    if(!data){setSharedStatus("No strategy has been published for this game's AI and postgame review yet.");return;}
     sharedRecord=data;loadSharedStrategy();updateSharedControls();
   }
-  function sharedPayload(status,userId){
-    const published=status==="published";
+  function sharedPayload(userId){
+    const matchId=isUuid(draft?.source?.matchId)?String(draft.source.matchId):null;
     return {
-      match_id:draft.source.matchId,
+      match_id:matchId,
+      event_key:matchId||"tinker",
+      event_label:String(draft.source.eventLabel||(matchId?"Scheduled game":"Tinker / No Game")).trim().slice(0,180)||"Tinker / No Game",
       source_lineup_variation_id:draft.source.variationId||null,
       lineup_name:String(draft.source.label||"Game lineup").slice(0,140),
       title:String(draft.title||"Match Strategy").trim().slice(0,70)||"Match Strategy",
-      status,
-      ai_context_enabled:published,
+      status:"draft",
+      ai_context_enabled:false,
       opponent_formation:String(draft.opponentFormation||"4-4-2").slice(0,40),
       show_lanes:draft.showLanes!==false,
       lineup_snapshot:clone(draft.source.state||{}),
       scenes:clone(draft.scenes),
       updated_by:userId,
-      published_at:published?new Date().toISOString():null
+      published_at:null
     };
   }
   function strategyNameCheckText(){
@@ -235,12 +302,41 @@
     });
     renderAll();persist();
   }
+  async function saveOrOverwriteStrategy(payload,userId){
+    const titleKey=normalizedTitle(payload.title);
+    const {data:existing,error:lookupError}=await sb().from(STRATEGY_TABLE).select("id,title,status,ai_context_enabled").eq("event_key",payload.event_key).eq("title_key",titleKey).maybeSingle();
+    if(lookupError)throw lookupError;
+    if(existing){
+      const result=await sb().from(STRATEGY_TABLE).update(payload).eq("id",existing.id).select(STRATEGY_COLUMNS).single();
+      if(result.error)throw result.error;
+      return {record:result.data,overwritten:true,wasPublished:recordIsPublished(existing)};
+    }
+    const result=await sb().from(STRATEGY_TABLE).insert({...payload,created_by:userId}).select(STRATEGY_COLUMNS).single();
+    if(result.error?.code==="23505"){
+      const retry=await sb().from(STRATEGY_TABLE).update(payload).eq("event_key",payload.event_key).eq("title_key",titleKey).select(STRATEGY_COLUMNS).single();
+      if(retry.error)throw retry.error;
+      return {record:retry.data,overwritten:true,wasPublished:false};
+    }
+    if(result.error)throw result.error;
+    return {record:result.data,overwritten:false,wasPublished:false};
+  }
+  async function deleteSavedStrategy(id){
+    const record=strategyLibrary.find(item=>String(item.id)===String(id));if(!record)return;
+    const warning=recordIsPublished(record)?" This is the published AI strategy for the game, so deleting it will also remove it from AI and postgame review.":"";
+    if(!confirm('Delete saved strategy "'+record.title+'" for every captain?'+warning))return;
+    const result=await sb().from(STRATEGY_TABLE).delete().eq("id",record.id);
+    if(result.error){setSharedStatus("Could not delete the saved strategy: "+result.error.message,"error");return;}
+    if(String(sharedRecord?.id||"")===String(record.id))sharedRecord=null;
+    await refreshLibrary({quiet:true});
+    await window.SKORNotebook?.refresh?.({quiet:true});
+    setSharedStatus('Deleted shared strategy "'+record.title+'". Your current board remains available locally.');
+  }
   async function saveSharedStrategy(status){
     if(sharedLoading)return;
-    if(!draft?.source?.matchId){setSharedStatus("Choose a scheduled-game lineup and select Start from lineup first.","error");return;}
+    if(status==="published"&&!draft?.source?.matchId){setSharedStatus("Save this Tinker strategy to the captain library, or start from a scheduled-game lineup before publishing for AI.","error");return;}
     if(!sb()){setSharedStatus("Supabase is not connected. Your local draft is still safe on this device.","error");return;}
     sharedLoading=true;updateSharedControls();
-    setSharedStatus(status==="published"?"Publishing the current lineup and strategy for AI…":"Saving the shared captain draft…");
+    setSharedStatus(status==="published"?"Saving and publishing this named strategy for AI…":"Saving this named strategy for every captain…");
     try{
       if(status==="published"&&window.SKORNotebook?.reviewPlayerNames){
         const review=await window.SKORNotebook.reviewPlayerNames(strategyNameCheckText());
@@ -249,15 +345,19 @@
       }
       const {data:userData,error:userError}=await sb().auth.getUser();
       if(userError||!userData?.user)throw new Error(userError?.message||"Captain login required.");
-      const payload=sharedPayload(status,userData.user.id);
-      let result;
-      if(sharedRecord?.id)result=await sb().from(STRATEGY_TABLE).update(payload).eq("id",sharedRecord.id).select().single();
-      else result=await sb().from(STRATEGY_TABLE).insert({...payload,created_by:userData.user.id}).select().single();
-      if(result.error)throw result.error;
-      sharedRecord=result.data;persist();
-      window.dispatchEvent(new CustomEvent("skor:strategy-saved",{detail:{matchId:draft.source.matchId,status}}));
+      const saved=await saveOrOverwriteStrategy(sharedPayload(userData.user.id),userData.user.id);
+      sharedRecord=saved.record;
+      if(status==="published"){
+        const publishResult=await sb().rpc("publish_match_strategy",{p_strategy_id:sharedRecord.id});
+        if(publishResult.error)throw publishResult.error;
+      }
+      await refreshLibrary({quiet:true});
+      sharedRecord=strategyLibrary.find(item=>String(item.id)===String(saved.record.id))||saved.record;
+      persist();renderStrategyLibrary();updateSharedControls();
+      window.dispatchEvent(new CustomEvent("skor:strategy-saved",{detail:{matchId:draft.source.matchId||null,eventKey:sourceEventKey(),status}}));
       await window.SKORNotebook?.refresh?.({quiet:true});
-      setSharedStatus(status==="published"?"Published for AI. The lineup, bench, substitution plan, tactical scenes, opponent shape and coaching points are now approved AI context.":"Shared captain draft saved. It remains excluded from AI until published.",status==="published"?"published":"");
+      if(status==="published")setSharedStatus("Saved and published for AI. This is now the game's approved lineup and tactical context.","published");
+      else setSharedStatus((saved.overwritten?'Updated existing':'Saved new')+' shared strategy "'+sharedRecord.title+'". '+(saved.wasPublished?'It is now a captain draft and must be republished before AI can use it.':'It remains excluded from AI until published.'));
     }catch(error){setSharedStatus("Could not save the shared strategy: "+(error.message||error),"error");}
     finally{sharedLoading=false;updateSharedControls();}
   }
@@ -266,9 +366,9 @@
     const source=selectedSource();
     const home=playersFromLineup(source.state,source.roster);
     if(!home.length&&!confirm("This lineup does not have any players on the field yet. Start a blank strategy anyway?"))return;
-    draft=freshDraft(source);
+    draft=freshDraft(source);sharedRecord=null;
     renderAll();persist();
-    const state=$("strategySaveState");if(state)state.textContent="Started from "+source.label+" · saved locally";
+    const state=$("strategySaveState");if(state)state.textContent="Started from "+source.label+" · recovery copy updated";
     refreshSharedStatus();
   }
   function resetActivePlayers(){
@@ -465,14 +565,15 @@
     $("strategyUndo").addEventListener("click",()=>{const scene=activeScene();if(scene?.drawings.length){scene.drawings.pop();renderPitch();queuePersist();}});
     $("strategyClearMarks").addEventListener("click",()=>{const scene=activeScene();if(scene?.drawings.length&&confirm("Clear all coaching marks from this scene?")){scene.drawings=[];renderPitch();queuePersist();}});
     $("strategyAddScene").addEventListener("click",addScene);$("strategyRenameScene").addEventListener("click",renameScene);$("strategyDuplicateScene").addEventListener("click",duplicateScene);$("strategyDeleteScene").addEventListener("click",deleteScene);
-    $("strategyTitle").addEventListener("input",event=>{draft.title=event.target.value.slice(0,70);queuePersist();});
+    $("strategyTitle").addEventListener("input",event=>{draft.title=event.target.value.slice(0,70);syncSharedRecord();updateSharedControls();queuePersist();});
+    $("strategyTitle").addEventListener("change",()=>{syncSharedRecord();renderStrategyLibrary();updateSharedControls();});
     $("strategySceneTitle").addEventListener("input",event=>{const scene=activeScene();scene.name=event.target.value.slice(0,50)||"Untitled Scene";$("strategySceneName").textContent=scene.name;renderScenes();queuePersist();});
     $("strategySceneTypeSelect").addEventListener("change",event=>{const scene=activeScene();scene.type=event.target.value;$("strategySceneType").textContent=TYPE_LABELS[scene.type];renderScenes();queuePersist();});
     $("strategyCoachingPoints").addEventListener("input",event=>{activeScene().points=event.target.value.slice(0,600);queuePersist();});
     $("strategyResetScene").addEventListener("click",()=>{if(confirm("Reset player and opponent positions from the source lineup? Your coaching marks will stay."))resetActivePlayers();});
-    $("strategyLoadShared").addEventListener("click",loadSharedStrategy);
     $("strategySaveShared").addEventListener("click",()=>saveSharedStrategy("draft"));
     $("strategyPublishAi").addEventListener("click",()=>saveSharedStrategy("published"));
+    $("strategyRefreshLibrary").addEventListener("click",()=>refreshSharedStatus());
     $("strategyExportPng").addEventListener("click",exportPng);
   }
   function init(){
@@ -480,7 +581,7 @@
     if(!$("strategyPitch"))return;
     initialized=true;refreshSources();
     draft=loadLocal()||freshDraft(currentSource());
-    bind();renderAll();persist();refreshSharedStatus();
+    bind();renderAll();renderStrategyLibrary();persist();refreshSharedStatus();
   }
   function activate(){init();refreshSources();renderAll();refreshSharedStatus();}
 
