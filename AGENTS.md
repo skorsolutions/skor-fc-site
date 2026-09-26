@@ -11,5 +11,6 @@ After every build or functional change:
 5. Never run or deploy a Supabase migration without explicit user approval. Record the exact approved migration and resulting verification in the documentation.
 6. Do not put secrets, service-role keys, access tokens, private player data, or private captain notes in documentation or client-side code.
 7. The repository is public. If the active GitHub publishing tool requires explicit approval before it will replace full source files containing authentication, Supabase configuration, or data-access logic, identify the complete affected file set first and request one consolidated authorization covering every file. Do not start uploads and then ask for file-by-file approvals.
+8. After every production release, publish the same plain-language release summary in two places: (a) the final response in the active chat and (b) a comment on the GitHub release commit. Include the build number, user-visible changes, affected integrations/surfaces, SQL or database status, verification performed, live status, and commit link. Do not treat a commit title alone as sufficient release documentation.
 
 Treat `docs/PROJECT-HANDBOOK.md` as the durable handoff for a new chat. Keep it concise enough to read first, but complete enough that future work does not depend on conversation memory.

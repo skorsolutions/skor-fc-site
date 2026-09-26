@@ -6,6 +6,7 @@
 - Repairs the existing **4-5-1** public Game Day and Matches renderers so published lineups do not fall back to the 4-2-3-1 coordinates.
 - Adds `docs/PROJECT-HANDBOOK.md` as the living cross-chat system reference and `AGENTS.md` as the permanent requirement to read and update it after every build.
 - Records one consolidated upfront authorization step for public full-source publishing so future chats do not interrupt a release with repeated file-specific confirmations.
+- Establishes a two-location release summary rule: every production release must be summarized in the chat handoff and in a GitHub comment on the release commit.
 - Verification: JavaScript syntax passed for the shared modules and every inline script; automated consistency checks confirmed the exact 11-player role sequence in the builder, Strategy, Crowd Game Day, public Matches, and Production / Final role ordering.
 - **SQL needed:** No.
 - **Database changes performed:** None.

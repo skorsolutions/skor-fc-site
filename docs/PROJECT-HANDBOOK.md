@@ -207,6 +207,7 @@ The repository contains only the newer incremental migrations. Earlier productio
 8. Before a public GitHub write that replaces full source files, enumerate the complete affected file set. If the publishing tool requires explicit public-disclosure approval, request one consolidated authorization covering every affected source/documentation file before uploading anything; never interrupt the user with separate file-by-file approvals.
 9. Commit and push to GitHub `main` unless the user requested a branch/PR instead.
 10. Confirm the connected Cloudflare deployment succeeds before declaring production complete.
+11. Post the same plain-language release summary in the active chat and as a comment on the GitHub release commit. Both summaries must state the build number, what changed, connected surfaces/integrations, SQL/database status, verification, live status, and commit link.
 
 No SQL change is required for a formation-only release because the saved lineup and strategy JSON accept new formation/role strings. A schema migration is required only if persistence structure or database-enforced behavior changes.
 
@@ -223,6 +224,7 @@ A build is complete only when:
 - No unapproved SQL/database action occurred.
 - The build number, handbook, and deployment notes are current.
 - The change is committed/pushed and the production deployment is verified.
+- A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
 ## 14. Current build v54.3
 
