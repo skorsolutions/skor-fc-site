@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-09-26 ET
-Current Captain Portal build: **v55.2**
+Current Captain Portal build: **v56.0**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -109,6 +109,21 @@ Every new formation must be added to all applicable locations:
 - Mobile export controls and previews must remain usable without horizontal clipping.
 
 See `docs/LINEUP-EXPORT.md` for the renderer geometry, data flow, compatibility rules, and QA checklist.
+
+### Referee game-card export
+
+- **Ref Game Card** is a separate action beside the lineup PNG/JPG buttons.
+- It reads the current Lineup Builder board for the selected scheduled game. Saving or publishing the lineup is not required before export.
+- Only the starting field and named Substitutes bench are included. The general pool, attendance alone, Potential Positions alone, and planned-sub references alone do not add a player.
+- Permanent players use `team_roster.full_name`, sort by jersey number, and appear before TEMP players. TEMP players use their full match-specific display name and assigned inventory jersey number.
+- The supplied organization layout has 26 physical roster rows. Active players populate the top rows; unused rows remain blank for handwritten, last-minute additions.
+- Opponent, date, field, and scheduled time come from the selected `matches` row. Coach and colors use team defaults. These header values can be corrected for the export without modifying Supabase.
+- Validation blocks a Tinker/no-game board, empty squad, more than 26 players, stale identities, missing jersey numbers, and duplicate jersey numbers.
+- **Print / Save PDF** produces one landscape US Letter page. **Download Excel** fills a sanitized organization template and applies the same one-page print area.
+- The public template contains no historical roster data. Current player data is inserted only in the authenticated captain's browser when the export is requested.
+- The feature is read-only: it requires no SQL, Supabase write, Edge Function, AI, Crowd, public Matches, Notebook, or Game Day change.
+
+See `docs/REF-GAME-CARD.md` for the complete field mapping, ordering rules, validation, security boundary, and QA checklist.
 
 ## 6. Game Day clock and live scoring
 
@@ -266,11 +281,12 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 15. Current build v55.2
+## 15. Current build v56.0
 
-- Crops the Captain Gameplan picture at the opponent's 18-yard line, removing the distant opponent goal, goal area, and penalty area.
-- Widens the cropped pitch to 800 pixels and enlarges on-field jerseys to `100 × 88` pixels with larger numbers, role labels, player names, TEMP labels, and captain badge.
-- Remaps canonical full-pitch vertical positions into the 88.5-metre visible area without changing saved lineup data; the goalkeeper receives a small export-only spacing adjustment.
-- Applies the same renderer to the in-portal preview and PNG/JPG downloads. Bench, Potential Positions, substitution waves, quote, notes, Crowd Game Day, public Matches, and AI context retain their existing behavior.
-- Updates the renderer-contract test and `docs/LINEUP-EXPORT.md` with the crop and sizing rules.
-- Requires no SQL, Supabase migration, Edge Function deployment, or saved-lineup data change.
+- Adds a separate referee game-card workflow beside the lineup PNG/JPG actions.
+- Builds the official roster from the current starters and Substitutes, using full names and placing TEMP players after permanent players.
+- Preserves all 26 physical player rows so unused lines remain available for handwritten additions.
+- Auto-fills match details, validates missing/duplicate jersey numbers and other blocking conditions, and allows export-only header corrections.
+- Adds one-page landscape printing/Save as PDF and a populated Excel download based on a sanitized organization template.
+- Adds focused automated coverage and `docs/REF-GAME-CARD.md`.
+- Requires no SQL, Supabase migration, Edge Function deployment, saved-lineup change, AI change, or public/Game Day change.

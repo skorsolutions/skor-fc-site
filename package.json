@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "test:clock": "node tests/verify-match-clock.mjs",
-    "test:lineup-export": "node tests/verify-lineup-export.mjs"
+    "test:lineup-export": "node tests/verify-lineup-export.mjs",
+    "test:ref-game-card": "node tests/verify-ref-game-card.mjs"
   },
   "devDependencies": {
     "wrangler": "4.129.0"

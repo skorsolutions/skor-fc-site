@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v55.2-lineup-export-crop" />
-  <title>SKOR FC Admin | Captain Portal v55.2</title>
+  <meta name="skor-build" content="captain-portal-v56.0-ref-game-card" />
+  <title>SKOR FC Admin | Captain Portal v56.0</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
   <link rel="stylesheet" href="strategy.css?v=54.2" />
+  <link rel="stylesheet" href="ref-game-card.css?v=56.0" />
   <style>
     :root{
       --maroon:#741f35;
@@ -2757,7 +2758,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V55.2</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V56.0</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -2840,6 +2841,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div class="gameplan-export-actions">
               <button class="btn btn-primary" id="exportGameplanPng" type="button">Export PNG</button>
               <button class="btn btn-light" id="exportGameplanJpg" type="button">Export JPG</button>
+              <button class="btn btn-light" id="openRefGameCardBtn" type="button">Ref Game Card</button>
             </div>
           </div>
           <div class="gameplan-message-grid">
@@ -2866,6 +2868,36 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </div>
       </div>
     </section>
+
+    <dialog class="ref-game-card-dialog" id="refGameCardDialog">
+      <div class="ref-game-card-shell">
+        <div class="ref-game-card-head">
+          <div>
+            <h2>Referee Game Card</h2>
+            <p>Uses the current lineup board: starters plus Substitutes. Full names are printed, TEMP players are placed last, and unused rows remain blank for handwritten additions.</p>
+          </div>
+          <button class="btn btn-light ref-game-card-close" id="closeRefGameCard" type="button">Close</button>
+        </div>
+        <div class="ref-game-card-body">
+          <div class="ref-game-card-fields">
+            <div><label for="refCardOpponent">Opponent</label><input id="refCardOpponent" maxlength="100"></div>
+            <div><label for="refCardDate">Date</label><input id="refCardDate" type="date"></div>
+            <div><label for="refCardField">Field</label><input id="refCardField" maxlength="120"></div>
+            <div><label for="refCardTime">Scheduled starting time</label><input id="refCardTime" type="time"></div>
+            <div><label for="refCardCoach">Coach</label><input id="refCardCoach" maxlength="100"></div>
+            <div><label for="refCardColors">Team colors</label><input id="refCardColors" maxlength="100"></div>
+          </div>
+          <div class="ref-game-card-summary" id="refGameCardSummary"></div>
+          <div class="ref-game-card-status" id="refGameCardStatus"></div>
+          <div class="ref-game-card-preview-shell" id="refGameCardPreviewShell"><div class="ref-game-card-preview-stage" id="refGameCardPreview"></div></div>
+        </div>
+        <div class="ref-game-card-actions">
+          <button class="btn btn-light" id="cancelRefGameCard" type="button">Cancel</button>
+          <button class="btn btn-light" id="downloadRefGameCardExcel" type="button">Download Excel</button>
+          <button class="btn btn-primary" id="printRefGameCard" type="button">Print / Save PDF</button>
+        </div>
+      </div>
+    </dialog>
 
     <section class="view" id="strategy">
       <div class="strategy-shell">
@@ -3051,7 +3083,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
 
 <script>
-/* SKOR FC Lineup Builder v55.2 - opponent-18 crop and larger gameplan jerseys */
+/* SKOR FC Lineup Builder v56.0 - referee game-card print and Excel export */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"Joshua"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -3060,6 +3092,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     {player_key:"11-Edward",number:11,name:"Eddy"},{player_key:"1-Todd",number:1,name:"Todd"},{player_key:"3-Brad",number:3,name:"Brad"},{player_key:"21-Andres",number:21,name:"Andres"},
     {player_key:"12-Koushyar",number:12,name:"Koushyar"},{player_key:"15-Andrew",number:15,name:"Andrew"},{player_key:"4-Nick",number:4,name:"Nick"}
   ];
+  roster=roster.map(player=>({...player,fullName:player.name}));
   let permanentRoster = roster.slice();
   let matchTempPlayers = [];
 
@@ -4695,6 +4728,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         player_key:String(r.player_key || r.id || (r.jersey_number+"-"+r.full_name)),
         number:Number(r.jersey_number),
         name:String(r.preferred_name||r.display_name||String(r.full_name||"Player").trim().split(/\s+/)[0]),
+        fullName:String(r.full_name||r.display_name||r.preferred_name||"Player"),
         temp:false,
         archived:false
       }))
@@ -4721,6 +4755,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       jersey_inventory_id:r.jersey_inventory_id?String(r.jersey_inventory_id):"",
       number:r.jersey_number===null||r.jersey_number===undefined?null:Number(r.jersey_number),
       name:String(r.display_name||"Fill-in"),
+      fullName:String(r.display_name||"Fill-in"),
       temp:true,
       archived:r.active===false
     };
@@ -5037,7 +5072,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Lineup Builder v55.2 ready. Gameplan pictures crop at the opponent's 18-yard line and use larger jersey-player markers.");
+  markStatus("Lineup Builder v56.0 ready. Referee game cards can be printed, saved as PDF, or downloaded as Excel from the current match squad.");
 
   window.SKORLineup={
     setRoster,
@@ -5054,6 +5089,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     listVariations:()=>clone(allSharedVariations),
     getEventLabel:()=>eventLabel(),
     getEventKey:()=>eventKey(),
+    getSelectedMatch:()=>clone(eventMatches.get(String(selectedRealMatchId()))||null),
     getCaptainKey:()=>captainKey,
     reload:()=>{ loadDraft(); renderAll(); refreshVariations(false); }
   };
@@ -5063,8 +5099,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="jerseys.js"></script>
 <script src="strategy.js?v=54.3"></script>
+<script src="ref-game-card.js?v=56.0"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -6883,7 +6921,7 @@ document.getElementById("productionOpenLineupBtn")?.addEventListener("click",()=
 async function loadGameDayMatches(preferredId=null){
   const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_player_key,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
-  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v55.2";
+  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v56.0";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
   gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;window.SKORLineup?.setEvents(gameDayMatches,false);await loadAiPlayerCommentSelection({force:true});await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();

@@ -1,3 +1,22 @@
+## v56.0 — Referee game-card print and Excel export
+
+- Adds a separate **Ref Game Card** action beside lineup PNG/JPG export.
+- Uses the current selected scheduled game and current Lineup Builder board, including only starters and the named Substitutes bench.
+- Uses permanent players' full roster names, sorts permanent players by jersey number, and appends match-specific TEMP players with their assigned jersey numbers.
+- Preserves all 26 physical player rows from the supplied organization layout; unused rows remain blank for handwritten, last-minute additions.
+- Auto-fills opponent, date, field, scheduled kickoff, coach, and team colors. The export preview allows one-time header corrections without changing Supabase.
+- Blocks output for Tinker/no-game boards, an empty squad, more than 26 players, stale identities, missing jersey numbers, or duplicate jersey numbers.
+- Adds a phone-capable preview and one-page US Letter landscape **Print / Save PDF** flow.
+- Adds a match-specific **Download Excel** flow that preserves the official styling and applies the `A1:L36` one-page print area.
+- Sanitizes the committed Excel template so no historical opponent or player list is stored in the public repository; current roster data is inserted only in the captain's browser.
+- Connected behavior: reads existing `matches`, current lineup state, `team_roster`, `match_temp_players`, and TEMP jersey assignments. It does not modify Production / Final, attendance, Game Day, Crowd Scoring, public Matches, Notebook, Strategy, or AI context.
+- Verification: focused data/ordering/validation/template tests, Captain Portal inline-JavaScript parsing, existing lineup-export and persistent-clock suites, generated Excel inspection/rendering, and responsive-layout contract checks. Live desktop/phone review remains part of post-deployment verification.
+- Documentation: adds `docs/REF-GAME-CARD.md` and updates the durable project handbook.
+- **SQL needed:** No.
+- **Database changes performed:** None. No Supabase migration or Edge Function deployment is required.
+- **Live status:** Local build prepared for user review; not yet pushed or deployed.
+- Affected assets: `admin.html`, `ref-game-card.js`, `ref-game-card.css`, `assets/SKOR-Ref-Game-Card-Template.xlsx`, `package.json`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/REF-GAME-CARD.md`, and this deployment note.
+
 ## v55.2 — Opponent-18 Gameplan crop and larger jerseys
 
 - Crops the Shareable Gameplan Export at the opponent's 18-yard line, removing the opponent goal, goal area, and penalty area from the picture.
