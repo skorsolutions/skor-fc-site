@@ -1,3 +1,18 @@
+## v56.3 — Referee-card Excel one-page layout repair
+
+- Fixes Excel player rows whose names and jersey numbers could be vertically cut off.
+- Narrows the roster sequence and jersey-number columns, gives the player-name column the useful remaining width, and centers the sequence numbers.
+- Uses 18.5-point roster rows to preserve readability without pushing the referee signatures below the page.
+- Removes the competing fixed Excel scale percentage and explicitly enables one-page-wide/one-page-tall fit with automatic page breaks disabled.
+- Uses 0.18-inch print margins so the right-side referee fields and the final **Linesman 2** row remain inside one US Letter landscape page.
+- Preserves the existing 26 player rows, full-name/TEMP ordering, missing-cell repair, editable header mapping, PDF layout, and read-only integration boundaries.
+- Verification: referee-card, lineup-export, and persistent-clock suites; JavaScript syntax; Excel archive integrity and print metadata; and a generated one-page Letter landscape render confirming the complete right edge and **Linesman 2** line.
+- Documentation: updates `docs/REF-GAME-CARD.md` and the durable project handbook with the Excel sizing and print rules.
+- **SQL needed:** No.
+- **Database changes performed:** None. No Supabase migration or Edge Function deployment is required.
+- **Release status:** Approved for GitHub `main`; the release commit and live production verification are recorded immediately after publication.
+- Affected assets: `admin.html`, `ref-game-card.js`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/REF-GAME-CARD.md`, and this deployment note.
+
 ## v56.2 — Referee-card PDF layout repair
 
 - Rebalances the one-page US Letter landscape layout so the referee header, Weather/Field row, and Sportsmanship section no longer overlap.

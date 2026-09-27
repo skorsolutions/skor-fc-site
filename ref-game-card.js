@@ -178,6 +178,23 @@
   function xmlElements(parent,localName){return Array.from(parent.getElementsByTagNameNS(EXCEL_NS,localName));}
   function xmlElement(doc,localName){return doc.createElementNS(EXCEL_NS,`x:${localName}`);}
   function findCell(doc,address){return xmlElements(doc,"c").find(cell=>cell.getAttribute("r")===address)||null;}
+  function findRow(doc,rowNumber){return xmlElements(doc,"row").find(row=>Number(row.getAttribute("r"))===Number(rowNumber))||null;}
+  function findColumn(doc,columnNumber){return xmlElements(doc,"col").find(column=>Number(column.getAttribute("min"))<=columnNumber&&Number(column.getAttribute("max"))>=columnNumber)||null;}
+  function setColumnWidth(doc,columnNumber,width){
+    const column=findColumn(doc,columnNumber);
+    if(!column)throw new Error(`Excel template column ${columnNumber} is missing.`);
+    column.setAttribute("width",String(width));column.setAttribute("customWidth","1");
+  }
+  function applyExcelRosterLayout(doc){
+    setColumnWidth(doc,1,12.5);setColumnWidth(doc,2,32.08203125);setColumnWidth(doc,3,8.5);
+    [3,4,5,6,7].forEach(row=>{const label=findCell(doc,`A${row}`);if(label)label.setAttribute("s","32");});
+    for(let rowNumber=11;rowNumber<=36;rowNumber++){
+      const row=findRow(doc,rowNumber);if(!row)throw new Error(`Excel template row ${rowNumber} is missing.`);
+      row.setAttribute("ht","18.5");row.setAttribute("customHeight","1");
+      const sequence=findCell(doc,`A${rowNumber}`);
+      if(sequence)sequence.setAttribute("s",sequence.getAttribute("s")==="31"?"47":"52");
+    }
+  }
   function cellAddressParts(address){
     const match=String(address||"").match(/^([A-Z]+)(\d+)$/);
     if(!match)throw new Error(`Invalid Excel cell address ${address}.`);
@@ -227,13 +244,14 @@
     let setupPr=xmlElements(sheetPr,"pageSetUpPr")[0];
     if(!setupPr){setupPr=xmlElement(sheetDoc,"pageSetUpPr");sheetPr.appendChild(setupPr);}
     setupPr.setAttribute("fitToPage","1");
+    setupPr.setAttribute("autoPageBreaks","0");
     ["printOptions","pageMargins","pageSetup"].forEach(name=>xmlElements(sheetDoc,name).forEach(node=>node.remove()));
     const tableParts=xmlElements(sheetDoc,"tableParts")[0]||null;
     const printOptions=xmlElement(sheetDoc,"printOptions");printOptions.setAttribute("horizontalCentered","1");
     const margins=xmlElement(sheetDoc,"pageMargins");
-    Object.entries({left:"0.25",right:"0.25",top:"0.25",bottom:"0.25",header:"0",footer:"0"}).forEach(([key,value])=>margins.setAttribute(key,value));
+    Object.entries({left:"0.18",right:"0.18",top:"0.18",bottom:"0.18",header:"0",footer:"0"}).forEach(([key,value])=>margins.setAttribute(key,value));
     const setup=xmlElement(sheetDoc,"pageSetup");
-    Object.entries({paperSize:"1",orientation:"landscape",fitToWidth:"1",fitToHeight:"1",scale:"81"}).forEach(([key,value])=>setup.setAttribute(key,value));
+    Object.entries({paperSize:"1",orientation:"landscape",fitToWidth:"1",fitToHeight:"1",pageOrder:"overThenDown",usePrinterDefaults:"0"}).forEach(([key,value])=>setup.setAttribute(key,value));
     rootNode.insertBefore(printOptions,tableParts);
     rootNode.insertBefore(margins,tableParts);
     rootNode.insertBefore(setup,tableParts);
@@ -264,6 +282,7 @@
     const sheetDoc=parser.parseFromString(await sheetFile.async("string"),"application/xml");
     const workbookDoc=parser.parseFromString(await workbookFile.async("string"),"application/xml");
     if(sheetDoc.querySelector("parsererror")||workbookDoc.querySelector("parsererror"))throw new Error("The referee-card Excel template could not be read.");
+    applyExcelRosterLayout(sheetDoc);
     setCellText(sheetDoc,"B3",data.teamName);setCellText(sheetDoc,"B4",data.teamColors);setCellText(sheetDoc,"B5",data.coach);setCellText(sheetDoc,"B6",data.opponent);
     setCellText(sheetDoc,"I3",data.field);setCellText(sheetDoc,"L3",data.dateLabel);setCellText(sheetDoc,"J4",data.timeLabel);setCellText(sheetDoc,"J5","");setCellText(sheetDoc,"J6","");
     for(let index=0;index<CARD_CAPACITY;index++){
@@ -278,7 +297,7 @@
   }
 
   const api={CARD_CAPACITY,buildCardData,validateCardData,buildCardMarkup,fileBase,selectedSquadIds,formatDateLabel,formatTimeLabel,opponentFor,buildExcelBlob};
-  if(typeof module!=="undefined"&&module.exports)api.__test={setCellText,setCellNumber,findCell};
+  if(typeof module!=="undefined"&&module.exports)api.__test={setCellText,setCellNumber,findCell,applyExcelRosterLayout,applyPrintSettings};
   root.SKORRefGameCard=api;
   if(typeof module!=="undefined"&&module.exports)module.exports=api;
   if(typeof document==="undefined")return;
@@ -331,7 +350,7 @@
     render();const check=validateCardData(currentData);if(!check.valid)return;
     const popup=window.open("","_blank");
     if(!popup){status.className="ref-game-card-status visible error";status.textContent="The print window was blocked. Allow pop-ups for this site and try again.";return;}
-    const cssUrl=new URL("ref-game-card.css?v=56.2",window.location.href).href;
+    const cssUrl=new URL("ref-game-card.css?v=56.3",window.location.href).href;
     popup.document.open();popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(fileBase(currentData))}</title><link rel="stylesheet" href="${escapeHtml(cssUrl)}"></head><body class="ref-card-print-body">${buildCardMarkup(currentData)}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));<\/script></body></html>`);popup.document.close();
   });
 

@@ -71,9 +71,16 @@ class FakeDocument{
 function fakeCell(address,style){const cell=new FakeElement("c");cell.setAttribute("r",address);if(style)cell.setAttribute("s",style);return cell;}
 function fakeRow(number,cells=[]){const row=new FakeElement("row");row.setAttribute("r",number);cells.forEach(cell=>row.appendChild(cell));return row;}
 const worksheet=new FakeElement("worksheet"),sheetData=new FakeElement("sheetData");worksheet.appendChild(sheetData);
+const columns=new FakeElement("cols");worksheet.appendChild(columns);
+for(const [min,max,width] of [[1,1,"16.90625"],[2,2,"24.90625"],[3,3,"12.26953125"]]){
+  const column=new FakeElement("col");column.setAttribute("min",min);column.setAttribute("max",max);column.setAttribute("width",width);columns.appendChild(column);
+}
+for(let row=3;row<=7;row++)sheetData.appendChild(fakeRow(row,[Object.assign(fakeCell(`A${row}`,"8"),{})]));
+for(let row=11;row<=29;row++)sheetData.appendChild(fakeRow(row,[fakeCell(`A${row}`,row<17?"22":"31")]));
 sheetData.appendChild(fakeRow(30,[fakeCell("B30","4"),fakeCell("C30","4")]));
 const missingRow=fakeRow(31,[fakeCell("D31","5")]);sheetData.appendChild(missingRow);
 sheetData.appendChild(fakeRow(32,[fakeCell("B32","34"),fakeCell("C32","34")]));
+for(let row=33;row<=36;row++)sheetData.appendChild(fakeRow(row,[fakeCell(`A${row}`,"31")]));
 const fakeDoc=new FakeDocument(worksheet);
 refCard.__test.setCellText(fakeDoc,"B31","");
 refCard.__test.setCellNumber(fakeDoc,"C31","");
@@ -85,16 +92,34 @@ assert.equal(refCard.__test.findCell(fakeDoc,"C31").getAttribute("s"),"4","a cre
 assert.deepEqual(missingRow.children.map(cell=>cell.getAttribute("r")),["B31","C31","D31"],"created cells must be inserted in worksheet column order");
 assert.equal(refCard.__test.findCell(fakeDoc,"B31").children[0].children[0].textContent,"Twenty-first Player");
 assert.equal(refCard.__test.findCell(fakeDoc,"C31").children[0].textContent,"22");
+refCard.__test.applyExcelRosterLayout(fakeDoc);
+const fakeColumns=fakeDoc.getElementsByTagNameNS("","col");
+assert.deepEqual(fakeColumns.map(column=>column.getAttribute("width")),["12.5","32.08203125","8.5"],"sequence and jersey columns must stay compact while labels and player names remain readable");
+assert.equal(fakeDoc.getElementsByTagNameNS("","row").find(row=>row.getAttribute("r")==="11").getAttribute("ht"),"18.5","player rows must avoid text clipping without pushing the final signature off the page");
+assert.equal(refCard.__test.findCell(fakeDoc,"A3").getAttribute("s"),"32","top labels must use the narrower-column label style");
+assert.equal(refCard.__test.findCell(fakeDoc,"A11").getAttribute("s"),"52","top-border sequence cells must be centered");
+assert.equal(refCard.__test.findCell(fakeDoc,"A33").getAttribute("s"),"47","regular sequence cells must be centered");
+refCard.__test.applyPrintSettings(fakeDoc);
+const setupPr=fakeDoc.getElementsByTagNameNS("","pageSetUpPr")[0];
+const pageMargins=fakeDoc.getElementsByTagNameNS("","pageMargins")[0];
+const pageSetup=fakeDoc.getElementsByTagNameNS("","pageSetup")[0];
+assert.equal(setupPr.getAttribute("fitToPage"),"1","Excel must use fit-to-page mode");
+assert.equal(setupPr.getAttribute("autoPageBreaks"),"0","automatic page breaks must not split the game card");
+assert.equal(pageMargins.getAttribute("right"),"0.18","landscape margins must leave clearance at both horizontal edges");
+assert.equal(pageMargins.getAttribute("bottom"),"0.18","landscape margins must leave clearance below Linesman 2");
+assert.equal(pageSetup.getAttribute("fitToWidth"),"1","the game card must fit one page wide");
+assert.equal(pageSetup.getAttribute("fitToHeight"),"1","the game card must fit one page tall");
+assert.equal(pageSetup.getAttribute("scale"),null,"fixed scaling must not override fit-to-page settings");
 
-assert.match(admin,/captain-portal-v56\.2-ref-game-card-print-layout/);
-assert.match(admin,/LINEUP BUILDER V56\.2/);
+assert.match(admin,/captain-portal-v56\.3-ref-game-card-excel-print-layout/);
+assert.match(admin,/LINEUP BUILDER V56\.3/);
 assert.match(admin,/id="openRefGameCardBtn"/);
 assert.match(admin,/id="downloadRefGameCardExcel"/);
 assert.match(admin,/id="printRefGameCard"/);
 assert.match(admin,/fullName:String\(r\.full_name/);
 assert.match(admin,/getSelectedMatch:/);
 assert.match(admin,/jszip@3\.10\.1/);
-assert.match(admin,/ref-game-card\.js\?v=56\.2/);
+assert.match(admin,/ref-game-card\.js\?v=56\.3/);
 assert.match(refCardSource,/function ensureCell\(doc,address\)/);
 assert.match(refCardSource,/if\(!cell&&!clean\)return/);
 assert.match(refCardSource,/if\(!cell&&blank\)return/);
@@ -103,7 +128,7 @@ assert.match(css,/grid-template-rows:48px 158px minmax\(0,1fr\)/);
 assert.match(css,/\.ref-card-field-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-report-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-roster\{[^}]*font-size:12\.5px\}/);
-assert.match(handbook,/Current Captain Portal build: \*\*v56\.2\*\*/);
+assert.match(handbook,/Current Captain Portal build: \*\*v56\.3\*\*/);
 
 assert.ok(fs.existsSync(templatePath),"the sanitized Excel template must be present");
 const sharedStrings=execFileSync("unzip",["-p",templatePath.pathname,"xl/sharedStrings.xml"],{encoding:"utf8"});

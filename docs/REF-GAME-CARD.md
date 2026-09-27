@@ -1,6 +1,6 @@
 # Referee Game Card
 
-Build: **v56.2**
+Build: **v56.3**
 
 This document defines the Captain Portal referee-card workflow. The feature reproduces the supplied Roswell Recreation & Parks game-card layout as a separate export beside the lineup PNG/JPG actions.
 
@@ -74,7 +74,11 @@ A missing field or scheduled time produces a warning but remains printable becau
 - The public template contains no historical player list or prior opponent.
 - The browser inserts the current header and roster into the workbook at export time.
 - Excel files may omit XML nodes for completely blank cells. The exporter skips missing cells that remain blank and creates any missing cell that needs a player value, inheriting the nearest same-column template style.
-- The generated workbook sets the Template sheet print area to `A1:L36`, uses US Letter landscape, fits to one page, and hides the unused blank helper roster tab.
+- The generated workbook sets the Template sheet print area to `A1:L36`, uses US Letter landscape, explicitly fits to one page wide by one page tall, and hides the unused blank helper roster tab.
+- Fit-to-page is the only Excel scaling rule. The exporter disables automatic page breaks and does not write a competing fixed scale percentage.
+- Excel print margins are 0.18 inches on every edge so the right-side referee fields and the final **Linesman 2** signature row remain inside the printable page.
+- Player rows use an 18.5-point fixed height so roster text is not vertically cut off while all 26 rows and the complete referee-signature section remain on one page.
+- The roster sequence and jersey-number columns are compact, the player-name column receives the remaining space, sequence numbers are centered, and the top-left form labels retain enough width to remain complete.
 - The downloaded filename follows the same match-specific convention as the PDF/print document.
 - JSZip runs in the browser to preserve the template's Excel styling while updating only the required cells and print metadata.
 
@@ -96,5 +100,6 @@ A missing field or scheduled time produces a warning but remains printable becau
 - Confirm missing/duplicate jersey validation blocks both outputs.
 - Confirm editable header changes appear in the preview, print view, and Excel file.
 - Confirm the PDF/print result is one landscape Letter page.
-- Open the `.xlsx` in Excel and confirm the print area, orientation, scaling, styles, and populated cells.
+- Open the `.xlsx` in Excel and confirm it prints as exactly one landscape Letter page with no clipped text on either horizontal edge and with **Linesman 2** visible at the bottom.
+- Confirm roster text is vertically centered and fully visible, sequence numbers are centered, and the sequence/jersey columns do not consume unnecessary width.
 - Check desktop and representative phone widths.

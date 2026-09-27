@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-09-27 ET
-Current Captain Portal build: **v56.2**
+Current Captain Portal build: **v56.3**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -122,6 +122,8 @@ See `docs/LINEUP-EXPORT.md` for the renderer geometry, data flow, compatibility 
 - **Print / Save PDF** produces one landscape US Letter page. **Download Excel** fills a sanitized organization template and applies the same one-page print area.
 - The public template contains no historical roster data. Current player data is inserted only in the authenticated captain's browser when the export is requested.
 - The Excel exporter must not assume blank handwriting-row cells exist in the worksheet XML. It skips absent blank targets and creates an absent cell only when a player value must be written, inheriting a nearby same-column style.
+- The Excel roster uses compact sequence and jersey-number columns, a wider player-name column, centered sequence numbers, and 18.5-point player rows so names and numbers remain readable without displacing the signature section.
+- Excel export uses `A1:L36`, US Letter landscape, 0.18-inch margins, and one-page-wide/one-page-tall fit metadata with automatic page breaks disabled. A fixed scale percentage must not compete with fit-to-page. The complete right-side form and **Linesman 2** row must remain visible.
 - The feature is read-only: it requires no SQL, Supabase write, Edge Function, AI, Crowd, public Matches, Notebook, or Game Day change.
 
 See `docs/REF-GAME-CARD.md` for the complete field mapping, ordering rules, validation, security boundary, and QA checklist.
@@ -282,7 +284,7 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 15. Current build v56.2
+## 15. Current build v56.3
 
 - Adds a separate referee game-card workflow beside the lineup PNG/JPG actions.
 - Builds the official roster from the current starters and Substitutes, using full names and placing TEMP players after permanent players.
@@ -292,4 +294,6 @@ A build is complete only when:
 - Adds focused automated coverage and `docs/REF-GAME-CARD.md`.
 - Repairs Excel downloads when the sanitized workbook omits XML nodes for completely blank handwriting-row cells such as `B31`/`C31`.
 - Repairs the landscape PDF spacing so Weather/Field and Sportsmanship never overlap, increases roster legibility, and centers populated header values within their underlined fields.
+- Repairs the Excel worksheet sizing so roster text is not vertically cut off and the sequence/jersey columns are not unnecessarily wide.
+- Makes Excel use one unambiguous fit-to-page rule with smaller print margins, keeping all right-side fields and the **Linesman 2** signature line inside one landscape Letter page.
 - Requires no SQL, Supabase migration, Edge Function deployment, saved-lineup change, AI change, or public/Game Day change.
