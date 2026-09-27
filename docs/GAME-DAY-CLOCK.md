@@ -1,6 +1,6 @@
 # SKOR FC Game Day Clock
 
-Status: **v57.0 release candidate**
+Status: **v57.0 production**
 Last updated: 2026-09-27
 
 This document is the durable implementation and operating reference for the official match clock, event timestamps, Crowd display, and substitution reminders.
@@ -97,6 +97,8 @@ Captain Game Day does not allow a new live event to be saved until the official 
 Execute permission is revoked from `PUBLIC` and then granted explicitly to `anon` and `authenticated`, because both signed-out visitors and signed-in players can open public pages. The function exposes no session ID, Crowd `active` state, invite, participant, voting, referee-review, captain, or write fields.
 
 The approved migration was applied as Supabase migration `20260927134927 expose_public_match_clock`. Direct anonymous execution succeeded, returned only the seven documented fields, and returned zero rows for unpublished matches. The Supabase security advisor intentionally flags this function because it is a public `SECURITY DEFINER` endpoint; its published-match filter and minimal read-only projection are the explicit public contract.
+
+Production commit `8dbc56e4aa071f4580d5ae414c5c36c3ce7e6ab9` was verified on `skorfc.net` on 2026-09-27. Home, Match Center, and Captain Portal served their v57.0 build markers; the deployed `public-match-clock.js?v=57.0` exactly matched the repository asset; and an anonymous production RPC call returned only the approved seven-field projection. The sessions present during verification were already `full_time`, so the public clock correctly remained hidden.
 
 Home and Match Center refresh the safe RPC projection every five seconds and calculate the visible time locally every second. Only `first_half`, `halftime`, and `second_half` are shown as a current public clock. Public scores, match status, and timestamped events refresh every 30 seconds.
 
