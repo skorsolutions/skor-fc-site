@@ -1,3 +1,17 @@
+## v55.1 — Lineup-style Gameplan picture
+
+- Rebuilds the Shareable Gameplan Export around the same vertical `68:105` field proportion used by the Lineup Builder, Crowd Game Day, and public Matches.
+- Replaces the old circular on-field markers with maroon jersey/shirt silhouettes containing the saved jersey number, plus role, optional player name, TEMP label, and captain badge.
+- Uses the exact canonical saved formation coordinates instead of rescaling the occupied players to fill a wide landscape field.
+- Matches the lineup presentation with striped grass and proportionally placed halfway line, center circle, penalty areas, and six-yard boxes.
+- Keeps one renderer for the live preview and PNG/JPG downloads, so the preview is the exported picture.
+- Preserves the existing named bench, optional Potential Positions, every enabled substitution wave, quote, notes, dynamic-height reflow, and WhatsApp-ready download workflow.
+- Verification: all Captain Portal inline JavaScript parses; `test:lineup-export` validates the pitch ratio, canonical-coordinate mapping, jersey marker, shared preview/download renderer, and removal of the old circular on-field marker; the existing persistent-clock suite still passes. A rendered `3-2-3-2` fixture was visually checked for pitch proportions, jersey spacing, labels, captain badge, bench flow, and clipping.
+- Documentation: adds `docs/LINEUP-EXPORT.md` and updates the durable project handbook.
+- **SQL needed:** No.
+- **Database changes performed:** None.
+- Affected assets: `admin.html`, `package.json`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/LINEUP-EXPORT.md`, and this deployment note.
+
 ## v55.0 — Persistent official match clock
 
 - Adds a captain-authoritative match clock that persists through refreshes and closed apps by storing a Supabase elapsed-time anchor and server start timestamp.

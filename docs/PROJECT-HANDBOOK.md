@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
-Last updated: 2026-09-27
-Current Captain Portal build: **v55.0**
+Last updated: 2026-09-26 ET
+Current Captain Portal build: **v55.1**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -96,12 +96,19 @@ Every new formation must be added to all applicable locations:
 ## 5. Lineup exports
 
 - Exports are intended for WhatsApp sharing and support PNG and JPG.
+- The export preview and downloaded image use the same canonical renderer.
+- The starting-lineup picture uses the same vertical `68:105` field proportion as the Lineup Builder, Crowd Game Day, and public Matches—not a landscape field.
+- Standard formation players keep their canonical saved `x` / `y` coordinates. The export must not independently stretch the occupied players to fill the field.
+- On-field players use maroon jersey/shirt silhouettes with number, role, optional name, TEMP label, and captain badge. Circular on-field player markers are not part of the lineup export design.
+- The field uses the same striped green treatment and proportional halfway line, center circle, penalty areas, and six-yard boxes as the canonical lineup presentation.
 - Export includes every lineup/substitution wave, not only the currently selected wave.
 - The named substitute bench is always included.
 - Potential Positions are optional in the export and do not alter saved lineup data.
 - Captain badge, inspirational quote, and gameplan notes may be included.
 - Content must reflow so wrapped names, all waves, the bench, optional Potential Positions, quote, and notes never overlap.
 - Mobile export controls and previews must remain usable without horizontal clipping.
+
+See `docs/LINEUP-EXPORT.md` for the renderer geometry, data flow, compatibility rules, and QA checklist.
 
 ## 6. Game Day clock and live scoring
 
@@ -259,11 +266,11 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 15. Current build v55.0
+## 15. Current build v55.1
 
-- Adds the persistent, captain-authoritative official match clock, 40/45-minute half flow, halftime break timer, pause/resume, and synchronized match statuses.
-- Adds official timestamp capture for captain goals/cards/fouls, Crowd goals/cards, and Crowd referee/foul reviews; Captain, Crowd, and public match event feeds render those times.
-- Adds 10/15-minute substitution cadence reminders, two-minute **GET READY** warnings, due alerts, wave groups, and optional exact wave minutes.
-- Carries wave timing/group metadata through saved lineup JSON, exports, Production / Final, Captain Game Day, and Crowd Game Day.
-- Uses the applied `supabase/migrations/20260926203049_add_persistent_match_clock.sql` migration, recorded by Supabase as `20260927001357 add_persistent_match_clock`.
-- Existing session/event data was preserved, no Edge Function deployment was needed, and post-migration schema/grant/advisor checks passed for the new clock objects.
+- Replaces the Gameplan export's wide landscape field with the canonical vertical `68:105` lineup pitch.
+- Replaces circular on-field player dots with the same maroon jersey/shirt presentation used by the Lineup Builder and published lineup surfaces.
+- Keeps standard formations on their canonical saved coordinates instead of stretching only the occupied area to fill the export field.
+- Applies the renderer to both the in-portal preview and PNG/JPG downloads; bench, Potential Positions, substitution waves, quote, and notes retain their existing behavior.
+- Adds `docs/LINEUP-EXPORT.md` and an automated renderer-contract test.
+- Requires no SQL, Supabase migration, Edge Function deployment, or saved-lineup data change.
