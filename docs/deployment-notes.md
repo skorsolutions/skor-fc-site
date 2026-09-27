@@ -10,7 +10,7 @@
 - Documentation: updates `docs/REF-GAME-CARD.md` and the durable project handbook with the Excel sizing and print rules.
 - **SQL needed:** No.
 - **Database changes performed:** None. No Supabase migration or Edge Function deployment is required.
-- **Release status:** Approved for GitHub `main`; the release commit and live production verification are recorded immediately after publication.
+- **Live status:** Published to GitHub `main` in release commit `27f20c7`. The connected Cloudflare production deployment is live; the public Captain Portal v56.3 build marker, visible v56.3 label, and v56.3 `ref-game-card.css` / `ref-game-card.js` asset references were verified from `skorfc.net`.
 - Affected assets: `admin.html`, `ref-game-card.js`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/REF-GAME-CARD.md`, and this deployment note.
 
 ## v56.2 — Referee-card PDF layout repair
