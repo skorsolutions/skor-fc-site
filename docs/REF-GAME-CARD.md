@@ -1,6 +1,6 @@
 # Referee Game Card
 
-Build: **v56.0**
+Build: **v56.1**
 
 This document defines the Captain Portal referee-card workflow. The feature reproduces the supplied Roswell Recreation & Parks game-card layout as a separate export beside the lineup PNG/JPG actions.
 
@@ -71,6 +71,7 @@ A missing field or scheduled time produces a warning but remains printable becau
 - `assets/SKOR-Ref-Game-Card-Template.xlsx` is a sanitized derivative of the supplied organization workbook.
 - The public template contains no historical player list or prior opponent.
 - The browser inserts the current header and roster into the workbook at export time.
+- Excel files may omit XML nodes for completely blank cells. The exporter skips missing cells that remain blank and creates any missing cell that needs a player value, inheriting the nearest same-column template style.
 - The generated workbook sets the Template sheet print area to `A1:L36`, uses US Letter landscape, fits to one page, and hides the unused blank helper roster tab.
 - The downloaded filename follows the same match-specific convention as the PDF/print document.
 - JSZip runs in the browser to preserve the template's Excel styling while updating only the required cells and print metadata.

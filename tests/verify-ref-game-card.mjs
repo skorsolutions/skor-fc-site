@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 
 const require=createRequire(import.meta.url);
 const refCard=require("../ref-game-card.js");
+const refCardSource=fs.readFileSync(new URL("../ref-game-card.js",import.meta.url),"utf8");
 const admin=fs.readFileSync(new URL("../admin.html",import.meta.url),"utf8");
 const css=fs.readFileSync(new URL("../ref-game-card.css",import.meta.url),"utf8");
 const handbook=fs.readFileSync(new URL("../docs/PROJECT-HANDBOOK.md",import.meta.url),"utf8");
@@ -50,17 +51,55 @@ assert.match(refCard.validateCardData(duplicate).errors.join(" "),/Jersey #11/);
 const missingNumber=structuredClone(data);missingNumber.players[2].number=null;
 assert.match(refCard.validateCardData(missingNumber).errors.join(" "),/Assign a jersey number/);
 
-assert.match(admin,/captain-portal-v56\.0-ref-game-card/);
-assert.match(admin,/LINEUP BUILDER V56\.0/);
+class FakeElement{
+  constructor(localName){this.localName=localName;this.attributes=new Map();this.children=[];this.parentNode=null;this.textContent="";}
+  getAttribute(name){return this.attributes.get(name)??null;}
+  hasAttribute(name){return this.attributes.has(name);}
+  setAttribute(name,value){this.attributes.set(name,String(value));}
+  setAttributeNS(_namespace,name,value){this.setAttribute(name,value);}
+  removeAttribute(name){this.attributes.delete(name);}
+  appendChild(child){child.parentNode=this;this.children.push(child);return child;}
+  insertBefore(child,before){child.parentNode=this;const index=before?this.children.indexOf(before):-1;if(index<0)this.children.push(child);else this.children.splice(index,0,child);return child;}
+  remove(){if(!this.parentNode)return;const index=this.parentNode.children.indexOf(this);if(index>=0)this.parentNode.children.splice(index,1);this.parentNode=null;}
+  getElementsByTagNameNS(_namespace,name){return this.children.flatMap(child=>[...(child.localName===name?[child]:[]),...child.getElementsByTagNameNS(_namespace,name)]);}
+}
+class FakeDocument{
+  constructor(root){this.documentElement=root;}
+  createElementNS(_namespace,qualifiedName){return new FakeElement(qualifiedName.split(":").pop());}
+  getElementsByTagNameNS(namespace,name){return [...(this.documentElement.localName===name?[this.documentElement]:[]),...this.documentElement.getElementsByTagNameNS(namespace,name)];}
+}
+function fakeCell(address,style){const cell=new FakeElement("c");cell.setAttribute("r",address);if(style)cell.setAttribute("s",style);return cell;}
+function fakeRow(number,cells=[]){const row=new FakeElement("row");row.setAttribute("r",number);cells.forEach(cell=>row.appendChild(cell));return row;}
+const worksheet=new FakeElement("worksheet"),sheetData=new FakeElement("sheetData");worksheet.appendChild(sheetData);
+sheetData.appendChild(fakeRow(30,[fakeCell("B30","4"),fakeCell("C30","4")]));
+const missingRow=fakeRow(31,[fakeCell("D31","5")]);sheetData.appendChild(missingRow);
+sheetData.appendChild(fakeRow(32,[fakeCell("B32","34"),fakeCell("C32","34")]));
+const fakeDoc=new FakeDocument(worksheet);
+refCard.__test.setCellText(fakeDoc,"B31","");
+refCard.__test.setCellNumber(fakeDoc,"C31","");
+assert.equal(refCard.__test.findCell(fakeDoc,"B31"),null,"an omitted cell that remains blank must stay untouched");
+refCard.__test.setCellText(fakeDoc,"B31","Twenty-first Player");
+refCard.__test.setCellNumber(fakeDoc,"C31",22);
+assert.equal(refCard.__test.findCell(fakeDoc,"B31").getAttribute("s"),"4","a created name cell must inherit the nearest name-column style");
+assert.equal(refCard.__test.findCell(fakeDoc,"C31").getAttribute("s"),"4","a created number cell must inherit the nearest number-column style");
+assert.deepEqual(missingRow.children.map(cell=>cell.getAttribute("r")),["B31","C31","D31"],"created cells must be inserted in worksheet column order");
+assert.equal(refCard.__test.findCell(fakeDoc,"B31").children[0].children[0].textContent,"Twenty-first Player");
+assert.equal(refCard.__test.findCell(fakeDoc,"C31").children[0].textContent,"22");
+
+assert.match(admin,/captain-portal-v56\.1-ref-game-card-cell-repair/);
+assert.match(admin,/LINEUP BUILDER V56\.1/);
 assert.match(admin,/id="openRefGameCardBtn"/);
 assert.match(admin,/id="downloadRefGameCardExcel"/);
 assert.match(admin,/id="printRefGameCard"/);
 assert.match(admin,/fullName:String\(r\.full_name/);
 assert.match(admin,/getSelectedMatch:/);
 assert.match(admin,/jszip@3\.10\.1/);
-assert.match(admin,/ref-game-card\.js\?v=56\.0/);
+assert.match(admin,/ref-game-card\.js\?v=56\.1/);
+assert.match(refCardSource,/function ensureCell\(doc,address\)/);
+assert.match(refCardSource,/if\(!cell&&!clean\)return/);
+assert.match(refCardSource,/if\(!cell&&blank\)return/);
 assert.match(css,/@page\{size:Letter landscape;margin:\.25in\}/);
-assert.match(handbook,/Current Captain Portal build: \*\*v56\.0\*\*/);
+assert.match(handbook,/Current Captain Portal build: \*\*v56\.1\*\*/);
 
 assert.ok(fs.existsSync(templatePath),"the sanitized Excel template must be present");
 const sharedStrings=execFileSync("unzip",["-p",templatePath.pathname,"xl/sharedStrings.xml"],{encoding:"utf8"});
@@ -71,5 +110,6 @@ for(const staleName of ["Todd Lamberg","Ivan Martinez","Press and Play","Dez Niz
   assert.ok(!rosterSheet.includes(staleName),`blank helper sheet must not retain ${staleName}`);
 }
 assert.match(templateSheet,/r="A36"[^>]*>[\s\S]*?<x:v>26<\/x:v>/,"the final handwriting row must be numbered 26");
+assert.doesNotMatch(templateSheet,/r="B31"/,"fixture must retain the originally omitted blank cell that caused the production error");
 
 console.log("Referee game-card verification passed.");

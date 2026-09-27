@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-09-26 ET
-Current Captain Portal build: **v56.0**
+Current Captain Portal build: **v56.1**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -121,6 +121,7 @@ See `docs/LINEUP-EXPORT.md` for the renderer geometry, data flow, compatibility 
 - Validation blocks a Tinker/no-game board, empty squad, more than 26 players, stale identities, missing jersey numbers, and duplicate jersey numbers.
 - **Print / Save PDF** produces one landscape US Letter page. **Download Excel** fills a sanitized organization template and applies the same one-page print area.
 - The public template contains no historical roster data. Current player data is inserted only in the authenticated captain's browser when the export is requested.
+- The Excel exporter must not assume blank handwriting-row cells exist in the worksheet XML. It skips absent blank targets and creates an absent cell only when a player value must be written, inheriting a nearby same-column style.
 - The feature is read-only: it requires no SQL, Supabase write, Edge Function, AI, Crowd, public Matches, Notebook, or Game Day change.
 
 See `docs/REF-GAME-CARD.md` for the complete field mapping, ordering rules, validation, security boundary, and QA checklist.
@@ -281,7 +282,7 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 15. Current build v56.0
+## 15. Current build v56.1
 
 - Adds a separate referee game-card workflow beside the lineup PNG/JPG actions.
 - Builds the official roster from the current starters and Substitutes, using full names and placing TEMP players after permanent players.
@@ -289,4 +290,5 @@ A build is complete only when:
 - Auto-fills match details, validates missing/duplicate jersey numbers and other blocking conditions, and allows export-only header corrections.
 - Adds one-page landscape printing/Save as PDF and a populated Excel download based on a sanitized organization template.
 - Adds focused automated coverage and `docs/REF-GAME-CARD.md`.
+- Repairs Excel downloads when the sanitized workbook omits XML nodes for completely blank handwriting-row cells such as `B31`/`C31`.
 - Requires no SQL, Supabase migration, Edge Function deployment, saved-lineup change, AI change, or public/Game Day change.

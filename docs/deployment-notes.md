@@ -1,3 +1,15 @@
+## v56.1 — Referee-card blank Excel cell repair
+
+- Fixes **Download Excel** failing with `Excel template cell B31 is missing` when the sanitized organization workbook omits XML nodes for completely blank handwriting rows.
+- Missing cells that will remain blank are now left untouched. If a selected squad is large enough to need an omitted cell, the exporter creates it in the correct worksheet row and column and inherits the nearest same-column template style.
+- Keeps all v56.0 roster rules unchanged: starters plus Substitutes only, full permanent-player names, TEMP players last, duplicate/missing-number validation, and all 26 physical rows available for printing or handwriting.
+- Adds a regression fixture that confirms `B31` is absent from the template and verifies that the exporter contains both safe missing-blank handling and missing-populated-cell creation.
+- Documentation: updates `docs/REF-GAME-CARD.md` and the durable project handbook with the blank-cell rule.
+- **SQL needed:** No.
+- **Database changes performed:** None. No Supabase migration or Edge Function deployment is required.
+- **Live status:** Repair prepared locally after the production error report; publishing and production verification pending.
+- Affected assets: `admin.html`, `ref-game-card.js`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/REF-GAME-CARD.md`, and this deployment note.
+
 ## v56.0 — Referee game-card print and Excel export
 
 - Adds a separate **Ref Game Card** action beside lineup PNG/JPG export.

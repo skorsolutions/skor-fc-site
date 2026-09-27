@@ -178,14 +178,34 @@
   function xmlElements(parent,localName){return Array.from(parent.getElementsByTagNameNS(EXCEL_NS,localName));}
   function xmlElement(doc,localName){return doc.createElementNS(EXCEL_NS,`x:${localName}`);}
   function findCell(doc,address){return xmlElements(doc,"c").find(cell=>cell.getAttribute("r")===address)||null;}
+  function cellAddressParts(address){
+    const match=String(address||"").match(/^([A-Z]+)(\d+)$/);
+    if(!match)throw new Error(`Invalid Excel cell address ${address}.`);
+    return {column:match[1],row:Number(match[2])};
+  }
+  function columnNumber(label){return [...label].reduce((total,char)=>(total*26)+char.charCodeAt(0)-64,0);}
+  function ensureCell(doc,address){
+    const existing=findCell(doc,address);if(existing)return existing;
+    const target=cellAddressParts(address),row=xmlElements(doc,"row").find(node=>Number(node.getAttribute("r"))===target.row);
+    if(!row)throw new Error(`Excel template row ${target.row} is missing.`);
+    const sameColumn=xmlElements(doc,"c").map(cell=>({cell,parts:cellAddressParts(cell.getAttribute("r"))}))
+      .filter(item=>item.parts.column===target.column&&item.cell.hasAttribute("s"))
+      .sort((a,b)=>Math.abs(a.parts.row-target.row)-Math.abs(b.parts.row-target.row));
+    const cell=xmlElement(doc,"c");cell.setAttribute("r",address);
+    if(sameColumn[0])cell.setAttribute("s",sameColumn[0].cell.getAttribute("s"));
+    const targetColumn=columnNumber(target.column);
+    const nextCell=Array.from(row.children).find(child=>child.localName==="c"&&columnNumber(cellAddressParts(child.getAttribute("r")).column)>targetColumn);
+    row.insertBefore(cell,nextCell||null);
+    return cell;
+  }
   function clearCellValue(cell){
     Array.from(cell.children).filter(child=>["v","is","f"].includes(child.localName)).forEach(child=>child.remove());
     cell.removeAttribute("t");
   }
   function setCellText(doc,address,value){
-    const cell=findCell(doc,address);if(!cell)throw new Error(`Excel template cell ${address} is missing.`);
-    clearCellValue(cell);
     const clean=String(value??"");
+    let cell=findCell(doc,address);if(!cell&&!clean)return;
+    cell=cell||ensureCell(doc,address);clearCellValue(cell);
     if(!clean)return;
     cell.setAttribute("t","inlineStr");
     const inline=xmlElement(doc,"is"),node=xmlElement(doc,"t");
@@ -193,9 +213,10 @@
     node.textContent=clean;inline.appendChild(node);cell.appendChild(inline);
   }
   function setCellNumber(doc,address,value){
-    const cell=findCell(doc,address);if(!cell)throw new Error(`Excel template cell ${address} is missing.`);
-    clearCellValue(cell);
-    if(value===null||value===undefined||value==="")return;
+    const blank=value===null||value===undefined||value==="";
+    let cell=findCell(doc,address);if(!cell&&blank)return;
+    cell=cell||ensureCell(doc,address);clearCellValue(cell);
+    if(blank)return;
     const node=xmlElement(doc,"v");node.textContent=String(value);cell.appendChild(node);
   }
 
@@ -257,6 +278,7 @@
   }
 
   const api={CARD_CAPACITY,buildCardData,validateCardData,buildCardMarkup,fileBase,selectedSquadIds,formatDateLabel,formatTimeLabel,opponentFor,buildExcelBlob};
+  if(typeof module!=="undefined"&&module.exports)api.__test={setCellText,setCellNumber,findCell};
   root.SKORRefGameCard=api;
   if(typeof module!=="undefined"&&module.exports)module.exports=api;
   if(typeof document==="undefined")return;
@@ -309,7 +331,7 @@
     render();const check=validateCardData(currentData);if(!check.valid)return;
     const popup=window.open("","_blank");
     if(!popup){status.className="ref-game-card-status visible error";status.textContent="The print window was blocked. Allow pop-ups for this site and try again.";return;}
-    const cssUrl=new URL("ref-game-card.css?v=56.0",window.location.href).href;
+    const cssUrl=new URL("ref-game-card.css?v=56.1",window.location.href).href;
     popup.document.open();popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(fileBase(currentData))}</title><link rel="stylesheet" href="${escapeHtml(cssUrl)}"></head><body class="ref-card-print-body">${buildCardMarkup(currentData)}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));<\/script></body></html>`);popup.document.close();
   });
 
