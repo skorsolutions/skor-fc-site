@@ -14,7 +14,7 @@
 - Documentation: adds `docs/REF-GAME-CARD.md` and updates the durable project handbook.
 - **SQL needed:** No.
 - **Database changes performed:** None. No Supabase migration or Edge Function deployment is required.
-- **Live status:** Local build prepared for user review; not yet pushed or deployed.
+- **Live status:** Published to GitHub `main` in release commit `bf25c69` and deployed through the connected Cloudflare production build. The live Captain Portal v56.0 marker, Ref Game Card control, JavaScript, responsive print CSS, and valid Excel template archive were verified from `skorfc.net`.
 - Affected assets: `admin.html`, `ref-game-card.js`, `ref-game-card.css`, `assets/SKOR-Ref-Game-Card-Template.xlsx`, `package.json`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/REF-GAME-CARD.md`, and this deployment note.
 
 ## v55.2 — Opponent-18 Gameplan crop and larger jerseys
