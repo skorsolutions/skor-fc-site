@@ -1,6 +1,9 @@
 {
   "name": "skor-fc-site",
   "private": true,
+  "scripts": {
+    "test:clock": "node tests/verify-match-clock.mjs"
+  },
   "devDependencies": {
     "wrangler": "4.129.0"
   }

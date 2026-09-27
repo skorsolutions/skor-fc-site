@@ -1,3 +1,20 @@
+## v55.0 — Persistent official match clock
+
+- Adds a captain-authoritative match clock that persists through refreshes and closed apps by storing a Supabase elapsed-time anchor and server start timestamp.
+- Adds 40/45-minute halves, pause/resume, an explicit Halftime action with a separate break timer, second-half continuation from exactly 40:00/45:00, and explicit Full Time.
+- Synchronizes clock phase changes with the existing Scheduled → 1st Half → Halftime → 2nd Half → Final match status flow.
+- Adds visual/vibration warnings when the regulation halftime/full-time threshold is reached; the referee remains authoritative and the phase never changes automatically.
+- Adds score-neutral **SKOR Foul** and **Opponent Foul** actions to captain scoring, plus server-derived official timestamps on new captain goals/cards/fouls, Crowd goals/cards, and Crowd referee/foul reviews. Captain, Crowd, and public event feeds display the captured time; historical events are not assigned guessed minutes.
+- Adds 10/15-minute substitution cadence, Defense/Midfield/Strikers/Mixed wave groups, optional exact absolute match minutes, two-minute **GET READY** reminders, and **SUB NOW** alerts.
+- Carries wave group/timing metadata through saved lineup JSON, exports, Production / Final, Captain Game Day, and Crowd Game Day while preserving older saved lineups.
+- Separates official clock state from Crowd access: configuring or running the clock does not automatically open Crowd Scoring.
+- Documentation: adds `docs/GAME-DAY-CLOCK.md` and updates the durable project handbook with the state machine, data contract, security boundary, deployment order, and operational checklist.
+- Verification: the automated clock test passes; all inline JavaScript in `admin.html`, `gameday.html`, and `matches.html` parses; shared JavaScript modules parse; HTML IDs are unique; and whitespace/error checks pass. Live schema checks confirmed all clock/event timestamp columns, constraints, the supporting foreign-key index, the enabled event-stamping trigger, and authenticated-only grants for the new/updated RPCs. Supabase security/performance advisors were rerun: the clock changes add no new warning/error, while the fresh supporting index has the expected initial unused-index informational notice; unrelated pre-existing project findings remain.
+- **SQL needed:** Yes — `supabase/migrations/20260926203049_add_persistent_match_clock.sql`.
+- **Database changes performed:** The approved migration was applied successfully as `20260927001357 add_persistent_match_clock`. Existing Game Day sessions and match events were preserved; historical event times were not backfilled or guessed. No Edge Function deployment was required.
+- **Live status:** Published to GitHub `main` and deployed through the connected Cloudflare production build; production asset markers and representative desktop/phone layouts were checked after deployment.
+- Affected assets: `admin.html`, `gameday.html`, `matches.html`, `package.json`, `tests/verify-match-clock.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/GAME-DAY-CLOCK.md`, this deployment note, and `supabase/migrations/20260926203049_add_persistent_match_clock.sql`.
+
 ## v54.3 — 3-2-3-2 lineup formation and project handbook
 
 - Adds **3-2-3-2** with `LB, CB, RB / LDM, RDM / LAM, CAM, RAM / LCF, RCF`, plus the goalkeeper.

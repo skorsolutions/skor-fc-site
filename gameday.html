@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090a0d">
-<meta name="skor-build" content="gameday-v51.25-official-lineup-match-center">
-<title>SKOR FC | Match Center v51.25</title>
+<meta name="skor-build" content="gameday-v55.0-official-match-clock">
+<title>SKOR FC | Match Center v55.0</title>
 <meta name="description" content="SKOR FC crowd-powered live match scoring, referee decision review and Man of the Match voting.">
 <style>
 :root{--bg:#07080a;--panel:#111318;--panel2:#171a20;--line:#2d3138;--text:#f5f5f6;--muted:#9da2aa;--maroon:#8f1836;--maroon2:#b51c43;--green:#2f7a5c;--amber:#9b7220;--red:#a52a3d;--blue:#315b85}
@@ -143,6 +143,9 @@
 .identity-row{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:10px}.identity-chip{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border:1px solid #343941;border-radius:999px;background:#101318;color:#c7cbd0;font-size:10px;font-weight:900}
 @media(max-width:520px){.email-auth .auth-actions,.email-auth .code-row{grid-template-columns:1fr}.email-auth .auth-actions .btn,.email-auth .code-row .btn{width:100%}}
 
+/* SKOR FC v55.0 — captain-authoritative persistent match clock */
+.official-clock{margin:14px auto 0;display:grid;justify-items:center}.official-clock-time{font-size:clamp(48px,13vw,76px);line-height:.9;font-weight:950;letter-spacing:-.065em;font-variant-numeric:tabular-nums}.official-clock-status{margin-top:7px;color:#bdc2ca;font-size:11px;font-weight:850}.official-clock-break{margin-top:5px;color:#e2c46d;font-size:11px;font-weight:900}.official-clock-alert{display:none;margin:10px auto 0;max-width:540px;padding:9px 11px;border:1px solid #704058;border-radius:10px;background:#2f1520;color:#ffc0d0;font-size:11px;font-weight:850;line-height:1.4}.official-clock-alert.show{display:block}.clock-modal-time{padding:10px 12px;border:1px solid #3b4149;border-radius:10px;background:#171a1f;color:#d5d8dd;font-size:12px;font-weight:850;line-height:1.4}.eventbtn:disabled{opacity:.42;cursor:not-allowed;filter:grayscale(.35)}
+
 
 /* SKOR FC v51.25 — Official lineup Match Center */
 .lineup-showcase{overflow:hidden;padding:0!important;background:linear-gradient(180deg,#12151a,#0b0d10)!important}
@@ -233,6 +236,12 @@
   <div class="card matchhead">
     <div class="eyebrow" id="matchDate">GAME DAY</div>
     <div class="matchteams"><div class="team" id="homeTeam">Home</div><div class="score" id="crowdScore">0–0</div><div class="team" id="awayTeam">Away</div></div>
+    <div class="official-clock">
+      <div class="official-clock-time" id="officialClockTime">00:00</div>
+      <div class="official-clock-status" id="officialClockStatus">Waiting for the captain to start the official clock</div>
+      <div class="official-clock-break hidden" id="officialClockBreak"></div>
+      <div class="official-clock-alert" id="officialClockAlert"></div>
+    </div>
     <div class="phase" id="matchPhase">Crowd Scoring Open</div>
     <div class="crowdline" id="crowdLine">0 scorers joined</div>
     <div class="identity-row"><div class="identity-chip" id="crowdIdentity">Crowd ID</div><button class="mini" id="changeCrowdIdBtn" type="button">Change ID</button></div>
@@ -287,6 +296,7 @@
 </main>
 
 <div class="modal" id="eventModal"><div class="sheet"><div class="sheethead"><h2 id="eventModalTitle">Report Event</h2><button class="close" data-close="eventModal" type="button">×</button></div><div class="form">
+  <div class="clock-modal-time" id="eventClockStamp">The captain's official clock will timestamp this report.</div>
   <div><label>Half</label><select id="eventHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
   <div id="playerChoiceWrap"><label>SKOR Player</label><select id="eventPlayer"><option value="">Select player…</option></select></div>
   <div id="assistChoiceWrap"><label>Assist</label><select id="eventAssist"><option value="">Unassisted / No assist</option></select></div>
@@ -295,6 +305,7 @@
 </div></div></div>
 
 <div class="modal" id="refModal"><div class="sheet"><div class="sheethead"><h2>Referee Decision Review</h2><button class="close" data-close="refModal" type="button">×</button></div><div class="form">
+  <div class="clock-modal-time" id="refClockStamp">The captain's official clock will timestamp this report.</div>
   <div><label>Half</label><select id="refHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
   <div><label>Decision</label><select id="refType"><option>Foul / No Foul</option><option>Penalty / No Penalty</option><option>Offside / Onside</option><option>Yellow Card / No Card</option><option>Red Card / No Red Card</option><option>Handball / No Handball</option><option>Goal Allowed / Goal Disallowed</option><option>Throw-in / Corner / Goal Kick</option><option>Other</option></select></div>
   <div><label>What happened? <span style="color:#777;font-weight:500">(optional)</span></label><textarea id="refDescription" placeholder="Example: Possible handball in the box"></textarea></div>
@@ -307,7 +318,7 @@
 const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-let user=null,sessionId=null,session=null,match=null,roster=[],participants=[],events=[],reports=[],refDecisions=[],refVotes=[],motmVotes=[],productionLineup=null,productionTempPlayers=[],currentEventType=null,refreshTimer=null,presenceTimer=null,realtimeChannel=null;
+let user=null,sessionId=null,session=null,match=null,roster=[],participants=[],events=[],reports=[],refDecisions=[],refVotes=[],motmVotes=[],productionLineup=null,productionTempPlayers=[],currentEventType=null,refreshTimer=null,presenceTimer=null,realtimeChannel=null,clockTickTimer=null;
 const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
 function showScreen(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');}
 function setStatus(id,msg,error=false){const e=$(id);if(!e)return;e.textContent=msg||"";e.classList.toggle('error',!!error);}
@@ -332,10 +343,12 @@ async function openSession(id){
   subscribeRealtime();
   if(refreshTimer)clearInterval(refreshTimer);
   refreshTimer=setInterval(loadAll,7000);
+  if(clockTickTimer)clearInterval(clockTickTimer);
+  clockTickTimer=setInterval(renderOfficialClock,1000);
   if(presenceTimer)clearInterval(presenceTimer);
   presenceTimer=setInterval(touchPresence,30000);
 }
-async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_sessions').select('id,match_id,active,motm_voting_open,ref_review_open,expires_at').eq('id',sessionId).single();if(s.error){return;}session=s.data;const [m,r,p,e,er,rd,rv,mv,gp]=await Promise.all([
+async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_sessions').select('id,match_id,active,motm_voting_open,ref_review_open,expires_at,clock_phase,clock_running,clock_elapsed_seconds,clock_started_at,clock_phase_started_at,half_length_minutes,sub_interval_minutes,clock_updated_at').eq('id',sessionId).single();if(s.error){return;}session=s.data;const [m,r,p,e,er,rd,rv,mv,gp]=await Promise.all([
  db.from('matches').select('id,kickoff,status,home_team,away_team,location').eq('id',session.match_id).single(),
  db.from('public_roster').select('player_key,display_name,jersey_number,position').order('jersey_number',{ascending:true}),
  db.rpc('get_game_day_participants',{p_session_id:sessionId}),
@@ -349,6 +362,36 @@ async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_se
 const gpRow=gp.error?null:(Array.isArray(gp.data)?gp.data[0]:gp.data);
 productionLineup=gpRow||null;productionTempPlayers=Array.isArray(gpRow?.temp_players)?gpRow.temp_players:[];
 render();}
+function officialClockSeconds(){
+  if(!session)return 0;
+  const anchor=Math.max(0,Number(session.clock_elapsed_seconds)||0);
+  if(!session.clock_running||!session.clock_started_at)return anchor;
+  return anchor+Math.max(0,Math.floor((Date.now()-new Date(session.clock_started_at).getTime())/1000));
+}
+function clockFormat(seconds){const safe=Math.max(0,Math.floor(Number(seconds)||0));return `${String(Math.floor(safe/60)).padStart(2,'0')}:${String(safe%60).padStart(2,'0')}`;}
+function eventClockLabel(record){
+  if(record?.clock_elapsed_seconds===null||record?.clock_elapsed_seconds===undefined)return record?.half==='second'?'2nd half · time not recorded':'1st half · time not recorded';
+  return `${clockFormat(record.clock_elapsed_seconds)} · ${record.clock_period==='second_half'?'2nd':'1st'} half`;
+}
+function renderOfficialClock(){
+  if(!$('officialClockTime')||!session)return;
+  const phase=session.clock_phase||'not_started',seconds=officialClockSeconds(),halfLength=Number(session.half_length_minutes)||45,halfSeconds=halfLength*60;
+  $('officialClockTime').textContent=clockFormat(seconds);
+  const labels={not_started:'Waiting for the captain to start the official clock',first_half:`Official 1st Half · ${session.clock_running?'Running':'Paused'}`,halftime:'Official Halftime',second_half:`Official 2nd Half · ${session.clock_running?'Running':'Paused'}`,full_time:'Official Full Time'};
+  $('officialClockStatus').textContent=labels[phase]||'Official Match Clock';
+  const isBreak=phase==='halftime';
+  $('officialClockBreak').classList.toggle('hidden',!isBreak);
+  if(isBreak){const breakSeconds=session.clock_phase_started_at?Math.max(0,Math.floor((Date.now()-new Date(session.clock_phase_started_at).getTime())/1000)):0;$('officialClockBreak').textContent=`Break ${clockFormat(breakSeconds)} · Match time held at ${clockFormat(halfSeconds)}`;}
+  let warning='';
+  if(phase==='first_half'&&seconds>=halfSeconds)warning=`${halfLength}:00 reached. The captain will tap Halftime when the referee ends the half.`;
+  if(phase==='second_half'&&seconds>=halfSeconds*2)warning=`${halfLength*2}:00 reached. The captain will tap Full Time when the referee ends the match.`;
+  $('officialClockAlert').textContent=warning;$('officialClockAlert').classList.toggle('show',!!warning);
+  const playable=['first_half','second_half'].includes(phase);
+  const half=phase==='second_half'?'second':'first';
+  $('eventHalf').value=half;$('refHalf').value=half;$('eventHalf').disabled=playable;$('refHalf').disabled=playable;
+  const stamp=playable?`Official time now: ${clockFormat(seconds)} · ${phase==='second_half'?'2nd':'1st'} Half`:'The captain must start a playable half before an official timestamp is available.';
+  $('eventClockStamp').textContent=stamp;$('refClockStamp').textContent=stamp;
+}
 const ACTIVE_WINDOW_MS=5*60*1000;
 function activeParticipants(){
   const cutoff=Date.now()-ACTIVE_WINDOW_MS;
@@ -393,6 +436,7 @@ function matchLineupPlayer(pid){
   const p=roster.find(x=>String(x.player_key)===key);
   return p?{name:p.display_name,number:p.jersey_number,temp:false}:{name:key||"Player",number:"?",temp:false};
 }
+function matchSubUnitLabel(value){return ({defense:'Defense',midfield:'Midfield',strikers:'Strikers',mixed:'Mixed'})[value]||'Mixed';}
 function renderOfficialLineup(){
   const body=$('officialLineupBody'), nameEl=$('officialLineupName'), updated=$('officialLineupUpdated'), formationEl=$('officialFormation');
   if(!body||!nameEl||!updated||!formationEl)return;
@@ -442,9 +486,10 @@ function renderOfficialLineup(){
   }
   const wavesHtml=waves.length?waves.map(w=>{
     const label=String(w.row.label||"").trim();
+    const timing=Number(w.row.minute)>0?`${Number(w.row.minute)}'`:`Auto ${Number(session?.sub_interval_minutes)||15}m`;
     const outs=(w.row.out||[]).map(pid=>{const p=matchLineupPlayer(pid);return `${p.number} ${p.name}`}).join(", ")||"—";
     const ins=(w.row.in||[]).map(pid=>{const p=matchLineupPlayer(pid);return `${p.number} ${p.name}`}).join(", ")||"—";
-    return `<div class="match-wave"><div class="match-wave-title">${esc(w.phase)} · Wave ${w.i}${label?' — '+esc(label):''}</div><div class="match-wave-copy">OUT: ${esc(outs)}<br>IN: ${esc(ins)}</div></div>`;
+    return `<div class="match-wave"><div class="match-wave-title">${esc(w.phase)} · Wave ${w.i} · ${esc(timing)} · ${esc(matchSubUnitLabel(w.row.unit))}${label?' — '+esc(label):''}</div><div class="match-wave-copy">OUT: ${esc(outs)}<br>IN: ${esc(ins)}</div></div>`;
   }).join(""):'<div class="empty">No planned substitution waves published.</div>';
 
   body.innerHTML=`<div class="match-lineup-layout">
@@ -481,8 +526,9 @@ function render(){
   if(sc.pOpp)pending.push(`Opponent +${sc.pOpp} pending`);
   $('pendingScore').classList.toggle('hidden',!pending.length);
   $('pendingScore').textContent=pending.join(' · ');
-  renderOfficialLineup();renderRosterOptions();renderEventFeed();renderRefFeed();renderMotm();
-  document.querySelectorAll('[data-report],#refCallBtn').forEach(b=>b.disabled=!session.active);
+  renderOfficialClock();renderOfficialLineup();renderRosterOptions();renderEventFeed();renderRefFeed();renderMotm();
+  const playable=['first_half','second_half'].includes(session.clock_phase||'not_started');
+  document.querySelectorAll('[data-report],#refCallBtn').forEach(b=>b.disabled=!session.active||!playable);
 }
 function renderRosterOptions(){const opts='<option value="">Select player…</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">#${p.jersey_number} ${esc(p.display_name)}</option>`).join('');const cur=$('eventPlayer').value;$('eventPlayer').innerHTML=opts;if([...$('eventPlayer').options].some(o=>o.value===cur))$('eventPlayer').value=cur;const acur=$('eventAssist').value;$('eventAssist').innerHTML='<option value="">Unassisted / No assist</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">#${p.jersey_number} ${esc(p.display_name)}</option>`).join('');if([...$('eventAssist').options].some(o=>o.value===acur))$('eventAssist').value=acur;}
 function renderEventFeed(){
@@ -491,19 +537,19 @@ function renderEventFeed(){
     const c=eventCounts(ev.id),needed=eventThreshold(ev),conf=isConfirmed(ev);
     const dis=c.dispute>=needed&&c.dispute>=c.confirm;
     const crowdAtEvent=Math.max(1,Number(ev.participant_count_snapshot)||participants.length||1);
-    return `<div class="feeditem"><div class="feedtop"><div><div class="feedtitle">${esc(eventLabel(ev))}</div><div class="meta">${ev.half==='second'?'2nd':'1st'} half · ${c.confirm}/${needed} confirmations · ${c.dispute} dispute · ${crowdAtEvent} scorer${crowdAtEvent===1?'':'s'} active when reported</div></div><span class="confidence ${conf?'confirmed':dis?'disputed':''}">${conf?'Confirmed':dis?'Disputed':'Pending'}</span></div><div class="voteactions"><button class="mini" data-evote="confirm" data-eid="${ev.id}" type="button">${c.mine==='confirm'?'✓ ':''}Confirm</button><button class="mini" data-evote="dispute" data-eid="${ev.id}" type="button">${c.mine==='dispute'?'✓ ':''}Dispute</button></div></div>`;
+    return `<div class="feeditem"><div class="feedtop"><div><div class="feedtitle">${esc(eventLabel(ev))}</div><div class="meta">${eventClockLabel(ev)} · ${c.confirm}/${needed} confirmations · ${c.dispute} dispute · ${crowdAtEvent} scorer${crowdAtEvent===1?'':'s'} active when reported</div></div><span class="confidence ${conf?'confirmed':dis?'disputed':''}">${conf?'Confirmed':dis?'Disputed':'Pending'}</span></div><div class="voteactions"><button class="mini" data-evote="confirm" data-eid="${ev.id}" type="button">${c.mine==='confirm'?'✓ ':''}Confirm</button><button class="mini" data-evote="dispute" data-eid="${ev.id}" type="button">${c.mine==='dispute'?'✓ ':''}Dispute</button></div></div>`;
   }).join('');
   $('eventFeed').querySelectorAll('[data-evote]').forEach(b=>b.addEventListener('click',()=>voteEvent(b.dataset.eid,b.dataset.evote)));
 }
 async function voteEvent(id,verdict){const {error}=await db.rpc('vote_game_day_event',{p_event_id:id,p_verdict:verdict});if(error)return alert(error.message);await loadAll();}
-function renderRefFeed(){if(!refDecisions.length){$('refFeed').innerHTML='<div class="empty">No referee decisions flagged yet.</div>';return;}$('refFeed').innerHTML=refDecisions.map(d=>{const vs=refVotes.filter(v=>v.decision_id===d.id),agree=vs.filter(v=>v.vote==='agree').length,disagree=vs.filter(v=>v.vote==='disagree').length,unsure=vs.filter(v=>v.vote==='unsure').length,mine=vs.find(v=>v.user_id===user.id)?.vote;const total=vs.length,pct=total?Math.round(disagree/total*100):0;return `<div class="feeditem"><div class="feedtop"><div><div class="feedtitle">⚖️ ${esc(d.decision_type)}</div><div class="meta">${d.half==='second'?'2nd':'1st'} half${d.description?' · '+esc(d.description):''}</div></div><span class="confidence ${disagree>agree?'disputed':''}">${total?`${pct}% disagree`:'Vote open'}</span></div><div class="refvote"><button data-rvote="agree" data-rid="${d.id}" type="button">${mine==='agree'?'✓ ':''}Agree ${agree}</button><button data-rvote="disagree" data-rid="${d.id}" type="button">${mine==='disagree'?'✓ ':''}Disagree ${disagree}</button><button data-rvote="unsure" data-rid="${d.id}" type="button">${mine==='unsure'?'✓ ':''}Unsure ${unsure}</button></div></div>`}).join('');$('refFeed').querySelectorAll('[data-rvote]').forEach(b=>b.addEventListener('click',()=>voteRef(b.dataset.rid,b.dataset.rvote)));}
+function renderRefFeed(){if(!refDecisions.length){$('refFeed').innerHTML='<div class="empty">No referee decisions flagged yet.</div>';return;}$('refFeed').innerHTML=refDecisions.map(d=>{const vs=refVotes.filter(v=>v.decision_id===d.id),agree=vs.filter(v=>v.vote==='agree').length,disagree=vs.filter(v=>v.vote==='disagree').length,unsure=vs.filter(v=>v.vote==='unsure').length,mine=vs.find(v=>v.user_id===user.id)?.vote;const total=vs.length,pct=total?Math.round(disagree/total*100):0;return `<div class="feeditem"><div class="feedtop"><div><div class="feedtitle">⚖️ ${esc(d.decision_type)}</div><div class="meta">${eventClockLabel(d)}${d.description?' · '+esc(d.description):''}</div></div><span class="confidence ${disagree>agree?'disputed':''}">${total?`${pct}% disagree`:'Vote open'}</span></div><div class="refvote"><button data-rvote="agree" data-rid="${d.id}" type="button">${mine==='agree'?'✓ ':''}Agree ${agree}</button><button data-rvote="disagree" data-rid="${d.id}" type="button">${mine==='disagree'?'✓ ':''}Disagree ${disagree}</button><button data-rvote="unsure" data-rid="${d.id}" type="button">${mine==='unsure'?'✓ ':''}Unsure ${unsure}</button></div></div>`}).join('');$('refFeed').querySelectorAll('[data-rvote]').forEach(b=>b.addEventListener('click',()=>voteRef(b.dataset.rid,b.dataset.rvote)));}
 async function voteRef(id,vote){const {error}=await db.rpc('vote_ref_decision',{p_decision_id:id,p_vote:vote});if(error)return alert(error.message);await loadAll();}
 function renderMotm(){const open=!!session.motm_voting_open;$('motmSection').classList.toggle('hidden',!open);if(!open)return;const mine=motmVotes.find(v=>v.user_id===user.id);$('motmGrid').innerHTML=roster.map(p=>`<button class="motmchip ${mine?.player_key===p.player_key?'selected':''}" data-motm="${esc(p.player_key)}" type="button">#${p.jersey_number}<br>${esc(p.display_name)}</button>`).join('');$('motmGrid').querySelectorAll('[data-motm]').forEach(b=>b.addEventListener('click',()=>castMotm(b.dataset.motm)));setStatus('motmStatus',mine?`Your vote: ${mine.player_number?'#'+mine.player_number+' ':''}${mine.player_name}`:'Choose one SKOR FC player.');}
 async function castMotm(key){const p=roster.find(x=>x.player_key===key);if(!p)return;const {error}=await db.rpc('cast_game_day_motm_vote',{p_session_id:sessionId,p_player_key:p.player_key,p_player_name:p.display_name,p_player_number:p.jersey_number});if(error)return setStatus('motmStatus',error.message,true);await loadAll();}
 document.querySelectorAll('[data-report]').forEach(b=>b.addEventListener('click',()=>openEventModal(b.dataset.report)));
-function openEventModal(type){currentEventType=type;$('eventModalTitle').textContent=({'skor_goal':'SKOR Goal','opponent_goal':'Opponent Goal','opponent_own_goal':'Opponent Own Goal','skor_own_goal':'SKOR Own Goal','skor_yellow_card':'SKOR Yellow Card','skor_red_card':'SKOR Red Card','opponent_yellow_card':'Opponent Yellow Card','opponent_red_card':'Opponent Red Card'}[type]||'Report Event');const needsPlayer=['skor_goal','skor_yellow_card','skor_red_card'].includes(type),needsAssist=type==='skor_goal',opp=['opponent_goal','opponent_yellow_card','opponent_red_card'].includes(type);$('playerChoiceWrap').classList.toggle('hidden',!needsPlayer);$('assistChoiceWrap').classList.toggle('hidden',!needsAssist);$('opponentWrap').classList.toggle('hidden',!opp);$('eventPlayer').value='';$('eventAssist').value='';$('opponentName').value='';setStatus('eventModalStatus','');$('eventModal').classList.add('open');}
+function openEventModal(type){currentEventType=type;$('eventModalTitle').textContent=({'skor_goal':'SKOR Goal','opponent_goal':'Opponent Goal','opponent_own_goal':'Opponent Own Goal','skor_own_goal':'SKOR Own Goal','skor_yellow_card':'SKOR Yellow Card','skor_red_card':'SKOR Red Card','opponent_yellow_card':'Opponent Yellow Card','opponent_red_card':'Opponent Red Card'}[type]||'Report Event');const needsPlayer=['skor_goal','skor_yellow_card','skor_red_card'].includes(type),needsAssist=type==='skor_goal',opp=['opponent_goal','opponent_yellow_card','opponent_red_card'].includes(type);$('playerChoiceWrap').classList.toggle('hidden',!needsPlayer);$('assistChoiceWrap').classList.toggle('hidden',!needsAssist);$('opponentWrap').classList.toggle('hidden',!opp);$('eventPlayer').value='';$('eventAssist').value='';$('opponentName').value='';setStatus('eventModalStatus','');renderOfficialClock();$('eventModal').classList.add('open');}
 $('saveEventBtn').addEventListener('click',async()=>{const type=currentEventType,p=roster.find(x=>x.player_key===$('eventPlayer').value),a=roster.find(x=>x.player_key===$('eventAssist').value),needs=['skor_goal','skor_yellow_card','skor_red_card'].includes(type);if(needs&&!p)return setStatus('eventModalStatus','Choose a SKOR player.',true);const {error}=await db.rpc('report_game_day_event',{p_session_id:sessionId,p_event_type:type,p_half:$('eventHalf').value,p_player_key:p?.player_key||null,p_player_name:p?.display_name||null,p_player_number:p?.jersey_number||null,p_assist_player_key:a?.player_key||null,p_assist_player_name:a?.display_name||null,p_assist_player_number:a?.jersey_number||null,p_opponent_player_name:$('opponentName').value.trim()||null});if(error)return setStatus('eventModalStatus',error.message,true);$('eventModal').classList.remove('open');await loadAll();});
-$('refCallBtn').addEventListener('click',()=>{$('refDescription').value='';setStatus('refModalStatus','');$('refModal').classList.add('open');});
+$('refCallBtn').addEventListener('click',()=>{$('refDescription').value='';setStatus('refModalStatus','');renderOfficialClock();$('refModal').classList.add('open');});
 $('saveRefBtn').addEventListener('click',async()=>{const {error}=await db.rpc('report_ref_decision',{p_session_id:sessionId,p_half:$('refHalf').value,p_decision_type:$('refType').value,p_description:$('refDescription').value.trim()||null,p_vote:$('refVote').value});if(error)return setStatus('refModalStatus',error.message,true);$('refModal').classList.remove('open');await loadAll();});
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>$(b.dataset.close).classList.remove('open')));document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 function subscribeRealtime(){if(realtimeChannel){db.removeChannel(realtimeChannel);realtimeChannel=null;}realtimeChannel=db.channel('skor-crowd-'+sessionId).on('postgres_changes',{event:'*',schema:'public',table:'game_day_crowd_events',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_event_reports',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_ref_decisions',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_ref_votes',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'*',schema:'public',table:'game_day_motm_votes',filter:`session_id=eq.${sessionId}`},loadAll).on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_day_sessions',filter:`id=eq.${sessionId}`},loadAll).subscribe();}

@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
-Last updated: 2026-09-26  
-Current Captain Portal build: **v54.3**
+Last updated: 2026-09-27
+Current Captain Portal build: **v55.0**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -103,7 +103,40 @@ Every new formation must be added to all applicable locations:
 - Content must reflow so wrapped names, all waves, the bench, optional Potential Positions, quote, and notes never overlap.
 - Mobile export controls and previews must remain usable without horizontal clipping.
 
-## 6. Strategy system
+## 6. Game Day clock and live scoring
+
+### Authoritative clock model
+
+- Every scheduled match uses its existing unique `game_day_sessions` row for clock state. Creating/configuring a clock does **not** automatically open Crowd Scoring; `game_day_sessions.active` remains the separate Crowd access switch.
+- The captain/admin clock is the official source of truth. Crowd Game Day displays the same clock read-only and cannot start, pause, resume, end, or reset it.
+- Persistence does not depend on a browser interval. Supabase stores an elapsed-seconds anchor plus `clock_started_at`; clients calculate `anchor + (now - started_at)` while the clock is running. Closing the app therefore does not stop match time.
+- Clock phases are `not_started`, `first_half`, `halftime`, `second_half`, and `full_time`. A playable half may be running or paused.
+- Captain controls are transactional through `control_match_clock(...)`, which also synchronizes `matches.status` / `current_half`.
+- Halftime holds official match time at the selected half length and starts a separate break timer. Starting the second half always resumes official match time from exactly `40:00` or `45:00`, even when the first-half whistle occurred during stoppage time.
+- Supported regulation settings are 40- or 45-minute halves. The half length cannot change after the first half starts unless the captain resets the clock.
+- The in-app threshold alert appears at `40:00` / `45:00` for halftime and at `80:00` / `90:00` for full time. The referee still determines the whistle; the clock never changes phase automatically.
+- In-app vibration/visual reminders run while a Game Day page is open. The server clock continues while the app is closed, and the correct time is reconstructed when reopened; this release does not promise background push notifications from a closed browser.
+
+### Event timestamps and Crowd truth
+
+- New captain `match_events` rows for goals, cards, and ordinary SKOR/opponent fouls are stamped on insert with `clock_period`, `clock_elapsed_seconds`, and `clock_recorded_at`. A database trigger uses the official session clock and overrides the half with the active official half.
+- New Crowd goals/cards receive the same official fields when the first matching report creates the consensus event. Later confirmations keep the original event time.
+- New Crowd referee/foul reviews are also stamped with official clock time.
+- Editing a captain event keeps its original timestamp; event edits do not silently rewrite history to the current clock.
+- Historical events are not assigned guessed minutes. They continue to display their saved half with “time not recorded” where appropriate.
+- Captain Game Day, Crowd Game Day, and public Matches render the stored official timestamp. Crowd scoring remains consensus-based, but its time source is captain/admin truth.
+
+### Substitution reminder rules
+
+- `game_day_sessions.sub_interval_minutes` stores the active match cadence and accepts 10 or 15 minutes.
+- Each planned lineup wave may persist `unit` (`defense`, `midfield`, `strikers`, or `mixed`) and an optional absolute match `minute` inside the existing lineup variation JSON.
+- If a wave has no exact minute, first-half targets are cadence × wave order; second-half targets are half length + cadence × wave order.
+- The captain clock shows the next planned wave, changes to **GET READY** two minutes before it, and changes to **SUB NOW** at the target. Exact saved minutes override the cadence.
+- Wave group and timing metadata flow through saved variations, Production / Final, lineup export, Captain Game Day, and Crowd Game Day lineup presentation. Existing saved lineups remain valid and receive safe default wave groups when edited.
+
+See `docs/GAME-DAY-CLOCK.md` for the complete state/action/data contract and operational checklist.
+
+## 7. Strategy system
 
 - Strategy imports the selected lineup variation/current lineup, including exact player placement and formation.
 - Captains can change the opponent formation independently of the SKOR lineup.
@@ -122,7 +155,7 @@ Every new formation must be added to all applicable locations:
 - Tinker strategies and ordinary drafts are never supplied to the AI.
 - `publish_match_strategy(uuid)` performs the one-published-strategy transaction.
 
-## 7. Captain Notebook and AI rules
+## 8. Captain Notebook and AI rules
 
 - Notebook entries and debriefs are persistent and tied to games when appropriate.
 - After-game guidance captures what worked, what failed, opponent behavior, adjustments, player observations, and improvements since the previous game.
@@ -143,7 +176,7 @@ Every new formation must be added to all applicable locations:
 - Organize with AI is an explicit user action and must preserve meaning without inventing tactical claims.
 - Duplicate or ambiguous names, such as two players with the same first name, require jersey-aware resolution.
 
-## 8. Attendance, RSVP, and player feedback
+## 9. Attendance, RSVP, and player feedback
 
 - Player RSVP statuses: Going, Maybe, Can’t Make It, and No Response, with optional notes and an explicit save action.
 - Captain attendance statuses: Present, Absent, Excused, and Unmarked.
@@ -151,7 +184,7 @@ Every new formation must be added to all applicable locations:
 - Captains can review team-visible feedback and private captain chat.
 - Player comments enter AI context only through deliberate captain selection.
 
-## 9. Jerseys and TEMP players
+## 10. Jerseys and TEMP players
 
 - Kits are configurable; current defaults include Maroon and White.
 - Physical jersey inventory tracks kit, number, size, status, captain holder/custodian, and notes.
@@ -159,7 +192,7 @@ Every new formation must be added to all applicable locations:
 - A physical inventory item cannot be assigned to multiple active TEMP players for the same match.
 - TEMP jersey assignment drives the displayed lineup/Game Day number.
 
-## 10. Supabase integration map
+## 11. Supabase integration map
 
 The repository contains only the newer incremental migrations. Earlier production objects also exist and are called by the frontend, so do not infer the complete production schema from this folder alone.
 
@@ -170,7 +203,7 @@ The repository contains only the newer incremental migrations. Earlier productio
 - Player access/activity: `player_access`, `player_match_attendance`, `player_match_reactions`.
 - Captain/Notebook: `captain_notebook_entries`, `captain_notebook_attachments`, `captain_match_debriefs`, `captain_ai_player_comment_refs`, `captain_player_name_aliases`.
 - Jerseys: `team_kits`, `jersey_inventory`.
-- Crowd Game Day: `game_day_sessions`, `game_day_invites`, `game_day_crowd_events`, `game_day_event_reports`, `game_day_ref_decisions`, `game_day_ref_votes`, `game_day_motm_votes`.
+- Crowd Game Day and official clock: `game_day_sessions`, `game_day_invites`, `game_day_crowd_events`, `game_day_event_reports`, `game_day_ref_decisions`, `game_day_ref_votes`, `game_day_motm_votes`.
 
 ### Edge Functions in this repository
 
@@ -187,7 +220,7 @@ The repository contains only the newer incremental migrations. Earlier productio
 - Use RLS on exposed tables and least-privilege policies/grants.
 - After an approved schema change, verify it with a query and Supabase security/performance advisors, then record the exact migration and result in `docs/deployment-notes.md`.
 
-## 11. Mobile and responsive rules
+## 12. Mobile and responsive rules
 
 - Mobile is a first-class workflow, not a reduced desktop preview.
 - The lineup builder uses tap player → tap position/pitch; desktop drag-and-drop remains supported.
@@ -195,7 +228,7 @@ The repository contains only the newer incremental migrations. Earlier productio
 - Wide tables may use intentional horizontal overflow, but primary actions and working surfaces may not be clipped off-screen.
 - Validate at a representative phone viewport and desktop viewport whenever layout-affecting code changes.
 
-## 12. Deployment and build workflow
+## 13. Deployment and build workflow
 
 1. Read this handbook and the newest deployment note.
 2. Pull the latest `main` branch and preserve unrelated work.
@@ -211,7 +244,7 @@ The repository contains only the newer incremental migrations. Earlier productio
 
 No SQL change is required for a formation-only release because the saved lineup and strategy JSON accept new formation/role strings. A schema migration is required only if persistence structure or database-enforced behavior changes.
 
-## 13. Definition of done
+## 14. Definition of done
 
 A build is complete only when:
 
@@ -226,9 +259,11 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 14. Current build v54.3
+## 15. Current build v55.0
 
-- Added lineup type **3-2-3-2** with the exact roles requested: `LB, CB, RB / LDM, RDM / LAM, CAM, RAM / LCF, RCF`, plus `GK`.
-- Added the shape to the Lineup Builder, Potential Positions, Strategy home/opponent maps, saved/imported lineup flow, exports, Production / Final view, Crowd Game Day, and public Matches renderer.
-- Fixed the earlier 4-5-1 omission in the Crowd Game Day and public Matches formation maps.
-- No Supabase migration or database change was needed.
+- Adds the persistent, captain-authoritative official match clock, 40/45-minute half flow, halftime break timer, pause/resume, and synchronized match statuses.
+- Adds official timestamp capture for captain goals/cards/fouls, Crowd goals/cards, and Crowd referee/foul reviews; Captain, Crowd, and public match event feeds render those times.
+- Adds 10/15-minute substitution cadence reminders, two-minute **GET READY** warnings, due alerts, wave groups, and optional exact wave minutes.
+- Carries wave timing/group metadata through saved lineup JSON, exports, Production / Final, Captain Game Day, and Crowd Game Day.
+- Uses the applied `supabase/migrations/20260926203049_add_persistent_match_clock.sql` migration, recorded by Supabase as `20260927001357 add_persistent_match_clock`.
+- Existing session/event data was preserved, no Edge Function deployment was needed, and post-migration schema/grant/advisor checks passed for the new clock objects.
