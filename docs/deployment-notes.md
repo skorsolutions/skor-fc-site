@@ -7,7 +7,7 @@
 - Documentation: updates `docs/REF-GAME-CARD.md` and the durable project handbook with the blank-cell rule.
 - **SQL needed:** No.
 - **Database changes performed:** None. No Supabase migration or Edge Function deployment is required.
-- **Live status:** Repair prepared locally after the production error report; publishing and production verification pending.
+- **Live status:** Published to GitHub `main` in release commit `9ca552a` and deployed through the connected Cloudflare production build. The live Captain Portal v56.1 marker and the exact repaired `ref-game-card.js` asset were verified from `skorfc.net`.
 - Affected assets: `admin.html`, `ref-game-card.js`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/REF-GAME-CARD.md`, and this deployment note.
 
 ## v56.0 — Referee game-card print and Excel export
