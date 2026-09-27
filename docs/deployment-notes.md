@@ -8,7 +8,7 @@
 - Documentation: updates `docs/REF-GAME-CARD.md` and the durable project handbook with the approved PDF layout rules.
 - **SQL needed:** No.
 - **Database changes performed:** None. No Supabase migration or Edge Function deployment is required.
-- **Live status:** Approved preview prepared; publishing and production verification pending.
+- **Live status:** Published to GitHub `main` in release commit `eb632c2` and deployed through the connected Cloudflare production build. The live Captain Portal v56.2 marker and exact `ref-game-card.css`/`ref-game-card.js` assets were verified from `skorfc.net`.
 - Affected assets: `admin.html`, `ref-game-card.css`, `ref-game-card.js`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/REF-GAME-CARD.md`, and this deployment note.
 
 ## v56.1 — Referee-card blank Excel cell repair
