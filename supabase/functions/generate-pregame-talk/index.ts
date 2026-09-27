@@ -304,9 +304,9 @@ Deno.serve(async (req: Request) => {
   }) : null;
 
   const strategyRow = strategyResult.data;
-  const strategyScenes = Array.isArray(strategyRow?.scenes) ? strategyRow.scenes.slice(0, 20).map((rawScene: unknown, index: number) => {
-    const scene = objectValue(rawScene);
-    const home = Array.isArray(scene.home) ? scene.home.slice(0, 18).map((rawPlayer: unknown) => {
+  const strategyFrame = (rawFrame: unknown, index: number) => {
+    const frame = objectValue(rawFrame);
+    const home = Array.isArray(frame.home) ? frame.home.slice(0, 18).map((rawPlayer: unknown) => {
       const player = objectValue(rawPlayer);
       return {
         first_name: clean(player.name, 80).split(/\s+/)[0] || "Player",
@@ -315,7 +315,7 @@ Deno.serve(async (req: Request) => {
         board_y_percent: Number.isFinite(Number(player.y)) ? Number(player.y) : null,
       };
     }) : [];
-    const opponents = Array.isArray(scene.opponents) ? scene.opponents.slice(0, 18).map((rawOpponent: unknown) => {
+    const opponents = Array.isArray(frame.opponents) ? frame.opponents.slice(0, 18).map((rawOpponent: unknown) => {
       const opponent = objectValue(rawOpponent);
       return {
         role: clean(opponent.label, 30) || "Opponent",
@@ -323,18 +323,16 @@ Deno.serve(async (req: Request) => {
         board_y_percent: Number.isFinite(Number(opponent.y)) ? Number(opponent.y) : null,
       };
     }) : [];
-    const drawings = Array.isArray(scene.drawings) ? scene.drawings.slice(0, 60).map((rawDrawing: unknown) => {
+    const drawings = Array.isArray(frame.drawings) ? frame.drawings.slice(0, 60).map((rawDrawing: unknown) => {
       const drawing = objectValue(rawDrawing), type = clean(drawing.type, 20);
       return type === "text"
         ? { type, label: clean(drawing.text, 80), x: drawing.x, y: drawing.y }
         : { type, x1: drawing.x1, y1: drawing.y1, x2: drawing.x2, y2: drawing.y2 };
     }) : [];
-    const ball = objectValue(scene.ball);
+    const ball = objectValue(frame.ball);
     return {
       order: index + 1,
-      name: clean(scene.name, 80) || `Scene ${index + 1}`,
-      moment: ["offense", "defense", "transition"].includes(String(scene.type)) ? scene.type : "offense",
-      coaching_points: clean(scene.points, 800),
+      name: clean(frame.name, 80) || `Step ${index + 1}`,
       skor_positions: home,
       opponent_positions: opponents,
       ball: {
@@ -342,6 +340,27 @@ Deno.serve(async (req: Request) => {
         board_y_percent: Number.isFinite(Number(ball.y)) ? Number(ball.y) : null,
       },
       tactical_marks: drawings,
+    };
+  };
+  const strategyScenes = Array.isArray(strategyRow?.scenes) ? strategyRow.scenes.slice(0, 20).map((rawScene: unknown, index: number) => {
+    const scene = objectValue(rawScene);
+    const rawFrames = Array.isArray(scene.subScenes) && scene.subScenes.length
+      ? scene.subScenes.slice(0, 12)
+      : [scene];
+    const subScenes = rawFrames.map(strategyFrame);
+    const firstFrame = subScenes[0] ?? strategyFrame(scene, 0);
+    return {
+      order: index + 1,
+      name: clean(scene.name, 80) || `Scene Bundle ${index + 1}`,
+      moment: ["offense", "defense", "transition", "set_piece"].includes(String(scene.type)) ? scene.type : "offense",
+      category: clean(scene.category, 30) || "other",
+      coaching_points: clean(scene.points, 800),
+      animation_step_count: subScenes.length,
+      sub_scenes: subScenes,
+      skor_positions: firstFrame.skor_positions,
+      opponent_positions: firstFrame.opponent_positions,
+      ball: firstFrame.ball,
+      tactical_marks: firstFrame.tactical_marks,
     };
   }) : [];
   const publishedStrategyContext = strategyRow ? {
@@ -387,7 +406,7 @@ Only captain-visible WhatsApp messages are supplied. Historical lineup images ar
 When production_lineup is present, treat it as the captains' current authoritative plan for this target match. Use its formation, position assignments, bench, ranked depth chart, substitution order, field captain, and game-plan notes together—not as isolated facts. Points drawn directly from this plan must use the source lineup_plan.
 The depth chart is ranked coverage by position, not a second starting lineup. Planned substitutions are ordered waves; preserve their phase and order. Second-half waves remain valid saved planning context even when second_half_waves_visible_on_export is false.
 Do not casually contradict the Production/Final plan. You may identify a coverage, workload, transition, or communication risk and offer a clearly labeled ai_strategy contingency. If production_lineup is null, do not invent lineup assignments or substitution plans.
-When published_strategy is present, it was explicitly approved by a captain for AI use. Treat its opponent formation, offense/defense/transition scenes, player locations, tactical marks, and coaching points as the intended tactical plan for the target match. Points drawn directly from it must use the source strategy_plan.
+When published_strategy is present, it was explicitly approved by a captain for AI use. Treat its opponent formation, offense/defense/transition/set-piece Scene Bundles, ordered sub-scenes, player locations, ball movement, tactical marks, and coaching points as the intended tactical plan for the target match. A bundle's sub-scenes are consecutive animation keyframes within one tactical situation; do not imply that unrelated bundles run as one continuous play. Points drawn directly from it must use the source strategy_plan.
 Coordinates are supporting context, not certainty about exact real-world distances. Translate them into plain spoken soccer instructions. Do not expose raw coordinates in the talk.
 Use lineup_used_to_build_strategy to notice if the strategy was built from a different snapshot than production_lineup. If they conflict, prioritize production_lineup for player assignments and use published_strategy only for its tactical principles; do not invent a resolution.
 Completed debrief fields lineup_execution, strategy_execution, and opponent_adjustments are captain observations from previous games. Use them to reinforce what worked, avoid repeating failed instructions, and prepare for opponent-shape changes without claiming the next opponent will behave the same way.

@@ -1,3 +1,19 @@
+# v58.0 — Strategy Scene Bundles and local GIF animation
+
+- Upgrades each Strategy scene into a parent **Scene Bundle** with ordered animation sub-scenes such as 1.1 ball right, 1.2 ball center, and 1.3 ball left.
+- Adds bundle and sub-scene creation, duplication, reordering, renaming/editing, and removal while automatically renumbering the visible hierarchy.
+- Adds Slow, Normal, and Fast preview for the selected bundle only. Unrelated tactical bundles never play as one continuous animation.
+- Adds a browser-local looping GIF export for each Scene Bundle and keeps a high-resolution PNG export for the selected sub-scene. Tactical images are not uploaded for rendering.
+- Adds a shared captain Scene Bundle library grouped by game/Tinker and tactical category, with same-name overwrite, Edit/update/rename, Add copy, delete, direct GIF export, and snapshot-based reuse.
+- Preserves all existing saved Strategy rows. A legacy flat scene becomes a one-step bundle at load time, and new saves retain a first-frame compatibility mirror.
+- Extends the explicitly published Pregame Talk context with ordered bundle sub-scenes, set pieces, player/opponent movement, ball movement, and tactical marks. Drafts, Tinker bundles, and library-only bundles remain excluded from AI.
+- Adds responsive phone controls, focused regression coverage, a vendored MIT-licensed `gifenc` 1.0.3 encoder, and `docs/STRATEGY-ANIMATION.md`.
+- **SQL needed:** Yes. The approved local migration `20260927220904_add_strategy_scene_bundles.sql` was applied as Supabase migration `20260927223330 add_strategy_scene_bundles`.
+- **Database changes performed:** Created the empty captain-only `strategy_scene_bundles` table with RLS, least-privilege grants, event/category/name uniqueness, JSON keyframe limits, audit fields, and supporting indexes. Existing `match_strategies` and all other tables and rows were preserved. Policy, grant, constraint, and index checks passed; Supabase advisors found no new security issue, with only expected unused-index notices for the new empty table.
+- **Edge Function deployment:** The approved `generate-pregame-talk` update was deployed as active version 13 with JWT verification enabled. The deployed source was checked for ordered `sub_scenes`, animation step counts, and the separation rule for unrelated bundles. The function sends the approved match/captain context to OpenAI with `store: false` only after an authenticated captain deliberately generates a Pregame Talk.
+- **Live status:** Backend work is complete. The v58.0 frontend publication and production verification are pending the release commit and connected Cloudflare deployment.
+- Affected assets: `admin.html`, `strategy.css`, `strategy.js`, `vendor/gifenc/*`, `supabase/migrations/20260927220904_add_strategy_scene_bundles.sql`, `supabase/functions/generate-pregame-talk/index.ts`, `package.json`, `tests/verify-strategy-animation.mjs`, `docs/STRATEGY-ANIMATION.md`, `docs/PROJECT-HANDBOOK.md`, and this deployment note.
+
 ## v57.0 — Public official match clock and timestamped Match Center
 
 - Shows the captain-controlled official clock on the public Home featured match and current-game schedule row while the match is in the first half, halftime, or second half.

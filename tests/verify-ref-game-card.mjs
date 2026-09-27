@@ -111,7 +111,7 @@ assert.equal(pageSetup.getAttribute("fitToWidth"),"1","the game card must fit on
 assert.equal(pageSetup.getAttribute("fitToHeight"),"1","the game card must fit one page tall");
 assert.equal(pageSetup.getAttribute("scale"),null,"fixed scaling must not override fit-to-page settings");
 
-assert.match(admin,/captain-portal-v57\.0-public-official-match-clock/);
+assert.match(admin,/captain-portal-v58\.0-strategy-animation-bundles/);
 assert.match(admin,/CAPTAIN PORTAL V57\.0/);
 assert.match(admin,/id="openRefGameCardBtn"/);
 assert.match(admin,/id="downloadRefGameCardExcel"/);
@@ -128,7 +128,7 @@ assert.match(css,/grid-template-rows:48px 158px minmax\(0,1fr\)/);
 assert.match(css,/\.ref-card-field-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-report-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-roster\{[^}]*font-size:12\.5px\}/);
-assert.match(handbook,/Current Captain Portal build: \*\*v57\.0\*\*/);
+assert.match(handbook,/Current Captain Portal build: \*\*v58\.0\*\*/);
 
 assert.ok(fs.existsSync(templatePath),"the sanitized Excel template must be present");
 const sharedStrings=execFileSync("unzip",["-p",templatePath.pathname,"xl/sharedStrings.xml"],{encoding:"utf8"});

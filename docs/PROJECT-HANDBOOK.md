@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-09-27 ET
-Current Captain Portal build: **v57.0**
+Current Captain Portal build: **v58.0**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -26,7 +26,7 @@ This is the durable handoff document for new chats and future developers. Read i
 | `admin.html` | Captain portal | Dashboard, Game Day, Notebook, attendance, announcements, schedule, roster, jerseys, lineups, fields, payments, sponsors |
 | `gameday.html` | Crowd Game Day | Invite-based live scoring, verification, referee decisions, MOTM voting, official lineup |
 | `captain-notebook.js/css` | Captain Notebook module | Notes, imports, debriefs, protected AI selection, pregame talk |
-| `strategy.js/css` | Strategy module | Tactical scenes, saved strategies, exports, AI publication |
+| `strategy.js/css` | Strategy module | Scene Bundles, animation keyframes, saved strategies/bundles, GIF/PNG exports, AI publication |
 | `jerseys.js/css` | Jersey module | Kits, physical inventory, captain custody, TEMP assignments |
 | `whatsapp-import.js` | Notebook import helper | Ordered WhatsApp batch parsing/import behavior |
 
@@ -174,10 +174,16 @@ See `docs/GAME-DAY-CLOCK.md` for the complete state/action/data contract and ope
 
 - Strategy imports the selected lineup variation/current lineup, including exact player placement and formation.
 - Captains can change the opponent formation independently of the SKOR lineup.
-- A strategy contains named scenes, scene type, coaching points, home players, opponent placeholders, ball, and drawings.
-- Scenes can be added, renamed, selected, reordered where supported, and removed; at least one scene must remain.
+- A **Strategy** is the complete game plan. It contains ordered **Scene Bundles**, not one automatically continuous animation.
+- A **Scene Bundle** is one tactical situation or chapter, such as Narrow Defense, Offense in Possession, Corners, or Free Kicks.
+- Every Scene Bundle contains one to twelve ordered **sub-scenes** (animation keyframes). Display numbering is derived from order: the first bundle's frames are 1.1, 1.2, 1.3; the second bundle's frames are 2.1, 2.2, and so on.
+- Moving bundles or sub-scenes automatically changes the display numbering. Numbers are not stored as permanent identities.
+- Each sub-scene stores its own SKOR player positions, opponent placeholders, ball location, and tactical marks. Bundle name, moment, category, and coaching points apply to the bundle.
+- Bundles and sub-scenes can be added, duplicated, selected, reordered, renamed where applicable, and removed. A strategy must keep at least one bundle, and each bundle must keep at least one sub-scene.
+- Preview animates only the selected Scene Bundle. It interpolates player, opponent, and ball locations between ordered keyframes; tactical marks switch with the keyframe. It does not join unrelated bundles into one play.
 - Strategy is a phone-capable working surface. Tabs, scene actions, tools, pitch, and coaching controls must stay inside the viewport with touch-friendly targets.
-- Strategy exports are shareable through the same practical WhatsApp workflow expected of lineup exports.
+- **Export bundle GIF** creates one looping GIF for the selected bundle entirely in the captain's browser. The tactical frames are not uploaded to another service.
+- **Export selected step PNG** exports only the current sub-scene. Both formats retain the strategy/bundle/step label and coaching points for WhatsApp sharing.
 
 ### Strategy persistence and AI publication
 
@@ -188,6 +194,13 @@ See `docs/GAME-DAY-CLOCK.md` for the complete state/action/data contract and ope
 - Only one strategy per scheduled game may be explicitly **Published for AI**.
 - Tinker strategies and ordinary drafts are never supplied to the AI.
 - `publish_match_strategy(uuid)` performs the one-published-strategy transaction.
+- Shared reusable bundles persist separately in captain-only `strategy_scene_bundles`. They are grouped first by scheduled game or Tinker and then by Defense, Offense, Transition, Corners, Free Kicks, Other Set Pieces, or Other.
+- Saving the same normalized bundle name in the same event/category overwrites that record. A loaded bundle can be renamed and explicitly saved back to update it; duplicating a bundle in the editor clears its library linkage so it becomes an independent copy.
+- Adding a library bundle to a strategy creates an embedded snapshot. Later library updates or deletion never silently change an existing strategy or its AI-published snapshot.
+- Existing v1 saved strategies remain compatible. Each old flat scene is normalized into a Scene Bundle containing one sub-scene, and new saves retain a top-level first-frame mirror for safe compatibility.
+- The Pregame Talk Edge Function reads every explicitly published bundle and its ordered sub-scenes, while preserving the rule that unrelated bundles are separate tactical situations.
+
+See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, security, compatibility, and test rules.
 
 ## 8. Captain Notebook and AI rules
 
@@ -233,7 +246,7 @@ The repository contains only the newer incremental migrations. Earlier productio
 ### Principal tables/views used by the client
 
 - Team/public data: `team_roster`, `public_roster`, `team_fields`, `public_fields`, `matches`, `practices`, `announcements`, `match_events`.
-- Lineups: `lineup_variations`, `match_temp_players`, `match_strategies`.
+- Lineups and strategy: `lineup_variations`, `match_temp_players`, `match_strategies`, `strategy_scene_bundles`.
 - Player access/activity: `player_access`, `player_match_attendance`, `player_match_reactions`.
 - Captain/Notebook: `captain_notebook_entries`, `captain_notebook_attachments`, `captain_match_debriefs`, `captain_ai_player_comment_refs`, `captain_player_name_aliases`.
 - Jerseys: `team_kits`, `jersey_inventory`.
@@ -293,16 +306,13 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 15. Current build v56.3
+## 15. Current build v58.0
 
-- Adds a separate referee game-card workflow beside the lineup PNG/JPG actions.
-- Builds the official roster from the current starters and Substitutes, using full names and placing TEMP players after permanent players.
-- Preserves all 26 physical player rows so unused lines remain available for handwritten additions.
-- Auto-fills match details, validates missing/duplicate jersey numbers and other blocking conditions, and allows export-only header corrections.
-- Adds one-page landscape printing/Save as PDF and a populated Excel download based on a sanitized organization template.
-- Adds focused automated coverage and `docs/REF-GAME-CARD.md`.
-- Repairs Excel downloads when the sanitized workbook omits XML nodes for completely blank handwriting-row cells such as `B31`/`C31`.
-- Repairs the landscape PDF spacing so Weather/Field and Sportsmanship never overlap, increases roster legibility, and centers populated header values within their underlined fields.
-- Repairs the Excel worksheet sizing so roster text is not vertically cut off and the sequence/jersey columns are not unnecessarily wide.
-- Makes Excel use one unambiguous fit-to-page rule with smaller print margins, keeping all right-side fields and the **Linesman 2** signature line inside one landscape Letter page.
-- Requires no SQL, Supabase migration, Edge Function deployment, saved-lineup change, AI change, or public/Game Day change.
+- Upgrades flat Strategy scenes into ordered Scene Bundles with numbered animation sub-scenes.
+- Adds bundle and sub-scene add, duplicate, reorder, rename/edit, and remove workflows with safe minimum/maximum limits.
+- Adds Slow, Normal, and Fast in-portal animation preview for the selected bundle only.
+- Adds local, looping GIF export for the selected bundle and PNG export for the selected animation step.
+- Adds a shared captain Scene Bundle library grouped by game/Tinker and tactical category, with same-name overwrite and safe strategy snapshots.
+- Preserves old saved strategies by converting each old scene into a one-step bundle on load.
+- Extends explicitly published AI strategy context with ordered sub-scenes, set pieces, player/opponent movement, ball movement, and tactical marks.
+- The approved `add_strategy_scene_bundles` migration was applied as Supabase migration `20260927223330`, and `generate-pregame-talk` was deployed as active version 13 with JWT verification enabled. Frontend publication and live verification are the remaining release steps.

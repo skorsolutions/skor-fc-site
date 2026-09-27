@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v57.0-public-official-match-clock" />
-  <title>SKOR FC Admin | Captain Portal v57.0</title>
+  <meta name="skor-build" content="captain-portal-v58.0-strategy-animation-bundles" />
+  <title>SKOR FC Admin | Captain Portal v58.0</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
-  <link rel="stylesheet" href="strategy.css?v=54.2" />
+  <link rel="stylesheet" href="strategy.css?v=58.0" />
   <link rel="stylesheet" href="ref-game-card.css?v=56.3" />
   <style>
     :root{
@@ -2913,9 +2913,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="strategy-pipeline" aria-label="Strategy publishing pipeline">
           <div class="strategy-pipeline-step complete"><span>1</span><strong>Choose lineup</strong><small>Current or saved</small></div>
           <div class="strategy-pipeline-join"></div>
-          <div class="strategy-pipeline-step active"><span>2</span><strong>Build strategy</strong><small>Scenes + coaching marks</small></div>
+          <div class="strategy-pipeline-step active"><span>2</span><strong>Build strategy</strong><small>Scene Bundles + animation steps</small></div>
           <div class="strategy-pipeline-join muted"></div>
-          <div class="strategy-pipeline-step future"><span>3</span><strong>Share safely</strong><small>PNG now · Player Portal later</small></div>
+          <div class="strategy-pipeline-step future"><span>3</span><strong>Share safely</strong><small>GIF / PNG now · Player Portal later</small></div>
         </div>
 
         <div class="panel strategy-setup-panel">
@@ -2932,12 +2932,34 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </div>
 
         <div class="strategy-scenes-row">
-          <div class="strategy-scenes" id="strategyScenes" role="tablist" aria-label="Strategy scenes"></div>
+          <div class="strategy-scenes" id="strategyScenes" role="tablist" aria-label="Strategy Scene Bundles"></div>
           <div class="strategy-scene-actions">
-            <button class="mini-btn" id="strategyAddScene" type="button">+ New scene</button>
-            <button class="mini-btn" id="strategyRenameScene" type="button">Rename selected</button>
+            <button class="mini-btn" id="strategyAddScene" type="button">+ New bundle</button>
+            <button class="mini-btn" id="strategyMoveSceneLeft" type="button">← Earlier</button>
+            <button class="mini-btn" id="strategyMoveSceneRight" type="button">Later →</button>
+            <button class="mini-btn" id="strategyRenameScene" type="button">Rename</button>
             <button class="mini-btn" id="strategyDuplicateScene" type="button">Duplicate</button>
-            <button class="mini-btn strategy-danger" id="strategyDeleteScene" type="button">Remove selected</button>
+            <button class="mini-btn strategy-danger" id="strategyDeleteScene" type="button">Remove</button>
+          </div>
+        </div>
+
+        <div class="strategy-subscene-panel" aria-label="Animation steps">
+          <div class="strategy-subscene-head">
+            <div><strong>Animation steps</strong><small>Keyframes inside this Scene Bundle. Numbers update automatically when bundles or steps move.</small></div>
+            <div class="strategy-preview-controls">
+              <button class="mini-btn" id="strategyPreviewPlay" type="button">▶ Preview</button>
+              <button class="mini-btn" id="strategyPreviewRestart" type="button">↺ Restart</button>
+              <label for="strategyAnimationSpeed">Speed</label>
+              <select id="strategyAnimationSpeed"><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option></select>
+            </div>
+          </div>
+          <div class="strategy-subscene-tabs" id="strategySubScenes" role="tablist" aria-label="Sub-scenes"></div>
+          <div class="strategy-subscene-actions">
+            <button class="mini-btn" id="strategyAddSubScene" type="button">+ Add step</button>
+            <button class="mini-btn" id="strategyDuplicateSubScene" type="button">Duplicate step</button>
+            <button class="mini-btn" id="strategyMoveSubSceneLeft" type="button">← Earlier</button>
+            <button class="mini-btn" id="strategyMoveSubSceneRight" type="button">Later →</button>
+            <button class="mini-btn strategy-danger" id="strategyDeleteSubScene" type="button">Remove step</button>
           </div>
         </div>
 
@@ -2971,19 +2993,36 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="strategy-notes-panel">
             <label for="strategyTitle">Strategy name</label>
             <input id="strategyTitle" maxlength="70" value="Match Strategy" placeholder="Match Strategy">
-            <label for="strategySceneTitle">Selected scene name</label>
-            <input id="strategySceneTitle" maxlength="50" value="Build Up" placeholder="Build Up">
+            <label for="strategySceneTitle">Selected Scene Bundle name</label>
+            <input id="strategySceneTitle" maxlength="70" value="Build Up" placeholder="Build Up">
             <label for="strategySceneTypeSelect">Moment of the game</label>
-            <select id="strategySceneTypeSelect"><option value="offense">In possession</option><option value="defense">Out of possession</option><option value="transition">Transition</option></select>
+            <select id="strategySceneTypeSelect"><option value="offense">In possession</option><option value="defense">Out of possession</option><option value="transition">Transition</option><option value="set_piece">Set piece</option></select>
+            <label for="strategySceneCategory">Library category</label>
+            <select id="strategySceneCategory"><option value="defense">Defense</option><option value="offense">Offense</option><option value="transition">Transition</option><option value="corner">Corners</option><option value="free_kick">Free kicks</option><option value="set_piece">Other set pieces</option><option value="other">Other</option></select>
+            <label for="strategySubSceneTitle">Selected animation step</label>
+            <input id="strategySubSceneTitle" maxlength="70" value="Starting position" placeholder="Ball on right">
             <label for="strategyCoachingPoints">Coaching points</label>
             <textarea id="strategyCoachingPoints" maxlength="600" rows="8" placeholder="What should players see and remember in this moment?"></textarea>
             <div class="strategy-save-state" id="strategySaveState">Local recovery copy ready</div>
             <div class="strategy-shared-state" id="strategySharedState">Save this named strategy so every captain can load it from any device.</div>
+            <button class="btn btn-light" id="strategySaveBundle" type="button">Save Scene Bundle</button>
             <button class="btn btn-light" id="strategySaveShared" type="button">Save Strategy</button>
             <button class="btn btn-primary" id="strategyPublishAi" type="button">Publish for AI</button>
-            <button class="btn btn-primary" id="strategyExportPng" type="button">Export scene for WhatsApp</button>
+            <button class="btn btn-primary" id="strategyExportGif" type="button">Export bundle GIF</button>
+            <button class="btn btn-primary" id="strategyExportPng" type="button">Export selected step PNG</button>
             <button class="btn btn-light" id="strategyResetScene" type="button">Reset players from lineup</button>
           </div>
+        </div>
+
+        <div class="panel strategy-library-panel">
+          <div class="strategy-library-head">
+            <div>
+              <h2>Scene Bundle Library <span class="variation-count" id="strategyBundleLibraryCount">0</span></h2>
+              <div class="sub">Reusable tactical chapters grouped by game or Tinker and tactical category. Adding one to a strategy creates a safe snapshot.</div>
+            </div>
+            <button class="mini-btn" id="strategyRefreshBundleLibrary" type="button">Refresh</button>
+          </div>
+          <div class="strategy-library" id="strategyBundleLibrary"><div class="strategy-library-empty">Loading saved Scene Bundles…</div></div>
         </div>
 
         <div class="panel strategy-library-panel">
@@ -3083,7 +3122,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
 
 <script>
-/* SKOR FC Captain Portal v57.0 - public official clock and event timestamps */
+/* SKOR FC Captain Portal v58.0 - strategy Scene Bundles, sub-scenes, and GIF export */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"Joshua"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -5072,7 +5111,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v57.0 ready. Official match time now flows to Home and Match Center.");
+  markStatus("Captain Portal v58.0 ready. Strategy Scene Bundles can animate and export as GIFs.");
 
   window.SKORLineup={
     setRoster,
@@ -5101,7 +5140,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="jerseys.js"></script>
-<script src="strategy.js?v=54.3"></script>
+<script src="strategy.js?v=58.0"></script>
 <script src="ref-game-card.js?v=56.3"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
