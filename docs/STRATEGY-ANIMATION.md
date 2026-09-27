@@ -92,6 +92,7 @@ Only an explicitly AI-published scheduled-game Strategy is read by `generate-pre
 - RLS, grants, policies, constraints, indexes, and Supabase advisors were checked after migration.
 - The approved `generate-pregame-talk` update is active as version 13 with JWT verification enabled.
 - Its OpenAI request uses `store: false`; the protected context is assembled only for an authenticated captain's deliberate Pregame Talk request.
+- Frontend release `a3f912637a3f0e1153906bb9397c3da29aab3708` was verified on `skorfc.net` on 2026-09-27. The v58.0 portal marker, Strategy assets, and browser-required GIF encoder modules exactly matched the repository.
 
 ## Release and verification checklist
 

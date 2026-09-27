@@ -315,4 +315,5 @@ A build is complete only when:
 - Adds a shared captain Scene Bundle library grouped by game/Tinker and tactical category, with same-name overwrite and safe strategy snapshots.
 - Preserves old saved strategies by converting each old scene into a one-step bundle on load.
 - Extends explicitly published AI strategy context with ordered sub-scenes, set pieces, player/opponent movement, ball movement, and tactical marks.
-- The approved `add_strategy_scene_bundles` migration was applied as Supabase migration `20260927223330`, and `generate-pregame-talk` was deployed as active version 13 with JWT verification enabled. Frontend publication and live verification are the remaining release steps.
+- The approved `add_strategy_scene_bundles` migration was applied as Supabase migration `20260927223330`, and `generate-pregame-talk` was deployed as active version 13 with JWT verification enabled.
+- Production release `a3f912637a3f0e1153906bb9397c3da29aab3708` was verified on `skorfc.net`: the v58.0 Captain Portal marker, Strategy JavaScript/CSS, and browser-required GIF encoder modules exactly matched the repository.
