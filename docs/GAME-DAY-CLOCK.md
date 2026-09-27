@@ -1,6 +1,6 @@
 # SKOR FC Game Day Clock
 
-Status: **v55.0 production**  
+Status: **v57.0 release candidate**
 Last updated: 2026-09-27
 
 This document is the durable implementation and operating reference for the official match clock, event timestamps, Crowd display, and substitution reminders.
@@ -15,6 +15,7 @@ This document is the durable implementation and operating reference for the offi
 6. New goals, cards, and referee/foul reviews capture the server-derived official time.
 7. Crowd scoring keeps its consensus rules, but the time attached to a Crowd event comes from the official captain clock.
 8. Historical events without a clock timestamp remain valid and are labeled as having no recorded time; the system does not invent historical minutes.
+9. Public Home and Match Center show the same captain-authoritative clock anywhere the current match is presented.
 
 ## Clock states
 
@@ -82,6 +83,23 @@ Captain events are stamped by the `trg_stamp_match_event_clock` insert trigger. 
 
 Editing a captain event preserves its original timestamp. Deleting an event deletes only that event; it does not affect the clock.
 
+Captain Game Day does not allow a new live event to be saved until the official clock is in `first_half` or `second_half`. This protects the public event timeline from new untimed sideline entries. Existing historical events without timestamps remain valid, and edits keep their original timestamp.
+
+## Public clock data contract
+
+`get_public_match_clocks()` is a read-only `SECURITY DEFINER` RPC with an empty search path and explicit object qualification. It deliberately returns a minimal projection for published matches only:
+
+- `match_id`;
+- `clock_phase` and `clock_running`;
+- `clock_elapsed_seconds` and `clock_started_at`;
+- `half_length_minutes` and `clock_updated_at`.
+
+Execute permission is revoked from `PUBLIC` and then granted explicitly to `anon` and `authenticated`, because both signed-out visitors and signed-in players can open public pages. The function exposes no session ID, Crowd `active` state, invite, participant, voting, referee-review, captain, or write fields.
+
+The approved migration was applied as Supabase migration `20260927134927 expose_public_match_clock`. Direct anonymous execution succeeded, returned only the seven documented fields, and returned zero rows for unpublished matches. The Supabase security advisor intentionally flags this function because it is a public `SECURITY DEFINER` endpoint; its published-match filter and minimal read-only projection are the explicit public contract.
+
+Home and Match Center refresh the safe RPC projection every five seconds and calculate the visible time locally every second. Only `first_half`, `halftime`, and `second_half` are shown as a current public clock. Public scores, match status, and timestamped events refresh every 30 seconds.
+
 ## Substitution plan contract
 
 Each saved substitution wave may contain:
@@ -118,9 +136,11 @@ The `unit` and `minute` properties live in the existing lineup JSON, so no lineu
 
 | Surface | Behavior |
 | --- | --- |
-| `admin.html` | Full clock controls, configuration, halftime break, warnings, substitution reminders, timestamped official event log |
+| `admin.html` | Full clock controls, configuration, halftime break, warnings, substitution reminders, timestamped official event log, and prevention of new untimed live events |
 | `gameday.html` | Read-only smooth official clock, break display, threshold notice, timestamped Crowd events/ref reviews |
-| `matches.html` | Stored official times on public goals and discipline events |
+| `index.html` | Read-only official clock on the featured current match and current-game schedule row |
+| `matches.html` | Read-only official clock on the selected/current match plus stored official times on public goals and discipline events |
+| `public-match-clock.js` | Shared one-second clock reconstruction and phase rendering for public surfaces |
 | Lineup builder/export | Wave group and optional exact match minute |
 
 ## Deployment order

@@ -5,12 +5,15 @@ import vm from "node:vm";
 const read = (file) => fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 const admin = read("admin.html");
 const crowd = read("gameday.html");
+const home = read("index.html");
 const matches = read("matches.html");
 const migration = read("supabase/migrations/20260926203049_add_persistent_match_clock.sql");
+const publicClockMigration = read("supabase/migrations/20260927134927_expose_public_match_clock.sql");
+const publicClockSource = read("public-match-clock.js");
 const handbook = read("docs/PROJECT-HANDBOOK.md");
 const clockDoc = read("docs/GAME-DAY-CLOCK.md");
 
-for (const [file, html] of [["admin.html", admin], ["gameday.html", crowd], ["matches.html", matches]]) {
+for (const [file, html] of [["admin.html", admin], ["gameday.html", crowd], ["index.html", home], ["matches.html", matches]]) {
   const inline = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
   assert.ok(inline.length, `${file} must contain an inline script`);
   inline.forEach((match, index) => new vm.Script(match[1], { filename: `${file}#inline-${index + 1}` }));
@@ -30,6 +33,8 @@ assert.match(admin, /data-sub-wave-minute/);
 assert.match(admin, /data-event="skor_foul"/);
 assert.match(admin, /data-event="opponent_foul"/);
 assert.match(admin, /clock_period,clock_elapsed_seconds,clock_recorded_at/);
+assert.match(admin, /Start the official 1st or 2nd half clock before recording a live event/);
+assert.match(admin, /Official Event Log/);
 
 assert.match(crowd, /id="officialClockTime"/);
 assert.match(crowd, /renderOfficialClock/);
@@ -38,6 +43,23 @@ assert.match(crowd, /eventClockLabel\(d\)/);
 assert.match(matches, /eventClockLabel/);
 assert.match(matches, /renderFoulGroup/);
 assert.match(matches, /clock_period,clock_elapsed_seconds,clock_recorded_at/);
+assert.match(matches, /get_public_match_clocks/);
+assert.match(matches, /data-official-clock/);
+assert.match(matches, /Official time not recorded/);
+assert.match(home, /get_public_match_clocks/);
+assert.match(home, /data-official-clock/);
+assert.match(home, /public-match-clock\.js\?v=57\.0/);
+
+const publicClockContext = { globalThis: {} };
+vm.runInNewContext(publicClockSource, publicClockContext, { filename: "public-match-clock.js" });
+const publicClock = publicClockContext.globalThis.SKORPublicMatchClock;
+assert.ok(publicClock, "public clock helper must expose its renderer contract");
+const runningClock={clock_phase:"first_half",clock_running:true,clock_elapsed_seconds:600,clock_started_at:"2026-09-27T16:00:00.000Z"};
+assert.equal(publicClock.officialSeconds(runningClock,Date.parse("2026-09-27T16:00:12.900Z")),612);
+assert.equal(publicClock.format(612),"10:12");
+assert.equal(publicClock.phaseLabel(runningClock),"1st Half");
+assert.equal(publicClock.isCurrent(runningClock),true);
+assert.equal(publicClock.isCurrent({...runningClock,clock_phase:"full_time"}),false);
 
 for (const required of [
   "clock_phase",
@@ -56,6 +78,12 @@ for (const required of [
 assert.match(migration, /security definer\s+set search_path = ''/i);
 assert.match(migration, /revoke all on function public\.control_match_clock[\s\S]*from public, anon/i);
 assert.match(migration, /grant execute on function public\.control_match_clock[\s\S]*to authenticated/i);
+assert.match(publicClockMigration, /create or replace function public\.get_public_match_clocks\(\)/i);
+assert.match(publicClockMigration, /security definer\s+set search_path = ''/i);
+assert.match(publicClockMigration, /where m\.published = true/i);
+assert.match(publicClockMigration, /revoke all on function public\.get_public_match_clocks\(\) from public, anon, authenticated/i);
+assert.match(publicClockMigration, /grant execute on function public\.get_public_match_clocks\(\) to anon, authenticated/i);
+assert.doesNotMatch(publicClockMigration, /s\.(active|motm_voting_open|ref_review_open|created_by|updated_by)/i);
 
 const officialSeconds = ({ anchor, running, startedAt, now }) =>
   Math.max(0, anchor + (running && startedAt ? Math.floor((now - startedAt) / 1000) : 0));

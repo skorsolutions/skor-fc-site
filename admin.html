@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v56.3-ref-game-card-excel-print-layout" />
-  <title>SKOR FC Admin | Captain Portal v56.3</title>
+  <meta name="skor-build" content="captain-portal-v57.0-public-official-match-clock" />
+  <title>SKOR FC Admin | Captain Portal v57.0</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
   <link rel="stylesheet" href="strategy.css?v=54.2" />
@@ -2094,7 +2094,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="event-editor" id="eventEditor">
             <strong id="eventEditorTitle">Record Event</strong>
             <div class="form" style="margin-top:12px">
-              <div class="clock-event-stamp" id="eventClockPreview">New events will use the official captain clock.</div>
+              <div class="clock-event-stamp" id="eventClockPreview" aria-live="polite">New events will use the official captain clock.</div>
               <div id="eventPlayerWrap">
                 <label>Player</label><select id="eventPlayer"></select>
                 <div class="manual-player-fields" id="eventPlayerManual">
@@ -2135,8 +2135,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </div>
 
         <div class="panel gameday-log-panel">
-          <h2>Event Log</h2>
-          <div class="sub">Recorded in match order. Use Edit or Delete to correct a sideline entry.</div>
+          <h2>Official Event Log</h2>
+          <div class="sub">Every new live event is server-stamped from the captain clock. Use Edit or Delete to correct a sideline entry.</div>
           <div class="event-log" id="gameDayEventLog"><div style="color:var(--muted);font-size:.9rem">No events loaded.</div></div>
         </div>
 
@@ -2758,7 +2758,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V56.3</div>
+          <div class="v19-lineup-badge">● CAPTAIN PORTAL V57.0</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -3083,7 +3083,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
 
 <script>
-/* SKOR FC Lineup Builder v56.3 - referee game-card Excel print layout */
+/* SKOR FC Captain Portal v57.0 - public official clock and event timestamps */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"Joshua"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -5072,7 +5072,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Lineup Builder v56.3 ready. Referee game-card Excel downloads fit cleanly on one landscape page.");
+  markStatus("Captain Portal v57.0 ready. Official match time now flows to Home and Match Center.");
 
   window.SKORLineup={
     setRoster,
@@ -6390,9 +6390,9 @@ function clockFormat(seconds){
   return `${String(minutes).padStart(2,"0")}:${String(secs).padStart(2,"0")}`;
 }
 function clockStampLabel(seconds,period=""){
-  if(seconds===null||seconds===undefined||!Number.isFinite(Number(seconds)))return "Time not recorded";
+  if(seconds===null||seconds===undefined||!Number.isFinite(Number(seconds)))return "Official time not recorded";
   const half=period==="second_half"?"2nd Half":period==="first_half"?"1st Half":"Official Time";
-  return `${clockFormat(seconds)} · ${half}`;
+  return `Official ${clockFormat(seconds)} · ${half}`;
 }
 function clockPhaseLabel(clock=gameClockState){
   const phase=clock?.clock_phase||"not_started";
@@ -6483,7 +6483,7 @@ function renderGameClock(){
     const editingEvent=editingEventId?gameDayEvents.find(event=>event.id===editingEventId):null;
     eventClockPreview.textContent=editingEventId
       ? `Original timestamp: ${clockStampLabel(editingEvent?.clock_elapsed_seconds,editingEvent?.clock_period)}. Editing keeps that recorded time; the half can be corrected manually.`
-      : (["first_half","second_half"].includes(phase)?`This event will be stamped at ${clockFormat(seconds)} by the official captain clock.`:"Start a playable half to attach an official match timestamp.");
+      : (["first_half","second_half"].includes(phase)?`The server will stamp this event at official time ${clockFormat(seconds)} (${phase==="second_half"?"2nd Half":"1st Half"}).`:`Start the official 1st or 2nd half clock before recording a live event.`);
   }
 }
 async function controlGameClock(action){
@@ -6921,7 +6921,7 @@ document.getElementById("productionOpenLineupBtn")?.addEventListener("click",()=
 async function loadGameDayMatches(preferredId=null){
   const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_player_key,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
-  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v56.3";
+  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v57.0";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
   gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;window.SKORLineup?.setEvents(gameDayMatches,false);await loadAiPlayerCommentSelection({force:true});await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
@@ -6950,6 +6950,7 @@ document.getElementById("cancelMatchEvent").addEventListener("click",()=>{eventE
 document.getElementById("saveMatchEvent").addEventListener("click",async()=>{
   if(!portalCanWrite()){viewerBlocked("save Game Day events");return;}
   if(!gameDayReady||!gameDaySelected?.id){alert("No live match is selected.");return;}
+  if(!editingEventId&&!["first_half","second_half"].includes(gameClockState?.clock_phase||"not_started")){alert("Start the official 1st or 2nd half clock before recording a live event. This guarantees the event receives the captain's official match timestamp.");return;}
   const needsSkorPlayer=["skor_goal","skor_yellow_card","skor_red_card","skor_foul"].includes(currentEventType),needsOpponentPlayer=["opponent_yellow_card","opponent_red_card","opponent_foul"].includes(currentEventType);
   const player=needsSkorPlayer?selectedPlayerData(eventPlayer,eventPlayerManualName,eventPlayerManualNumber,eventPlayerMatchNumber):null;
   const assist=currentEventType==="skor_goal"?selectedPlayerData(eventAssist,eventAssistManualName,eventAssistManualNumber,eventAssistMatchNumber):null;

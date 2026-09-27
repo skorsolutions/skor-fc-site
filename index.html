@@ -3,10 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="public-home-v50.3-clean-squad-player-portal-links">
+<meta name="skor-build" content="public-home-v57.0-official-live-match-clock">
 <title>SKOR FC | Over 30 Soccer in Roswell, Georgia</title>
 <meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, match results, season stats, practices, and club updates.">
-<meta name="skor-build" content="public-shared-data-v37">
 <style>
 :root{
   --bg:#07080a;
@@ -115,6 +114,11 @@ img{max-width:100%}
 .match-main h2{font-size:clamp(24px,2.4vw,38px);line-height:1;margin:6px 0 11px;text-transform:uppercase}
 .match-meta{display:flex;gap:18px;flex-wrap:wrap;color:#b3b6bb;font-size:12px}
 .match-meta strong{color:#eee}
+.public-match-clock{display:inline-flex;align-items:center;gap:7px;width:max-content;padding:6px 9px;border:1px solid rgba(211,58,94,.55);border-radius:999px;background:rgba(143,24,54,.2);color:#f7dce3;font-size:10px;font-weight:950;letter-spacing:.04em;text-transform:uppercase}
+.public-match-clock[hidden]{display:none!important}.public-match-clock:before{content:"";width:7px;height:7px;border-radius:50%;background:#c72a50;box-shadow:0 0 0 4px rgba(199,42,80,.16)}
+.public-match-clock.is-running:before{animation:clockPulse 1.2s ease-in-out infinite}.public-match-clock.is-halftime:before{background:#e2a23a;box-shadow:0 0 0 4px rgba(226,162,58,.15)}
+.public-match-clock strong{color:#fff;font-size:12px;font-variant-numeric:tabular-nums}.public-match-clock .clock-official{color:#d87890}.public-match-clock.compact{margin-top:7px;padding:5px 8px;font-size:9px}.public-match-clock.compact strong{font-size:10px}
+@keyframes clockPulse{50%{opacity:.45;transform:scale(.82)}}
 .match-cta{min-width:190px;display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;background:linear-gradient(135deg,#711029,#ad123b);font-size:16px;line-height:1.05;font-weight:950;text-transform:uppercase;letter-spacing:.04em}
 
 .row-logos{display:flex;align-items:center;gap:6px;align-self:center;margin-right:12px}
@@ -288,6 +292,7 @@ img{max-width:100%}
   
   .match-main h2{font-size:19px}
   .match-meta{display:grid;gap:4px;font-size:11px}
+  .public-match-clock{margin-top:5px}
   .match-cta{min-width:92px;font-size:12px;padding:8px}
 
   .section{padding:34px 0}
@@ -579,6 +584,7 @@ img{max-width:100%}
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="public-match-clock.js?v=57.0"></script>
 <script>
 /*
   SKOR FC 2026 schedule
@@ -767,6 +773,7 @@ const SKOR_GAMES = [
 const GAME_WINDOW_MS = 2 * 60 * 60 * 1000;
 let MATCHES = [...SKOR_GAMES];
 let MATCH_EVENTS = [];
+let MATCH_CLOCKS = new Map();
 
 function gameDate(game){ return new Date(game.kickoff); }
 function isStillUpcoming(game, now){
@@ -842,6 +849,19 @@ function logoBadge(team, src, large=false){
   return `<div class="${cls} ${teamClass}" title="${escapeHtmlMatch(team)}"><img src="${src}" alt="${escapeHtmlMatch(team)} logo"></div>`;
 }
 function escapeHtmlMatch(value){ return String(value||"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s])); }
+function homeClockHtml(game,compact=false){
+  if(!game?.id)return "";
+  return `<span class="public-match-clock${compact?" compact":""}" data-official-clock data-clock-match="${escapeHtmlMatch(game.id)}" hidden><span class="clock-official">Official</span><strong data-clock-time>00:00</strong><span data-clock-phase>Match Time</span></span>`;
+}
+function syncHomeMatchClocks(){window.SKORPublicMatchClock?.render(document,MATCH_CLOCKS);}
+async function loadPublicMatchClocks(){
+  try{
+    const {data,error}=await publicDb.rpc("get_public_match_clocks");
+    if(error){console.info("Public match clock unavailable:",error.message);return;}
+    MATCH_CLOCKS=window.SKORPublicMatchClock?.toMap(data)||new Map();
+    syncHomeMatchClocks();
+  }catch(err){console.info("Public match clock unavailable:",err?.message||err);}
+}
 
 function renderNextMatch(game){
   const card=document.getElementById("nextMatchCard");
@@ -863,9 +883,10 @@ function renderNextMatch(game){
     title.textContent=`${game.home} vs ${game.away}`;
   }
   const scorer=scorerSummary(game);
-  meta.innerHTML=`<span><strong>${formatFullDate(date)}</strong></span><span><strong>${formatTime(date)}</strong></span><span><strong>${homeFieldLink(game.location)}</strong></span>${scorer?`<div class="match-scorers">${scorer}</div>`:""}`;
+  meta.innerHTML=`<span><strong>${formatFullDate(date)}</strong></span><span><strong>${formatTime(date)}</strong></span><span><strong>${homeFieldLink(game.location)}</strong></span>${homeClockHtml(game)}${scorer?`<div class="match-scorers">${scorer}</div>`:""}`;
   logos.innerHTML=logoBadge(game.home,game.homeLogo,true)+logoBadge(game.away,game.awayLogo,true);
   link.href=`matches.html?game=${encodeURIComponent(game.slug)}`;
+  syncHomeMatchClocks();
 }
 
 function renderUpcomingGames(games){
@@ -876,10 +897,11 @@ function renderUpcomingGames(games){
     const showScore=isLiveStatus(game.status)||game.status==="final"||eventsFor(game).length>0;
     return `<a class="game-row-link" href="matches.html?game=${encodeURIComponent(game.slug)}">
       <div class="date-box">${monthLabel(date)}<strong>${dayLabel(date)}</strong></div>
-      <div class="game-info"><h3>${escapeHtmlMatch(game.home)} vs ${escapeHtmlMatch(game.away)}</h3><p>${formatTime(date)} · ${escapeHtmlMatch(game.location)}</p></div>
+      <div class="game-info"><h3>${escapeHtmlMatch(game.home)} vs ${escapeHtmlMatch(game.away)}</h3><p>${formatTime(date)} · ${escapeHtmlMatch(game.location)}</p>${homeClockHtml(game,true)}</div>
       ${showScore?`<div class="game-result">${score.home}–${score.away}</div>`:`<div class="row-logos" aria-label="team logos">${logoBadge(game.home,game.homeLogo)}${logoBadge(game.away,game.awayLogo)}</div>`}
     </a>`;
   }).join("");
+  syncHomeMatchClocks();
 }
 
 function practiceDateLabel(date){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"long",month:"short",day:"numeric"}).format(date);}
@@ -916,8 +938,11 @@ async function loadMatchCenterData(){
 
 updateSchedule();
 loadMatchCenterData();
+loadPublicMatchClocks();
 loadUpcomingPractices();
-setInterval(loadMatchCenterData, 60 * 1000);
+setInterval(loadMatchCenterData, 30 * 1000);
+setInterval(loadPublicMatchClocks, 5 * 1000);
+setInterval(syncHomeMatchClocks, 1000);
 setInterval(loadUpcomingPractices, 60 * 1000);
 setInterval(loadPublicRosterHome, 60 * 1000);
 setInterval(loadPublicFields, 60 * 1000);

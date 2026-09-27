@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-09-27 ET
-Current Captain Portal build: **v56.3**
+Current Captain Portal build: **v57.0**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -145,11 +145,20 @@ See `docs/REF-GAME-CARD.md` for the complete field mapping, ordering rules, vali
 ### Event timestamps and Crowd truth
 
 - New captain `match_events` rows for goals, cards, and ordinary SKOR/opponent fouls are stamped on insert with `clock_period`, `clock_elapsed_seconds`, and `clock_recorded_at`. A database trigger uses the official session clock and overrides the half with the active official half.
+- Captain Game Day requires the official clock to be in the first or second half before a new live event can be saved. Editing an existing event remains allowed and preserves its original timestamp.
 - New Crowd goals/cards receive the same official fields when the first matching report creates the consensus event. Later confirmations keep the original event time.
 - New Crowd referee/foul reviews are also stamped with official clock time.
 - Editing a captain event keeps its original timestamp; event edits do not silently rewrite history to the current clock.
 - Historical events are not assigned guessed minutes. They continue to display their saved half with “time not recorded” where appropriate.
 - Captain Game Day, Crowd Game Day, and public Matches render the stored official timestamp. Crowd scoring remains consensus-based, but its time source is captain/admin truth.
+
+### Public live-clock projection
+
+- Public Home and Match Center call `get_public_match_clocks()` and show the captain clock only while a published match is in `first_half`, `halftime`, or `second_half`.
+- Each page reconstructs the running time every second from the stored elapsed-seconds anchor plus `clock_started_at`; the RPC refreshes every five seconds so pause, resume, halftime, and second-half changes reach public viewers without reloading.
+- The public RPC returns only `match_id`, clock phase/running state, elapsed seconds, start anchor, half length, and update time for published matches. It does not expose Crowd access state, invite codes, participants, captain identity, or write access.
+- The home featured match and current-game schedule row show the same official clock. Match Center shows it on both the selected scoreboard and current-game list row.
+- Match Center refreshes scores, match status, and timestamped event records every 30 seconds while the local official clock continues smoothly every second.
 
 ### Substitution reminder rules
 

@@ -1,3 +1,17 @@
+## v57.0 — Public official match clock and timestamped Match Center
+
+- Shows the captain-controlled official clock on the public Home featured match and current-game schedule row while the match is in the first half, halftime, or second half.
+- Shows the same official clock prominently on the selected Match Center scoreboard and on the current-game list row.
+- Reconstructs running time every second from the Supabase server anchor, so viewers see smooth persistent time without making a database request every second.
+- Refreshes the safe public clock projection every five seconds and public match status, score, and timestamped events every 30 seconds.
+- Labels Match Center goals, cards, and fouls with explicit **Official MM:SS · Half** timestamps; historical events remain labeled **Official time not recorded** instead of receiving guessed minutes.
+- Keeps the existing database trigger as the timestamp authority. Captain Game Day now blocks a new live event until the official clock is in the first or second half, while edits preserve the event's original timestamp.
+- Adds `get_public_match_clocks()`, a narrow read-only RPC for published matches. It exposes only clock calculation fields and no Crowd access, invite, participant, voting, captain, or write data.
+- Verification: JavaScript syntax, duplicate-ID checks, public clock calculations, migration security/grants, direct anonymous RPC execution, persistent-clock suite, and lineup/referee-card regression suites all passed. Workspace-only browser URLs are not available to the cloud browser, so final responsive visual verification remains part of the production check.
+- **SQL needed:** Yes. The approved migration `20260927134927_expose_public_match_clock.sql` was applied as Supabase migration `20260927134927 expose_public_match_clock`.
+- **Database changes performed:** Added only the read-only `get_public_match_clocks()` function and its least-privilege execute grants. The migration contains no table or row mutation; existing match, session, and event data was preserved. Anonymous execution returned only the seven documented clock fields and zero unpublished rows. Supabase advisors correctly report the intentionally public `SECURITY DEFINER` endpoint; the projection, published-match filter, empty search path, explicit qualification, and revoked `PUBLIC` grant were validated. No Edge Function deployment was required.
+- Affected assets: `index.html`, `matches.html`, `admin.html`, `public-match-clock.js`, `tests/verify-match-clock.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `supabase/migrations/20260927134927_expose_public_match_clock.sql`, `docs/GAME-DAY-CLOCK.md`, `docs/PROJECT-HANDBOOK.md`, and this deployment note.
+
 ## v56.3 — Referee-card Excel one-page layout repair
 
 - Fixes Excel player rows whose names and jersey numbers could be vertically cut off.
