@@ -1,3 +1,15 @@
+## v55.2 — Opponent-18 Gameplan crop and larger jerseys
+
+- Crops the Shareable Gameplan Export at the opponent's 18-yard line, removing the opponent goal, goal area, and penalty area from the picture.
+- Widens the visible pitch from 720 to 800 pixels and uses the real cropped proportion of `68:88.5` instead of rendering the complete 105-metre field.
+- Enlarges on-field jerseys from `68 × 60` to `100 × 88` pixels and scales their numbers, role labels, player names, TEMP labels, and captain badge for better phone readability.
+- Remaps canonical full-pitch vertical positions into the cropped field without changing saved lineup coordinates. Adds a small export-only goalkeeper adjustment to avoid a center-back/goalkeeper label collision at the larger size.
+- Keeps the in-portal preview and PNG/JPG download on the same SVG renderer. Bench, Potential Positions, every enabled substitution wave, quote, notes, Crowd Game Day, public Matches, saved lineups, and AI context are unchanged.
+- Verification: all Captain Portal inline JavaScript parses; the renderer-contract test validates the crop dimensions, coordinate transformation, opponent-box removal, larger jerseys, goalkeeper spacing, shared preview/download renderer, and documentation; the persistent-clock suite still passes. An actual `3-2-3-2` export fixture with eleven starters, a captain, and three substitutes was rendered and visually checked after user approval.
+- **SQL needed:** No.
+- **Database changes performed:** None. No Supabase migration or Edge Function deployment was required.
+- Affected assets: `admin.html`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/LINEUP-EXPORT.md`, and this deployment note.
+
 ## v55.1 — Lineup-style Gameplan picture
 
 - Rebuilds the Shareable Gameplan Export around the same vertical `68:105` field proportion used by the Lineup Builder, Crowd Game Day, and public Matches.

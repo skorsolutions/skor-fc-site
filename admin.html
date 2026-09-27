@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v55.1-lineup-export-pitch" />
-  <title>SKOR FC Admin | Captain Portal v55.1</title>
+  <meta name="skor-build" content="captain-portal-v55.2-lineup-export-crop" />
+  <title>SKOR FC Admin | Captain Portal v55.2</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
   <link rel="stylesheet" href="strategy.css?v=54.2" />
@@ -2757,7 +2757,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     <section class="view" id="lineups">
       <div class="lineup-shell">
         <div class="panel">
-          <div class="v19-lineup-badge">● LINEUP BUILDER V55.1</div>
+          <div class="v19-lineup-badge">● LINEUP BUILDER V55.2</div>
           <h2>Matchday Lineup Builder</h2>
           <div class="sub">Build the starting XI, drag players into positions, switch to Freeform / Custom for a totally open tactical board, save variations, and plan substitutions.</div>
           <div class="lineup-toolbar">
@@ -3051,7 +3051,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
 
 <script>
-/* SKOR FC Lineup Builder v55.1 - canonical vertical-pitch gameplan export */
+/* SKOR FC Lineup Builder v55.2 - opponent-18 crop and larger gameplan jerseys */
 (function(){
   let roster = [
     {player_key:"2-Ivan",number:2,name:"Ivan"},{player_key:"9-Andres",number:9,name:"Andres"},{player_key:"17-David",number:17,name:"Joshua"},{player_key:"18-Jason",number:18,name:"Jason"},
@@ -3475,11 +3475,15 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const includeDepthChart=document.getElementById("exportIncludeDepthChart")?.checked!==false;
     const captain=player(state.captainId);
     const captainText=captain?playerListLabel(captain):"Not selected";
-    // Match the canonical Lineup Builder pitch instead of stretching the
-    // formation across a landscape export field. 68:105 is shared by the
-    // editor, Crowd Game Day, public Matches, and this exported picture.
+    // Show the useful tactical area from the opponent's 18-yard line through
+    // our own goal line. The crop removes the distant opponent goal area and
+    // gives the lineup more width without changing canonical player positions.
     const lineupCardX=50,lineupCardY=178,lineupCardW=980;
-    const pitchW=720,pitchH=Math.round(pitchW*(105/68));
+    const fullPitchLength=105,opponentPenaltyDepth=16.5;
+    const visiblePitchLength=fullPitchLength-opponentPenaltyDepth;
+    const croppedTopPct=(opponentPenaltyDepth/fullPitchLength)*100;
+    const visiblePitchPct=100-croppedTopPct;
+    const pitchW=800,pitchH=Math.round(pitchW*(visiblePitchLength/68));
     const pitchX=(W-pitchW)/2,pitchY=258;
     const lineupCardH=(pitchY+pitchH+36)-lineupCardY;
     const showNames=(state.labelMode||"names")!=="numbers";
@@ -3487,6 +3491,11 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     function canonicalExportCoord(value,min=5,max=95,fallback=50){
       const numeric=Number(value);
       return Number.isFinite(numeric)?Math.max(min,Math.min(max,numeric)):fallback;
+    }
+    function croppedExportY(value){
+      const canonical=canonicalExportCoord(value,8,92);
+      const cropped=((canonical-croppedTopPct)/visiblePitchPct)*100;
+      return Math.max(6,Math.min(94,cropped));
     }
 
     function wrapExportLines(value,maxChars=28){
@@ -3609,6 +3618,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const stripeY=pitchY+(pitchH*(index/10));
       return `<rect x="${pitchX}" y="${stripeY}" width="${pitchW}" height="${pitchH/10+1}" fill="${index%2===0?'#4e875b':'#558e61'}"/>`;
     }).join("");
+    const halfwayY=pitchY+(pitchH*(((50-croppedTopPct)/visiblePitchPct)));
+    const ownPenaltyH=pitchH*(16.5/visiblePitchLength);
+    const ownGoalAreaH=pitchH*(5.5/visiblePitchLength);
     const pitch = `
       <rect x="${lineupCardX}" y="${lineupCardY}" width="${lineupCardW}" height="${lineupCardH}" rx="24" ry="24" fill="#f8faf9" stroke="#d8dbe1"/>
       <text x="74" y="216" font-size="26" font-weight="900" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">Starting Lineup</text>
@@ -3618,12 +3630,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         ${pitchStripes}
       </g>
       <rect x="${pitchX}" y="${pitchY}" width="${pitchW}" height="${pitchH}" rx="12" ry="12" fill="none" stroke="#ffffff" stroke-width="5"/>
-      <line x1="${pitchX}" y1="${pitchY + pitchH/2}" x2="${pitchX+pitchW}" y2="${pitchY + pitchH/2}" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
-      <circle cx="${pitchX + pitchW/2}" cy="${pitchY + pitchH/2}" r="${pitchW*.10}" fill="none" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
-      <rect x="${pitchX + pitchW*.21}" y="${pitchY}" width="${pitchW*.58}" height="${pitchH*.16}" fill="none" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
-      <rect x="${pitchX + pitchW*.35}" y="${pitchY}" width="${pitchW*.30}" height="${pitchH*.07}" fill="none" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
-      <rect x="${pitchX + pitchW*.21}" y="${pitchY+pitchH-(pitchH*.16)}" width="${pitchW*.58}" height="${pitchH*.16}" fill="none" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
-      <rect x="${pitchX + pitchW*.35}" y="${pitchY+pitchH-(pitchH*.07)}" width="${pitchW*.30}" height="${pitchH*.07}" fill="none" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
+      <line x1="${pitchX}" y1="${halfwayY}" x2="${pitchX+pitchW}" y2="${halfwayY}" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
+      <circle cx="${pitchX + pitchW/2}" cy="${halfwayY}" r="${pitchW*.10}" fill="none" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*.205}" y="${pitchY+pitchH-ownPenaltyH}" width="${pitchW*.59}" height="${ownPenaltyH}" fill="none" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
+      <rect x="${pitchX + pitchW*.365}" y="${pitchY+pitchH-ownGoalAreaH}" width="${pitchW*.27}" height="${ownGoalAreaH}" fill="none" stroke="#ffffff" stroke-opacity=".84" stroke-width="4"/>
       ${!hasFieldPlayers ? `<text x="${pitchX + pitchW/2}" y="${pitchY + pitchH/2}" text-anchor="middle" font-size="30" font-weight="800" fill="#edf7ef" font-family="Arial, Helvetica, sans-serif">No lineup placed yet</text>` : ""}
     `;
 
@@ -3631,25 +3641,26 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const p=player(entry.pid);
       if(!p) return "";
       const exportXPct=canonicalExportCoord(entry.x,5,95);
-      const exportYPct=canonicalExportCoord(entry.y,8,92);
+      const baseExportYPct=croppedExportY(entry.y);
+      const exportYPct=entry.label==="GK"?Math.min(93,baseExportYPct+2.5):baseExportYPct;
       const x=pitchX + (exportXPct/100)*pitchW;
       const y=pitchY + (exportYPct/100)*pitchH;
-      const jerseyW=68,jerseyH=60,jerseyLeft=x-(jerseyW/2),jerseyTop=y-(jerseyH/2);
+      const jerseyW=100,jerseyH=88,jerseyLeft=x-(jerseyW/2),jerseyTop=y-(jerseyH/2);
       const jerseyPoints=[[20,0],[35,7],[65,7],[80,0],[100,19],[85,34],[78,28],[78,100],[22,100],[22,28],[15,34],[0,19]]
         .map(([px,py])=>`${jerseyLeft+(jerseyW*px/100)},${jerseyTop+(jerseyH*py/100)}`).join(" ");
-      const role = !isFreeform(state.formation) && entry.label ? `<text x="${x}" y="${y-43}" text-anchor="middle" font-size="17" font-weight="950" fill="#e8f3ea" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(entry.label)}</text>` : "";
-      const name = showNames ? `<text x="${x}" y="${y+49}" text-anchor="middle" font-size="21" font-weight="900" fill="#ffffff" stroke="#24552f" stroke-width="4" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}</text>` : "";
+      const role = !isFreeform(state.formation) && entry.label ? `<text x="${x}" y="${y-59}" text-anchor="middle" font-size="22" font-weight="950" fill="#e8f3ea" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(entry.label)}</text>` : "";
+      const name = showNames ? `<text x="${x}" y="${y+68}" text-anchor="middle" font-size="26" font-weight="900" fill="#ffffff" stroke="#24552f" stroke-width="4" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}</text>` : "";
       const captainBadge = state.captainId===entry.pid ? `
-        <circle cx="${x+30}" cy="${y-27}" r="15" fill="#ffffff" stroke="#801A3D" stroke-width="3"/>
-        <text x="${x+30}" y="${y-21}" text-anchor="middle" font-size="16" font-weight="950" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">C</text>
+        <circle cx="${x+44}" cy="${y-39}" r="20" fill="#ffffff" stroke="#801A3D" stroke-width="3"/>
+        <text x="${x+44}" y="${y-31}" text-anchor="middle" font-size="20" font-weight="950" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">C</text>
       ` : "";
       return `
         ${role}
         <polygon points="${jerseyPoints}" fill="#801A3D" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
-        <path d="M ${x-11} ${y-28} L ${x+11} ${y-28} Q ${x+9} ${y-18} ${x} ${y-18} Q ${x-9} ${y-18} ${x-11} ${y-28} Z" fill="#17181c"/>
-        <text x="${x}" y="${y+10}" text-anchor="middle" font-size="${p.temp&&jerseyLabel(p)==='TEMP'?15:25}" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
+        <path d="M ${x-16} ${y-42} L ${x+16} ${y-42} Q ${x+13} ${y-26} ${x} ${y-26} Q ${x-13} ${y-26} ${x-16} ${y-42} Z" fill="#17181c"/>
+        <text x="${x}" y="${y+14}" text-anchor="middle" font-size="${p.temp&&jerseyLabel(p)==='TEMP'?20:36}" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
         ${captainBadge}
-        ${name}${p.temp?`<text x="${x}" y="${y+64}" text-anchor="middle" font-size="12" font-weight="950" fill="#ffffff" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">TEMP</text>`:""}
+        ${name}${p.temp?`<text x="${x}" y="${y+86}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">TEMP</text>`:""}
       `;
     }).join("");
 
@@ -5026,7 +5037,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus('Lineup Builder v55.1 ready. Gameplan pictures now match the vertical pitch and jersey-player design used by the lineup board.');
+  markStatus("Lineup Builder v55.2 ready. Gameplan pictures crop at the opponent's 18-yard line and use larger jersey-player markers.");
 
   window.SKORLineup={
     setRoster,
@@ -6872,7 +6883,7 @@ document.getElementById("productionOpenLineupBtn")?.addEventListener("click",()=
 async function loadGameDayMatches(preferredId=null){
   const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_player_key,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
-  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v55.1";
+  gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v55.2";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
   gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;window.SKORLineup?.setEvents(gameDayMatches,false);await loadAiPlayerCommentSelection({force:true});await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();

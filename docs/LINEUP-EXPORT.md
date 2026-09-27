@@ -1,6 +1,6 @@
 # SKOR FC Lineup Export
 
-Status: **v55.1 production renderer contract**
+Status: **v55.2 production renderer contract**
 
 This is the durable reference for the lineup picture shown in **Shareable Gameplan Export** and downloaded as PNG or JPG. Read it before changing pitch geometry, player markers, formation mapping, export height, or content beneath the pitch.
 
@@ -10,9 +10,9 @@ The exported lineup picture must look like the Lineup Builder rather than a sepa
 
 ## Canonical visual rules
 
-1. The field is vertical with a `68:105` width-to-height ratio.
+1. The field is vertical and shows the tactical area from the opponent's 18-yard line through SKOR's own goal line. The visible width-to-length ratio is `68:88.5`.
 2. The field uses alternating horizontal green stripes.
-3. The halfway line, center circle, penalty areas, and six-yard boxes are placed proportionally to the field dimensions.
+3. The opponent goal, goal area, and penalty area are outside the crop and are not drawn. The halfway line, center circle, SKOR penalty area, and SKOR six-yard box keep their real locations within the cropped field.
 4. On-field players are maroon jersey/shirt silhouettes with a dark collar and white outline.
 5. The saved jersey number appears inside the shirt. TEMP is used when a fill-in has no assigned number.
 6. Standard formations show the saved role above the shirt.
@@ -26,9 +26,12 @@ The source of truth remains the lineup state in `admin.html`.
 
 - Standard formations use the exact canonical percentage coordinates defined in the `formations` map.
 - Freeform / Custom uses its saved player percentages.
-- Export coordinates are bounded only to the supported interactive field range: `5–95%` horizontally and `8–92%` vertically.
+- Horizontal export coordinates remain bounded to the supported interactive field range of `5–95%`.
+- The canonical vertical coordinate is based on the full 105-metre pitch. The renderer removes the first 16.5 metres, remaps the remaining 88.5 metres into the export, and bounds the visible result to `6–94%`.
+- The goalkeeper receives a small export-only downward adjustment, capped at `93%`, so the larger goalkeeper and center-back labels do not collide. Saved lineup coordinates are not changed.
 - The exporter must not calculate a new minimum/maximum from occupied players and expand that smaller area across the field. Doing so changes the tactical meaning and makes formations look different from the editor.
-- The v55.1 export canvas stays 1,080 pixels wide. The pitch is 720 pixels wide and derives its height as `round(720 × 105 ÷ 68)`.
+- The v55.2 export canvas stays 1,080 pixels wide. The cropped pitch is 800 pixels wide and derives its height as `round(800 × 88.5 ÷ 68)`.
+- On-field jersey silhouettes are `100 × 88` export pixels. Numbers, role labels, names, TEMP labels, and the captain badge scale with the larger jersey design.
 - The starting-lineup card and all following cards derive their vertical positions from the computed pitch height. Do not return to fixed offsets that assume a landscape pitch.
 
 ## Shared rendering pipeline
@@ -44,7 +47,7 @@ The preview and downloaded file must never use separate field or player renderer
 
 ## Content below the field
 
-The v55.1 pitch redesign does not change the data or rules for:
+The v55.2 pitch crop and larger jerseys do not change the data or rules for:
 
 - the named substitute bench;
 - optional Potential Positions / Depth Chart;
@@ -62,7 +65,7 @@ The bench begins after the calculated starting-lineup card height. Lower cards c
 - No additional export state is stored.
 - No lineup JSON shape changes.
 - Saved variations and Production / Final records remain compatible.
-- Crowd Game Day and public Matches already use the vertical pitch and shirt design; v55.1 brings the downloadable Captain export into visual alignment with them.
+- Crowd Game Day and public Matches keep their existing full-pitch lineup renderers. The opponent-18 crop is specific to the Captain's shareable Gameplan picture.
 - Strategy exports remain a separate tactical-scene format and are not changed by this renderer.
 - No SQL, Supabase migration, RLS change, Edge Function, or AI-context change is required.
 
@@ -76,7 +79,7 @@ The export image itself has a stable 1,080-pixel width for reliable sharing. The
 - Run `npm run test:clock` to ensure the previous integrated build still parses and passes.
 - Confirm every inline script in `admin.html` parses.
 - Render at least one formation with eleven starters; `3-2-3-2` is useful because it exercises narrow central spacing and two forwards.
-- Check the vertical pitch ratio, stripes, field lines, shirts, numbers, roles, names, captain badge, and field-edge clipping.
+- Check the `68:88.5` cropped-pitch ratio, absence of the opponent goal/boxes, adjusted halfway line, stripes, own penalty-area lines, shirts, numbers, roles, names, captain badge, and field-edge clipping.
 - Check Numbers Only and a TEMP player when those behaviors change.
 - Check a populated bench and enough substitution/Potential Position content to force export-height growth when layout code changes.
 - Confirm preview and PNG/JPG paths both call `buildGameplanSvg()`.

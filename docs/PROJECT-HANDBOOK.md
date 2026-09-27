@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-09-26 ET
-Current Captain Portal build: **v55.1**
+Current Captain Portal build: **v55.2**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -97,10 +97,10 @@ Every new formation must be added to all applicable locations:
 
 - Exports are intended for WhatsApp sharing and support PNG and JPG.
 - The export preview and downloaded image use the same canonical renderer.
-- The starting-lineup picture uses the same vertical `68:105` field proportion as the Lineup Builder, Crowd Game Day, and public Matches—not a landscape field.
-- Standard formation players keep their canonical saved `x` / `y` coordinates. The export must not independently stretch the occupied players to fill the field.
-- On-field players use maroon jersey/shirt silhouettes with number, role, optional name, TEMP label, and captain badge. Circular on-field player markers are not part of the lineup export design.
-- The field uses the same striped green treatment and proportional halfway line, center circle, penalty areas, and six-yard boxes as the canonical lineup presentation.
+- The starting-lineup picture uses a vertical tactical crop from the opponent's 18-yard line through SKOR's own goal line. The opponent goal and its boxes are omitted so the useful lineup area is larger.
+- Standard formation players originate from their canonical saved `x` / `y` coordinates. Horizontal coordinates remain unchanged; vertical coordinates are remapped from the 105-metre full pitch into the remaining 88.5 metres. The saved lineup is never altered.
+- On-field players use large `100 × 88` maroon jersey/shirt silhouettes with scaled number, role, optional name, TEMP label, and captain badge. Circular on-field player markers are not part of the lineup export design.
+- The cropped field uses striped grass, the adjusted halfway line and center circle, and SKOR's proportional penalty and six-yard boxes. Crowd Game Day and public Matches retain their existing full-pitch renderers.
 - Export includes every lineup/substitution wave, not only the currently selected wave.
 - The named substitute bench is always included.
 - Potential Positions are optional in the export and do not alter saved lineup data.
@@ -266,11 +266,11 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 15. Current build v55.1
+## 15. Current build v55.2
 
-- Replaces the Gameplan export's wide landscape field with the canonical vertical `68:105` lineup pitch.
-- Replaces circular on-field player dots with the same maroon jersey/shirt presentation used by the Lineup Builder and published lineup surfaces.
-- Keeps standard formations on their canonical saved coordinates instead of stretching only the occupied area to fill the export field.
-- Applies the renderer to both the in-portal preview and PNG/JPG downloads; bench, Potential Positions, substitution waves, quote, and notes retain their existing behavior.
-- Adds `docs/LINEUP-EXPORT.md` and an automated renderer-contract test.
+- Crops the Captain Gameplan picture at the opponent's 18-yard line, removing the distant opponent goal, goal area, and penalty area.
+- Widens the cropped pitch to 800 pixels and enlarges on-field jerseys to `100 × 88` pixels with larger numbers, role labels, player names, TEMP labels, and captain badge.
+- Remaps canonical full-pitch vertical positions into the 88.5-metre visible area without changing saved lineup data; the goalkeeper receives a small export-only spacing adjustment.
+- Applies the same renderer to the in-portal preview and PNG/JPG downloads. Bench, Potential Positions, substitution waves, quote, notes, Crowd Game Day, public Matches, and AI context retain their existing behavior.
+- Updates the renderer-contract test and `docs/LINEUP-EXPORT.md` with the crop and sizing rules.
 - Requires no SQL, Supabase migration, Edge Function deployment, or saved-lineup data change.
