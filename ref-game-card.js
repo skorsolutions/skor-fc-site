@@ -331,7 +331,7 @@
     render();const check=validateCardData(currentData);if(!check.valid)return;
     const popup=window.open("","_blank");
     if(!popup){status.className="ref-game-card-status visible error";status.textContent="The print window was blocked. Allow pop-ups for this site and try again.";return;}
-    const cssUrl=new URL("ref-game-card.css?v=56.1",window.location.href).href;
+    const cssUrl=new URL("ref-game-card.css?v=56.2",window.location.href).href;
     popup.document.open();popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(fileBase(currentData))}</title><link rel="stylesheet" href="${escapeHtml(cssUrl)}"></head><body class="ref-card-print-body">${buildCardMarkup(currentData)}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));<\/script></body></html>`);popup.document.close();
   });
 

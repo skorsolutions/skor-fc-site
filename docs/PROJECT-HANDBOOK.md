@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
-Last updated: 2026-09-26 ET
-Current Captain Portal build: **v56.1**
+Last updated: 2026-09-27 ET
+Current Captain Portal build: **v56.2**
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -282,7 +282,7 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 15. Current build v56.1
+## 15. Current build v56.2
 
 - Adds a separate referee game-card workflow beside the lineup PNG/JPG actions.
 - Builds the official roster from the current starters and Substitutes, using full names and placing TEMP players after permanent players.
@@ -291,4 +291,5 @@ A build is complete only when:
 - Adds one-page landscape printing/Save as PDF and a populated Excel download based on a sanitized organization template.
 - Adds focused automated coverage and `docs/REF-GAME-CARD.md`.
 - Repairs Excel downloads when the sanitized workbook omits XML nodes for completely blank handwriting-row cells such as `B31`/`C31`.
+- Repairs the landscape PDF spacing so Weather/Field and Sportsmanship never overlap, increases roster legibility, and centers populated header values within their underlined fields.
 - Requires no SQL, Supabase migration, Edge Function deployment, saved-lineup change, AI change, or public/Game Day change.

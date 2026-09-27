@@ -1,6 +1,6 @@
 # Referee Game Card
 
-Build: **v56.1**
+Build: **v56.2**
 
 This document defines the Captain Portal referee-card workflow. The feature reproduces the supplied Roswell Recreation & Parks game-card layout as a separate export beside the lineup PNG/JPG actions.
 
@@ -62,6 +62,8 @@ A missing field or scheduled time produces a warning but remains printable becau
 
 - The browser opens a dedicated print view using US Letter, landscape, with 0.25-inch margins.
 - The output is one page and retains all 26 player rows.
+- The referee header is given enough vertical space to keep Weather/Field separate from Sportsmanship, and the roster type is sized for legible printing.
+- Populated team, match, field, date, and scheduled-time values are centered horizontally and vertically within their underlined form fields. Player names remain left-aligned in the roster table.
 - The print document title is `SKOR_FC_vs_<Opponent>_<YYYY-MM-DD>_Ref_Game_Card`, which becomes the suggested filename in browsers that use the document title for Save as PDF.
 - The in-portal preview and print view use the same card-markup generator.
 - The dialog controls remain usable on phones; the full paper preview scales to the available screen width.

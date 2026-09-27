@@ -1,3 +1,16 @@
+## v56.2 — Referee-card PDF layout repair
+
+- Rebalances the one-page US Letter landscape layout so the referee header, Weather/Field row, and Sportsmanship section no longer overlap.
+- Increases roster text legibility while preserving all 26 printed player rows and the one-page output.
+- Centers populated team, coach, opponent, league, field, date, and scheduled-time values horizontally and vertically within their underlined form fields; roster player names remain left-aligned for readability.
+- Keeps the Excel export and all v56.1 missing-cell handling unchanged.
+- Adds regression checks for the print-grid spacing, centered field rules, larger roster type, and v56.2 asset versions.
+- Documentation: updates `docs/REF-GAME-CARD.md` and the durable project handbook with the approved PDF layout rules.
+- **SQL needed:** No.
+- **Database changes performed:** None. No Supabase migration or Edge Function deployment is required.
+- **Live status:** Approved preview prepared; publishing and production verification pending.
+- Affected assets: `admin.html`, `ref-game-card.css`, `ref-game-card.js`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/REF-GAME-CARD.md`, and this deployment note.
+
 ## v56.1 — Referee-card blank Excel cell repair
 
 - Fixes **Download Excel** failing with `Excel template cell B31 is missing` when the sanitized organization workbook omits XML nodes for completely blank handwriting rows.
