@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="squad-v50.3-position-bio-preferred-name-live-profile">
+<meta name="skor-build" content="squad-v58.1-private-match-scores">
 <title>SKOR FC | Squad</title>
 <meta name="description" content="Meet the SKOR FC squad — Over 30 soccer in Roswell, Georgia.">
 <meta name="skor-build" content="public-shared-data-v37">
@@ -174,7 +174,7 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
       <div>
         <div class="eyebrow">2026 Season</div>
         <h2>Season Stats</h2>
-        <p>Automatically calculated from Captain Game Day match events. Temporary match jersey numbers stay attached to the correct roster player.</p>
+        <p>Season totals for individual players, including goals, assists, cards and Man of the Match awards.</p>
       </div>
       <div class="stats-live" id="statsStatus">Loading live stats…</div>
     </div>
@@ -187,16 +187,6 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
       <div class="stat-tile"><span>MOTM Awards</span><strong id="teamMotm">0</strong></div>
     </div>
 
-    <div class="season-record" aria-label="2026 team season record">
-      <div class="record-tile"><span>Played</span><strong id="recordPlayed">0</strong></div>
-      <div class="record-tile"><span>Wins</span><strong id="recordWins">0</strong></div>
-      <div class="record-tile"><span>Draws</span><strong id="recordDraws">0</strong></div>
-      <div class="record-tile"><span>Losses</span><strong id="recordLosses">0</strong></div>
-      <div class="record-tile"><span>GF</span><strong id="recordGF">0</strong></div>
-      <div class="record-tile"><span>GA</span><strong id="recordGA">0</strong></div>
-      <div class="record-tile"><span>GD</span><strong id="recordGD">0</strong></div>
-    </div>
-    <div class="record-note">Season record uses matches marked <strong>Final</strong>. GF = Goals For, GA = Goals Against, GD = Goal Difference.</div>
 
     <div class="leaders">
       <div class="leader-card"><span>Leading Scorer</span><strong id="goalLeader">—</strong><small id="goalLeaderSub">No goals recorded yet</small></div>
@@ -705,69 +695,20 @@ function bestPlayer(stats,field){
 async function loadSeasonStats(){
   const status=document.getElementById("statsStatus");
   try{
-    const [{data:matches,error:matchError},{data:events,error:eventError}] = await Promise.all([
-      statsDb.from("matches").select("id,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number").eq("published",true),
-      statsDb.from("match_events").select("match_id,event_type,player_name,player_number,roster_player_number,assist_player_name,assist_player_number,assist_roster_player_number")
-    ]);
-    if(matchError) throw matchError;
-    if(eventError) throw eventError;
-
-    const validMatchIds=new Set((matches||[]).filter(m=>m.status!=="scheduled").map(m=>m.id));
-    const seasonEvents=(events||[]).filter(e=>validMatchIds.has(e.match_id));
-    const finalMatches=(matches||[]).filter(m=>m.status==="final");
-    let recordWins=0,recordDraws=0,recordLosses=0,recordGF=0,recordGA=0;
-    for(const m of finalMatches){
-      let gf=0,ga=0;
-      for(const e of (events||[]).filter(e=>e.match_id===m.id)){
-        if(e.event_type==="skor_goal" || e.event_type==="opponent_own_goal") gf++;
-        else if(e.event_type==="opponent_goal" || e.event_type==="skor_own_goal") ga++;
-      }
-      recordGF+=gf; recordGA+=ga;
-      if(gf>ga) recordWins++;
-      else if(gf<ga) recordLosses++;
-      else recordDraws++;
-    }
-    document.getElementById("recordPlayed").textContent=finalMatches.length;
-    document.getElementById("recordWins").textContent=recordWins;
-    document.getElementById("recordDraws").textContent=recordDraws;
-    document.getElementById("recordLosses").textContent=recordLosses;
-    document.getElementById("recordGF").textContent=recordGF;
-    document.getElementById("recordGA").textContent=recordGA;
-    const gd=recordGF-recordGA;
-    document.getElementById("recordGD").textContent=gd>0?`+${gd}`:String(gd);
+    const {data,error}=await statsDb.rpc("get_public_player_season_stats");
+    if(error) throw error;
+    const summary=data||{}, totals=summary.totals||{};
     const stats=new Map();
     roster.forEach(p=>stats.set(playerKey(p.number,p.name),newStat(p.number,p.name)));
-
-    let teamGoals=0,teamAssists=0,teamYellow=0,teamRed=0;
-    for(const e of seasonEvents){
-      if(e.event_type==="skor_goal"){
-        teamGoals++;
-        addToMap(stats,e.player_number,e.player_name,"goals",e.roster_player_number);
-        if(e.assist_player_name || e.assist_player_number){
-          teamAssists++;
-          addToMap(stats,e.assist_player_number,e.assist_player_name,"assists",e.assist_roster_player_number);
-        }
-      }else if(e.event_type==="opponent_own_goal"){
-        teamGoals++;
-      }else if(e.event_type==="skor_yellow_card"){
-        teamYellow++; addToMap(stats,e.player_number,e.player_name,"yellow",e.roster_player_number);
-      }else if(e.event_type==="skor_red_card"){
-        teamRed++; addToMap(stats,e.player_number,e.player_name,"red",e.roster_player_number);
-      }
+    for(const player of summary.players||[]){
+      const key=statIdentity(player.number,player.name,player.number);
+      stats.set(key,{...newStat(player.number,player.name),...player});
     }
-
-    let motmCount=0;
-    for(const m of (matches||[])){
-      if(!m.man_of_match_player_name && !m.man_of_match_player_number) continue;
-      motmCount++;
-      addToMap(stats,m.man_of_match_player_number,m.man_of_match_player_name,"motm",m.man_of_match_roster_player_number);
-    }
-
-    document.getElementById("teamGoals").textContent=teamGoals;
-    document.getElementById("teamAssists").textContent=teamAssists;
-    document.getElementById("teamYellow").textContent=teamYellow;
-    document.getElementById("teamRed").textContent=teamRed;
-    document.getElementById("teamMotm").textContent=motmCount;
+    document.getElementById("teamGoals").textContent=totals.goals??0;
+    document.getElementById("teamAssists").textContent=totals.assists??0;
+    document.getElementById("teamYellow").textContent=totals.yellow??0;
+    document.getElementById("teamRed").textContent=totals.red??0;
+    document.getElementById("teamMotm").textContent=totals.motm??0;
 
     document.querySelectorAll(".player-stats").forEach(el=>{
       const number=el.dataset.playerNumber,name=el.dataset.playerName;
@@ -790,7 +731,7 @@ async function loadSeasonStats(){
       .sort((a,b)=>(b.goals+b.assists+b.motm)-(a.goals+a.assists+a.motm));
     const extraWrap=document.getElementById("extraPlayerStats"),body=document.getElementById("extraPlayerStatsBody");
     if(extras.length){
-      body.innerHTML=extras.map(s=>`<tr><td>${displayPlayer(s.number,s.name)}</td><td class="num">${s.goals}</td><td class="num">${s.assists}</td><td class="num">${s.yellow}</td><td class="num">${s.red}</td><td class="num">${s.motm}</td></tr>`).join("");
+      body.innerHTML=extras.map(s=>`<tr><td>${rosterEsc(displayPlayer(s.number,s.name))}</td><td class="num">${s.goals}</td><td class="num">${s.assists}</td><td class="num">${s.yellow}</td><td class="num">${s.red}</td><td class="num">${s.motm}</td></tr>`).join("");
       extraWrap.classList.add("show");
     }else extraWrap.classList.remove("show");
 
@@ -807,3 +748,4 @@ setInterval(initSquadPage,60*1000);
 
 </body>
 </html>
+

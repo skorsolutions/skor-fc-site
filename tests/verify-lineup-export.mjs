@@ -12,7 +12,7 @@ inlineScripts.forEach((match, index) => {
   new vm.Script(match[1], { filename: `admin.html#inline-${index + 1}` });
 });
 
-assert.match(admin, /captain-portal-v58\.0-strategy-animation-bundles/);
+assert.match(admin, /captain-portal-v58\.1-private-public-match-scores/);
 assert.match(admin, /CAPTAIN PORTAL V57\.0/);
 assert.match(admin, /const fullPitchLength=105,opponentPenaltyDepth=16\.5/);
 assert.match(admin, /const visiblePitchLength=fullPitchLength-opponentPenaltyDepth/);
@@ -55,3 +55,4 @@ assert.ok(cropY(25) < 12, "forwards must move into the enlarged top tactical are
 assert.ok(cropY(50) > 40 && cropY(50) < 41, "the full-pitch halfway line must retain its real location after cropping");
 
 console.log("Lineup export verification passed.");
+

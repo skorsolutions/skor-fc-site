@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="public-home-v57.0-official-live-match-clock">
+<meta name="skor-build" content="public-home-v58.1-private-match-scores">
 <title>SKOR FC | Over 30 Soccer in Roswell, Georgia</title>
-<meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, match results, season stats, practices, and club updates.">
+<meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, player season stats, practices, and club updates.">
 <style>
 :root{
   --bg:#07080a;
@@ -772,7 +772,6 @@ const SKOR_GAMES = [
 
 const GAME_WINDOW_MS = 2 * 60 * 60 * 1000;
 let MATCHES = [...SKOR_GAMES];
-let MATCH_EVENTS = [];
 let MATCH_CLOCKS = new Map();
 
 function gameDate(game){ return new Date(game.kickoff); }
@@ -821,28 +820,6 @@ function normalizeMatch(row){
     awayLogo:row.away_logo || teamLogo(row.away_team || row.away)
   };
 }
-function eventsFor(game){ return game?.id ? MATCH_EVENTS.filter(e=>e.match_id===game.id) : []; }
-function scoreFor(game){
-  let skor=0, opponent=0;
-  eventsFor(game).forEach(e=>{
-    if(e.event_type==="skor_goal" || e.event_type==="opponent_own_goal") skor++;
-    if(e.event_type==="opponent_goal" || e.event_type==="skor_own_goal") opponent++;
-  });
-  const homeIsSkor=game.home==="SKOR FC";
-  return {skor,opponent,home:homeIsSkor?skor:opponent,away:homeIsSkor?opponent:skor};
-}
-function scorerSummary(game){
-  const goals=eventsFor(game).filter(e=>e.event_type==="skor_goal" || e.event_type==="opponent_own_goal");
-  if(!goals.length) return "";
-  return goals.map(e=>{
-    if(e.event_type==="opponent_own_goal") return "⚽ Opponent own goal";
-    const safePlayer=homePublicName(e.player_name,e.roster_player_number);
-    const safeAssist=homePublicName(e.assist_player_name,e.assist_roster_player_number);
-    const player=safePlayer ? `${safePlayer}${e.player_number?` #${e.player_number}`:""}` : "SKOR goal";
-    const assist=safeAssist ? ` · Assist: ${safeAssist}${e.assist_player_number?` #${e.assist_player_number}`:""}` : "";
-    return `⚽ ${player}${assist}`;
-  }).join("<br>");
-}
 function logoBadge(team, src, large=false){
   const cls=large?"match-team-badge":"row-logo-badge";
   const teamClass=team==="SKOR FC"?"skor":"opponent";
@@ -873,17 +850,11 @@ function renderNextMatch(game){
     card.innerHTML=`<div class="match-complete"><div class="match-label">2026 Season</div><h2>No upcoming matches scheduled</h2><a class="btn btn-secondary" style="margin-top:14px" href="matches.html#past">Past Matches</a></div>`;
     return;
   }
-  const date=gameDate(game), score=scoreFor(game);
-  const showScore=isLiveStatus(game.status)||game.status==="final"||eventsFor(game).length>0;
+  const date=gameDate(game);
   const label=statusLabel(game.status);
   document.querySelector("#nextMatchCard .match-label").innerHTML=`${label}${isLiveStatus(game.status)?'<span class="live-pill">LIVE</span>':game.status==='final'?'<span class="live-pill final">FINAL</span>':''}`;
-  if(showScore){
-    title.innerHTML=`${escapeHtmlMatch(game.home)} <strong>${score.home}</strong> – <strong>${score.away}</strong> ${escapeHtmlMatch(game.away)}`;
-  } else {
-    title.textContent=`${game.home} vs ${game.away}`;
-  }
-  const scorer=scorerSummary(game);
-  meta.innerHTML=`<span><strong>${formatFullDate(date)}</strong></span><span><strong>${formatTime(date)}</strong></span><span><strong>${homeFieldLink(game.location)}</strong></span>${homeClockHtml(game)}${scorer?`<div class="match-scorers">${scorer}</div>`:""}`;
+  title.textContent=`${game.home} vs ${game.away}`;
+  meta.innerHTML=`<span><strong>${formatFullDate(date)}</strong></span><span><strong>${formatTime(date)}</strong></span><span><strong>${homeFieldLink(game.location)}</strong></span>${homeClockHtml(game)}`;
   logos.innerHTML=logoBadge(game.home,game.homeLogo,true)+logoBadge(game.away,game.awayLogo,true);
   link.href=`matches.html?game=${encodeURIComponent(game.slug)}`;
   syncHomeMatchClocks();
@@ -893,12 +864,11 @@ function renderUpcomingGames(games){
   const container=document.getElementById("upcomingGames");
   if(!games.length){ container.innerHTML=`<div class="schedule-empty">No additional matches are currently scheduled. <a href="matches.html#past">View past matches →</a></div>`; return; }
   container.innerHTML=games.map(game=>{
-    const date=gameDate(game), score=scoreFor(game);
-    const showScore=isLiveStatus(game.status)||game.status==="final"||eventsFor(game).length>0;
+    const date=gameDate(game);
     return `<a class="game-row-link" href="matches.html?game=${encodeURIComponent(game.slug)}">
       <div class="date-box">${monthLabel(date)}<strong>${dayLabel(date)}</strong></div>
       <div class="game-info"><h3>${escapeHtmlMatch(game.home)} vs ${escapeHtmlMatch(game.away)}</h3><p>${formatTime(date)} · ${escapeHtmlMatch(game.location)}</p>${homeClockHtml(game,true)}</div>
-      ${showScore?`<div class="game-result">${score.home}–${score.away}</div>`:`<div class="row-logos" aria-label="team logos">${logoBadge(game.home,game.homeLogo)}${logoBadge(game.away,game.awayLogo)}</div>`}
+      <div class="row-logos" aria-label="team logos">${logoBadge(game.home,game.homeLogo)}${logoBadge(game.away,game.awayLogo)}</div>
     </a>`;
   }).join("");
   syncHomeMatchClocks();
@@ -927,11 +897,7 @@ async function loadMatchCenterData(){
     const {data,error}=await publicDb.from("matches").select("id,slug,kickoff,arrival_at,status,home_team,away_team,location,home_logo,away_logo,published").eq("published",true).order("kickoff",{ascending:true});
     if(error || !data?.length){ if(error) console.info("Match Center using schedule fallback:",error.message); updateSchedule(); return; }
     MATCHES=data.map(normalizeMatch);
-    const ids=MATCHES.map(m=>m.id).filter(Boolean);
-    if(ids.length){
-      const {data:events,error:eventError}=await publicDb.from("match_events").select("id,match_id,event_type,player_name,player_number,roster_player_number,assist_player_name,assist_player_number,assist_roster_player_number,half,sequence,created_at").in("match_id",ids).order("sequence",{ascending:true});
-      if(!eventError && events) MATCH_EVENTS=events;
-    }
+
     updateSchedule();
   }catch(err){ console.info("Match Center using schedule fallback:",err); updateSchedule(); }
 }
@@ -957,3 +923,4 @@ document.querySelectorAll('#navLinks a').forEach(a=>{
 </script>
 </body>
 </html>
+
