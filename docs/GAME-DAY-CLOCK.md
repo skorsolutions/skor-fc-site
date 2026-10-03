@@ -100,7 +100,7 @@ The approved migration was applied as Supabase migration `20260927134927 expose_
 
 Production commit `8dbc56e4aa071f4580d5ae414c5c36c3ce7e6ab9` was verified on `skorfc.net` on 2026-09-27. Home, Match Center, and Captain Portal served their v57.0 build markers; the deployed `public-match-clock.js?v=57.0` exactly matched the repository asset; and an anonymous production RPC call returned only the approved seven-field projection. The sessions present during verification were already `full_time`, so the public clock correctly remained hidden.
 
-Home and Match Center refresh the safe RPC projection every five seconds and calculate the visible time locally every second. Only `first_half`, `halftime`, and `second_half` are shown as a current public clock. Prepared v58.1 refreshes match status and timestamped non-goal events every 30 seconds; public scores and per-match goal feeds are omitted. The official clock projection stays public and unchanged.
+Home and Match Center refresh the safe RPC projection every five seconds and calculate the visible time locally every second. Only `first_half`, `halftime`, and `second_half` are shown as a current public clock. v58.1 refreshes match status and timestamped non-goal events every 30 seconds; public scores and per-match goal feeds are omitted. The official clock projection stays public and unchanged.
 
 ## Substitution plan contract
 
@@ -141,7 +141,7 @@ The `unit` and `minute` properties live in the existing lineup JSON, so no lineu
 | `admin.html` | Full clock controls, configuration, halftime break, warnings, substitution reminders, timestamped official event log, and prevention of new untimed live events |
 | `gameday.html` | Read-only smooth official clock, break display, threshold notice, timestamped Crowd events/ref reviews |
 | `index.html` | Read-only official clock on the featured current match and current-game schedule row |
-| `matches.html` | Read-only official clock on the selected/current match plus stored official times on non-goal discipline events; prepared v58.1 keeps scores/goals private |
+| `matches.html` | Read-only official clock on the selected/current match plus stored official times on non-goal discipline events; v58.1 keeps scores/goals private |
 | `public-match-clock.js` | Shared one-second clock reconstruction and phase rendering for public surfaces |
 | Lineup builder/export | Wave group and optional exact match minute |
 
@@ -177,4 +177,3 @@ Because the updated clients select new columns, production must be released in t
 - Tap **Start 2nd Half** at the restart.
 - Tap **Full Time** at the final whistle.
 - Open/close Crowd Scoring independently as needed.
-

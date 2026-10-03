@@ -1,6 +1,6 @@
 # v58.1 — Match scores limited to team portals
 
-Status: **v58.1 publication approved; Supabase migration applied and verified. Website publication is in progress.** Source reviewed: GitHub `main` at `5ade865589df60af40ff24e10cee59255ec07715`.
+Status: **v58.1 is live; Supabase migration and production deployment verified on 2026-10-03.** Production release: [`4eb58c932756e36908db1d4ef076b51501cfc496`](https://github.com/skorsolutions/skor-fc-site/commit/4eb58c932756e36908db1d4ef076b51501cfc496), merged through PR #1. Source reviewed from GitHub `main` at `5ade865589df60af40ff24e10cee59255ec07715`.
 
 ## Requested behavior
 
@@ -29,7 +29,7 @@ Public MOTM prose is replaced by a neutral caption because a free-text match sum
 - Existing authenticated Player Profile RPCs already validate the linked active player before returning scores. Their source and client remain unchanged.
 - Independent Crowd goal submissions still contribute to existing report consensus. The goal feed's confirmation/dispute controls are no longer displayed in Crowd; captains continue to inspect/manage goal records in their portal.
 
-## Complete proposed publication file set
+## Complete approved publication file set
 
 1. `admin.html`
 2. `gameday.html`
@@ -48,7 +48,7 @@ Public MOTM prose is replaced by a neutral caption because a free-text match sum
 
 This list is the consolidated review for replacing full public source files containing the existing browser authentication and data-access configuration. No service-role key, private player data, credential, token or captain note is added.
 
-## Verification before approval
+## Verification
 
 - `npm run test:score-privacy`: passed. Exercises public renderers across Scheduled, First Half, Halftime, Second Half and Final; checks that stale goal records cannot appear in the public event helper; verifies source parsing, unique IDs, removal of public team results, preservation of player/captain score paths and the restricted data contract.
 - `npm run test:clock`: passed. Official clock calculations, timestamped discipline rendering and existing control contracts are preserved.
@@ -57,6 +57,8 @@ This list is the consolidated review for replacing full public source files cont
 - The current published announcements contain no numeric score pattern. Existing source score/crowd RPCs were inspected; the player score RPC checks current player authorization.
 - Applied migration verification: real `anon` and unlinked `authenticated` role queries return zero official goal rows. Active linked players and captains retain all 43 official goal rows; the protected Player Profile recent-match RPC returns its five existing match entries. Anonymous viewers retain eight non-goal events and access to the safe season aggregate RPC.
 - Match, event, roster, Crowd event and Crowd report row counts match the pre-migration snapshot. The aggregate function retains its empty search path. Security advisors flag the intentionally public definer aggregate; its no-argument narrow projection and grants were reviewed. Other reported findings concern pre-existing objects. [Advisor reference](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
+- Anonymous production HTTP checks return no official goal records, exactly the documented safe season-stat fields, and a working public clock RPC.
+- Cloudflare's `Workers Builds: skor-fc-site` check succeeded for production commit `4eb58c932756e36908db1d4ef076b51501cfc496` (build `5d6c69a3-2161-4a31-9643-0652d9c9abfd`, version `1814304f-0dc4-40b2-b66d-4fff984e92ac`). Live Home, Matches, Players, Squad, Crowd Game Day and Captain Portal HTML exactly match the approved source and serve their v58.1 build markers. Unrelated repository files and existing hosting settings were preserved.
 - A browser fixture preview was prepared for desktop and phone widths, but Chromium is unavailable and the browser download failed in this environment. Actual rendered visual QA remains pending. Existing mobile breakpoints are retained; Match Center's summary becomes a single-column panel.
 
 ## Approved release order
@@ -66,3 +68,5 @@ This list is the consolidated review for replacing full public source files cont
 3. Publish the approved file set through the existing GitHub/Cloudflare workflow. Preserve the hosting settings and `npx wrangler deploy` command.
 4. Verify the deployed build markers and public pages, complete available browser review, and record the production commit/live status in the release notes.
 5. Post the same plain-language release summary in chat and on the release commit, as required by the repository instructions.
+
+The available GitHub connector supports PR conversation comments but cannot create commit comments. The release summary is therefore recorded on merged PR #1 with the production commit link, as well as in the chat handoff; a commit comment could not be posted through this connector.

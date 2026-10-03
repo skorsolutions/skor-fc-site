@@ -1,8 +1,8 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-03 ET
-Current live Captain Portal build: **v58.0**
-Approved release: **v58.1**, migration `20261003225430` applied; website publication in progress
+Current live Captain Portal build: **v58.1**
+Production release: **`4eb58c932756e36908db1d4ef076b51501cfc496`**, migration `20261003225430` applied; Cloudflare deployment and live source verified
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -21,7 +21,7 @@ This is the durable handoff document for new chats and future developers. Read i
 | File | Surface | Primary responsibility |
 | --- | --- | --- |
 | `index.html` | Public home | Upcoming matches/practices, announcements, fields, roster summary |
-| `matches.html` | Public matches | Schedule, official clock, non-goal discipline events, MOTM identity, published Production / Final lineup; scores are private in prepared v58.1 |
+| `matches.html` | Public matches | Schedule, official clock, non-goal discipline events, MOTM identity, published Production / Final lineup; scores are private in v58.1 |
 | `players.html` / `squad.html` | Public squad | Published roster presentation |
 | `player-portal.html` | Authenticated player portal | Profile, availability/RSVP, playing status, attendance, reactions, comments, captain chat |
 | `admin.html` | Captain portal | Dashboard, Game Day, Notebook, attendance, announcements, schedule, roster, jerseys, lineups, fields, payments, sponsors |
@@ -35,7 +35,7 @@ This is the durable handoff document for new chats and future developers. Read i
 
 - Public pages use the Supabase publishable browser key and must read only public views/RPCs or rows permitted by RLS.
 - Player Portal requires supported authentication and a claimed/approved player identity.
-- Prepared v58.1 makes match scores and per-match goal records private to active linked players and approved Captain Portal identities. Public pages and Crowd never render scores. Public roster pages use a narrow season-aggregate RPC instead of loading individual goal rows. W/D/L and GF/GA/GD records are omitted from public squad pages. A Crowd invite or arbitrary login does not grant score access. The approved SQL is active as migration `20261003225430`; see `docs/SCORE-PRIVACY.md`.
+- v58.1 makes match scores and per-match goal records private to active linked players and approved Captain Portal identities. Public pages and Crowd never render scores. Public roster pages use a narrow season-aggregate RPC instead of loading individual goal rows. W/D/L and GF/GA/GD records are omitted from public squad pages. A Crowd invite or arbitrary login does not grant score access. The approved SQL is active as migration `20261003225430`; see `docs/SCORE-PRIVACY.md`.
 - Captain Portal requires an approved captain, super-admin, or explicitly supported view-only portal role.
 - View-only users may inspect allowed team information but may not create, update, publish, or delete records.
 - Captain and super-admin write authorization is enforced in the UI and again by RLS/RPC/Edge Function checks. UI hiding is never the security boundary.
@@ -152,7 +152,7 @@ See `docs/REF-GAME-CARD.md` for the complete field mapping, ordering rules, vali
 - New Crowd referee/foul reviews are also stamped with official clock time.
 - Editing a captain event keeps its original timestamp; event edits do not silently rewrite history to the current clock.
 - Historical events are not assigned guessed minutes. They continue to display their saved half with “time not recorded” where appropriate.
-- Captain Game Day renders all stored official timestamps. Prepared v58.1 public Matches and Crowd Game Day render only non-goal event feeds; per-match goals remain private. Crowd event submissions remain consensus-based, with captain/admin time as their source of truth.
+- Captain Game Day renders all stored official timestamps. v58.1 public Matches and Crowd Game Day render only non-goal event feeds; per-match goals remain private. Crowd event submissions remain consensus-based, with captain/admin time as their source of truth.
 
 ### Public live-clock projection
 
@@ -160,7 +160,7 @@ See `docs/REF-GAME-CARD.md` for the complete field mapping, ordering rules, vali
 - Each page reconstructs the running time every second from the stored elapsed-seconds anchor plus `clock_started_at`; the RPC refreshes every five seconds so pause, resume, halftime, and second-half changes reach public viewers without reloading.
 - The public RPC returns only `match_id`, clock phase/running state, elapsed seconds, start anchor, half length, and update time for published matches. It does not expose Crowd access state, invite codes, participants, captain identity, or write access.
 - The home featured match and current-game schedule row show the same official clock. Match Center shows it on both the selected scoreboard and current-game list row.
-- Prepared v58.1 Match Center refreshes match status and timestamped non-goal event records every 30 seconds while the local official clock continues smoothly every second. It does not render or request goal records.
+- v58.1 Match Center refreshes match status and timestamped non-goal event records every 30 seconds while the local official clock continues smoothly every second. It does not render or request goal records.
 
 ### Substitution reminder rules
 
@@ -308,7 +308,7 @@ A build is complete only when:
 - The change is committed/pushed and the production deployment is verified.
 - A matching “what changed” summary is present in the chat handoff and on the GitHub release commit.
 
-## 15. Current build v58.0
+## 15. Previous build v58.0
 
 - Upgrades flat Strategy scenes into ordered Scene Bundles with numbered animation sub-scenes.
 - Adds bundle and sub-scene add, duplicate, reorder, rename/edit, and remove workflows with safe minimum/maximum limits.
@@ -321,10 +321,11 @@ A build is complete only when:
 - Production release `a3f912637a3f0e1153906bb9397c3da29aab3708` was verified on `skorfc.net`: the v58.0 Captain Portal marker, Strategy JavaScript/CSS, and browser-required GIF encoder modules exactly matched the repository.
 
 
-## 16. Prepared build v58.1 — Private match scores
+## 16. Current build v58.1 — Private match scores
 
 - Removes public live/final match scores, per-match goal feeds, scorer summaries, and squad W/D/L/GF/GA/GD records. Keeps fixtures, official time, published lineup, roster and individual player season highlights.
 - Preserves Player Profile score RPCs and Captain Portal scoring. Crowd can submit goals without showing a scoreboard or goal feed.
 - Approved `docs/sql/SCORE-PRIVACY.sql` was applied as migration `20261003225430 restrict_public_match_scores`: three restrictive read policies, approved portal event reads, and a narrow public season-aggregate RPC. No existing data is modified or deleted. No Edge Function deployment is needed.
 - Frontend privacy, persistent-clock and lineup-export tests passed. Real post-migration role checks block anonymous/unlinked goal reads while preserving linked-player and captain scores. All data row counts are unchanged. Browser visual QA remains pending.
-- The user approved the migration and publication on 2026-10-03. Migration verification is complete; website publication is in progress. See `docs/SCORE-PRIVACY.md` for the exact affected file set and release sequence.
+- The user approved the migration and publication on 2026-10-03. Production release `4eb58c932756e36908db1d4ef076b51501cfc496` was merged through PR #1; the connected Cloudflare build succeeded. All six changed live pages exactly match approved source and serve v58.1 markers. Anonymous production HTTP checks confirm no goal rows and working safe season-stat/clock RPCs. See `docs/SCORE-PRIVACY.md` for the affected file set and complete verification.
+- The GitHub connector cannot create commit comments; the matching release summary is recorded on merged PR #1 with the production commit link and in the chat handoff.
