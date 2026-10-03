@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090a0d">
-<meta name="skor-build" content="gameday-v55.0-official-match-clock">
+<meta name="skor-build" content="gameday-v58.1-private-match-scores">
 <title>SKOR FC | Match Center v55.0</title>
 <meta name="description" content="SKOR FC crowd-powered live match scoring, referee decision review and Man of the Match voting.">
 <style>
@@ -235,7 +235,7 @@
 <section class="screen" id="gameScreen">
   <div class="card matchhead">
     <div class="eyebrow" id="matchDate">GAME DAY</div>
-    <div class="matchteams"><div class="team" id="homeTeam">Home</div><div class="score" id="crowdScore">0–0</div><div class="team" id="awayTeam">Away</div></div>
+    <div class="matchteams"><div class="team" id="homeTeam">Home</div><div class="score"><span class="vs">VS</span></div><div class="team" id="awayTeam">Away</div></div>
     <div class="official-clock">
       <div class="official-clock-time" id="officialClockTime">00:00</div>
       <div class="official-clock-status" id="officialClockStatus">Waiting for the captain to start the official clock</div>
@@ -245,7 +245,7 @@
     <div class="phase" id="matchPhase">Crowd Scoring Open</div>
     <div class="crowdline" id="crowdLine">0 scorers joined</div>
     <div class="identity-row"><div class="identity-chip" id="crowdIdentity">Crowd ID</div><button class="mini" id="changeCrowdIdBtn" type="button">Change ID</button></div>
-    <div class="pendingbar hidden" id="pendingScore"></div>
+    <p class="sub">Match scores are available in player profiles and the captain portal. Goal reports are sent to the captains.</p>
   </div>
 
 
@@ -277,7 +277,7 @@
   </div>
 
   <div class="card">
-    <div class="sectiontitle"><div><div class="eyebrow">Consensus</div><h2>Crowd Event Feed</h2></div><span class="confidence" id="consensusRule">Adaptive consensus</span></div>
+    <div class="sectiontitle"><div><div class="eyebrow">Consensus</div><h2>Cards &amp; Event Reviews</h2></div><span class="confidence" id="consensusRule">Adaptive consensus</span></div>
     <div class="feed" id="eventFeed"><div class="empty">No crowd events yet.</div></div>
   </div>
 
@@ -352,8 +352,8 @@ async function loadAll(){if(!sessionId)return;const s=await db.from('game_day_se
  db.from('matches').select('id,kickoff,status,home_team,away_team,location').eq('id',session.match_id).single(),
  db.from('public_roster').select('player_key,display_name,jersey_number,position').order('jersey_number',{ascending:true}),
  db.rpc('get_game_day_participants',{p_session_id:sessionId}),
- db.from('game_day_crowd_events').select('*').eq('session_id',sessionId).eq('active',true).order('created_at',{ascending:false}),
- db.from('game_day_event_reports').select('event_id,user_id,verdict,player_key,player_name,player_number,assist_player_key,assist_player_name,assist_player_number,opponent_player_name').eq('session_id',sessionId),
+ db.from('game_day_crowd_events').select('*').eq('session_id',sessionId).eq('active',true).not('event_type','in','(skor_goal,opponent_goal,opponent_own_goal,skor_own_goal)').order('created_at',{ascending:false}),
+ db.from('game_day_event_reports').select('event_id,user_id,verdict,player_key,player_name,player_number,assist_player_key,assist_player_name,assist_player_number,opponent_player_name,game_day_crowd_events!inner(event_type)').not('game_day_crowd_events.event_type','in','(skor_goal,opponent_goal,opponent_own_goal,skor_own_goal)').eq('session_id',sessionId),
  db.from('game_day_ref_decisions').select('*').eq('session_id',sessionId).eq('active',true).order('created_at',{ascending:false}),
  db.from('game_day_ref_votes').select('decision_id,user_id,vote').eq('session_id',sessionId),
  db.from('game_day_motm_votes').select('user_id,player_key,player_name,player_number').eq('session_id',sessionId),
@@ -409,7 +409,6 @@ function eventThreshold(ev){
   return Math.max(1,Number(ev?.consensus_threshold)||adaptiveThreshold(Number(ev?.participant_count_snapshot)||activeParticipants().length));
 }
 function isConfirmed(ev){const c=eventCounts(ev.id);const needed=eventThreshold(ev);return c.confirm>=needed&&c.confirm>c.dispute;}
-function crowdScore(){let skor=0,opp=0,pSkor=0,pOpp=0;events.forEach(ev=>{const conf=isConfirmed(ev),sk=['skor_goal','opponent_own_goal'].includes(ev.event_type),op=['opponent_goal','skor_own_goal'].includes(ev.event_type);if(conf){if(sk)skor++;if(op)opp++;}else{if(sk)pSkor++;if(op)pOpp++;}});const homeSkor=match?.home_team==='SKOR FC';return{home:homeSkor?skor:opp,away:homeSkor?opp:skor,pSkor,pOpp};}
 async function touchPresence(){
   if(!sessionId||!user)return;
   const {error}=await db.rpc('touch_game_day_presence',{p_session_id:sessionId});
@@ -513,27 +512,21 @@ function render(){
   $('matchDate').textContent=fmtDate(match.kickoff);
   const active=activeParticipants();
   const currentNeeded=adaptiveThreshold(active.length);
-  const sc=crowdScore();
-  $('crowdScore').textContent=`${sc.home}–${sc.away}`;
-  $('crowdLine').textContent=`${active.length} active scorer${active.length===1?'':'s'} · ${participants.length} joined · ${events.filter(isConfirmed).length} confirmed event${events.filter(isConfirmed).length===1?'':'s'}`;
+  $('crowdLine').textContent=`${active.length} active scorer${active.length===1?'':'s'} · ${participants.length} joined`;
   const mine=participants.find(p=>p.user_id===user?.id);
   if(mine){$('crowdIdentity').textContent=`Your Crowd ID: ${mine.display_name}`;$('topUser').textContent=mine.display_name;}
   const rule=$('consensusRule');
   if(rule)rule.textContent=`${currentNeeded} confirmation${currentNeeded===1?'':'s'} needed now`;
   $('matchPhase').textContent=session.active?'Crowd Scoring Open':'Crowd Scoring Closed';
-  const pending=[];
-  if(sc.pSkor)pending.push(`SKOR +${sc.pSkor} pending`);
-  if(sc.pOpp)pending.push(`Opponent +${sc.pOpp} pending`);
-  $('pendingScore').classList.toggle('hidden',!pending.length);
-  $('pendingScore').textContent=pending.join(' · ');
   renderOfficialClock();renderOfficialLineup();renderRosterOptions();renderEventFeed();renderRefFeed();renderMotm();
   const playable=['first_half','second_half'].includes(session.clock_phase||'not_started');
   document.querySelectorAll('[data-report],#refCallBtn').forEach(b=>b.disabled=!session.active||!playable);
 }
 function renderRosterOptions(){const opts='<option value="">Select player…</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">#${p.jersey_number} ${esc(p.display_name)}</option>`).join('');const cur=$('eventPlayer').value;$('eventPlayer').innerHTML=opts;if([...$('eventPlayer').options].some(o=>o.value===cur))$('eventPlayer').value=cur;const acur=$('eventAssist').value;$('eventAssist').innerHTML='<option value="">Unassisted / No assist</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">#${p.jersey_number} ${esc(p.display_name)}</option>`).join('');if([...$('eventAssist').options].some(o=>o.value===acur))$('eventAssist').value=acur;}
 function renderEventFeed(){
-  if(!events.length){$('eventFeed').innerHTML='<div class="empty">No crowd events yet.</div>';return;}
-  $('eventFeed').innerHTML=events.map(ev=>{
+  const visibleEvents=events.filter(e=>!['skor_goal','opponent_goal','opponent_own_goal','skor_own_goal'].includes(e.event_type));
+  if(!visibleEvents.length){$('eventFeed').innerHTML='<div class="empty">No crowd events yet.</div>';return;}
+  $('eventFeed').innerHTML=visibleEvents.map(ev=>{
     const c=eventCounts(ev.id),needed=eventThreshold(ev),conf=isConfirmed(ev);
     const dis=c.dispute>=needed&&c.dispute>=c.confirm;
     const crowdAtEvent=Math.max(1,Number(ev.participant_count_snapshot)||participants.length||1);
@@ -557,3 +550,4 @@ db.auth.onAuthStateChange((_e,s)=>{if(s?.user&&!user){setTimeout(afterLogin,0)}}
 </script>
 </body>
 </html>
+
