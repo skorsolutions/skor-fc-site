@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.1-private-public-match-scores" />
-  <title>SKOR FC Admin | Captain Portal v58.1</title>
+  <meta name="skor-build" content="captain-portal-v58.2-scoring-next-to-clock" />
+  <title>SKOR FC Admin | Captain Portal v58.2</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
   <link rel="stylesheet" href="strategy.css?v=58.0" />
@@ -596,12 +596,13 @@
       .notice,.backend-warning,.backend-ok{font-size:.76rem;padding:10px}
 
       /* ---------------- GAME DAY: sideline/one-thumb UI ---------------- */
+      /* Follow DOM order so scoring stays directly after the clock on phones. */
       #gameday .gameday-shell{
         display:flex;
         flex-direction:column;
         gap:9px;
       }
-      #gameday .gameday-controls-panel{order:0;padding:10px 12px}
+      #gameday .gameday-controls-panel{padding:10px 12px}
       #gameday .gameday-controls-panel h2{display:none}
       #gameday .gameday-controls-panel .sub{display:none}
       #gameday .gameday-controls-panel .fieldrow{
@@ -618,7 +619,6 @@
       #gameday .gameday-controls-panel select{min-height:40px;font-size:14px;padding:7px 8px}
 
       #gameday .gameday-score-panel{
-        order:1;
         position:sticky;
         top:4px;
         z-index:40;
@@ -650,7 +650,7 @@
         white-space:nowrap;
       }
 
-      #gameday .gameday-events-panel{order:2;padding:12px}
+      #gameday .gameday-events-panel{padding:12px}
       #gameday .gameday-events-panel > .sub{display:none}
       #gameday .event-buttons{
         display:grid!important;
@@ -703,11 +703,10 @@
       }
       #gameday #saveMatchEvent,#gameday #cancelMatchEvent{width:100%}
 
-      #gameday .gameday-log-panel{order:3}
       #gameday .event-log{gap:6px}
       #gameday .event-log-item{grid-template-columns:1fr!important;padding:9px}
       #gameday .event-actions{justify-content:flex-start}
-      #gameday .motm-panel{order:4;margin-top:0}
+      #gameday .motm-panel{margin-top:0}
 
       /* ---------------- LINEUPS: pitch + player rail together ---------------- */
       #lineups .lineup-shell{gap:9px}
@@ -1860,7 +1859,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.1</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.2</div>
   </aside>
 
   <main>
@@ -2005,64 +2004,6 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           </div>
         </div>
 
-        <div class="panel production-gameplan-panel" id="productionGameplanPanel">
-          <div class="production-gameplan-head">
-            <div>
-              <div class="production-gameplan-title"><h2 style="margin:0">Official Gameplan</h2><span class="production-gameplan-badge">Production / Final</span></div>
-              <div class="sub" id="productionGameplanMeta">Select a match to load its final lineup.</div>
-            </div>
-            <button class="mini-btn" id="productionOpenLineupBtn" type="button" style="display:none">Edit Final in Lineup Builder</button>
-          </div>
-          <div id="productionGameplanBody"><div class="production-empty">No final gameplan selected yet.</div></div>
-        </div>
-
-        <div class="panel crowd-admin-panel" id="crowdAdminPanel">
-          <div class="crowd-admin-head">
-            <div>
-              <h2>Crowd Scoring</h2>
-              <div class="sub">Captain-controlled QR access for this match. Participants use a separate mobile Game Day page and never enter the Captain Portal.</div>
-            </div>
-            <div class="crowd-head-badges"><span class="crowd-consensus-badge" id="crowdConsensusRule">Adaptive Consensus</span><span class="crowd-live-badge" id="crowdSessionBadge">Not Started</span></div>
-          </div>
-
-          <div class="crowd-stat-grid">
-            <div class="crowd-stat"><strong id="crowdScoreAdmin">0–0</strong><span>Crowd Score</span></div>
-            <div class="crowd-stat"><strong id="crowdParticipantCount">0</strong><span>Active Scorers</span></div>
-            <div class="crowd-stat"><strong id="crowdConfirmedCount">0</strong><span>Confirmed</span></div>
-            <div class="crowd-stat"><strong id="crowdPendingCount">0</strong><span>Pending</span></div>
-            <div class="crowd-stat"><strong id="crowdRefCount">0</strong><span>Ref Reviews</span></div>
-            <div class="crowd-stat"><strong id="crowdMotmCount">0</strong><span>MOTM Votes</span></div>
-          </div>
-
-          <div class="crowd-admin-grid">
-            <div>
-              <div class="crowd-admin-actions">
-                <button class="btn btn-primary" id="crowdStartBtn" type="button">Start Crowd Scoring</button>
-                <button class="btn btn-light" id="crowdGenerateQrBtn" type="button" style="display:none">Generate QR</button>
-                <button class="btn btn-light" id="crowdMotmToggle" type="button" style="display:none">Open MOTM Voting</button>
-                <button class="btn btn-light" id="crowdCloseBtn" type="button" style="display:none">Close Crowd Scoring</button>
-              </div>
-              <div class="crowd-admin-status" id="crowdAdminStatus">Select a match, then start a crowd-scoring session.</div>
-              <div class="crowd-participants" id="crowdParticipantList"></div>
-            </div>
-
-            <div class="crowd-qr-card" id="crowdQrCard" style="display:none">
-              <div class="crowd-qr-wrap">
-                <div id="crowdQrCode" aria-label="Crowd scoring QR code"></div>
-                <div class="crowd-link-box">
-                  <strong>Join this match</strong>
-                  <div class="sub" style="margin:4px 0 9px">Anyone with this QR can sign in and join the crowd-scoring session until you close it.</div>
-                  <input id="crowdJoinLink" readonly aria-label="Crowd scoring join link">
-                  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">
-                    <button class="mini-btn" id="crowdCopyLinkBtn" type="button">Copy Link</button>
-                    <a class="mini-btn" id="crowdOpenPageLink" href="gameday.html" target="_blank" rel="noopener">Open Page</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="scoreboard-admin gameday-score-panel">
           <div class="scoreboard-top">
             <div class="score-team" id="gameDayHome">Home<small id="gameDayHomeRole"></small></div>
@@ -2130,6 +2071,64 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
                 </div>
               </div>
               <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-primary" id="saveMatchEvent" type="button">Save Event</button><button class="btn btn-light" id="cancelMatchEvent" type="button">Cancel</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel production-gameplan-panel" id="productionGameplanPanel">
+          <div class="production-gameplan-head">
+            <div>
+              <div class="production-gameplan-title"><h2 style="margin:0">Official Gameplan</h2><span class="production-gameplan-badge">Production / Final</span></div>
+              <div class="sub" id="productionGameplanMeta">Select a match to load its final lineup.</div>
+            </div>
+            <button class="mini-btn" id="productionOpenLineupBtn" type="button" style="display:none">Edit Final in Lineup Builder</button>
+          </div>
+          <div id="productionGameplanBody"><div class="production-empty">No final gameplan selected yet.</div></div>
+        </div>
+
+        <div class="panel crowd-admin-panel" id="crowdAdminPanel">
+          <div class="crowd-admin-head">
+            <div>
+              <h2>Crowd Scoring</h2>
+              <div class="sub">Captain-controlled QR access for this match. Participants use a separate mobile Game Day page and never enter the Captain Portal.</div>
+            </div>
+            <div class="crowd-head-badges"><span class="crowd-consensus-badge" id="crowdConsensusRule">Adaptive Consensus</span><span class="crowd-live-badge" id="crowdSessionBadge">Not Started</span></div>
+          </div>
+
+          <div class="crowd-stat-grid">
+            <div class="crowd-stat"><strong id="crowdScoreAdmin">0–0</strong><span>Crowd Score</span></div>
+            <div class="crowd-stat"><strong id="crowdParticipantCount">0</strong><span>Active Scorers</span></div>
+            <div class="crowd-stat"><strong id="crowdConfirmedCount">0</strong><span>Confirmed</span></div>
+            <div class="crowd-stat"><strong id="crowdPendingCount">0</strong><span>Pending</span></div>
+            <div class="crowd-stat"><strong id="crowdRefCount">0</strong><span>Ref Reviews</span></div>
+            <div class="crowd-stat"><strong id="crowdMotmCount">0</strong><span>MOTM Votes</span></div>
+          </div>
+
+          <div class="crowd-admin-grid">
+            <div>
+              <div class="crowd-admin-actions">
+                <button class="btn btn-primary" id="crowdStartBtn" type="button">Start Crowd Scoring</button>
+                <button class="btn btn-light" id="crowdGenerateQrBtn" type="button" style="display:none">Generate QR</button>
+                <button class="btn btn-light" id="crowdMotmToggle" type="button" style="display:none">Open MOTM Voting</button>
+                <button class="btn btn-light" id="crowdCloseBtn" type="button" style="display:none">Close Crowd Scoring</button>
+              </div>
+              <div class="crowd-admin-status" id="crowdAdminStatus">Select a match, then start a crowd-scoring session.</div>
+              <div class="crowd-participants" id="crowdParticipantList"></div>
+            </div>
+
+            <div class="crowd-qr-card" id="crowdQrCard" style="display:none">
+              <div class="crowd-qr-wrap">
+                <div id="crowdQrCode" aria-label="Crowd scoring QR code"></div>
+                <div class="crowd-link-box">
+                  <strong>Join this match</strong>
+                  <div class="sub" style="margin:4px 0 9px">Anyone with this QR can sign in and join the crowd-scoring session until you close it.</div>
+                  <input id="crowdJoinLink" readonly aria-label="Crowd scoring join link">
+                  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px">
+                    <button class="mini-btn" id="crowdCopyLinkBtn" type="button">Copy Link</button>
+                    <a class="mini-btn" id="crowdOpenPageLink" href="gameday.html" target="_blank" rel="noopener">Open Page</a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

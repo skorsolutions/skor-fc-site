@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
-Last updated: 2026-10-03 ET
-Current live Captain Portal build: **v58.1**
+Last updated: 2026-10-12 UTC
+Prepared Captain Portal build: **v58.2**; last verified live build: **v58.1**
 Production release: **`4eb58c932756e36908db1d4ef076b51501cfc496`**, migration `20261003225430` applied; Cloudflare deployment and live source verified
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
@@ -131,6 +131,12 @@ See `docs/LINEUP-EXPORT.md` for the renderer geometry, data flow, compatibility 
 See `docs/REF-GAME-CARD.md` for the complete field mapping, ordering rules, validation, security boundary, and QA checklist.
 
 ## 6. Game Day clock and live scoring
+
+### Sideline layout
+
+- Captain Game Day places the official clock first, then the scoreboard and Record Event controls, before the Official Gameplan and Crowd Scoring panels. Desktop and phone follow the same document order.
+- The phone scoreboard remains sticky and event entry retains its existing bottom sheet. Supporting RSVP and attendance panels appear after scoring.
+- This v58.2 layout change retains the existing score calculation, event persistence, official timestamps, and private-score access rules. No database or Edge Function work is required.
 
 ### Authoritative clock model
 
@@ -321,7 +327,7 @@ A build is complete only when:
 - Production release `a3f912637a3f0e1153906bb9397c3da29aab3708` was verified on `skorfc.net`: the v58.0 Captain Portal marker, Strategy JavaScript/CSS, and browser-required GIF encoder modules exactly matched the repository.
 
 
-## 16. Current build v58.1 — Private match scores
+## 16. Previous build v58.1 — Private match scores
 
 - Removes public live/final match scores, per-match goal feeds, scorer summaries, and squad W/D/L/GF/GA/GD records. Keeps fixtures, official time, published lineup, roster and individual player season highlights.
 - Preserves Player Profile score RPCs and Captain Portal scoring. Crowd can submit goals without showing a scoreboard or goal feed.
@@ -329,3 +335,12 @@ A build is complete only when:
 - Frontend privacy, persistent-clock and lineup-export tests passed. Real post-migration role checks block anonymous/unlinked goal reads while preserving linked-player and captain scores. All data row counts are unchanged. Browser visual QA remains pending.
 - The user approved the migration and publication on 2026-10-03. Production release `4eb58c932756e36908db1d4ef076b51501cfc496` was merged through PR #1; the connected Cloudflare build succeeded. All six changed live pages exactly match approved source and serve v58.1 markers. Anonymous production HTTP checks confirm no goal rows and working safe season-stat/clock RPCs. See `docs/SCORE-PRIVACY.md` for the affected file set and complete verification.
 - The GitHub connector cannot create commit comments; the matching release summary is recorded on merged PR #1 with the production commit link and in the chat handoff.
+
+
+## 17. Prepared build v58.2 — Scoring beside the clock
+
+- Moves the scoreboard and Record Event panel directly after the official timer, ahead of the full lineup and Crowd Scoring panels.
+- Removes phone-only panel ordering so RSVP, attendance, lineup and Crowd panels cannot precede the scoring controls. Existing sticky scoreboard, touch buttons and entry sheet remain available.
+- Persistent-clock and score-privacy regression suites passed, including inline JavaScript syntax and unique IDs. Document-order and responsive CSS checks passed. All inline JavaScript is identical to v58.1; no persistence, event, privacy, export, AI, Crowd or public-rendering logic changed.
+- Browser rendering and authenticated save/reload checks could not be performed because browser control and an authenticated captain session are unavailable in this environment.
+- SQL/database changes: none required or performed. Production publication/verification is pending.

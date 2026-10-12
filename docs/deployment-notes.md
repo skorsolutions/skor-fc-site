@@ -1,3 +1,14 @@
+# v58.2 — Scoring beside the official timer (prepared release)
+
+- Places the Captain Portal Game Day scoreboard and Record Event controls directly below the official clock, before the full Official Gameplan and Crowd Scoring sections.
+- Makes phones follow the same panel order so lineup, Crowd, RSVP and attendance cannot push scoring down the page. Retains the sticky phone scoreboard, two-column touch buttons and event-entry bottom sheet.
+- **Affected files:** `admin.html`, `docs/PROJECT-HANDBOOK.md`, `docs/deployment-notes.md`.
+- **Integrations/surfaces:** Captain Portal layout only. Existing clock/goal handlers, timestamps, Supabase persistence, score privacy, Player Portal, public pages, Crowd, exports and AI behavior are unchanged.
+- **Verification:** Persistent-clock and score-privacy regression suites passed, including inline JavaScript syntax and unique IDs. Desktop/phone document order and responsive CSS checks passed. All inline scripts and moved panel contents exactly match v58.1. Browser control and a signed-in captain session are unavailable, so rendered desktop/phone review and authenticated persistence checks remain unverified.
+- **SQL/database status:** No SQL, database, migration, or Edge Function change is required or was performed.
+- **Live status:** Prepared from `main` commit `72e68881424d957007f774a2a13b9d2ed12a933f`; GitHub publication and connected Cloudflare production verification are pending.
+- **Release summary:** The connector has no commit-comment creation operation. Release details are included here and in the chat handoff; a GitHub commit comment cannot be posted through the available connector.
+
 # v58.1 — Private match scores (live)
 
 - Removes scores and scorer summaries from public Home and Match Center, and removes squad W/D/L, GF, GA and GD records so temporary/prospective players can browse the team without seeing negative match results.
@@ -376,3 +387,4 @@
 - Occupied field slots retain their tactical label (for example, `LB`, `CAM`, or `ST`) so the position remains visible beside the player.
 - Freeform placement is unchanged because the custom board does not use named formation slots.
 - Affected file: `admin.html`.
+
