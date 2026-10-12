@@ -1,8 +1,8 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-12 UTC
-Prepared Captain Portal build: **v58.2**; last verified live build: **v58.1**
-Production release: **`4eb58c932756e36908db1d4ef076b51501cfc496`**, migration `20261003225430` applied; Cloudflare deployment and live source verified
+Current deployed Captain Portal build: **v58.2**
+Production release: [`d0a4778d3eb6d484b6393a51868adedfede2d262`](https://github.com/skorsolutions/skor-fc-site/commit/d0a4778d3eb6d484b6393a51868adedfede2d262); connected Cloudflare production build succeeded. Live HTTP/source and rendered browser verification are unavailable in this environment. No database work for v58.2.
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -337,10 +337,10 @@ A build is complete only when:
 - The GitHub connector cannot create commit comments; the matching release summary is recorded on merged PR #1 with the production commit link and in the chat handoff.
 
 
-## 17. Prepared build v58.2 — Scoring beside the clock
+## 17. Current build v58.2 — Scoring beside the clock
 
 - Moves the scoreboard and Record Event panel directly after the official timer, ahead of the full lineup and Crowd Scoring panels.
 - Removes phone-only panel ordering so RSVP, attendance, lineup and Crowd panels cannot precede the scoring controls. Existing sticky scoreboard, touch buttons and entry sheet remain available.
 - Persistent-clock and score-privacy regression suites passed, including inline JavaScript syntax and unique IDs. Document-order and responsive CSS checks passed. All inline JavaScript is identical to v58.1; no persistence, event, privacy, export, AI, Crowd or public-rendering logic changed.
 - Browser rendering and authenticated save/reload checks could not be performed because browser control and an authenticated captain session are unavailable in this environment.
-- SQL/database changes: none required or performed. Production publication/verification is pending.
+- SQL/database changes: none required or performed. Production commit [`d0a4778d3eb6d484b6393a51868adedfede2d262`](https://github.com/skorsolutions/skor-fc-site/commit/d0a4778d3eb6d484b6393a51868adedfede2d262) deployed successfully through Cloudflare build `2d5e9801-596e-41ba-a6d6-3fc9dc0e4e1a`, version `718bca75-4ec5-4618-ab24-92d3557cd102`. Direct live HTTP verification is unavailable: the environment proxy connection fails and the web fetch tool cannot access the admin page.

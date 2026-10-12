@@ -1,4 +1,4 @@
-# v58.2 — Scoring beside the official timer (prepared release)
+# v58.2 — Scoring beside the official timer (deployed)
 
 - Places the Captain Portal Game Day scoreboard and Record Event controls directly below the official clock, before the full Official Gameplan and Crowd Scoring sections.
 - Makes phones follow the same panel order so lineup, Crowd, RSVP and attendance cannot push scoring down the page. Retains the sticky phone scoreboard, two-column touch buttons and event-entry bottom sheet.
@@ -6,7 +6,7 @@
 - **Integrations/surfaces:** Captain Portal layout only. Existing clock/goal handlers, timestamps, Supabase persistence, score privacy, Player Portal, public pages, Crowd, exports and AI behavior are unchanged.
 - **Verification:** Persistent-clock and score-privacy regression suites passed, including inline JavaScript syntax and unique IDs. Desktop/phone document order and responsive CSS checks passed. All inline scripts and moved panel contents exactly match v58.1. Browser control and a signed-in captain session are unavailable, so rendered desktop/phone review and authenticated persistence checks remain unverified.
 - **SQL/database status:** No SQL, database, migration, or Edge Function change is required or was performed.
-- **Live status:** Prepared from `main` commit `72e68881424d957007f774a2a13b9d2ed12a933f`; GitHub publication and connected Cloudflare production verification are pending.
+- **Live status:** Release [`d0a4778d3eb6d484b6393a51868adedfede2d262`](https://github.com/skorsolutions/skor-fc-site/commit/d0a4778d3eb6d484b6393a51868adedfede2d262) was pushed to `main` and the connected `Workers Builds: skor-fc-site` production check completed successfully on 2026-10-12. Cloudflare build `2d5e9801-596e-41ba-a6d6-3fc9dc0e4e1a`, deployed version `718bca75-4ec5-4618-ab24-92d3557cd102`. The GitHub release diff contains only the three documented files and inline JavaScript remains identical. Direct live-source HTTP verification could not be performed because the executor proxy is unreachable and the web fetch tool cannot access `admin.html`.
 - **Release summary:** The connector has no commit-comment creation operation. Release details are included here and in the chat handoff; a GitHub commit comment cannot be posted through the available connector.
 
 # v58.1 — Private match scores (live)
