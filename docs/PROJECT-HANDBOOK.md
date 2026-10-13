@@ -6,6 +6,8 @@ Production release: [`e54702002a7c7a10bdd81dbc152c2c020689f1ed`](https://github.
 
 **v58.3 personal ribbon order and saved TEMP names** is deployed. Ribbon, TEMP-directory, persistent-clock and score-privacy checks passed. The exact nine-file release diff and published source hashes were verified. No schema migration or Edge Function change. Direct live-source HTTP, rendered phone/desktop and real signed-in captain save/reload checks remain unavailable: the executor proxy is unreachable, the web tool cannot access the admin page, and browser control/authenticated captain sessions are unavailable. The connected production check verifies deployment, not those browser behaviors.
 
+Prepared release: **v58.4 bulk jersey custody handoffs** is checked and proceeding to production after the user's instruction to continue on 2026-10-13. Inventory checkboxes and Select all matching let a captain hand off a whole bag or a subset to one active receiving captain. No production jersey assignment or schema change has been made during preparation. Rendered desktop/phone review and a real signed-in transfer remain unverified because browser control and an authenticated captain session are unavailable.
+
 Data-only follow-up on 2026-10-13: two user-confirmed full names were applied to two historical TEMP rows; a misspelled event row for the first identity was also corrected. The user clarified the second identity and resumed work after a pause. The earlier mistaken additional name is excluded. Independent readback confirms four complete saved TEMP names and seven total TEMP records. No schema change or application deployment. IDs, match links, active status and jersey values were preserved.
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
@@ -33,6 +35,7 @@ This is the durable handoff document for new chats and future developers. Read i
 | `captain-notebook.js/css` | Captain Notebook module | Notes, imports, debriefs, protected AI selection, pregame talk |
 | `strategy.js/css` | Strategy module | Scene Bundles, animation keyframes, saved strategies/bundles, GIF/PNG exports, AI publication |
 | `jerseys.js/css` | Jersey module | Kits, physical inventory, captain custody, TEMP assignments |
+| `jerseys-bulk.js` | Local draft: custody handoff | Validates the receiving captain, updates selected holders together and verifies saved values |
 | `ribbon-order.js/css` | Personal navigation | Locked navigation, separate reorder dialog, personal account preference |
 | `temp-player-directory.js` | TEMP name directory | Protected historical full-name suggestions; jerseys stay match-specific |
 | `whatsapp-import.js` | Notebook import helper | Ordered WhatsApp batch parsing/import behavior |
@@ -267,7 +270,19 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 - Focus stays within the native modal, moved controls retain focus and scroll into view, and close restores the prior focus. The editor's height is bounded by the viewport and its list scrolls independently so actions remain visible on phones.
 - `npm run test:ribbon-order` verifies account isolation, cross-client persistence, defaults/new features, original navigation nodes, phone/desktop controls, cancel/reset, save failures, auth refreshes and stale-response handling. `npm run test:temp-player-directory` covers the connected TEMP save and referee-name flow. Real authenticated browser persistence and rendered phone/tablet/desktop checks are still required before declaring live UI verification complete.
 
-### Existing jersey rules
+### Local draft: bulk custody handoff
+
+- Select inventory rows using their physical asset IDs, or use Select all matching/header checkbox for the current search, kit and status filters. Defaults exclude retired rows; an explicit All statuses filter can include them. Selection survives filter changes and reports selected rows outside the current filters. Clear selection clears every selected row; unchecking the header clears only matching rows.
+- Choose an active captain or super-admin from the existing protected `get_notebook_captain_directory()` RPC. The batch recipient list never includes view-only users, inactive names or an arbitrary free-text target. The existing single-jersey editor retains its historical holder-name behavior.
+- Transfer selected confirms the count, receiving captain and any hidden selected rows. It changes `jersey_inventory.holder_captain_name` for exactly the selected IDs with one filtered UPDATE statement. Kit, number, size, availability, notes and TEMP assignments are preserved; the existing trigger updates timestamps.
+- Refresh the authoritative captain directory before writing. Return and independently read back selected IDs/holders before reporting a complete handoff. Partial or unverified results remain explicit; unconfirmed rows remain selected while they still exist. A readback failure warns that the transfer may have been saved and asks the captain to refresh before retrying.
+- Repeated clicks are blocked while transferring. Selection, filters, row actions and refresh controls are disabled during the handoff. Single-jersey/kit saves cannot start during it; a batch cannot start while their save buttons are busy. Successful handoffs update an open individual edit's holder so a later save cannot restore stale custody.
+- Reload shared inventory after every attempt. Update the inventory Held By cells and notify Lineups so TEMP jersey labels use the current holder without changing assignments or numbers. Sign-out clears the batch selection.
+- Use 44-pixel checkbox hit areas/buttons and a stacked phone action panel. Inventory tables retain intentional horizontal scrolling; the checkbox column stays visible. Existing ribbon/phone/desktop navigation layouts are untouched.
+- Existing SELECT/UPDATE grants and captain RLS are sufficient; `jersey_inventory` RLS, UPDATE USING/WITH CHECK and the guarded captain-directory definition were verified read-only. No migration, new table, Edge Function or permission change is required.
+- `npm run test:jersey-bulk` covers selecting/filtering/clearing, recipient validation, confirmation cancellation, one custody-only update, independent readback, partial/error states, reload persistence, preserving TEMP eligibility/numbers, double clicks, view-only protection, stale edit holders and responsive/markup contracts. Real authenticated browser handoff and rendered phone/desktop checks remain pending.
+
+### Physical jersey inventory
 
 - Kits are configurable; current defaults include Maroon and White.
 - Physical jersey inventory tracks kit, number, size, status, captain holder/custodian, and notes.

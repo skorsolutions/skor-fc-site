@@ -1,4 +1,4 @@
-/* SKOR FC Jersey Inventory v53.0 */
+/* SKOR FC Jersey Inventory v58.4 — bulk captain handoffs */
 (function(){
   "use strict";
 
@@ -7,6 +7,9 @@
   let captainNames=[];
   let initialized=false;
   let loading=false;
+  let captainListReady=false;
+  let bulkBusy=false;
+  const selectedJerseys=new Set();
 
   const el=id=>document.getElementById(id);
   const esc=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
@@ -62,6 +65,59 @@
     select.value=selected||"";
   }
 
+  function setBulkStatus(message,ok=true){
+    const node=el("jerseyBulkStatus");if(!node)return;
+    node.textContent=message||"";node.className="form-status "+(ok?"ok":"err");
+  }
+
+  function fillBulkCaptainSelect(){
+    const select=el("jerseyBulkCaptain");if(!select)return;
+    const current=select.value;
+    select.innerHTML='<option value="">Choose receiving captain…</option>'+captainNames.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join("");
+    select.value=captainNames.includes(current)?current:"";
+  }
+
+  function renderBulkControls(){
+    const visible=filteredInventory(),known=new Set(inventory.map(item=>String(item.id)));
+    for(const id of selectedJerseys)if(!known.has(id))selectedJerseys.delete(id);
+    const visibleSelected=visible.filter(item=>selectedJerseys.has(String(item.id))).length;
+    const count=selectedJerseys.size,locked=bulkBusy||loading||!canWrite();
+    const countNode=el("jerseyBulkCount");
+    if(countNode)countNode.textContent=`${count} jersey${count===1?"":"s"} selected${count>visibleSelected?` · ${count-visibleSelected} outside current filters`:""}`;
+    const all=el("jerseySelectVisible");
+    if(all){all.checked=visible.length>0&&visibleSelected===visible.length;all.indeterminate=visibleSelected>0&&visibleSelected<visible.length;all.disabled=locked||!visible.length;}
+    const selectAll=el("jerseyBulkSelectAll");if(selectAll){selectAll.textContent=`Select all matching (${visible.length})`;selectAll.disabled=locked||!visible.length;}
+    if(el("jerseyBulkClear"))el("jerseyBulkClear").disabled=locked||!count;
+    if(el("jerseyBulkCaptain"))el("jerseyBulkCaptain").disabled=locked||!captainListReady||!captainNames.length;
+    const transfer=el("jerseyBulkTransfer");
+    if(transfer){transfer.disabled=locked||!count||!captainListReady||!captainNames.includes(el("jerseyBulkCaptain")?.value);transfer.textContent=bulkBusy?"Transferring…":`Transfer ${count||"selected"} jersey${count===1?"":"s"}`;}
+    for(const id of ["refreshJerseysBtn","jerseySearch","jerseyKitFilter","jerseyStatusFilter"])if(el(id))el(id).disabled=bulkBusy;
+    el("jerseyInventoryBody")?.querySelectorAll("[data-jersey-select],[data-jersey-edit],[data-jersey-retire]").forEach(control=>{control.disabled=bulkBusy||!canWrite();});
+    if(el("jerseyBulkPanel"))el("jerseyBulkPanel").setAttribute("aria-busy",String(bulkBusy));
+  }
+
+  async function transferSelected(){
+    if(!canWrite()){window.SKORViewerBlocked?.("transfer jersey custody");return;}
+    if(bulkBusy||loading)return;
+    if(el("saveJerseyBtn")?.disabled||el("saveKitBtn")?.disabled)return setBulkStatus("Wait for the current save to finish, then transfer the jerseys.",false);
+    const ids=[...selectedJerseys],holder=el("jerseyBulkCaptain")?.value||"";
+    if(!ids.length)return setBulkStatus("Select at least one jersey.",false);
+    if(!captainListReady||!captainNames.includes(holder))return setBulkStatus("Choose a receiving captain from the dropdown.",false);
+    const visibleIds=new Set(filteredInventory().map(item=>String(item.id))),hidden=ids.filter(id=>!visibleIds.has(id)).length;
+    if(!confirm(`Transfer possession of ${ids.length} jersey${ids.length===1?"":"s"} to ${holder}?${hidden?`\n\nThis includes ${hidden} selected jersey${hidden===1?"":"s"} outside the current filters.`:""}`))return;
+    bulkBusy=true;renderBulkControls();setBulkStatus("Updating who holds the selected jerseys…");
+    try{
+      const result=await window.SKORJerseyBulk.transfer(client(),ids,holder),confirmed=new Set(result.confirmedIds);
+      inventory=inventory.map(item=>confirmed.has(String(item.id))?{...item,holder_captain_name:holder}:item);
+      result.confirmedIds.forEach(id=>selectedJerseys.delete(id));
+      const editingId=el("jerseyEditId")?.value;if(editingId&&confirmed.has(editingId))fillHolderSelect(holder);
+      renderAll();window.SKORLineup?.jerseysChanged?.();
+      if(result.unresolvedIds.length)setBulkStatus(`Verified ${result.confirmedIds.length} of ${ids.length} transfers. Review the selection before retrying.`,false);
+      else setBulkStatus(`${ids.length} jersey${ids.length===1?"":"s"} now held by ${holder}.`);
+    }catch(error){setBulkStatus(String(error?.message||error),false);}
+    finally{bulkBusy=false;await load(false);renderBulkControls();}
+  }
+
   function renderMetrics(){
     const activeInventory=inventory.filter(item=>item.status!=="retired");
     const values={
@@ -113,6 +169,7 @@
     body.innerHTML=rows.length?rows.map(item=>{
       const kit=kitFor(item.kit_id);
       return `<tr>
+        <td class="jersey-select-cell jersey-write-only"><label class="jersey-select-hitbox"><input type="checkbox" data-jersey-select="${esc(item.id)}" aria-label="Select ${esc(kit?.name||"Kit")} jersey ${esc(item.jersey_number)}, size ${esc(item.size)}"${selectedJerseys.has(String(item.id))?" checked":""}${!canWrite()||bulkBusy?" disabled":""}></label></td>
         <td><div class="jersey-identity"><span class="jersey-number-badge">#${esc(item.jersey_number)}</span><strong>${esc(item.size)}</strong></div></td>
         <td><span class="jersey-kit-label"><i class="jersey-kit-dot" style="background:${esc(kit?.color_hex||'#dddddd')}"></i>${esc(kit?.name||"Unknown kit")}</span><br><small>${esc(kit?.color_name||"")}</small></td>
         <td><span class="jersey-state ${esc(item.status)}">${esc(statusLabel(item.status))}</span></td>
@@ -120,14 +177,21 @@
         <td>${esc(item.notes||"—")}</td>
         <td><div class="jersey-row-actions jersey-write-only"><button class="mini-btn" type="button" data-jersey-edit="${esc(item.id)}">Edit</button>${item.status!=="retired"?`<button class="mini-btn" type="button" data-jersey-retire="${esc(item.id)}">Retire</button>`:""}</div></td>
       </tr>`;
-    }).join(""):'<tr><td colspan="6"><div class="jersey-empty">No jerseys match these filters.</div></td></tr>';
+    }).join(""):'<tr><td colspan="7"><div class="jersey-empty">No jerseys match these filters.</div></td></tr>';
+    body.querySelectorAll("[data-jersey-select]").forEach(checkbox=>checkbox.addEventListener("change",()=>{
+      if(!canWrite()||bulkBusy){checkbox.checked=selectedJerseys.has(checkbox.dataset.jerseySelect);return;}
+      if(checkbox.checked)selectedJerseys.add(checkbox.dataset.jerseySelect);else selectedJerseys.delete(checkbox.dataset.jerseySelect);
+      renderBulkControls();
+    }));
     body.querySelectorAll("[data-jersey-edit]").forEach(button=>button.addEventListener("click",()=>editJersey(button.dataset.jerseyEdit)));
     body.querySelectorAll("[data-jersey-retire]").forEach(button=>button.addEventListener("click",()=>retireJersey(button.dataset.jerseyRetire)));
+    renderBulkControls();
   }
 
   function renderAll(){
     fillKitSelects();
     fillHolderSelect(el("jerseyHolder")?.value||"");
+    fillBulkCaptainSelect();
     renderMetrics();
     renderKits();
     renderInventory();
@@ -143,13 +207,14 @@
   }
 
   function editKit(id){
-    const kit=kitFor(id);if(!kit||!canWrite())return;
+    const kit=kitFor(id);if(!kit||!canWrite()||bulkBusy)return;
     el("kitEditId").value=kit.id;el("kitName").value=kit.name;el("kitColorName").value=kit.color_name;el("kitColorHex").value=kit.color_hex;
     el("saveKitBtn").textContent="Update Kit";el("cancelKitEditBtn").style.display="inline-flex";
     el("kitName").focus();
   }
 
   async function toggleKit(id){
+    if(bulkBusy)return;
     if(!canWrite()){window.SKORViewerBlocked?.("manage kits");return;}
     const kit=kitFor(id);if(!kit)return;
     const next=kit.active===false;
@@ -172,13 +237,14 @@
   }
 
   function editJersey(id){
-    const item=itemFor(id);if(!item||!canWrite())return;
+    const item=itemFor(id);if(!item||!canWrite()||bulkBusy)return;
     el("jerseyEditId").value=item.id;el("jerseyKit").value=item.kit_id;el("jerseyNumber").value=item.jersey_number;el("jerseySize").value=item.size;el("jerseyStatus").value=item.status;fillHolderSelect(item.holder_captain_name||"");el("jerseyNotes").value=item.notes||"";
     el("saveJerseyBtn").textContent="Update Jersey";el("cancelJerseyEditBtn").style.display="inline-flex";
     el("jerseyNumber").focus();
   }
 
   async function retireJersey(id){
+    if(bulkBusy)return;
     if(!canWrite()){window.SKORViewerBlocked?.("retire jerseys");return;}
     const item=itemFor(id);if(!item)return;
     if(!confirm(`Retire ${displayLabel(item)}? It will stay in history but cannot be assigned to new TEMP players.`))return;
@@ -188,9 +254,10 @@
   }
 
   async function load(showMessage=false){
-    if(loading)return;
+    if(loading||bulkBusy)return;
     const sb=client();if(!sb)return;
     loading=true;
+    renderBulkControls();
     try{
       const [kitResult,inventoryResult,captainResult]=await Promise.all([
         sb.from("team_kits").select("id,name,color_name,color_hex,active,sort_order,created_at,updated_at").order("sort_order",{ascending:true}).order("name",{ascending:true}),
@@ -199,13 +266,17 @@
       ]);
       if(kitResult.error||inventoryResult.error)throw kitResult.error||inventoryResult.error;
       kits=kitResult.data||[];inventory=inventoryResult.data||[];
-      captainNames=(captainResult.error?[]:(captainResult.data||[]).map(row=>String(row.display_name||"").trim()).filter(Boolean));
+      captainListReady=!captainResult.error;
+      captainNames=window.SKORJerseyBulk.captainNames(captainResult.error?[]:captainResult.data);
+      if(captainResult.error)setBulkStatus("Captain list unavailable. Refresh inventory to retry.",false);
       showSchemaNotice(false);renderAll();window.SKORLineup?.jerseysChanged?.();
       if(showMessage)setStatus(`Jersey inventory refreshed — ${inventory.filter(item=>item.status!=="retired").length} active assets.`);
+      if(showMessage&&captainListReady)setBulkStatus("");
     }catch(error){
+      captainListReady=false;
       if(isMissingSchema(error))showSchemaNotice(true,"Jersey database setup is pending. The approved migration must finish before inventory can be saved.");
       else setStatus("Could not load jersey inventory: "+String(error?.message||error),false);
-    }finally{loading=false;}
+    }finally{loading=false;renderBulkControls();}
   }
 
   function availableOptions(currentId="",assignedIds=[]){
@@ -221,6 +292,11 @@
   }
 
   function bind(){
+    el("jerseyBulkCaptain")?.addEventListener("change",renderBulkControls);
+    el("jerseyBulkTransfer")?.addEventListener("click",transferSelected);
+    el("jerseyBulkClear")?.addEventListener("click",()=>{if(!canWrite()||bulkBusy)return;selectedJerseys.clear();renderInventory();});
+    el("jerseyBulkSelectAll")?.addEventListener("click",()=>{if(!canWrite()||bulkBusy||loading)return;filteredInventory().forEach(item=>selectedJerseys.add(String(item.id)));renderInventory();});
+    el("jerseySelectVisible")?.addEventListener("change",()=>{if(!canWrite()||bulkBusy||loading)return;const selected=el("jerseySelectVisible").checked;filteredInventory().forEach(item=>{if(selected)selectedJerseys.add(String(item.id));else selectedJerseys.delete(String(item.id));});renderInventory();});
     el("refreshJerseysBtn")?.addEventListener("click",()=>load(true));
     el("jerseySearch")?.addEventListener("input",renderInventory);
     el("jerseyKitFilter")?.addEventListener("change",renderInventory);
@@ -230,6 +306,7 @@
 
     el("kitForm")?.addEventListener("submit",async event=>{
       event.preventDefault();if(!canWrite()){window.SKORViewerBlocked?.("manage kits");return;}
+      if(bulkBusy)return;
       const id=el("kitEditId").value.trim(),name=el("kitName").value.trim(),color_name=el("kitColorName").value.trim(),color_hex=el("kitColorHex").value.toUpperCase();
       if(!name||!color_name)return setStatus("Kit name and color name are required.",false);
       const button=el("saveKitBtn");button.disabled=true;button.textContent="Saving…";
@@ -245,6 +322,7 @@
 
     el("jerseyForm")?.addEventListener("submit",async event=>{
       event.preventDefault();if(!canWrite()){window.SKORViewerBlocked?.("manage jerseys");return;}
+      if(bulkBusy)return;
       const id=el("jerseyEditId").value.trim(),kit_id=el("jerseyKit").value,jersey_number=Number(el("jerseyNumber").value),size=el("jerseySize").value.trim().toUpperCase(),status=el("jerseyStatus").value,holder=el("jerseyHolder").value.trim(),notes=el("jerseyNotes").value.trim();
       if(!kit_id)return setStatus("Select a kit.",false);
       if(!Number.isInteger(jersey_number)||jersey_number<1||jersey_number>99)return setStatus("Jersey number must be 1–99.",false);
@@ -266,6 +344,7 @@
   }
 
   window.SKORJerseys={
+    clearSelection:()=>{selectedJerseys.clear();renderInventory();},
     init,
     activate:()=>initialized?load(false):init(),
     refresh:()=>load(false),
@@ -274,3 +353,4 @@
     getItem:id=>itemFor(id)
   };
 })();
+

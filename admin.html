@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.3-ribbon-order-saved-temp-names" />
-  <title>SKOR FC Admin | Captain Portal v58.3</title>
+  <meta name="skor-build" content="captain-portal-v58.4-bulk-jersey-custody" />
+  <title>SKOR FC Admin | Captain Portal v58.4</title>
   <link rel="stylesheet" href="captain-notebook.css" />
-  <link rel="stylesheet" href="jerseys.css" />
+  <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="strategy.css?v=58.0" />
   <link rel="stylesheet" href="ref-game-card.css?v=56.3" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
@@ -1863,7 +1863,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.3</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.4</div>
   </aside>
 
   <main>
@@ -2731,7 +2731,20 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div><label for="jerseyKitFilter">Kit</label><select id="jerseyKitFilter"><option value="all">All kits</option></select></div>
             <div><label for="jerseyStatusFilter">Status</label><select id="jerseyStatusFilter"><option value="active">Active inventory</option><option value="on_hand">On hand</option><option value="unavailable">Unavailable</option><option value="retired">Retired</option><option value="all">All statuses</option></select></div>
           </div>
-          <div class="jersey-table-wrap"><table class="table jersey-table"><thead><tr><th>Number / Size</th><th>Kit</th><th>Status</th><th>Held By</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="jerseyInventoryBody"><tr><td colspan="6"><div class="jersey-empty">Loading jersey inventory…</div></td></tr></tbody></table></div>
+          <div class="jersey-bulk-panel jersey-write-only" id="jerseyBulkPanel" aria-busy="false">
+            <div class="jersey-bulk-top">
+              <strong id="jerseyBulkCount" role="status">0 jerseys selected</strong>
+              <button class="mini-btn" id="jerseyBulkSelectAll" type="button" disabled>Select all matching</button>
+              <button class="mini-btn" id="jerseyBulkClear" type="button" disabled>Clear selection</button>
+            </div>
+            <p>Select the jerseys in the bag, then choose the captain receiving them. Select all matching follows the filters above. Selection stays checked when you change filters.</p>
+            <div class="jersey-bulk-actions">
+              <div><label for="jerseyBulkCaptain">Receiving captain</label><select id="jerseyBulkCaptain" disabled><option value="">Choose receiving captain…</option></select></div>
+              <button class="btn btn-primary" id="jerseyBulkTransfer" type="button" disabled>Transfer selected jerseys</button>
+            </div>
+            <div class="form-status" id="jerseyBulkStatus" role="status" aria-live="polite"></div>
+          </div>
+          <div class="jersey-table-wrap"><table class="table jersey-table"><thead><tr><th class="jersey-select-cell jersey-write-only"><label class="jersey-select-hitbox"><input id="jerseySelectVisible" type="checkbox" aria-label="Select all jerseys matching the current filters" disabled></label></th><th>Number / Size</th><th>Kit</th><th>Status</th><th>Held By</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="jerseyInventoryBody"><tr><td colspan="7"><div class="jersey-empty">Loading jersey inventory…</div></td></tr></tbody></table></div>
         </div>
       </div>
     </section>
@@ -5207,7 +5220,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="jerseys.js"></script>
+<script src="jerseys-bulk.js?v=58.4"></script>
+<script src="jerseys.js?v=58.4"></script>
 <script src="strategy.js?v=58.0"></script>
 <script src="ref-game-card.js?v=56.3"></script>
 <script>
@@ -5251,6 +5265,7 @@ function clearAuthError(){
   authError.style.display = "none";
 }
 function showLogin(){
+  window.SKORJerseys?.clearSelection();
   window.SKORRibbonOrder?.clear();
   window.SKORLineup?.clearTempNameDirectory();
   adminApp.style.display = "none";

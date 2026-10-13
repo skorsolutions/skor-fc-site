@@ -8,7 +8,8 @@
     "test:ref-game-card": "node tests/verify-ref-game-card.mjs",
     "test:strategy-animation": "node tests/verify-strategy-animation.mjs",
     "test:ribbon-order": "node tests/verify-ribbon-order.mjs",
-    "test:temp-player-directory": "node tests/verify-temp-player-directory.mjs"
+    "test:temp-player-directory": "node tests/verify-temp-player-directory.mjs",
+    "test:jersey-bulk": "node tests/verify-jersey-bulk.mjs"
   },
   "devDependencies": {
     "wrangler": "4.129.0"
