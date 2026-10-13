@@ -1,8 +1,12 @@
 # SKOR FC Project Handbook
 
-Last updated: 2026-10-12 UTC
+Last updated: 2026-10-13 UTC
 Current deployed Captain Portal build: **v58.2**
 Production release: [`d0a4778d3eb6d484b6393a51868adedfede2d262`](https://github.com/skorsolutions/skor-fc-site/commit/d0a4778d3eb6d484b6393a51868adedfede2d262); connected Cloudflare production build succeeded. Live HTTP/source and rendered browser verification are unavailable in this environment. No database work for v58.2.
+
+Prepared release: **v58.3 personal ribbon order and saved TEMP names**. The user explicitly authorized production deployment on 2026-10-13; the connected production check is pending. Both frontend features passed local checks. Rendered phone/desktop review and real signed-in captain save/reload checks remain pending because browser control and an authenticated captain session are unavailable here.
+
+Data-only follow-up on 2026-10-13: two user-confirmed full names were applied to two historical TEMP rows; a misspelled event row for the first identity was also corrected. The user clarified the second identity and resumed work after a pause. The earlier mistaken additional name is excluded. Independent readback confirms four complete saved TEMP names and seven total TEMP records. No schema change or application deployment. IDs, match links, active status and jersey values were preserved.
 
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
@@ -29,6 +33,8 @@ This is the durable handoff document for new chats and future developers. Read i
 | `captain-notebook.js/css` | Captain Notebook module | Notes, imports, debriefs, protected AI selection, pregame talk |
 | `strategy.js/css` | Strategy module | Scene Bundles, animation keyframes, saved strategies/bundles, GIF/PNG exports, AI publication |
 | `jerseys.js/css` | Jersey module | Kits, physical inventory, captain custody, TEMP assignments |
+| `ribbon-order.js/css` | Local draft: personal navigation | Locked navigation, separate reorder dialog, personal account preference |
+| `temp-player-directory.js` | Local draft: TEMP name directory | Protected historical full-name suggestions; jerseys stay match-specific |
 | `whatsapp-import.js` | Notebook import helper | Ordered WhatsApp batch parsing/import behavior |
 
 ## 3. Roles and access rules
@@ -241,6 +247,28 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 
 ## 10. Jerseys and TEMP players
 
+### Local draft: saved TEMP full names
+
+- A native Previous TEMP players dropdown reads existing `match_temp_players.display_name` values across games, including archived entries, under the existing portal RLS. It pages through all records, normalizes spacing/case for deduplication, and includes only names with at least two words and at most 80 characters. This is a format check, not legal-name verification.
+- Historical names remain in their existing database rows; no copied private name list is committed to the public repository. No separate directory table, SQL migration, production row change or Edge Function is required.
+- New and edited TEMP records require a full name for the referee form. Existing first-name-only records are preserved and omitted from the saved-full-name dropdown until corrected explicitly.
+- Selecting a saved name fills only the name, clears the jersey selection and creates a new match-specific TEMP identity through the existing save flow. It never copies an old jersey assignment or imports the player into the permanent roster.
+- The native selector remains within the existing player panel on phones and desktop, with a 44-pixel minimum touch height. It is disabled without a scheduled game, for view-only users and while editing an existing TEMP identity.
+- Reopening Lineups refreshes the directory; successful saves refresh it too. A failed history read leaves manual full-name entry available. Pending reads are invalidated and options cleared on sign-out.
+- The existing TEMP full-name mapping supplies the Lineup Builder, Game Day and referee PDF/Excel renderer. Historical game events with unlinked identities must not be used to silently rename TEMP players.
+
+### Local draft: personal ribbon order
+
+- Keep the existing desktop sidebar, tablet rail and phone horizontal scrolling ribbon. The original navigation markup, route handlers and existing responsive CSS remain unchanged. Reorder the original button nodes so click handlers, role visibility and active-tab identity persist. The working page does not scroll when the active navigation button is brought into view.
+- The header's Ribbon locked button opens a separate native modal editor. Phone controls are 44-pixel up/down buttons; desktop drag handles are limited to the editor. The navigation ribbon itself never becomes draggable, preserving horizontal phone swipes.
+- Changes preview immediately; Cancel and Escape restore the saved order. Reset changes the draft until Lock & save is pressed. Save failures leave the editor unlocked for retry or cancel; controls block duplicate saves while saving.
+- Store only feature IDs in the authenticated user's `user_metadata.skor_fc_ribbon_order_v1`, through `auth.updateUser`. This is a presentation preference, never authorization. Existing allowlist/RLS checks remain authoritative. The preference is personal to the captain account and loads across devices with a verified `auth.getUser()` read; there is no shared team order or new schema.
+- Ignore unknown/malformed/duplicate saved IDs and append newly added features in default order. Sign-out/account changes clear the previous captain's order and invalidate stale requests. Token/user refreshes do not discard an open editor. View-only users do not receive reorder controls.
+- Focus stays within the native modal, moved controls retain focus and scroll into view, and close restores the prior focus. The editor's height is bounded by the viewport and its list scrolls independently so actions remain visible on phones.
+- `npm run test:ribbon-order` verifies account isolation, cross-client persistence, defaults/new features, original navigation nodes, phone/desktop controls, cancel/reset, save failures, auth refreshes and stale-response handling. `npm run test:temp-player-directory` covers the connected TEMP save and referee-name flow. Real authenticated browser persistence and rendered phone/tablet/desktop checks are still required before declaring live UI verification complete.
+
+### Existing jersey rules
+
 - Kits are configurable; current defaults include Maroon and White.
 - Physical jersey inventory tracks kit, number, size, status, captain holder/custodian, and notes.
 - Only active, On Hand inventory is assignable to a TEMP player.
@@ -344,3 +372,4 @@ A build is complete only when:
 - Persistent-clock and score-privacy regression suites passed, including inline JavaScript syntax and unique IDs. Document-order and responsive CSS checks passed. All inline JavaScript is identical to v58.1; no persistence, event, privacy, export, AI, Crowd or public-rendering logic changed.
 - Browser rendering and authenticated save/reload checks could not be performed because browser control and an authenticated captain session are unavailable in this environment.
 - SQL/database changes: none required or performed. Production commit [`d0a4778d3eb6d484b6393a51868adedfede2d262`](https://github.com/skorsolutions/skor-fc-site/commit/d0a4778d3eb6d484b6393a51868adedfede2d262) deployed successfully through Cloudflare build `2d5e9801-596e-41ba-a6d6-3fc9dc0e4e1a`, version `718bca75-4ec5-4618-ab24-92d3557cd102`. Direct live HTTP verification is unavailable: the environment proxy connection fails and the web fetch tool cannot access the admin page.
+

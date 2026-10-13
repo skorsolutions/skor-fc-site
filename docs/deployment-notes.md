@@ -1,3 +1,43 @@
+# v58.3 — Personal ribbon order and saved TEMP names (release prepared)
+
+- Adds Ribbon locked / Unlock controls and a separate modal editor. Captains can move features with phone-sized arrows or desktop drag handles, preview the order, Lock & save, Cancel, or Reset to default.
+- Saves each captain's own feature order to their authenticated account for reuse across devices. Preferences contain only feature IDs and do not grant access. Unknown/duplicate IDs are ignored and new features append in default order. Failed saves stay open for retry; account changes and sign-out clear old state.
+- Preserves the existing desktop sidebar, tablet rail and phone scrolling ribbon. Original navigation buttons, route handlers, role restrictions, active states and responsive CSS are retained. Dragging exists only inside the modal, which has a scrolling list and visible action area.
+- Completes the locally prepared TEMP-name dropdown using protected historic records. Four confirmed full names are available in the database; incomplete historical names are omitted. Selecting a name creates a new match-specific TEMP identity through the existing save flow, with a separate jersey choice for each game. Newly entered full names become reusable through their saved match record.
+- **Affected files:** `admin.html`, `ribbon-order.js`, `ribbon-order.css`, `temp-player-directory.js`, `tests/verify-ribbon-order.mjs`, `tests/verify-temp-player-directory.mjs`, `package.json`, `docs/PROJECT-HANDBOOK.md`, `docs/deployment-notes.md`.
+- **Integrations/surfaces:** Captain Portal navigation, personal Auth metadata preference, TEMP history/name entry, match-specific jersey assignments and the existing referee PDF/Excel full-name mapping. Existing match, clock, score privacy, lineup publishing, public pages, AI and permanent-roster workflows are preserved.
+- **Verification:** Ribbon-order, TEMP-directory, persistent-clock and score-privacy npm suites pass. Coverage includes per-captain account isolation and cross-client preference reads, save failure/readback validation, cancel/reset, phone arrows, desktop drag, preserved original buttons, auth refreshes and sign-out races; TEMP history pagination/deduplication, new match identity creation, full-name validation, separate jerseys, view-only write protection and referee rendering. Inline JavaScript parses and HTML IDs are unique. Source comparison confirms original navigation markup, route handlers and existing responsive CSS match production. Browser control and a signed-in captain session are unavailable, so rendered phone/tablet/desktop and live authenticated save/reload checks remain pending.
+- **SQL/database status:** No migration, schema, RLS, grant or Edge Function change required or applied. Prior user-approved data corrections updated two TEMP names and one misspelled event entry; independent readback confirmed four complete saved names, seven total TEMP records and preserved match/jersey values. This frontend preparation performs no additional production writes. Personal order is written only when a captain explicitly uses Lock & save after the feature is available.
+- **Live status:** The user explicitly authorized deployment on 2026-10-13. v58.3 is prepared for the connected GitHub/Cloudflare production release; the production check is pending. No further database work is required. The successful release commit and deployment verification will be recorded after publication.
+
+# v58.3 — Second user-confirmed TEMP full name (data only)
+
+- On 2026-10-13, the user clarified the second historical TEMP player's full name, explicitly resumed work after a pause, and instructed that the earlier mistaken additional name be ignored.
+- Updated one existing `match_temp_players.display_name` using exact row ID, match ID and original-name guards. No related game-event entries needed renaming.
+- **Affected files:** This local deployment note and `docs/PROJECT-HANDBOOK.md`; no application-source change.
+- **Database work:** One existing TEMP row updated through guarded DML. ID, match link, jersey number, null inventory assignment and active status were preserved. No new player record, migration, schema, policy, permission or Edge Function change. Private player names and IDs remain in the database/conversation, not public-repository documentation.
+- **Verification:** Independent readback confirmed the corrected identity, unchanged jersey/match data, four complete saved names, seven total TEMP rows and no record for the ignored name.
+- **Live status:** Data correction only. The UI draft remains local; no GitHub push or website deployment.
+
+# v58.3 — User-confirmed historical TEMP name correction (data only)
+
+- On 2026-10-13, the user supplied the correct full spelling for one historical TEMP identity. Updated that existing `match_temp_players.display_name` and the matching game's misspelled `match_events.player_name` using exact row IDs, match ID and original-name guards.
+- **Affected files:** This local deployment note and `docs/PROJECT-HANDBOOK.md`; no application-source change.
+- **Database work:** Two existing rows updated through guarded DML. No migration, schema, policy, permission or Edge Function change. Jersey assignments/numbers, match links, IDs and active status were preserved. Private player names/IDs are retained in the database and conversation, not this public-repository documentation.
+- **Verification:** Independent readback confirmed both corrected names, unchanged match links/jersey values and active TEMP status, seven total TEMP rows, three distinct complete saved TEMP names and zero event rows with the original misspelling.
+- **Live status:** Database spelling correction performed under the user's data-population/correction instructions. The v58.3 UI draft remains local, not pushed or deployed; production application remains v58.2. A second supplied name is awaiting identity clarification before any old record is renamed.
+
+# v58.3 — Saved TEMP full names (local draft, not deployed)
+
+- Prepares a native Previous TEMP players dropdown using the existing protected database history, including archived match fill-ins. Full names are deduplicated; first-name-only records remain unchanged and are not suggested as complete names.
+- Picking a name clears the jersey choice, and the existing save flow creates a new match-specific identity. New/edited records require a first and last name so the referee form receives the complete display name.
+- The ribbon remains unchanged. The reordering proposal preserves phone scrolling, tablet navigation and the desktop sidebar, with a separate panel opened by Unlock; the proposal is recorded in the handbook.
+- **Affected files:** `admin.html`, `temp-player-directory.js`, `tests/verify-temp-player-directory.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/deployment-notes.md`.
+- **Integrations/surfaces:** TEMP player management, match-specific identity/jersey assignment and existing referee PDF/Excel name mapping. No permanent-roster, public-page, AI, clock or navigation behavior change.
+- **Verification:** Focused local checks passed for history pagination/deduplication, full-name validation, reused identities creating new match records, clearing old jerseys, view-only write protection, referee-name rendering, inline JavaScript syntax and unique HTML IDs. Desktop/tablet/phone ribbon markup and all existing responsive CSS were compared with current production source and are identical. Production schema/RLS and historical names were inspected read-only; ambiguous/unlinked historical event identities were not merged. Browser control and a signed-in captain session are unavailable, so rendered mobile/desktop review and authenticated browser save/reload remain unverified.
+- **SQL/database status:** No migration, production row mutation, or Edge Function change required or performed. Historic full names already exist in `match_temp_players`; the draft loads them dynamically rather than duplicating them in a new table or public source file.
+- **Live status:** Local draft only. No GitHub push, release or deployment. Production remains v58.2.
+
 # v58.2 — Scoring beside the official timer (deployed)
 
 - Places the Captain Portal Game Day scoreboard and Record Event controls directly below the official clock, before the full Official Gameplan and Crowd Scoring sections.
@@ -387,4 +427,5 @@
 - Occupied field slots retain their tactical label (for example, `LB`, `CAM`, or `ST`) so the position remains visible beside the player.
 - Freeform placement is unchanged because the custom board does not use named formation slots.
 - Affected file: `admin.html`.
+
 

@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.2-scoring-next-to-clock" />
-  <title>SKOR FC Admin | Captain Portal v58.2</title>
+  <meta name="skor-build" content="captain-portal-v58.3-ribbon-order-saved-temp-names" />
+  <title>SKOR FC Admin | Captain Portal v58.3</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css" />
   <link rel="stylesheet" href="strategy.css?v=58.0" />
   <link rel="stylesheet" href="ref-game-card.css?v=56.3" />
+  <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
   <style>
     :root{
       --maroon:#741f35;
@@ -439,6 +440,9 @@
     .temp-player-manager h4{margin:0 0 3px;font-size:.82rem}
     .temp-player-manager .temp-help{font-size:.7rem;line-height:1.35;color:var(--muted);margin-bottom:8px}
     .temp-player-form{display:grid;grid-template-columns:minmax(0,1.25fr) 82px auto;gap:6px;align-items:end}
+    .temp-saved-names{margin:10px 0;min-width:0}
+    .temp-saved-names select{width:100%;min-width:0;max-width:100%;min-height:44px}
+    .temp-player-form>div{min-width:0}
     .temp-player-form input{min-height:36px;padding:7px 8px;font-size:.78rem}
     .temp-player-form .mini-btn{min-height:36px}
     .temp-player-list{display:grid;gap:5px;margin-top:8px}
@@ -1859,7 +1863,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.2</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.3</div>
   </aside>
 
   <main>
@@ -1867,6 +1871,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <div>
         <h1 id="pageTitle">Captain Dashboard</h1>
         <p id="pageSub">Manage the team without touching the website code.</p>
+        <button class="ribbon-order-trigger" id="ribbonOrderToggle" type="button" hidden aria-haspopup="dialog" aria-controls="ribbonOrderDialog" aria-expanded="false" title="Unlock to reorder your features">🔒 Ribbon locked</button>
       </div>
       <div class="user">
         <span class="portal-role-badge" id="portalRoleBadge">CAPTAIN</span>
@@ -2804,8 +2809,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div class="mini-panel temp-player-manager" id="tempPlayerManager">
               <h4>Match Fill-ins / TEMP Players</h4>
               <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
+              <div class="temp-saved-names">
+                <label for="tempPlayerSavedName">Previous TEMP players</label>
+                <select id="tempPlayerSavedName" disabled><option value="">Loading saved full names…</option></select>
+                <div class="temp-help" id="tempPlayerSavedNameHelp" role="status">Choose a saved full name or enter a new one below. Pick the jersey separately for this game.</div>
+              </div>
               <div class="temp-player-form">
-                <div><label for="tempPlayerName">Name</label><input id="tempPlayerName" maxlength="80" placeholder="Fill-in player name"></div>
+                <div><label for="tempPlayerName">Full name</label><input id="tempPlayerName" maxlength="80" placeholder="First and last name" autocomplete="off"></div>
                 <div><label for="tempPlayerJersey">Available jersey</label><select id="tempPlayerJersey"><option value="">No jersey assigned yet</option></select></div>
                 <button class="mini-btn" id="saveTempPlayerBtn" type="button">Add TEMP</button>
               </div>
@@ -3120,6 +3130,25 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 </div>
 
 
+<dialog class="ribbon-order-dialog" id="ribbonOrderDialog" aria-labelledby="ribbonOrderTitle" aria-describedby="ribbonOrderHelp">
+  <div class="ribbon-order-shell">
+    <div class="ribbon-order-head">
+      <h2 id="ribbonOrderTitle">🔓 Reorder your ribbon</h2>
+      <p id="ribbonOrderHelp">Move your most-used features to the front. Use the arrows, or drag the handles on desktop. Your order is personal to your captain account.</p>
+    </div>
+    <ol class="ribbon-order-list" id="ribbonOrderList" aria-label="Feature order"></ol>
+    <div class="ribbon-order-footer">
+      <p class="ribbon-order-status" id="ribbonOrderStatus" role="status" aria-live="polite"></p>
+      <div class="ribbon-order-actions">
+        <button id="ribbonOrderReset" type="button">Reset to default</button>
+        <button id="ribbonOrderCancel" type="button">Cancel</button>
+        <button id="ribbonOrderSave" type="button">🔒 Lock &amp; save</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+<script src="ribbon-order.js?v=58.3"></script>
+<script src="temp-player-directory.js?v=58.3"></script>
 <script>
 /* SKOR FC Captain Portal v58.0 - strategy Scene Bundles, sub-scenes, and GIF export */
 (function(){
@@ -4823,12 +4852,15 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function resetTempPlayerForm(){
     const idEl=document.getElementById("tempPlayerEditId"),nameEl=document.getElementById("tempPlayerName"),jerseyEl=document.getElementById("tempPlayerJersey"),save=document.getElementById("saveTempPlayerBtn"),cancel=document.getElementById("cancelTempPlayerEditBtn");
     if(idEl)idEl.value="";if(nameEl)nameEl.value="";renderTempJerseyOptions("","");if(jerseyEl)jerseyEl.value="";
+    const savedName=document.getElementById("tempPlayerSavedName");if(savedName){savedName.value="";savedName.disabled=!selectedRealMatchId()||!window.SKORPortalCanWrite?.()||savedName.options.length<2;}
     if(save)save.textContent="Add TEMP";if(cancel)cancel.style.display="none";
   }
   function renderTempPlayerManager(){
     const list=document.getElementById("tempPlayerList"),context=document.getElementById("tempPlayerContext"),name=document.getElementById("tempPlayerName"),jersey=document.getElementById("tempPlayerJersey"),save=document.getElementById("saveTempPlayerBtn");
     if(!list||!context)return;
     const matchId=selectedRealMatchId(),canWrite=!!window.SKORPortalCanWrite?.();
+    const savedName=document.getElementById("tempPlayerSavedName");
+    if(savedName)savedName.disabled=!matchId||!canWrite||savedName.options.length<2||!!document.getElementById("tempPlayerEditId")?.value;
     if(!matchId){
       context.textContent="Select a scheduled match to add or edit fill-ins.";list.innerHTML="";
       if(name)name.disabled=true;if(jersey)jersey.disabled=true;if(save)save.disabled=true;
@@ -4847,6 +4879,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     list.querySelectorAll("[data-temp-edit]").forEach(btn=>btn.addEventListener("click",()=>{
       const p=matchTempPlayers.find(x=>x.temp_id===btn.dataset.tempEdit);if(!p)return;
       document.getElementById("tempPlayerEditId").value=p.temp_id;document.getElementById("tempPlayerName").value=p.name;renderTempJerseyOptions(p.temp_id,p.jersey_inventory_id);document.getElementById("tempPlayerJersey").value=p.jersey_inventory_id||"";
+      if(savedName){savedName.value="";savedName.disabled=true;}
       document.getElementById("saveTempPlayerBtn").textContent="Update TEMP";document.getElementById("cancelTempPlayerEditBtn").style.display="inline-block";
     }));
     list.querySelectorAll("[data-temp-remove]").forEach(btn=>btn.addEventListener("click",async()=>{
@@ -4883,6 +4916,32 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     ensureRealtime();
     refreshTinkerVariations();
     refreshVariations(false);
+    refreshTempNameDirectory();
+  }
+
+  let tempDirectoryRequest=0;
+  function clearTempNameDirectory(){
+    tempDirectoryRequest++;
+    const select=document.getElementById("tempPlayerSavedName");
+    if(select){select.replaceChildren(new Option("Choose a previous TEMP player",""));select.disabled=true;}
+  }
+  async function refreshTempNameDirectory(){
+    const select=document.getElementById("tempPlayerSavedName"),help=document.getElementById("tempPlayerSavedNameHelp"),client=sbClient();
+    if(!select||!client||!window.SKORTempDirectory)return;
+    const request=++tempDirectoryRequest;
+    select.replaceChildren(new Option("Loading saved full names…",""));select.disabled=true;
+    try{
+      const names=await window.SKORTempDirectory.loadNames(client);
+      if(request!==tempDirectoryRequest)return;
+      select.replaceChildren(new Option("Choose a previous TEMP player",""));
+      names.forEach(name=>select.add(new Option(name,name)));
+      if(help)help.textContent=names.length?"Saved full names from previous games. Pick the jersey separately for this game.":"No saved full names yet. Enter a first and last name below to remember them for next time.";
+    }catch(err){
+      if(request!==tempDirectoryRequest)return;
+      select.replaceChildren(new Option("Saved names unavailable",""));
+      if(help)help.textContent="Could not load previous names. You can still enter a full name below; reopen Lineups to retry.";
+    }
+    if(request===tempDirectoryRequest)renderTempPlayerManager();
   }
 
   const formation=document.getElementById('lineupFormation');
@@ -4964,14 +5023,21 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   });
 
   const saveTempPlayerBtn=document.getElementById("saveTempPlayerBtn");
+  const savedTempNameSelect=document.getElementById("tempPlayerSavedName");
+  if(savedTempNameSelect)savedTempNameSelect.addEventListener("change",()=>{
+    if(!selectedRealMatchId()||!window.SKORPortalCanWrite?.()||document.getElementById("tempPlayerEditId")?.value)return;
+    document.getElementById("tempPlayerName").value=savedTempNameSelect.value;
+    // Select only the identity: never copy an old game's jersey or inventory item.
+    renderTempJerseyOptions("","");document.getElementById("tempPlayerJersey").value="";
+  });
   const cancelTempPlayerEditBtn=document.getElementById("cancelTempPlayerEditBtn");
   if(cancelTempPlayerEditBtn)cancelTempPlayerEditBtn.addEventListener("click",resetTempPlayerForm);
   if(saveTempPlayerBtn)saveTempPlayerBtn.addEventListener("click",async()=>{
     if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("manage match fill-ins");return;}
     const matchId=selectedRealMatchId();if(!matchId){markStatus("Select a scheduled match before adding a TEMP player.",false);return;}
     const sb=sbClient();if(!sb){markStatus("Supabase is not connected.",false);return;}
-    const name=(document.getElementById("tempPlayerName").value||"").trim(),jerseyInventoryId=(document.getElementById("tempPlayerJersey").value||"").trim(),editId=(document.getElementById("tempPlayerEditId").value||"").trim();
-    if(!name){markStatus("Enter the fill-in player's name.",false);return;}
+    const name=window.SKORTempDirectory.cleanName(document.getElementById("tempPlayerName").value),jerseyInventoryId=(document.getElementById("tempPlayerJersey").value||"").trim(),editId=(document.getElementById("tempPlayerEditId").value||"").trim();
+    if(!window.SKORTempDirectory?.isFullName(name)){markStatus("Enter the fill-in player's first and last name for the referee form.",false);return;}
     saveTempPlayerBtn.disabled=true;saveTempPlayerBtn.textContent="Saving…";
     try{
       let result;
@@ -4979,6 +5045,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       if(editId)result=await sb.from("match_temp_players").update(payload).eq("id",editId).eq("match_id",matchId);
       else{const {data:{user}}=await sb.auth.getUser();result=await sb.from("match_temp_players").insert({...payload,match_id:matchId,created_by:user?.id||null});}
       if(result.error)throw result.error;
+      refreshTempNameDirectory();
       const assignedLabel=jerseyInventoryId?window.SKORJerseys?.labelFor?.(jerseyInventoryId):"";
       resetTempPlayerForm();await refreshTempPlayers(false);markStatus(name+" saved as a match TEMP player"+(assignedLabel?" with "+assignedLabel:" with jersey TBD")+".");
     }catch(err){const msg=String(err?.message||err);markStatus(msg.toLowerCase().includes("duplicate")?"That active TEMP name or jersey number is already in use for this match.":"Could not save TEMP player: "+msg,false);}
@@ -5118,6 +5185,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     setCaptain,
     refreshVariations,
     refreshTempPlayers,
+    refreshTempNameDirectory,
+    clearTempNameDirectory,
     jerseysChanged:()=>renderTempPlayerManager(),
     findVariation:id=>allSharedVariations.find(v=>String(v.id)===String(id))||null,
     loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
@@ -5182,6 +5251,8 @@ function clearAuthError(){
   authError.style.display = "none";
 }
 function showLogin(){
+  window.SKORRibbonOrder?.clear();
+  window.SKORLineup?.clearTempNameDirectory();
   adminApp.style.display = "none";
   authGate.style.display = "grid";
 }
@@ -5197,6 +5268,7 @@ function showDashboard(user,access){
   document.getElementById("userAvatar").textContent = (fullName.trim()[0] || "C").toUpperCase();
   window.SKORLineup?.setCaptain(user.id || email || "captain");
   applyPortalRoleUI();
+  window.SKORRibbonOrder?.init(user);
   loadTeamRoster();
   loadTeamFields().then(()=>loadScheduleManager());
   loadGameDayMatches();
@@ -5296,6 +5368,7 @@ function openView(id){
   document.getElementById("pageSub").textContent=meta[id][1];
   if(id==="attendance")loadAttendancePage();
   if(id==="activity")loadPlayerActivity();
+  if(id==="lineups")window.SKORLineup?.refreshTempNameDirectory();
   if(id==="jerseys")window.SKORJerseys?.activate();
   if(id==="notebook")window.SKORNotebook?.activate();
   if(id==="strategy")window.SKORStrategy?.activate();
@@ -7332,3 +7405,4 @@ loadAnnouncements();
 
 </body>
 </html>
+
