@@ -1,10 +1,10 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-13 UTC
-Current deployed Captain Portal build: **v58.2**
-Production release: [`d0a4778d3eb6d484b6393a51868adedfede2d262`](https://github.com/skorsolutions/skor-fc-site/commit/d0a4778d3eb6d484b6393a51868adedfede2d262); connected Cloudflare production build succeeded. Live HTTP/source and rendered browser verification are unavailable in this environment. No database work for v58.2.
+Current deployed Captain Portal build: **v58.3**
+Production release: [`e54702002a7c7a10bdd81dbc152c2c020689f1ed`](https://github.com/skorsolutions/skor-fc-site/commit/e54702002a7c7a10bdd81dbc152c2c020689f1ed). Cloudflare production build `03124c41-1cb7-497b-ab47-0b6a5b83226e` completed successfully on 2026-10-13 at 17:09 UTC; deployed version `0560fee8-169e-4e69-8650-650928b3fa4d`.
 
-Prepared release: **v58.3 personal ribbon order and saved TEMP names**. The user explicitly authorized production deployment on 2026-10-13; the connected production check is pending. Both frontend features passed local checks. Rendered phone/desktop review and real signed-in captain save/reload checks remain pending because browser control and an authenticated captain session are unavailable here.
+**v58.3 personal ribbon order and saved TEMP names** is deployed. Ribbon, TEMP-directory, persistent-clock and score-privacy checks passed. The exact nine-file release diff and published source hashes were verified. No schema migration or Edge Function change. Direct live-source HTTP, rendered phone/desktop and real signed-in captain save/reload checks remain unavailable: the executor proxy is unreachable, the web tool cannot access the admin page, and browser control/authenticated captain sessions are unavailable. The connected production check verifies deployment, not those browser behaviors.
 
 Data-only follow-up on 2026-10-13: two user-confirmed full names were applied to two historical TEMP rows; a misspelled event row for the first identity was also corrected. The user clarified the second identity and resumed work after a pause. The earlier mistaken additional name is excluded. Independent readback confirms four complete saved TEMP names and seven total TEMP records. No schema change or application deployment. IDs, match links, active status and jersey values were preserved.
 
@@ -33,8 +33,8 @@ This is the durable handoff document for new chats and future developers. Read i
 | `captain-notebook.js/css` | Captain Notebook module | Notes, imports, debriefs, protected AI selection, pregame talk |
 | `strategy.js/css` | Strategy module | Scene Bundles, animation keyframes, saved strategies/bundles, GIF/PNG exports, AI publication |
 | `jerseys.js/css` | Jersey module | Kits, physical inventory, captain custody, TEMP assignments |
-| `ribbon-order.js/css` | Local draft: personal navigation | Locked navigation, separate reorder dialog, personal account preference |
-| `temp-player-directory.js` | Local draft: TEMP name directory | Protected historical full-name suggestions; jerseys stay match-specific |
+| `ribbon-order.js/css` | Personal navigation | Locked navigation, separate reorder dialog, personal account preference |
+| `temp-player-directory.js` | TEMP name directory | Protected historical full-name suggestions; jerseys stay match-specific |
 | `whatsapp-import.js` | Notebook import helper | Ordered WhatsApp batch parsing/import behavior |
 
 ## 3. Roles and access rules
@@ -247,7 +247,7 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 
 ## 10. Jerseys and TEMP players
 
-### Local draft: saved TEMP full names
+### Saved TEMP full names
 
 - A native Previous TEMP players dropdown reads existing `match_temp_players.display_name` values across games, including archived entries, under the existing portal RLS. It pages through all records, normalizes spacing/case for deduplication, and includes only names with at least two words and at most 80 characters. This is a format check, not legal-name verification.
 - Historical names remain in their existing database rows; no copied private name list is committed to the public repository. No separate directory table, SQL migration, production row change or Edge Function is required.
@@ -257,7 +257,7 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 - Reopening Lineups refreshes the directory; successful saves refresh it too. A failed history read leaves manual full-name entry available. Pending reads are invalidated and options cleared on sign-out.
 - The existing TEMP full-name mapping supplies the Lineup Builder, Game Day and referee PDF/Excel renderer. Historical game events with unlinked identities must not be used to silently rename TEMP players.
 
-### Local draft: personal ribbon order
+### Personal ribbon order
 
 - Keep the existing desktop sidebar, tablet rail and phone horizontal scrolling ribbon. The original navigation markup, route handlers and existing responsive CSS remain unchanged. Reorder the original button nodes so click handlers, role visibility and active-tab identity persist. The working page does not scroll when the active navigation button is brought into view.
 - The header's Ribbon locked button opens a separate native modal editor. Phone controls are 44-pixel up/down buttons; desktop drag handles are limited to the editor. The navigation ribbon itself never becomes draggable, preserving horizontal phone swipes.
@@ -365,7 +365,7 @@ A build is complete only when:
 - The GitHub connector cannot create commit comments; the matching release summary is recorded on merged PR #1 with the production commit link and in the chat handoff.
 
 
-## 17. Current build v58.2 — Scoring beside the clock
+## 17. Previous build v58.2 — Scoring beside the clock
 
 - Moves the scoreboard and Record Event panel directly after the official timer, ahead of the full lineup and Crowd Scoring panels.
 - Removes phone-only panel ordering so RSVP, attendance, lineup and Crowd panels cannot precede the scoring controls. Existing sticky scoreboard, touch buttons and entry sheet remain available.
