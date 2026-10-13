@@ -1,12 +1,12 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-13 UTC
-Current deployed Captain Portal build: **v58.3**
-Production release: [`e54702002a7c7a10bdd81dbc152c2c020689f1ed`](https://github.com/skorsolutions/skor-fc-site/commit/e54702002a7c7a10bdd81dbc152c2c020689f1ed). Cloudflare production build `03124c41-1cb7-497b-ab47-0b6a5b83226e` completed successfully on 2026-10-13 at 17:09 UTC; deployed version `0560fee8-169e-4e69-8650-650928b3fa4d`.
+Current deployed Captain Portal build: **v58.4**
+Production release: [`3e6562e8d0d672e861932f417a2f9e14347bc8af`](https://github.com/skorsolutions/skor-fc-site/commit/3e6562e8d0d672e861932f417a2f9e14347bc8af). Cloudflare production build `3b31e197-8848-41ef-977f-5d06cbb57c6c` completed successfully on 2026-10-13 at 23:10 UTC; deployed version `a268f00a-a123-49cd-b0c7-c5d31c8ffc7d`.
 
 **v58.3 personal ribbon order and saved TEMP names** is deployed. Ribbon, TEMP-directory, persistent-clock and score-privacy checks passed. The exact nine-file release diff and published source hashes were verified. No schema migration or Edge Function change. Direct live-source HTTP, rendered phone/desktop and real signed-in captain save/reload checks remain unavailable: the executor proxy is unreachable, the web tool cannot access the admin page, and browser control/authenticated captain sessions are unavailable. The connected production check verifies deployment, not those browser behaviors.
 
-Prepared release: **v58.4 bulk jersey custody handoffs** is checked and proceeding to production after the user's instruction to continue on 2026-10-13. Inventory checkboxes and Select all matching let a captain hand off a whole bag or a subset to one active receiving captain. No production jersey assignment or schema change has been made during preparation. Rendered desktop/phone review and a real signed-in transfer remain unverified because browser control and an authenticated captain session are unavailable.
+**v58.4 bulk jersey custody handoffs** is deployed. Inventory checkboxes and Select all matching let a captain hand off a whole bag or a subset to one active receiving captain. Bulk-jersey, ribbon-order, TEMP-directory, persistent-clock and score-privacy checks passed; the exact eight-file release diff and source hashes were verified. No migration, Edge Function or actual jersey handoff was performed by preparing/deploying the feature. Rendered desktop/phone review and a real signed-in transfer remain unverified because browser control and an authenticated captain session are unavailable. The connected production check verifies deployment, not those browser behaviors.
 
 Data-only follow-up on 2026-10-13: two user-confirmed full names were applied to two historical TEMP rows; a misspelled event row for the first identity was also corrected. The user clarified the second identity and resumed work after a pause. The earlier mistaken additional name is excluded. Independent readback confirms four complete saved TEMP names and seven total TEMP records. No schema change or application deployment. IDs, match links, active status and jersey values were preserved.
 
@@ -35,7 +35,7 @@ This is the durable handoff document for new chats and future developers. Read i
 | `captain-notebook.js/css` | Captain Notebook module | Notes, imports, debriefs, protected AI selection, pregame talk |
 | `strategy.js/css` | Strategy module | Scene Bundles, animation keyframes, saved strategies/bundles, GIF/PNG exports, AI publication |
 | `jerseys.js/css` | Jersey module | Kits, physical inventory, captain custody, TEMP assignments |
-| `jerseys-bulk.js` | Local draft: custody handoff | Validates the receiving captain, updates selected holders together and verifies saved values |
+| `jerseys-bulk.js` | Custody handoff | Validates the receiving captain, updates selected holders together and verifies saved values |
 | `ribbon-order.js/css` | Personal navigation | Locked navigation, separate reorder dialog, personal account preference |
 | `temp-player-directory.js` | TEMP name directory | Protected historical full-name suggestions; jerseys stay match-specific |
 | `whatsapp-import.js` | Notebook import helper | Ordered WhatsApp batch parsing/import behavior |
@@ -270,7 +270,7 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 - Focus stays within the native modal, moved controls retain focus and scroll into view, and close restores the prior focus. The editor's height is bounded by the viewport and its list scrolls independently so actions remain visible on phones.
 - `npm run test:ribbon-order` verifies account isolation, cross-client persistence, defaults/new features, original navigation nodes, phone/desktop controls, cancel/reset, save failures, auth refreshes and stale-response handling. `npm run test:temp-player-directory` covers the connected TEMP save and referee-name flow. Real authenticated browser persistence and rendered phone/tablet/desktop checks are still required before declaring live UI verification complete.
 
-### Local draft: bulk custody handoff
+### Bulk custody handoff
 
 - Select inventory rows using their physical asset IDs, or use Select all matching/header checkbox for the current search, kit and status filters. Defaults exclude retired rows; an explicit All statuses filter can include them. Selection survives filter changes and reports selected rows outside the current filters. Clear selection clears every selected row; unchecking the header clears only matching rows.
 - Choose an active captain or super-admin from the existing protected `get_notebook_captain_directory()` RPC. The batch recipient list never includes view-only users, inactive names or an arbitrary free-text target. The existing single-jersey editor retains its historical holder-name behavior.
