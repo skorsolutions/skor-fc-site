@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.4-bulk-jersey-custody" />
-  <title>SKOR FC Admin | Captain Portal v58.4</title>
+  <meta name="skor-build" content="captain-portal-v58.5-equipment-lost-found" />
+  <title>SKOR FC Admin | Captain Portal v58.5</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
+  <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="strategy.css?v=58.0" />
   <link rel="stylesheet" href="ref-game-card.css?v=56.3" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
@@ -1856,6 +1857,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="schedule">◷ <span>Schedule</span></button>
       <button data-view="roster">♟ <span>Roster</span></button>
       <button data-view="jerseys">◫ <span>Jerseys</span></button>
+      <button data-view="equipment">◈ <span>Equipment</span></button>
       <button data-view="lineups">▦ <span>Lineups</span></button>
       <button data-view="strategy">◇ <span>Strategy</span></button>
       <button data-view="fields">⌖ <span>Fields</span></button>
@@ -1863,7 +1865,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.4</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.5</div>
   </aside>
 
   <main>
@@ -2674,6 +2676,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       </div>
     </section>
 
+
+    <section class="view" id="equipment">
+      <div class="panel" id="captainEquipment"></div>
+    </section>
 
     <section class="view" id="jerseys">
       <div class="jersey-shell">
@@ -5222,6 +5228,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="jerseys-bulk.js?v=58.4"></script>
 <script src="jerseys.js?v=58.4"></script>
+<script src="equipment.js?v=58.5"></script>
 <script src="strategy.js?v=58.0"></script>
 <script src="ref-game-card.js?v=56.3"></script>
 <script>
@@ -5266,6 +5273,7 @@ function clearAuthError(){
 }
 function showLogin(){
   window.SKORJerseys?.clearSelection();
+  window.SKOREquipment?.clear();
   window.SKORRibbonOrder?.clear();
   window.SKORLineup?.clearTempNameDirectory();
   adminApp.style.display = "none";
@@ -5289,6 +5297,7 @@ function showDashboard(user,access){
   loadGameDayMatches();
   loadDashboardFeedback();
   window.SKORJerseys?.init();
+  window.SKOREquipment?.mount({rootId:"captainEquipment",client:sb,mode:"captain"});
   window.SKORNotebook?.init();
   window.SKORStrategy?.init();
   window.dispatchEvent(new CustomEvent("skor:portal-ready"));
@@ -5364,6 +5373,7 @@ const meta = {
   schedule:["Schedule","Create games, practices and team events."],
   roster:["Roster","Manage players, numbers, positions and status."],
   jerseys:["Jerseys","Manage kit colors, physical jersey stock, sizes and captain custody."],
+  equipment:["Equipment","Track team gear, approve borrowing and help recover lost items."],
   lineups:["Lineups","Build match lineups and practice formations."],
   strategy:["Strategy","Turn saved lineups into private visual tactics and shareable coaching scenes."],
   fields:["Fields","Store field locations, maps and parking notes."],
@@ -5385,6 +5395,7 @@ function openView(id){
   if(id==="activity")loadPlayerActivity();
   if(id==="lineups")window.SKORLineup?.refreshTempNameDirectory();
   if(id==="jerseys")window.SKORJerseys?.activate();
+  if(id==="equipment")window.SKOREquipment?.refresh();
   if(id==="notebook")window.SKORNotebook?.activate();
   if(id==="strategy")window.SKORStrategy?.activate();
   window.scrollTo({top:0,behavior:"smooth"});
