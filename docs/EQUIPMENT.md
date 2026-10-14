@@ -1,6 +1,6 @@
 # Equipment and Lost & Found — v58.5
 
-Status: the user explicitly approved the migration and deployment on 2026-10-14. Database migration `20261014011026 add_equipment_and_lost_found` is applied. Rollback-only real-role/stock/privacy tests passed; all Equipment tables and photo objects are empty after verification. Frontend publication is in progress; production frontend remains v58.4 until Cloudflare confirms the v58.5 release.
+Status: the user explicitly approved the migration and deployment on 2026-10-14. Database migration `20261014011026 add_equipment_and_lost_found` is applied. Rollback-only real-role/stock/privacy tests passed; all Equipment tables and photo objects are empty after verification. Frontend v58.5 is deployed in release [b35bcd22f1b4a8d5c9f8f2dfa7c84c602b894225](https://github.com/skorsolutions/skor-fc-site/commit/b35bcd22f1b4a8d5c9f8f2dfa7c84c602b894225). Cloudflare production build `16b47caf-6290-4a31-a2f5-8f87a56f7f8d` succeeded on 2026-10-14 at 01:14:44 UTC; version `e58d7a3b-75a6-4319-af1a-d4640336dbd2`. The exact eleven-file diff and all source hashes were verified. Direct live HTTP, rendered browser and binary Storage HTTP verification remain unavailable.
 
 ## Surfaces
 
@@ -72,7 +72,7 @@ Post-migration advisors add only informational findings for this feature: nine i
 
 The disposable-local fixture script [../tests/verify-equipment-db.sql](../tests/verify-equipment-db.sql) remains available, but no local PostgreSQL binary or Docker socket is usable here. The production rollback test exercised the real applied SQL instead. A rendered desktop/tablet/phone review, binary photo upload through the Storage HTTP API, and a real signed-in browser roundtrip remain unverified: Chromium cannot start in the current command sandbox (`setsockopt` / `shutdown` permission errors). Responsive CSS/controller/SQL tests do not claim to replace those visual/browser checks.
 
-Frontend publication and the native Cloudflare production check are the remaining release step. Do not declare the UI live until that check succeeds. No Edge Function deployment is required.
+Frontend publication and the native Cloudflare production check succeeded. No Edge Function deployment was required. The connector cannot create a GitHub commit comment; the matching release summary is recorded in the chat and deployment notes.
 
 The local reconstructed checkout does not include the existing lineup-export, referee-card or Strategy test files; those suites were not verified here. Their editor/export logic was not changed.
 

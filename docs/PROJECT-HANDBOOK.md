@@ -1,8 +1,8 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-14 UTC
-Current deployed Captain Portal build: **v58.4**
-Production release: [`3e6562e8d0d672e861932f417a2f9e14347bc8af`](https://github.com/skorsolutions/skor-fc-site/commit/3e6562e8d0d672e861932f417a2f9e14347bc8af). Cloudflare production build `3b31e197-8848-41ef-977f-5d06cbb57c6c` completed successfully on 2026-10-13 at 23:10 UTC; deployed version `a268f00a-a123-49cd-b0c7-c5d31c8ffc7d`.
+Current deployed Captain Portal build: **v58.5**
+Production release: [`b35bcd22f1b4a8d5c9f8f2dfa7c84c602b894225`](https://github.com/skorsolutions/skor-fc-site/commit/b35bcd22f1b4a8d5c9f8f2dfa7c84c602b894225). Cloudflare production build `16b47caf-6290-4a31-a2f5-8f87a56f7f8d` completed successfully on 2026-10-14 at 01:14:44 UTC; deployed version `e58d7a3b-75a6-4319-af1a-d4640336dbd2`.
 
 **v58.3 personal ribbon order and saved TEMP names** is deployed. Ribbon, TEMP-directory, persistent-clock and score-privacy checks passed. The exact nine-file release diff and published source hashes were verified. No schema migration or Edge Function change. Direct live-source HTTP, rendered phone/desktop and real signed-in captain save/reload checks remain unavailable: the executor proxy is unreachable, the web tool cannot access the admin page, and browser control/authenticated captain sessions are unavailable. The connected production check verifies deployment, not those browser behaviors.
 
@@ -36,7 +36,7 @@ This is the durable handoff document for new chats and future developers. Read i
 | `strategy.js/css` | Strategy module | Scene Bundles, animation keyframes, saved strategies/bundles, GIF/PNG exports, AI publication |
 | `jerseys.js/css` | Jersey module | Kits, physical inventory, captain custody, TEMP assignments |
 | `jerseys-bulk.js` | Custody handoff | Validates the receiving captain, updates selected holders together and verifies saved values |
-| `equipment.js/css` | Equipment / Lost & Found (local v58.5 draft) | Shared lending store, custody, captain approval/returns, private reports/messages and team-only notifications |
+| `equipment.js/css` | Equipment / Lost & Found | Shared lending store, custody, captain approval/returns, private reports/messages and team-only notifications |
 | `ribbon-order.js/css` | Personal navigation | Locked navigation, separate reorder dialog, personal account preference |
 | `temp-player-directory.js` | TEMP name directory | Protected historical full-name suggestions; jerseys stay match-specific |
 | `whatsapp-import.js` | Notebook import helper | Ordered WhatsApp batch parsing/import behavior |
@@ -302,7 +302,7 @@ The repository contains only the newer incremental migrations. Earlier productio
 - Player access/activity: `player_access`, `player_match_attendance`, `player_match_reactions`.
 - Captain/Notebook: `captain_notebook_entries`, `captain_notebook_attachments`, `captain_match_debriefs`, `captain_ai_player_comment_refs`, `captain_player_name_aliases`.
 - Jerseys: `team_kits`, `jersey_inventory`.
-- Equipment (staged, not live): private `skor_equipment` inventory/loan/report/notification/history tables, guarded `equipment_snapshot` / `equipment_action` RPCs and private `skor-equipment` Storage. Exact SQL is `docs/sql/EQUIPMENT.sql`; explicit migration approval remains required.
+- Equipment: private `skor_equipment` inventory/loan/report/notification/history tables, guarded `equipment_snapshot` / `equipment_action` RPCs and private `skor-equipment` Storage. Approved `docs/sql/EQUIPMENT.sql` is applied as migration `20261014011026`; future migration changes still require explicit approval.
 - Crowd Game Day and official clock: `game_day_sessions`, `game_day_invites`, `game_day_crowd_events`, `game_day_event_reports`, `game_day_ref_decisions`, `game_day_ref_votes`, `game_day_motm_votes`.
 
 ### Edge Functions in this repository
@@ -392,7 +392,7 @@ A build is complete only when:
 
 ## 18. Equipment and Lost & Found — v58.5 release
 
-The user confirmed captain approval for borrowing, authorized implementation, then explicitly approved the exact database migration and deployment on 2026-10-14. Migration `20261014011026 add_equipment_and_lost_found` is applied. All real-role/stock/privacy test records were rolled back; no sample gear, custody, report, message or announcement persists. Frontend publication is in progress; production remains v58.4 until the native Cloudflare v58.5 check succeeds.
+The user confirmed captain approval for borrowing, authorized implementation, then explicitly approved the exact database migration and deployment on 2026-10-14. Migration `20261014011026 add_equipment_and_lost_found` is applied. All real-role/stock/privacy test records were rolled back; no sample gear, custody, report, message or announcement persists. Frontend is deployed in release `b35bcd22f1b4a8d5c9f8f2dfa7c84c602b894225`; the native Cloudflare production check succeeded at 01:14:44 UTC (build `16b47caf-6290-4a31-a2f5-8f87a56f7f8d`, version `e58d7a3b-75a6-4319-af1a-d4640336dbd2`). The exact eleven-file release diff and all source hashes match the checked files. Direct live HTTP, rendered phone/tablet/desktop and a real signed-in browser roundtrip remain unverified. The connector has no commit-comment creation operation; the matching summary is recorded in chat and repository notes.
 
 - Captain Equipment tab integrates with personal ribbon order. Existing desktop/tablet/phone navigation buttons, routes and responsive CSS are preserved. Shared Store, borrowing, Lost & Found and Notifications appear in both portals. Inventory, approvals/returns and History are captain controls; viewers have read-only access.
 - Configurable ball bags, ball entries/quantities, cone sets, cone entries/quantities and other gear. Assign stock custody to active captains or roster players individually or in a confirmed batch, including all selected bag contents. No real equipment counts are seeded. Team ownership, stock custodian and loan borrower remain distinct.
@@ -403,5 +403,5 @@ The user confirmed captain approval for borrowing, authorized implementation, th
 - A captain links verified missing inventory/quantity to a report. Missing stock and affected bags are unavailable. Found sightings/statuses do not restore quantities; a captain confirms recovery. A complete loan return cannot be confirmed while linked allocated gear remains missing. Resolved reports remain archived.
 - Approved `docs/sql/EQUIPMENT.sql` is applied as migration `20261014011026 add_equipment_and_lost_found` (execution SHA-256 `c068ec79bffe8e5c520adc2c788108054c4a7014efbda227357695ae9b1c5d11`; repository audit comments updated afterward). Private tables with RLS/no direct browser grants, guarded invoker RPCs/private definer implementations, existing allowlist/claimed-player authorization, serialized stock mutations and idempotent retries, private immutable photos and restrictive Storage boundaries. No unrelated production rows or Edge Functions change.
 - Six local suites pass: Equipment controller/security contracts, ribbon, bulk jerseys, TEMP names, persistent clock and score privacy. Inline scripts/IDs and original navigation/CSS/line endings pass. Actual rollback-only production PostgreSQL tests pass for captain, two players, viewer, unlinked-login and anonymous roles: approvals, bag/child quantities, custody, returns, recovery, private messages/photos and retry semantics. All nine private tables retain RLS with zero direct browser table grants; all feature rows/photos remain empty. Advisors add only expected default-deny/unused-index and eight informational foreign-key-index notices, no new security ERROR/WARN. Rendered phone/tablet/desktop, binary Storage HTTP upload and a real signed-in browser roundtrip remain unverified due environment socket permissions. `tests/verify-equipment-db.sql` is a disposable-local fixture test, never for production.
-- Publication and exact SQL are approved; database verification is complete. Publish the source and verify the native Cloudflare release before declaring the UI live. Full data/API rules, limitations, affected surfaces and release checklist: `docs/EQUIPMENT.md`.
+- Publication and exact SQL are approved; database verification is complete. The source is published and native Cloudflare production deployment is verified. Full data/API rules, limitations, affected surfaces and release checklist: `docs/EQUIPMENT.md`.
 - **Future multi-team app idea retained:** Equipment and Lost & Found should help recover personal/team gear at shared fields, tournaments and practices. Future work needs team-scoped memberships/data/notifications and explicit sharing/privacy rules before any optional venue/league board. The present single-team schema is not a multi-team implementation.
