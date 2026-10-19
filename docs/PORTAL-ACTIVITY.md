@@ -1,6 +1,6 @@
 # v58.6 — Portal activity repair
 
-Status: **User approved the migration and publication on 2026-10-19. Database migration `20261019065353 repair_portal_activity` is applied and verified; frontend publication is in progress.**
+Status: **User approved the migration and publication on 2026-10-19. Database migration `20261019065353 repair_portal_activity` is applied and verified; v58.6 frontend is deployed in release [`1ab0a7c329367e87b9f1ee025d5e3235e3f3736c`](https://github.com/skorsolutions/skor-fc-site/commit/1ab0a7c329367e87b9f1ee025d5e3235e3f3736c).**
 
 ## Diagnosis
 
@@ -58,5 +58,17 @@ The two portal files retain their existing publishable browser configuration/aut
 - Production checks inspected function definitions, schema, RLS/direct grants, migration history and aggregate activity/linkage. The approved migration is applied. The before/after digest confirms every preexisting activity ID, player identity, session start, last-seen timestamp and counter is unchanged after verification; legacy history and unrelated roster/match/event/access counts are preserved.
 - All statements in `tests/verify-portal-activity-db.sql` passed against production in a rolled-back transaction. Real-role checks covered player and captain writes, console-only recording/readback, reuse of a session, idle rollover, the old recorder, and forbidden ordinary-player/viewer/unlinked/anonymous report or portal access. No test event or timestamp change was committed. RLS remains enabled; direct table grants remain revoked; the three relevant RPCs have empty search paths and no anonymous execute grants. Security advisors add no findings; the new player/last-seen index has an expected informational [unused-index notice](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index) immediately after creation.
 - Browser control and a signed-in browser session remain unavailable. The real database API/role roundtrip is verified; rendered browser use is not. No background behavior is promised.
-- Frontend publication in progress: publish the approved ten-file set to GitHub `main`, verify the exact release diff/hashes, and confirm the connected Cloudflare production deployment. Verify live source if network access permits; report browser limitations accurately.
+- Frontend published: the exact approved ten-file release diff and every Git blob hash match the checked sources. The connected Cloudflare production check succeeded for `1ab0a7c329367e87b9f1ee025d5e3235e3f3736c` (build `04a9f078-d6cf-4247-bed8-06606fbf0b90`, version `35561a6e-8e15-4605-8b75-0f26ee7de33e`). Direct live-source HTTP verification is unavailable because the environment cannot connect to its proxy. This does not invalidate the successful native deployment result.
 - Record the release summary here/in deployment notes and in chat. The current GitHub connector cannot create the requested commit comment; do not claim that it was posted.
+
+## Release summary
+
+Done—v58.6 is deployed. Player Activity now tracks both captain and player portals and shows the latest activity instead of session start.
+
+The approved database update is applied. Recording, permissions, and three regression suites passed; Cloudflare deployment succeeded. Existing history was preserved. Browser visual testing remains unavailable.
+
+Refresh your portal once to activate the fix. Previously missed visits cannot be reconstructed.
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/1ab0a7c329367e87b9f1ee025d5e3235e3f3736c)
+
+The available GitHub connector cannot post a commit comment. This summary is retained here, in deployment notes, and in the active chat; no commit comment was posted.

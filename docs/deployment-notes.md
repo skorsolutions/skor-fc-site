@@ -1,4 +1,4 @@
-# v58.6 — Player and captain activity repair (database applied; frontend publishing)
+# v58.6 — Player and captain activity repair (deployed)
 
 - Fixes missing Captain Portal recording, missing foreground/return updates in the Player Portal, and an activity report that displayed session start instead of latest activity.
 - Includes approved console accounts without player profiles, avoids duplicating linked captains, labels each portal, and uses last seen for sorting and the seven-day filter. Records only authorized foreground/recent use, throttled to five minutes; hidden/idle pages do not keep someone active indefinitely.
@@ -6,8 +6,20 @@
 - **Affected files (10):** `admin.html`, `player-portal.html`, `portal-activity.js`, `package.json`, `tests/verify-portal-activity.mjs`, `tests/verify-portal-activity-db.sql`, `docs/sql/PORTAL-ACTIVITY.sql`, `docs/PORTAL-ACTIVITY.md`, `docs/PROJECT-HANDBOOK.md`, and this note.
 - **Verification:** Portal-activity, score-privacy and ribbon-order suites passed. Covers restored sessions, visibility/focus, idle/heartbeat throttling, retry, duplicate suppression, account isolation, stale auth/report responses, source labels, captain-only entries, last-seen display/filtering, escaping, script syntax and IDs. Existing CSS/navigation remain unchanged. Actual rollback-only production role/persistence tests passed: player/captain recording, console-only account readback, session reuse/idle rollover, old-recorder compatibility, and player/viewer/unlinked/anonymous restrictions. Independent before/after activity digest and legacy/unrelated row counts are unchanged. RLS remains on, direct table grants are zero and anonymous RPC execution is revoked. Security advisors add no findings; the new player/last-seen index has an informational [unused-index notice](https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index). Browser control and a signed-in browser session are unavailable; rendered use remains unverified.
 - **SQL/database status:** Explicitly approved and applied on 2026-10-19 as migration `20261019065353 repair_portal_activity`. Exact executed SQL: `docs/sql/PORTAL-ACTIVITY.sql`, SHA-256 `08ad288a7c4ee5a3b971dddfe19f5fba453ade13649049ea5e7ebda95f0df250`; only the source audit header was updated afterward. Extends the existing activity table with source/account-only support and indexes, adds guarded authenticated RPCs, and preserves the old recorder as a compatibility wrapper. No existing event/access claim or unrelated feature data changes. No Edge Function deployment. Rollback-only post-migration role/persistence verification passed and no test write persists.
-- **Live status:** User approved the exact migration and complete publication file set on 2026-10-19. Database is applied and verified. Frontend publication through GitHub `main`/Cloudflare is in progress from base `88bf9d8f7b259240fcad01c117008e7e9ba86df2`.
+- **Live status:** User approved the exact migration and complete publication file set on 2026-10-19. Database is applied and verified. Frontend release [`1ab0a7c329367e87b9f1ee025d5e3235e3f3736c`](https://github.com/skorsolutions/skor-fc-site/commit/1ab0a7c329367e87b9f1ee025d5e3235e3f3736c) was published to `main` from base `88bf9d8f7b259240fcad01c117008e7e9ba86df2`. Cloudflare production build `04a9f078-d6cf-4247-bed8-06606fbf0b90` succeeded; deployed version `35561a6e-8e15-4605-8b75-0f26ee7de33e`. Exact ten-file release diff and all Git blob hashes match checked sources. Direct live-source HTTP verification is unavailable because the environment cannot connect to its proxy. Open portals need one reload to receive the tracker.
 - Exact scope and deployment sequence: `docs/PORTAL-ACTIVITY.md`. The available GitHub connector cannot create commit comments; a release summary must not claim that one was posted.
+
+## v58.6 release summary
+
+Done—v58.6 is deployed. Player Activity now tracks both captain and player portals and shows the latest activity instead of session start.
+
+The approved database update is applied. Recording, permissions, and three regression suites passed; Cloudflare deployment succeeded. Existing history was preserved. Browser visual testing remains unavailable.
+
+Refresh your portal once to activate the fix. Previously missed visits cannot be reconstructed.
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/1ab0a7c329367e87b9f1ee025d5e3235e3f3736c)
+
+The connector cannot create a GitHub commit comment. This matching summary is recorded in repository documentation and chat; no commit comment was posted.
 
 # v58.5 — Equipment and Lost & Found (deployed)
 
