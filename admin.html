@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.5-equipment-lost-found" />
-  <title>SKOR FC Admin | Captain Portal v58.5</title>
+  <meta name="skor-build" content="captain-portal-v58.6-portal-activity" />
+  <title>SKOR FC Admin | Captain Portal v58.6</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1865,7 +1865,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.5</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.6</div>
   </aside>
 
   <main>
@@ -2248,20 +2248,21 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
     <section class="view" id="activity">
       <div class="grid player-activity-summary">
-        <div class="metric"><span>Roster Players</span><strong id="activityRosterCount">0</strong></div>
-        <div class="metric"><span>Logged In · 7 Days</span><strong id="activityRecentCount">0</strong></div>
-        <div class="metric"><span>Never Logged In</span><strong id="activityNeverCount">0</strong></div>
-        <div class="metric"><span>Recorded Sessions</span><strong id="activitySessionCount">0</strong></div>
+        <div class="metric"><span>Players &amp; Captains</span><strong id="activityRosterCount">0</strong></div>
+        <div class="metric"><span>Active · 7 Days</span><strong id="activityRecentCount">0</strong></div>
+        <div class="metric"><span>No Recorded Activity</span><strong id="activityNeverCount">0</strong></div>
+        <div class="metric"><span>Sessions Shown</span><strong id="activitySessionCount">0</strong></div>
       </div>
       <div class="panel">
-        <span class="pill">Player Portal</span>
+        <span class="pill">Portal Activity</span>
         <h2 style="margin:12px 0 4px">Player Activity</h2>
-        <div class="sub">Captain-only portal activity. Each player shows their five most recent recorded portal sessions. Existing pre-v51.12 data can seed one Legacy last-known login; new sessions are recorded from this release forward.</div>
+        <div class="sub">Captain-only activity from both portals, including approved console accounts without a player profile. Each person shows up to five sessions, ordered by last activity. Hidden tabs and idle pages stop recording. Previously missed visits cannot be reconstructed.</div>
         <div class="activity-filter-row">
-          <div class="control"><label for="activitySearch">Find player</label><input id="activitySearch" type="search" placeholder="Name or jersey number"></div>
-          <div class="control"><label for="activityLoginFilter">Login status</label><select id="activityLoginFilter"><option value="all">All Players</option><option value="recent">Logged in last 7 days</option><option value="older">Logged in previously</option><option value="never">Never logged in</option></select></div>
+          <div class="control"><label for="activitySearch">Find player or captain</label><input id="activitySearch" type="search" placeholder="Name or jersey number"></div>
+          <div class="control"><label for="activityLoginFilter">Activity</label><select id="activityLoginFilter"><option value="all">Everyone</option><option value="recent">Active in last 7 days</option><option value="older">Last active over 7 days ago</option><option value="never">No recorded activity</option></select></div>
           <button class="btn btn-light" id="refreshPlayerActivityBtn" type="button">Refresh</button>
         </div>
+        <div class="sub" id="playerActivityStatus" role="status" aria-live="polite"></div>
         <div class="player-activity-list" id="playerActivityList"><div class="sub">Loading player activity…</div></div>
       </div>
     </section>
@@ -5231,10 +5232,12 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="equipment.js?v=58.5"></script>
 <script src="strategy.js?v=58.0"></script>
 <script src="ref-game-card.js?v=56.3"></script>
+<script src="portal-activity.js?v=58.6"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const captainActivity=window.SKORPortalActivity.createTracker({client:sb,portal:"captain",onRecorded:refreshVisiblePlayerActivity,onError:()=>{console.warn("Captain activity could not be recorded; it will retry while the portal is active.");}});
 window.SKORSupabase = sb;
 
 const authGate = document.getElementById("authGate");
@@ -5244,6 +5247,7 @@ const authError = document.getElementById("authError");
 const logoutBtn = document.getElementById("logoutBtn");
 
 let PORTAL_ACCESS={role:"viewer",display_name:""};
+let portalSessionVersion=0,captainActivityUser=null;
 window.SKORPortalCanWrite=()=>["captain","super_admin"].includes(PORTAL_ACCESS.role);
 window.SKORPortalIsSuperAdmin=()=>PORTAL_ACCESS.role==="super_admin";
 function portalCanWrite(){return ["captain","super_admin"].includes(PORTAL_ACCESS.role);}
@@ -5272,6 +5276,9 @@ function clearAuthError(){
   authError.style.display = "none";
 }
 function showLogin(){
+  portalSessionVersion++;captainActivityUser=null;
+  captainActivity.clear();
+  clearPlayerActivity();
   window.SKORJerseys?.clearSelection();
   window.SKOREquipment?.clear();
   window.SKORRibbonOrder?.clear();
@@ -5280,6 +5287,9 @@ function showLogin(){
   authGate.style.display = "grid";
 }
 function showDashboard(user,access){
+  if(captainActivityUser!==user.id)clearPlayerActivity();
+  captainActivityUser=user.id;
+  void captainActivity.start(user.id);
   authGate.style.display = "none";
   adminApp.style.display = "grid";
   const rawRole=access?.role||"viewer";
@@ -5315,6 +5325,7 @@ async function captainIsApproved(user){
   return {...result.data,role};
 }
 async function handleSession(session){
+  const version=++portalSessionVersion;
   clearAuthError();
   if(!session?.user){
     showLogin();
@@ -5322,6 +5333,7 @@ async function handleSession(session){
   }
 
   const access = await captainIsApproved(session.user);
+  if(version!==portalSessionVersion)return;
   if(!access){
     showLogin();
     showAuthError("Captain access is not enabled for this account. Your Player Portal login remains active.");
@@ -5349,6 +5361,8 @@ googleLogin.addEventListener("click", async ()=>{
 });
 
 logoutBtn.addEventListener("click", async ()=>{
+  captainActivity.clear();
+  clearPlayerActivity();
   await sb.auth.signOut();
   AI_PLAYER_COMMENT_SELECTION.clear();
   showLogin();
@@ -5368,7 +5382,7 @@ const meta = {
   gameday:["Game Day","Track live score, goals, assists and cards from the sideline."],
   notebook:["Captain Notebook","Capture season observations and complete guided post-game reviews."],
   attendance:["Attendance","Review player attendance across the season and past matches."],
-  activity:["Player Activity","Review the five most recent Player Portal sessions for each player."],
+  activity:["Player Activity","Review recent activity from both the Player and Captain Portals."],
   announcements:["Announcements","Publish team updates to the homepage."],
   schedule:["Schedule","Create games, practices and team events."],
   roster:["Roster","Manage players, numbers, positions and status."],
@@ -5890,22 +5904,9 @@ function activityDateTime(value){
   const d=new Date(value);if(Number.isNaN(d.getTime()))return "Never";
   return d.toLocaleString("en-US",{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});
 }
-function activityRelative(value){
-  if(!value)return "Never";
-  const ms=Date.now()-new Date(value).getTime();
-  if(ms<60*60*1000)return `${Math.max(1,Math.floor(ms/(60*1000)))}m ago`;
-  if(ms<24*60*60*1000)return `${Math.floor(ms/(60*60*1000))}h ago`;
-  return `${Math.floor(ms/(24*60*60*1000))}d ago`;
-}
-function groupedPlayerActivity(){
-  const map=new Map();
-  (PLAYER_PORTAL_ACTIVITY||[]).forEach(row=>{
-    const id=String(row.roster_player_id);
-    if(!map.has(id))map.set(id,{roster_player_id:row.roster_player_id,jersey_number:row.jersey_number,display_name:row.display_name,playing_status:row.playing_status||"active",events:[]});
-    if(row.event_id)map.get(id).events.push(row);
-  });
-  return [...map.values()];
-}
+function activityRelative(value){return window.SKORPortalActivity.relativeActivity(value);}
+function groupedPlayerActivity(){return window.SKORPortalActivity.groupActivity(PLAYER_PORTAL_ACTIVITY);}
+const activitySeenAt=event=>window.SKORPortalActivity.latestActivityAt(event);
 function renderPlayerActivity(){
   const host=document.getElementById("playerActivityList");if(!host)return;
   const q=(document.getElementById("activitySearch")?.value||"").trim().toLowerCase();
@@ -5913,7 +5914,7 @@ function renderPlayerActivity(){
   const sevenDays=7*24*60*60*1000;
   let players=groupedPlayerActivity();
   const totalSessions=players.reduce((n,p)=>n+p.events.filter(e=>e.event_type!=="legacy_last_login").length,0);
-  const recent=players.filter(p=>p.events[0]?.occurred_at && Date.now()-new Date(p.events[0].occurred_at).getTime()<=sevenDays).length;
+  const recent=players.filter(p=>activitySeenAt(p.events[0]) && Date.now()-new Date(activitySeenAt(p.events[0])).getTime()<=sevenDays).length;
   const never=players.filter(p=>!p.events.length).length;
   document.getElementById("activityRosterCount").textContent=players.length;
   document.getElementById("activityRecentCount").textContent=recent;
@@ -5921,29 +5922,59 @@ function renderPlayerActivity(){
   document.getElementById("activitySessionCount").textContent=totalSessions;
   players=players.filter(p=>{
     if(q&&!`${p.jersey_number||""} ${p.display_name||""}`.toLowerCase().includes(q))return false;
-    const last=p.events[0]?.occurred_at?new Date(p.events[0].occurred_at).getTime():null;
+    const last=activitySeenAt(p.events[0])?new Date(activitySeenAt(p.events[0])).getTime():null;
     if(filter==="recent")return last&&Date.now()-last<=sevenDays;
     if(filter==="older")return last&&Date.now()-last>sevenDays;
     if(filter==="never")return !last;
     return true;
-  }).sort((a,b)=>Number(a.jersey_number)-Number(b.jersey_number));
-  if(!players.length){host.innerHTML='<div class="sub">No players match this filter.</div>';return;}
+  }).sort((a,b)=>(a.jersey_number??Infinity)-(b.jersey_number??Infinity)||String(a.display_name).localeCompare(String(b.display_name)));
+  if(!players.length){host.innerHTML='<div class="sub">No players or captains match this filter.</div>';return;}
   host.innerHTML=players.map(p=>{
     const events=p.events.slice(0,5);
     const last=events[0]||null;
     const slots=[...events];while(slots.length<5)slots.push(null);
-    return `<div class="player-activity-card"><div class="player-activity-head"><div class="player-activity-name">#${gdEsc(p.jersey_number)} ${gdEsc(p.display_name)}<small>${p.playing_status==='injured'?'Injured':'Active'} · ${events.length?`${events.length} recorded event${events.length===1?'':'s'} shown`:'No recorded portal login'}</small></div><div class="player-activity-last"><strong>${last?gdEsc(activityRelative(last.occurred_at)):'Never logged in'}</strong>${last?gdEsc(activityDateTime(last.occurred_at)):''}</div></div><div class="player-login-events">${slots.map((e,i)=>e?`<div class="player-login-event ${e.event_type==='legacy_last_login'?'legacy':''}"><strong>${e.event_type==='legacy_last_login'?'Legacy login':`Portal session ${i+1}`}</strong><span>${gdEsc(activityDateTime(e.occurred_at))}</span>${Number(e.open_count||1)>1?`<span>${Number(e.open_count)} portal opens in session</span>`:''}</div>`:`<div class="player-login-event empty"><strong>No earlier login</strong><span>Not recorded</span></div>`).join('')}</div></div>`;
+    const role={captain:'Captain',super_admin:'Super admin',viewer:'View only',player:'Player'}[p.portal_role]||'Player';
+    const identity=(p.jersey_number==null?'':`#${gdEsc(p.jersey_number)} `)+gdEsc(p.display_name);
+    return `<div class="player-activity-card"><div class="player-activity-head"><div class="player-activity-name">${identity}<small>${gdEsc(role)}${p.playing_status==='injured'?' · Injured':''} · ${events.length?`${events.length} recorded session${events.length===1?'':'s'} shown`:'No recorded activity'}</small></div><div class="player-activity-last"><strong>${last?gdEsc(activityRelative(activitySeenAt(last))):'No recorded activity'}</strong>${last?`Last active ${gdEsc(activityDateTime(activitySeenAt(last)))}`:''}</div></div><div class="player-login-events">${slots.map(e=>e?`<div class="player-login-event ${e.event_type==='legacy_last_login'?'legacy':''}"><strong>${e.event_type==='legacy_last_login'?'Legacy login':e.portal==='captain'?'Captain Portal':'Player Portal'}</strong><span>Last active ${gdEsc(activityDateTime(activitySeenAt(e)))}</span><span>Started ${gdEsc(activityDateTime(e.occurred_at))}</span></div>`:`<div class="player-login-event empty"><strong>No earlier session</strong><span>Not recorded</span></div>`).join('')}</div></div>`;
   }).join('');
 }
-async function loadPlayerActivity(showMessage=false){
-  const host=document.getElementById("playerActivityList");if(!host)return;
-  if(!portalCanWrite()){host.innerHTML='<div class="sub">Captain access required.</div>';return;}
-  host.innerHTML='<div class="sub">Loading player activity…</div>';
-  const {data,error}=await sb.rpc("get_player_portal_activity",{p_limit_per_player:5});
-  if(error){host.innerHTML=`<div class="sub">Player Activity requires the v51.12 SQL migration: ${gdEsc(error.message)}</div>`;return;}
-  PLAYER_PORTAL_ACTIVITY=data||[];renderPlayerActivity();
-  if(showMessage){const b=document.getElementById("refreshPlayerActivityBtn");if(b){const old=b.textContent;b.textContent="Refreshed ✓";setTimeout(()=>b.textContent=old,1200);}}
+let playerActivityVersion=0,playerActivityLoading=false,playerActivityUpdatedAt=null;
+function clearPlayerActivity(){
+  playerActivityVersion++;playerActivityLoading=false;PLAYER_PORTAL_ACTIVITY=[];playerActivityUpdatedAt=null;
+  const host=document.getElementById("playerActivityList");if(host)host.innerHTML='';
+  const status=document.getElementById("playerActivityStatus");if(status)status.textContent='';
+  const button=document.getElementById("refreshPlayerActivityBtn");if(button)button.disabled=false;
+  for(const id of ["activityRosterCount","activityRecentCount","activityNeverCount","activitySessionCount"]){const node=document.getElementById(id);if(node)node.textContent='0';}
 }
+async function loadPlayerActivity(){
+  const host=document.getElementById("playerActivityList"),status=document.getElementById("playerActivityStatus");if(!host)return;
+  if(!portalCanWrite()){host.innerHTML='<div class="sub">Captain access required.</div>';return;}
+  if(playerActivityLoading)return;
+  playerActivityLoading=true;
+  const version=++playerActivityVersion;
+  const button=document.getElementById("refreshPlayerActivityBtn");if(button)button.disabled=true;
+  if(!playerActivityUpdatedAt)host.innerHTML='<div class="sub">Loading player and captain activity…</div>';
+  try{
+    const {data,error}=await sb.rpc("get_portal_activity",{p_limit_per_person:5});
+    if(version!==playerActivityVersion)return;
+    if(error)throw error;
+    PLAYER_PORTAL_ACTIVITY=data||[];playerActivityUpdatedAt=new Date().toISOString();renderPlayerActivity();
+    status.textContent=`Updated ${activityDateTime(playerActivityUpdatedAt)} · Refreshes every minute while this page is visible. New visits appear after each person's portal reloads with this update.`;
+  }catch(error){
+    if(version!==playerActivityVersion)return;
+    if(!playerActivityUpdatedAt)host.innerHTML='<div class="sub">Activity could not be loaded.</div>';
+    status.textContent=playerActivityUpdatedAt?'Refresh failed. Showing the last loaded activity; use Refresh to retry.':'Activity tracking is temporarily unavailable. Use Refresh to retry.';
+    console.warn('Portal activity report could not be loaded:',error);
+  }finally{
+    if(version===playerActivityVersion){playerActivityLoading=false;if(button)button.disabled=false;}
+  }
+}
+function refreshVisiblePlayerActivity(){
+  if(document.visibilityState!=="hidden"&&document.getElementById("activity")?.classList.contains("active")&&adminApp.style.display!=="none")void loadPlayerActivity();
+}
+setInterval(refreshVisiblePlayerActivity,60000);
+document.addEventListener("visibilitychange",refreshVisiblePlayerActivity);
+window.addEventListener("focus",refreshVisiblePlayerActivity);
 function feedbackOpponent(row){return row.opponent||"Opponent";}
 function feedbackPreview(value,max=180){const s=String(value||"").trim();return s.length>max?s.slice(0,max-1)+"…":s;}
 function aiPlayerCommentSelected(commentId){return AI_PLAYER_COMMENT_SELECTION.has(String(commentId||""));}
@@ -7431,4 +7462,5 @@ loadAnnouncements();
 
 </body>
 </html>
+
 

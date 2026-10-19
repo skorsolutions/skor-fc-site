@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v58.5-equipment-lost-found" />
+<meta name="skor-build" content="player-portal-v58.6-portal-activity" />
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <link rel="stylesheet" href="equipment.css?v=58.5">
@@ -174,10 +174,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="equipment.js?v=58.5"></script>
+<script src="portal-activity.js?v=58.6"></script>
 <script>
 const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const playerActivity=window.SKORPortalActivity.createTracker({client:db,portal:"player",onError:()=>console.warn("Player activity could not be recorded; it will retry while the portal is active.")});
 const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
 let user=null,profile=null,stats=null,upcoming=[],recent=[],feedbackMatchId=null,myReaction={self_reaction:null,team_reaction:null};
 let playingStatus={playing_status:'active',status_updated_at:null};
@@ -222,8 +224,7 @@ async function authorizePlayer(session=null){
     }
 
     portalAuthorized=true;
-    const loginEvent=await db.rpc('record_my_player_portal_login');
-    if(loginEvent.error)console.warn('Portal login event could not be recorded:',loginEvent.error);
+    void playerActivity.start(user.id);
     $('logoutBtn').classList.remove('hidden');
     syncCaptainPortalButton();
     showAuthLoading('Loading your SKOR stats, schedule and match activity…');
@@ -267,12 +268,13 @@ $('googleBtn').addEventListener('click',async()=>{
 });
 $('emailLoginBtn').addEventListener('click',async()=>{const email=$('playerEmail').value.trim().toLowerCase();if(!email)return status('loginStatus','Enter your email address.',true);sessionStorage.setItem('skorPlayerAuthEmail',email);status('loginStatus','Sending secure sign-in email…');const {error}=await db.auth.signInWithOtp({email,options:{emailRedirectTo:`${location.origin}/player-portal.html`,shouldCreateUser:true}});if(error)return status('loginStatus',error.message,true);$('emailCodeRow').classList.remove('hidden');status('loginStatus','Check your email. Use the secure link, or enter the one-time code here if your message contains a code.');});
 $('verifyEmailCodeBtn').addEventListener('click',async()=>{const email=($('playerEmail').value.trim().toLowerCase()||sessionStorage.getItem('skorPlayerAuthEmail')||'');const token=$('playerEmailCode').value.trim();if(!email||!token)return status('loginStatus','Enter the email address and one-time code.',true);status('loginStatus','Verifying…');const {error}=await db.auth.verifyOtp({email,token,type:'email'});if(error)status('loginStatus',error.message,true);});
-async function logout(){window.SKOREquipment?.clear();portalAuthorized=false;user=null;await db.auth.signOut();sessionStorage.removeItem('skorPlayerAuthEmail');location.href='player-portal.html';}
+async function logout(){playerActivity.clear();window.SKOREquipment?.clear();portalAuthorized=false;user=null;await db.auth.signOut();sessionStorage.removeItem('skorPlayerAuthEmail');location.href='player-portal.html';}
 $('logoutBtn').addEventListener('click',logout);$('deniedLogoutBtn').addEventListener('click',logout);
 $('homepageBtn').addEventListener('click',()=>{location.href='index.html';});
 $('captainPortalBtn').addEventListener('click',()=>{location.href='admin.html';});
 db.auth.onAuthStateChange((event,s)=>{
   if(event==='SIGNED_OUT'){
+    playerActivity.clear();
     window.SKOREquipment?.clear();
     user=null;
     portalAuthorized=false;
@@ -487,4 +489,5 @@ init();
 </script>
 </body>
 </html>
+
 
