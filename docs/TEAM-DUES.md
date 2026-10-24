@@ -1,6 +1,6 @@
 # Team dues — v58.24
 
-**Approved database migration and opening data are applied and verified. Frontend production deployment is pending.** Existing frontend production remains v58.23 Captain / v58.18 Player Portal until the release build succeeds. No payment processor, checkout or money transfer is integrated.
+**v58.24 is deployed to the Captain and Player Portals.** The approved database migration, opening data, real-role checks, exact source file set and matching Cloudflare production traffic are verified. No payment processor, checkout or money transfer is integrated.
 
 ## Captain workflow
 
@@ -72,6 +72,19 @@ Approved migration `20261024215244 add_team_dues_ledger` is applied. All seven s
 
 Committed ledger state is exactly one Fall 2026 group, 20 paid memberships, one administrative initialization audit and the supplied private instructions. There are zero assessments, receipts, voids, scenarios, linked matches or shares. All 12 linked approved player profiles return the correct opening paid state, instructions, null historical amount and no fabricated receipts. Seven original source-table counts/digests (roster, access, matches, lineup variations, strategies, bundle library and captain allowlist) are unchanged. No named captain was impersonated to attribute the production seed. The connector returned two expired-request errors before the successful atomic initialization; readback proved no earlier writes or duplicate records.
 
-Security advisors add no feature-related ERROR/WARN: only ten expected default-deny private-table INFO findings. Performance advisors add the informational event-share covering-index notice and expected unused-index notices on new tables. Existing unrelated findings remain unchanged. Exact checked sources are ready for GitHub publication and matching Cloudflare production verification.
+Security advisors add no feature-related ERROR. Four intentional `authenticated_security_definer_function_executable` WARN findings identify the guarded public RPCs: each has an empty search path, explicit captain/self authorization, authenticated-only execute grants and tested player/unlinked/anonymous denial. Ten private-table INFO findings reflect the intended default-deny RLS/no direct grants model. Performance advisors add the informational event-share covering-index notice and expected unused-index notices on new tables. Existing unrelated findings remain unchanged. Release commit [`4eb3aadc58cd9cd154a68fc45a612f8f25638bbb`](https://github.com/skorsolutions/skor-fc-site/commit/4eb3aadc58cd9cd154a68fc45a612f8f25638bbb) contains exactly 18 checked files; all published blob hashes match. Cloudflare build `b5ba2d43-ad27-4bdd-a2eb-c9216657810d` succeeded for this exact commit; deployed version `721ec2dd-9b6b-42ba-8a4f-8f510ac75a06`, deployment `694d1073-85b0-414b-9954-bb86bbe0893d`, is verified at 100% production traffic.
 
-Real PL/pgSQL/role/data verification is complete. Frontend publication and production traffic verification are pending. Rendered phone/desktop, actual signed-in browser saves and binary GIF download cannot be verified in this environment; Chromium cannot launch under the socket restrictions. Do not describe these as passed. GitHub commit-comment creation remains unavailable through connected tools; record the release summary in chat and deployment notes.
+Real PL/pgSQL/role/data verification, frontend publication and production traffic verification are complete. Rendered phone/desktop, actual signed-in browser saves and binary GIF download cannot be verified in this environment; Chromium cannot launch under the socket restrictions. Do not describe these as passed. GitHub commit-comment creation remains unavailable through connected tools; record the release summary in chat and deployment notes.
+
+
+## Published release summary
+
+Deployed **v58.24** to the Captain and Player Portals.
+
+- Payments includes Run Numbers, discount comparisons, partial payments and event tags, synced with Roster and Player Portal balances.
+- All 20 current Fall 2026 players show **paid**, without invented historical amounts or receipts.
+- The approved database migration and real-role checks passed, along with 17 local test suites. Cloudflare production is verified at 100% traffic.
+
+Open **Captain Portal → Payments**. Create a new season/event to use Run Numbers. Browser visual/GIF download checks remain unverified.
+
+[Captain Portal](https://skorfc.net/admin.html) · [Release](https://github.com/skorsolutions/skor-fc-site/commit/4eb3aadc58cd9cd154a68fc45a612f8f25638bbb). Release notes are saved; the connector cannot post commit comments.
