@@ -1,4 +1,4 @@
-# v58.22 — Compact RSVP & Player Feedback dashboard in Game Day (deployment pending)
+# v58.22 — Compact RSVP & Player Feedback dashboard in Game Day (deployed)
 
 - Implements the corrected approved preview directly under Man of the Match in Game Day. RSVP counts, reactions and player feedback remain visible within one unified full-width dashboard; no new page, navigation item or match selector.
 - Full Roster RSVP and Match Attendance use independent native disclosures closed by default. The attendance reminder stays in the visible summary: “Remember to fill out the match attendance before or after the game.” Attendance metrics/list/edit actions live inside its expandable body. Current disclosure choices survive list refreshes/saves.
@@ -6,7 +6,19 @@
 - **Affected files (7):** `admin.html`, `tests/verify-captain-notifications.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, and this note. Captain v58.22; Player Portal remains v58.18 and homepage v58.15.
 - **Verification:** Seven suites passed: persistent clock, substitution alarm, captain notifications, score privacy, lineup export, referee card and Strategy animation. HTML structure checks confirm the unified dashboard directly follows Man of the Match, both native disclosures default closed, reminder belongs to the visible attendance summary, and feedback/counts are outside disclosures. All original inline JavaScript is byte-identical except the ready-build label, retaining attendance persistence, private replies, AI selection and inbox links. No production records were edited for verification. Rendered browser/phone visual verification remains unavailable; the user approved the corrected screenshot-based draft.
 - **SQL/backend:** No database query/write, migration, RPC, permission, Edge Function or Realtime change. Existing attendance records, inbox receipts, alarms, lineups/keepers and exports are unchanged.
-- **Live status:** Awaiting publication and Cloudflare verification. Connected tools cannot post commit comments.
+- **Live status:** Source release [`f6f2fd56473df6d3384be05ac3fe513fb568c8fb`](https://github.com/skorsolutions/skor-fc-site/commit/f6f2fd56473df6d3384be05ac3fe513fb568c8fb) published from `40d62c31d9b22fc30940339980452abed707c193`. Cloudflare build `df4c3d2c-21d1-42e1-af36-5088bfd53332` succeeded; version `70180640-8eba-4944-8f5c-c94694ab2547`, deployment `7f2a7a83-a480-49d2-8a04-8f7ce8002ea9`, verified at 100% production traffic. All seven source hashes and the exact release file set match checked sources. Build completed at 2026-10-24 19:47:04 UTC. This documentation-only follow-up records deployment results. Connected tools cannot post commit comments; no comment was posted.
+
+## v58.22 release summary
+
+Deployed **v58.22**. The **RSVP & Player Feedback** dashboard is directly below **Man of the Match** in Game Day.
+
+- **Full Roster RSVP** and **Match Attendance** start collapsed.
+- The attendance reminder stays visible.
+- Summary counts and player feedback stay visible.
+
+Seven checks passed; no database changes. Browser visual review remains unavailable.
+
+Refresh the [Captain Portal](https://skorfc.net/admin.html). [Release](https://github.com/skorsolutions/skor-fc-site/commit/f6f2fd56473df6d3384be05ac3fe513fb568c8fb). Release notes saved; connected tools cannot post commit comments.
 
 # v58.21 — Local Game Day substitution alarm (deployed)
 
