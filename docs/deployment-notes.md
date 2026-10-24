@@ -1,4 +1,4 @@
-# v58.9 — Clean player selection and mobile match setup (release prepared)
+# v58.9 — Clean player selection and mobile match setup (deployed)
 
 - Simplifies Players beside the field: primary number, short name, one TEMP indication. Dual-number and keeper-duty captions remain on field markers and the referee sheet; bench/depth/substitution labels use primary numbers. Removes the legacy CSS-generated duplicate TEMP and avoids a second badge for an unnumbered TEMP shirt.
 - Keeps complete identities for referee PDF/Excel and the clearly labeled full-name entry/edit field. Previous-name selection displays short labels but preserves the complete selected value. Editing an existing fill-in restores its complete stored name; no player name or saved lineup is rewritten.
@@ -7,7 +7,24 @@
 - **Affected files (14):** `admin.html`, `matches.html`, `gameday.html`, `keeper-plan.css`, `keeper-editor.js`, `lineup-marker.js`, `tests/verify-keeper-plan.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/LINEUP-EXPORT.md`, `docs/MATCH-KEEPERS.md`, and this note.
 - **Verification:** Keeper/HTML/SVG behavior checks cover primary-only off-field cards, on-field emphasis, one TEMP for numbered/unnumbered players, short/full identity separation, full referee names, no repeated keeper preview, and closed Potential Positions. HTML structure checks verify both setup forms are outside the narrow rail and IDs remain unique. Seven affected suites pass: keepers, lineup export, referee card, Strategy animation, saved TEMP directory, clock and score privacy. Edit-handler verification restores the complete referee name from the short-label roster. Browser rendering remains unavailable because Chromium exits with sandbox `setsockopt: Operation not permitted`; mobile CSS/DOM checks do not establish rendered browser verification.
 - **SQL/database status:** No migration, query, production data write, permission or Edge Function change. Existing full-name validation, saved identity reuse, match-specific jersey choice and referee output remain intact.
-- **Live status:** Prepared for the existing main-branch Cloudflare deployment. Verify release hashes/file set and the exact Workers Builds check before reporting success. Commit-comment creation is unavailable in the connected GitHub tools; retain the matching release summary in documentation and chat.
+- **Live status:** Implementation release [`6ab72d06a4a7e80e10066952dc47c4593a4434bb`](https://github.com/skorsolutions/skor-fc-site/commit/6ab72d06a4a7e80e10066952dc47c4593a4434bb) was published to main from `390454e9c5cbde3dbaec0fb2ca7b82ac0ba618f6`. Workers Builds succeeded: build `00edd3a0-8bba-4c72-b4d4-09824d162f1e`, production version `5a897dbd-bd67-47ca-984b-9d1c46e969d5`. All 14 hashes and the exact release diff match the checked local source. A documentation-only follow-up records verification. Commit-comment creation is unavailable in the connected GitHub tools; no commit comment was posted.
+
+## v58.9 release summary
+
+Deployed **v58.9**.
+
+- Player picker: short names, primary numbers, one TEMP marker.
+- Dual numbers and keeper notes stay on the field and referee sheet.
+- Fill-in and keeper panels now stack at full width on phones.
+- Potential Positions stays hidden until clicked.
+
+Full names are preserved for the referee sheet. Seven test suites passed; no database changes. Browser visual checks remain unavailable.
+
+Reload the [Captain Portal](https://skorfc.net/admin.html).
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/6ab72d06a4a7e80e10066952dc47c4593a4434bb)
+
+The connector cannot create commit comments. This matching summary is recorded in documentation and chat; no commit comment was posted.
 
 # v58.8 — Readable keeper numbers and TEMP names (deployed)
 
