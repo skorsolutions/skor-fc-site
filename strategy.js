@@ -53,13 +53,13 @@
         const player=byId.get(String(pid));if(!player)return;
         players.push({id:String(pid),name:playerName(player),number:Number.isFinite(Number(player.number))?Number(player.number):"",x:clamp(Number(pos.x)||50,4,96),y:clamp(Number(pos.y)||50,5,95)});
       });
-      return players;
+      return players.map(p=>({...p,keeperNumber:window.SKORKeeperPlan?.details(snapshot,p.id,p.number).jerseyNumber??null,keeperLabel:window.SKORKeeperPlan?.details(snapshot,p.id,p.number).label||''}));
     }
     (HOME_FORMATIONS[formation]||HOME_FORMATIONS["4-2-3-1"]).forEach(([role,x,y])=>{
       const pid=String(snapshot?.slots?.[role]||""),player=byId.get(pid);
       if(player)players.push({id:pid,name:playerName(player),number:Number.isFinite(Number(player.number))?Number(player.number):"",x,y});
     });
-    return players;
+    return players.map(p=>({...p,keeperNumber:window.SKORKeeperPlan?.details(snapshot,p.id,p.number).jerseyNumber??null,keeperLabel:window.SKORKeeperPlan?.details(snapshot,p.id,p.number).label||''}));
   }
   function makeSubScene(state={},name="Starting position"){
     return {id:uid("step"),name:String(name||"Animation step").slice(0,70),home:clone(state.home||[]),opponents:clone(state.opponents||[]),ball:clone(state.ball||{x:50,y:45}),drawings:clone(state.drawings||[])};
@@ -427,7 +427,9 @@
   }
   function homeMarkup(player){
     const x=player.x*10,y=player.y*6.8;
-    return '<g class="strategy-svg-home strategy-player-shadow" data-kind="home" data-id="'+esc(player.id)+'" transform="translate('+x+' '+y+')" filter="url(#strategyShadow)"><circle r="44" fill="transparent"/><circle r="29" fill="#741f35" stroke="#fff" stroke-width="4"/><text y="5" text-anchor="middle" fill="#fff" font-size="19" font-weight="950">'+esc(player.number)+'</text><rect x="-39" y="32" width="78" height="24" rx="12" fill="#17181d" opacity=".94"/><text y="49" text-anchor="middle" fill="#fff" font-size="14" font-weight="850">'+esc(player.name)+'</text></g>';
+    const number=player.keeperNumber!==null&&player.keeperNumber!==undefined&&String(player.keeperNumber)!==String(player.number)?player.number+' / '+player.keeperNumber:String(player.number);
+    const keeper=player.keeperLabel?'<text y="69" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">('+esc(player.keeperLabel)+')</text>':'';
+    return '<g class="strategy-svg-home strategy-player-shadow" data-kind="home" data-id="'+esc(player.id)+'" transform="translate('+x+' '+y+')" filter="url(#strategyShadow)"><circle r="44" fill="transparent"/><circle r="29" fill="#741f35" stroke="#fff" stroke-width="4"/><text y="5" text-anchor="middle" fill="#fff" font-size="'+(number.includes(" / ")?11:19)+'" font-weight="950">'+esc(number)+'</text><rect x="-39" y="32" width="78" height="24" rx="12" fill="#17181d" opacity=".94"/><text y="49" text-anchor="middle" fill="#fff" font-size="14" font-weight="850">'+esc(player.name)+'</text>'+keeper+'</g>';
   }
   function awayMarkup(player,index){
     const x=player.x*10,y=player.y*6.8;
@@ -620,3 +622,4 @@
 
   window.SKORStrategy={init,activate,refreshSources,refreshSharedStatus,loadForMatch,getDraft:()=>clone(draft),renderExportSvg:()=>exportSvgMarkup(activeScene(),activeSubScene()),__test:{normalizeDraft,interpolateFrame,sceneForStorage}};
 })();
+

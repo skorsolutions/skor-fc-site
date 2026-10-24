@@ -27,7 +27,7 @@ for (const id of [
 
 assert.match(admin, /Scene Bundle Library/);
 assert.match(admin, /Export bundle GIF/);
-assert.match(admin, /captain-portal-v58\.0-strategy-animation-bundles/);
+assert.match(admin, /captain-portal-v58\.7-match-keepers/);
 assert.match(css, /strategy-subscene-panel/);
 assert.match(css, /strategy-subscene-tab\.active/);
 assert.match(strategy, /import\("\.\/vendor\/gifenc\/index\.js"\)/);
@@ -103,3 +103,4 @@ assert.match(pregame, /unrelated bundles run as one continuous play/);
 assert.match(handbook, /Scene Bundle/);
 
 console.log("Strategy Scene Bundle and GIF verification passed.");
+

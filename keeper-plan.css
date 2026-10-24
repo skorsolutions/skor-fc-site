@@ -1,0 +1,19 @@
+.keeper-plan{min-width:0}.keeper-plan p{font-size:.78rem;line-height:1.5;color:var(--muted,#606774)}
+.keeper-plan label{display:block;font-size:.74rem;font-weight:800;margin-bottom:5px}
+.keeper-plan input,.keeper-plan select{width:100%;min-height:44px;box-sizing:border-box}
+.keeper-plan-row{display:grid;grid-template-columns:minmax(0,1fr) 94px;gap:8px;padding:12px 0;border-bottom:1px solid #d8dbe1}
+.keeper-plan-person{grid-column:1/-1;font-weight:800;font-size:.82rem;overflow-wrap:anywhere}
+.keeper-plan-preview{grid-column:1/-1;font-size:.75rem;color:#741f35;overflow-wrap:anywhere}
+.keeper-plan-status{font-size:.78rem;line-height:1.5;margin-top:10px;color:#a02424}
+.keeper-tag{display:block;font-size:9px;font-weight:800;line-height:1.15;white-space:normal;max-width:112px;margin:3px auto 0}
+.jersey.keeper-dual{font-size:13px!important;white-space:nowrap}
+.player-peg.compact .jersey.keeper-dual{font-size:11px!important}
+.keeper-roster-summary{display:grid;gap:4px;padding:10px 0;font-size:.76rem;overflow-wrap:anywhere}
+body.viewer-mode .keeper-plan input,body.viewer-mode .keeper-plan select{pointer-events:none;opacity:.65}
+.lineup-jersey.keeper-dual,.match-jersey.keeper-dual{font-size:9px!important;white-space:nowrap}
+.bench-number.keeper-dual,.match-bench-num.keeper-dual{min-width:56px;font-size:11px!important;white-space:nowrap}
+.ref-card-keeper-label{font-size:8px;font-weight:400}.ref-card-jersey{white-space:nowrap}
+.jersey.keeper-dual,.lineup-jersey.keeper-dual,.match-jersey.keeper-dual{clip-path:none;background:none;isolation:isolate}
+.jersey.keeper-dual:after,.lineup-jersey.keeper-dual:after,.match-jersey.keeper-dual:after{content:"";position:absolute;inset:0;background:#801a3d;clip-path:polygon(20% 0,35% 7%,65% 7%,80% 0,100% 19%,85% 34%,78% 28%,78% 100%,22% 100%,22% 28%,15% 34%,0 19%);z-index:-1}
+.keeper-number-pair{position:relative;z-index:1;display:inline-block;background:#741f35;padding:2px 3px;border-radius:3px;font-size:9px;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:520px){.keeper-plan-row{grid-template-columns:minmax(0,1fr) 86px}.keeper-tag{font-size:8px;max-width:92px}}

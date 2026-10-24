@@ -1,7 +1,8 @@
 # SKOR FC Project Handbook
 
-Last updated: 2026-10-19 UTC
-Current deployed Captain Portal build: **v58.6**
+Last updated: 2026-10-24 UTC
+Current Captain Portal build: **v58.7** (match keepers; deployment verification pending).
+Previous deployed build: **v58.6**.
 Production release: [`1ab0a7c329367e87b9f1ee025d5e3235e3f3736c`](https://github.com/skorsolutions/skor-fc-site/commit/1ab0a7c329367e87b9f1ee025d5e3235e3f3736c). Approved migration `20261019065353 repair_portal_activity` is applied and verified. Cloudflare production build `04a9f078-d6cf-4247-bed8-06606fbf0b90` succeeded on 2026-10-19; deployed version `35561a6e-8e15-4605-8b75-0f26ee7de33e`. Exact source hashes/release files were verified. Direct HTTP and rendered browser checks remain unavailable.
 
 **v58.3 personal ribbon order and saved TEMP names** is deployed. Ribbon, TEMP-directory, persistent-clock and score-privacy checks passed. The exact nine-file release diff and published source hashes were verified. No schema migration or Edge Function change. Direct live-source HTTP, rendered phone/desktop and real signed-in captain save/reload checks remain unavailable: the executor proxy is unreachable, the web tool cannot access the admin page, and browser control/authenticated captain sessions are unavailable. The connected production check verifies deployment, not those browser behaviors.
@@ -54,6 +55,17 @@ This is the durable handoff document for new chats and future developers. Read i
 - Database migrations require explicit user approval before they are applied.
 
 ## 4. Lineup system rules
+
+### Match-specific keeper assignments — v58.7
+
+- **Keepers for this match** identifies the starting keeper and potential cover. The standard formation's GK is the starter; Freeform explicitly designates one starter. Selecting another starter moves him into goal and puts a displaced standard-formation GK on the bench.
+- `state.keeperPlan` stores `spareNumbers` (default `[30]`) and `assignments` keyed by lineup player ID, with `role` (`starting`, `starting_temp`, `secondary_temp`, `backup`) and `jerseyNumber` (1–99 or null for a regular starter wearing his own number). This lives in the existing lineup JSON, so no schema migration is needed.
+- Every player retains his primary roster/TEMP number. A different keeper jersey displays beside it as `12 / 30`. Multiple keeper assignments may share the same spare number or use different spares. Secondary spare numbers do not change inventory custody, TEMP inventory bindings, event identity or roster numbers.
+- Labels are `(starting keeper)` and `(backup keeper)` with a regular starter; `(starting temp keeper)` and `(secondary temp keeper)` when an outfield player starts in goal. Cover means potential cover, not a promise of keeper minutes. A regular GK placed in the standard GK slot receives the starting label on older saved lineups too.
+- Spare choices are saved with each variation, shared with captains on loading, retained when copying to a new match and suggested from the latest saved variation on new boards. There is no separate multi-team settings store. Keeper **assignments** clear on cross-match copy; designate the destination keepers again. Removing a squad player clears his assignment. TEMP guest status and temporary keeper duty are separate concepts.
+- Editor, local drafts, saved variations, Final updates, PNG/JPG, referee preview/PDF/Excel, Captain/Crowd Game Day, public Matches and imported Strategy snapshots retain the assignments. The pregame Edge Function packages the same `keeper-plan.js` rules and includes only sanitized existing player identities plus keeper role/numbers in approved lineup context.
+- Shared spare numbers pass referee validation. Missing temporary/backup keeper numbers, multiple freeform starters and keeper cover without a starter block save/publication/card export; ordinary duplicate primary numbers still fail, as does a spare conflicting with an outfield player's primary jersey. Numbers range from 1 to 99.
+- Shared browser rules: `keeper-plan.js`; touch-friendly editor: `keeper-editor.js` / `keeper-plan.css`. Edge packaging copy: `supabase/functions/generate-pregame-talk/keeper-plan.js`; keep it byte-identical to the browser module. Verify with `npm run test:keepers` and affected existing suites. No SQL or RLS change. Deployment also requires the updated authenticated `generate-pregame-talk` Edge Function.
 
 ### Core model
 
@@ -413,4 +425,5 @@ The user confirmed captain approval for borrowing, authorized implementation, th
 - Six local suites pass: Equipment controller/security contracts, ribbon, bulk jerseys, TEMP names, persistent clock and score privacy. Inline scripts/IDs and original navigation/CSS/line endings pass. Actual rollback-only production PostgreSQL tests pass for captain, two players, viewer, unlinked-login and anonymous roles: approvals, bag/child quantities, custody, returns, recovery, private messages/photos and retry semantics. All nine private tables retain RLS with zero direct browser table grants; all feature rows/photos remain empty. Advisors add only expected default-deny/unused-index and eight informational foreign-key-index notices, no new security ERROR/WARN. Rendered phone/tablet/desktop, binary Storage HTTP upload and a real signed-in browser roundtrip remain unverified due environment socket permissions. `tests/verify-equipment-db.sql` is a disposable-local fixture test, never for production.
 - Publication and exact SQL are approved; database verification is complete. The source is published and native Cloudflare production deployment is verified. Full data/API rules, limitations, affected surfaces and release checklist: `docs/EQUIPMENT.md`.
 - **Future multi-team app idea retained:** Equipment and Lost & Found should help recover personal/team gear at shared fields, tournaments and practices. Future work needs team-scoped memberships/data/notifications and explicit sharing/privacy rules before any optional venue/league board. The present single-team schema is not a multi-team implementation.
+
 

@@ -12,7 +12,7 @@ inlineScripts.forEach((match, index) => {
   new vm.Script(match[1], { filename: `admin.html#inline-${index + 1}` });
 });
 
-assert.match(admin, /captain-portal-v58\.1-private-public-match-scores/);
+assert.match(admin, /captain-portal-v58\.7-match-keepers/);
 assert.match(admin, /CAPTAIN PORTAL V57\.0/);
 assert.match(admin, /const fullPitchLength=105,opponentPenaltyDepth=16\.5/);
 assert.match(admin, /const visiblePitchLength=fullPitchLength-opponentPenaltyDepth/);
@@ -30,7 +30,7 @@ assert.match(admin, /<polygon points="\$\{jerseyPoints\}"/);
 assert.match(admin, /clipPath id="gameplanPitchClip"/);
 assert.match(admin, /same vertical pitch, formation spacing, and jersey shirts as the Lineup Builder/);
 assert.doesNotMatch(admin, /<circle cx="\$\{x\}" cy="\$\{y\}" r="44"/);
-assert.match(handbook, /Current Captain Portal build: \*\*v58\.0\*\*/);
+assert.match(handbook, /Current Captain Portal build: \*\*v58\.7\*\*/);
 assert.match(exportDoc, /The exporter must not calculate a new minimum\/maximum from occupied players/);
 assert.match(exportDoc, /Circular markers may still be used in compact bench\/list chips, but never as the on-field lineup player design/);
 assert.match(exportDoc, /opponent's 18-yard line through SKOR's own goal line/);
@@ -55,4 +55,5 @@ assert.ok(cropY(25) < 12, "forwards must move into the enlarged top tactical are
 assert.ok(cropY(50) > 40 && cropY(50) < 41, "the full-pitch halfway line must retain its real location after cropping");
 
 console.log("Lineup export verification passed.");
+
 

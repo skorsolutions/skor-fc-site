@@ -71,6 +71,9 @@
 .ref-card-sequence{height:100%;display:flex;align-items:center;padding-left:4px;border-right:1px solid #000}
 .ref-card-player-name{padding:0 5px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ref-card-jersey{text-align:center;font-weight:700}
+.ref-card-jersey{white-space:nowrap;font-size:11px}
+.ref-card-keeper-label{display:block;font-size:8px;font-weight:400;line-height:8px}
+.ref-card-player-name:has(.ref-card-keeper-label){font-size:10.5px;line-height:10px}
 .ref-card-yellow{background:#fff900}
 .ref-card-red{background:#ff1010}
 
@@ -110,3 +113,4 @@
   body.ref-card-print-body>*:not(.ref-card-page){display:none!important}
   body.ref-card-print-body .ref-card-page{width:10.5in;height:8in;break-inside:avoid;page-break-inside:avoid}
 }
+

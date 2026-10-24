@@ -1,4 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2.95.0";
+import './keeper-plan.js';
+const keeperPlan = (globalThis as typeof globalThis & { SKORKeeperPlan: {
+  details: (state: unknown, pid: string, number: unknown) => { number: string; label: string; jerseyNumber: number | null };
+  squadIds: (state: unknown) => string[];
+} }).SKORKeeperPlan;
 
 const ALLOWED_ORIGINS = new Set([
   "https://skorfc.net",
@@ -281,6 +286,11 @@ Deno.serve(async (req: Request) => {
       name: clean(meta.name, 140),
       updated_at: meta.updated_at,
       formation,
+      keeper_assignments: keeperPlan.squadIds(lineupState).flatMap(pid => {
+        const player = lineupPlayer(pid);
+        const keeper = keeperPlan.details(lineupState, pid, player.jersey_number);
+        return keeper.label ? [{ player, role: keeper.label, keeper_jersey_number: keeper.jerseyNumber, displayed_numbers: keeper.number }] : [];
+      }),
       starting_lineup: startingLineup,
       bench: playerList(lineupState.bench),
       depth_chart: Object.entries(depth).map(([position, rawPlayers]) => ({
@@ -404,6 +414,7 @@ Use attendance only for practical availability, unit-balance, and substitution-a
 target_match_captain_whatsapp contains captain-authored messages explicitly assigned to this target match. Read them in timestamp and sequence order so replies retain their conversational meaning. Treat them as captain priorities or discussion, not as verified game observations. Points grounded in them must use the source captain_whatsapp.
 Only captain-visible WhatsApp messages are supplied. Historical lineup images are stored separately for captain review and are not present in this text context; never infer an image's contents from an attachment marker.
 When production_lineup is present, treat it as the captains' current authoritative plan for this target match. Use its formation, position assignments, bench, ranked depth chart, substitution order, field captain, and game-plan notes together—not as isolated facts. Points drawn directly from this plan must use the source lineup_plan.
+Keeper assignments describe match-specific starting and cover duties. A starting temp keeper is an outfield player covering in goal; a secondary temp keeper or backup keeper is potential cover, not an additional starter. Multiple keepers may share one spare jersey at different times. Keep the primary jersey number as the player's identity and do not infer that every backup will play in goal.
 The depth chart is ranked coverage by position, not a second starting lineup. Planned substitutions are ordered waves; preserve their phase and order. Second-half waves remain valid saved planning context even when second_half_waves_visible_on_export is false.
 Do not casually contradict the Production/Final plan. You may identify a coverage, workload, transition, or communication risk and offer a clearly labeled ai_strategy contingency. If production_lineup is null, do not invent lineup assignments or substitution plans.
 When published_strategy is present, it was explicitly approved by a captain for AI use. Treat its opponent formation, offense/defense/transition/set-piece Scene Bundles, ordered sub-scenes, player locations, ball movement, tactical marks, and coaching points as the intended tactical plan for the target match. A bundle's sub-scenes are consecutive animation keyframes within one tactical situation; do not imply that unrelated bundles run as one continuous play. Points drawn directly from it must use the source strategy_plan.
@@ -470,3 +481,4 @@ Keep each bullet direct, positive, specific, and actionable. Separate evidence-b
     },
   }, 200, origin);
 });
+

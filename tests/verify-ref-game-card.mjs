@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 import { createRequire } from "node:module";
-import { execFileSync } from "node:child_process";
+import { inflateRawSync } from "node:zlib";
 
 const require=createRequire(import.meta.url);
 const refCard=require("../ref-game-card.js");
@@ -62,6 +62,7 @@ class FakeElement{
   insertBefore(child,before){child.parentNode=this;const index=before?this.children.indexOf(before):-1;if(index<0)this.children.push(child);else this.children.splice(index,0,child);return child;}
   remove(){if(!this.parentNode)return;const index=this.parentNode.children.indexOf(this);if(index>=0)this.parentNode.children.splice(index,1);this.parentNode=null;}
   getElementsByTagNameNS(_namespace,name){return this.children.flatMap(child=>[...(child.localName===name?[child]:[]),...child.getElementsByTagNameNS(_namespace,name)]);}
+  cloneNode(deep){const copy=new FakeElement(this.localName);copy.attributes=new Map(this.attributes);copy.textContent=this.textContent;if(deep)this.children.forEach(c=>copy.appendChild(c.cloneNode(true)));return copy;}
 }
 class FakeDocument{
   constructor(root){this.documentElement=root;}
@@ -111,7 +112,23 @@ assert.equal(pageSetup.getAttribute("fitToWidth"),"1","the game card must fit on
 assert.equal(pageSetup.getAttribute("fitToHeight"),"1","the game card must fit one page tall");
 assert.equal(pageSetup.getAttribute("scale"),null,"fixed scaling must not override fit-to-page settings");
 
-assert.match(admin,/captain-portal-v58\.0-strategy-animation-bundles/);
+const keeperState={...state,keeperPlan:{spareNumbers:[30,31],assignments:{p11:{role:'starting_temp',jerseyNumber:30},p2:{role:'secondary_temp',jerseyNumber:30}}}};
+const keeperData=refCard.buildCardData({state:keeperState,roster,match});
+assert.equal(refCard.validateCardData(keeperData).valid,true);
+refCard.__test.applyExcelPlayers(fakeDoc,keeperData.players);
+assert.equal(refCard.__test.findCell(fakeDoc,'C11').getAttribute('t'),'inlineStr','dual jerseys must be text in Excel');
+assert.equal(refCard.__test.findCell(fakeDoc,'C11').children[0].children[0].textContent,'2 / 30');
+assert.equal(refCard.__test.findCell(fakeDoc,'B11').children[0].children[0].textContent,'Ivan Martinez\n(secondary temp keeper)');
+const stylesRoot=new FakeElement('styleSheet'),fonts=new FakeElement('fonts'),xfs=new FakeElement('cellXfs');
+stylesRoot.appendChild(fonts);stylesRoot.appendChild(xfs);
+const font=new FakeElement('font'),size=new FakeElement('sz');size.setAttribute('val','11');font.appendChild(size);fonts.appendChild(font);
+for(let i=0;i<60;i++){const xf=new FakeElement('xf');xf.setAttribute('fontId','0');xfs.appendChild(xf);}
+refCard.__test.applyKeeperExcelStyles(fakeDoc,new FakeDocument(stylesRoot),keeperData.players);
+const keeperStyle=xfs.children[Number(refCard.__test.findCell(fakeDoc,'B11').getAttribute('s'))];
+assert.equal(keeperStyle.getElementsByTagNameNS('','alignment')[0].getAttribute('wrapText'),'1');
+assert.equal(fonts.children[Number(keeperStyle.getAttribute('fontId'))].children[0].getAttribute('val'),'8','keeper rows fit both name and duty inside the one-page card');
+
+assert.match(admin,/captain-portal-v58\.7-match-keepers/);
 assert.match(admin,/CAPTAIN PORTAL V57\.0/);
 assert.match(admin,/id="openRefGameCardBtn"/);
 assert.match(admin,/id="downloadRefGameCardExcel"/);
@@ -119,7 +136,7 @@ assert.match(admin,/id="printRefGameCard"/);
 assert.match(admin,/fullName:String\(r\.full_name/);
 assert.match(admin,/getSelectedMatch:/);
 assert.match(admin,/jszip@3\.10\.1/);
-assert.match(admin,/ref-game-card\.js\?v=56\.3/);
+assert.match(admin,/ref-game-card\.js\?v=58\.7/);
 assert.match(refCardSource,/function ensureCell\(doc,address\)/);
 assert.match(refCardSource,/if\(!cell&&!clean\)return/);
 assert.match(refCardSource,/if\(!cell&&blank\)return/);
@@ -128,12 +145,25 @@ assert.match(css,/grid-template-rows:48px 158px minmax\(0,1fr\)/);
 assert.match(css,/\.ref-card-field-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-report-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-roster\{[^}]*font-size:12\.5px\}/);
-assert.match(handbook,/Current Captain Portal build: \*\*v58\.0\*\*/);
+assert.match(handbook,/Current Captain Portal build: \*\*v58\.7\*\*/);
 
 assert.ok(fs.existsSync(templatePath),"the sanitized Excel template must be present");
-const sharedStrings=execFileSync("unzip",["-p",templatePath.pathname,"xl/sharedStrings.xml"],{encoding:"utf8"});
-const rosterSheet=execFileSync("unzip",["-p",templatePath.pathname,"xl/worksheets/sheet2.xml"],{encoding:"utf8"});
-const templateSheet=execFileSync("unzip",["-p",templatePath.pathname,"xl/worksheets/sheet1.xml"],{encoding:"utf8"});
+const template=fs.readFileSync(templatePath);
+function unzipEntry(name){
+  for(let offset=0;offset<template.length-46;offset++){
+    if(template.readUInt32LE(offset)!==0x02014b50)continue;
+    const length=template.readUInt16LE(offset+28);
+    if(template.subarray(offset+46,offset+46+length).toString()!==name)continue;
+    const method=template.readUInt16LE(offset+10),size=template.readUInt32LE(offset+20),local=template.readUInt32LE(offset+42);
+    const start=local+30+template.readUInt16LE(local+26)+template.readUInt16LE(local+28),bytes=template.subarray(start,start+size);
+    assert.ok(method===0||method===8,'supported ZIP compression');
+    return (method===8?inflateRawSync(bytes):bytes).toString('utf8');
+  }
+  throw new Error('Missing workbook entry: '+name);
+}
+const sharedStrings=unzipEntry('xl/sharedStrings.xml');
+const rosterSheet=unzipEntry('xl/worksheets/sheet2.xml');
+const templateSheet=unzipEntry('xl/worksheets/sheet1.xml');
 for(const staleName of ["Todd Lamberg","Ivan Martinez","Press and Play","Dez Nizigama","Ayman Abunimer"]){
   assert.ok(!sharedStrings.includes(staleName),`sanitized template must not retain ${staleName}`);
   assert.ok(!rosterSheet.includes(staleName),`blank helper sheet must not retain ${staleName}`);
@@ -142,3 +172,4 @@ assert.match(templateSheet,/r="A36"[^>]*>[\s\S]*?<x:v>26<\/x:v>/,"the final hand
 assert.doesNotMatch(templateSheet,/r="B31"/,"fixture must retain the originally omitted blank cell that caused the production error");
 
 console.log("Referee game-card verification passed.");
+

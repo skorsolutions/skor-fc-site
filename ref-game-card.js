@@ -55,11 +55,15 @@
     const byId=new Map((roster||[]).map(player=>[playerId(player),player]));
     const squadIds=selectedSquadIds(state);
     const missingPlayerIds=squadIds.filter(id=>!byId.has(id));
+    const keeper=root.SKORKeeperPlan||(typeof require==='function'?require('./keeper-plan.js'):null);
     const players=squadIds.map(id=>byId.get(id)).filter(Boolean).map(player=>({
       id:playerId(player),
       name:fullPlayerName(player),
       number:validJersey(player?.number??player?.jersey_number),
-      temp:player?.temp===true
+      temp:player?.temp===true,
+      keeperLabel:keeper?.details(state,playerId(player),validJersey(player?.number??player?.jersey_number)).label||'',
+      keeperNumber:keeper?.details(state,playerId(player),validJersey(player?.number??player?.jersey_number)).jerseyNumber??null,
+      jerseyLabel:keeper?.details(state,playerId(player),validJersey(player?.number??player?.jersey_number)).number||''
     })).sort((a,b)=>{
       if(a.temp!==b.temp)return a.temp?1:-1;
       if(a.number!==null&&b.number!==null&&a.number!==b.number)return a.number-b.number;
@@ -82,6 +86,7 @@
       timeInput,
       timeLabel:formatTimeLabel(timeInput),
       players,
+      keeperErrors:keeper?.validate(state)||[],
       missingPlayerIds,
       matchId:text(match?.id),
       eventLabel:text(edits.eventLabel),
@@ -92,6 +97,7 @@
 
   function validateCardData(data){
     const errors=[];
+    errors.push(...(data?.keeperErrors||[]));
     const warnings=[];
     if(!data?.matchId)errors.push("Select a scheduled game. Tinker boards cannot create an official referee card.");
     if(!text(data?.opponent))errors.push("The selected game does not have an opponent.");
@@ -108,6 +114,10 @@
       numbers.get(player.number).push(player.name);
     });
     [...numbers.entries()].filter(([,names])=>names.length>1).forEach(([number,names])=>errors.push(`Jersey #${number} is assigned to ${names.join(" and ")}.`));
+    (data?.players||[]).filter(p=>p.keeperNumber!==null&&p.keeperNumber!==undefined).forEach(p=>{
+      const conflict=(data.players||[]).find(other=>other.id!==p.id&&other.number===p.keeperNumber&&!other.keeperLabel);
+      if(conflict)errors.push(`Keeper jersey #${p.keeperNumber} conflicts with ${conflict.name}'s primary jersey.`);
+    });
     if(!text(data?.field))warnings.push("Field is blank. You can enter it here or write it on the printed card.");
     if(!text(data?.timeInput))warnings.push("Scheduled starting time is blank.");
     return {errors,warnings,valid:errors.length===0};
@@ -116,7 +126,7 @@
   function rosterRows(data){
     return Array.from({length:CARD_CAPACITY},(_,index)=>{
       const player=data.players[index];
-      return `<tr><td class="ref-card-player-cell"><div class="ref-card-player-content"><span class="ref-card-sequence">${index+1}</span><span class="ref-card-player-name">${player?escapeHtml(player.name):""}</span></div></td><td class="ref-card-jersey">${player?.number??""}</td><td></td><td></td><td></td><td></td></tr>`;
+      return `<tr><td class="ref-card-player-cell"><div class="ref-card-player-content"><span class="ref-card-sequence">${index+1}</span><span class="ref-card-player-name">${player?escapeHtml(player.name):""}${player?.keeperLabel?' <span class="ref-card-keeper-label">('+escapeHtml(player.keeperLabel)+')</span>':''}</span></div></td><td class="ref-card-jersey">${player?escapeHtml(player.jerseyLabel||(player.number??'')):''}</td><td></td><td></td><td></td><td></td></tr>`;
     }).join("");
   }
 
@@ -271,33 +281,63 @@
     printArea.textContent="'Template'!$A$1:$L$36";definedNames.appendChild(printArea);
   }
 
+  function applyExcelPlayers(sheetDoc,players){
+    for(let index=0;index<CARD_CAPACITY;index++){
+      const row=11+index,player=players[index];
+      setCellNumber(sheetDoc,`A${row}`,index+1);setCellText(sheetDoc,`B${row}`,player?player.name+(player.keeperLabel?'\n('+player.keeperLabel+')':''):'');
+      if(player?.keeperNumber!==null&&player?.keeperNumber!==undefined)setCellText(sheetDoc,`C${row}`,player.jerseyLabel);
+      else setCellNumber(sheetDoc,`C${row}`,player?.number??'');
+      ['D','E','F','G'].forEach(column=>setCellText(sheetDoc,`${column}${row}`,''));
+    }
+  }
+  function applyKeeperExcelStyles(sheetDoc,stylesDoc,players){
+    if(!players.some(p=>p.keeperLabel))return;
+    const fonts=xmlElements(stylesDoc,'fonts')[0],xfs=xmlElements(stylesDoc,'cellXfs')[0];
+    if(!fonts||!xfs)throw new Error('Excel template styles are incomplete.');
+    const styles=new Map();
+    players.forEach((player,index)=>{
+      if(!player.keeperLabel)return;
+      const cell=findCell(sheetDoc,`B${11+index}`),base=Number(cell?.getAttribute('s')||0);
+      if(!cell)return;
+      if(!styles.has(base)){
+        const xf=xmlElements(xfs,'xf')[base].cloneNode(true);
+        const font=xmlElements(fonts,'font')[Number(xf.getAttribute('fontId')||0)].cloneNode(true);
+        const size=xmlElements(font,'sz')[0]||xmlElement(stylesDoc,'sz');size.setAttribute('val','8');if(!size.parentNode)font.appendChild(size);
+        const fontId=xmlElements(fonts,'font').length;fonts.appendChild(font);fonts.setAttribute('count',String(fontId+1));
+        xf.setAttribute('fontId',String(fontId));xf.setAttribute('applyFont','1');xf.setAttribute('applyAlignment','1');
+        const alignment=xmlElements(xf,'alignment')[0]||xmlElement(stylesDoc,'alignment');
+        alignment.setAttribute('wrapText','1');alignment.setAttribute('vertical','center');alignment.setAttribute('horizontal','left');alignment.removeAttribute('shrinkToFit');
+        if(!alignment.parentNode)xf.appendChild(alignment);
+        const styleId=xmlElements(xfs,'xf').length;xfs.appendChild(xf);xfs.setAttribute('count',String(styleId+1));styles.set(base,styleId);
+      }
+      cell.setAttribute('s',String(styles.get(base)));
+    });
+  }
   async function buildExcelBlob(data,{fetchImpl=root.fetch,JSZipImpl=root.JSZip}={}){
     if(!JSZipImpl)throw new Error("Excel export library did not load. Refresh the page and try again.");
     const response=await fetchImpl(EXCEL_TEMPLATE,{cache:"no-store"});
     if(!response.ok)throw new Error("Could not load the referee-card Excel template.");
     const zip=await JSZipImpl.loadAsync(await response.arrayBuffer());
     const parser=new DOMParser(),serializer=new XMLSerializer();
-    const sheetFile=zip.file("xl/worksheets/sheet1.xml"),workbookFile=zip.file("xl/workbook.xml");
-    if(!sheetFile||!workbookFile)throw new Error("The referee-card Excel template is incomplete.");
+    const sheetFile=zip.file("xl/worksheets/sheet1.xml"),workbookFile=zip.file("xl/workbook.xml"),stylesFile=zip.file('xl/styles.xml');
+    if(!sheetFile||!workbookFile||!stylesFile)throw new Error("The referee-card Excel template is incomplete.");
     const sheetDoc=parser.parseFromString(await sheetFile.async("string"),"application/xml");
     const workbookDoc=parser.parseFromString(await workbookFile.async("string"),"application/xml");
-    if(sheetDoc.querySelector("parsererror")||workbookDoc.querySelector("parsererror"))throw new Error("The referee-card Excel template could not be read.");
+    const stylesDoc=parser.parseFromString(await stylesFile.async('string'),'application/xml');
+    if(sheetDoc.querySelector("parsererror")||workbookDoc.querySelector("parsererror")||stylesDoc.querySelector('parsererror'))throw new Error("The referee-card Excel template could not be read.");
     applyExcelRosterLayout(sheetDoc);
     setCellText(sheetDoc,"B3",data.teamName);setCellText(sheetDoc,"B4",data.teamColors);setCellText(sheetDoc,"B5",data.coach);setCellText(sheetDoc,"B6",data.opponent);
     setCellText(sheetDoc,"I3",data.field);setCellText(sheetDoc,"L3",data.dateLabel);setCellText(sheetDoc,"J4",data.timeLabel);setCellText(sheetDoc,"J5","");setCellText(sheetDoc,"J6","");
-    for(let index=0;index<CARD_CAPACITY;index++){
-      const row=11+index,player=data.players[index];
-      setCellNumber(sheetDoc,`A${row}`,index+1);setCellText(sheetDoc,`B${row}`,player?.name||"");setCellNumber(sheetDoc,`C${row}`,player?.number??"");
-      ["D","E","F","G"].forEach(column=>setCellText(sheetDoc,`${column}${row}`,""));
-    }
+    applyExcelPlayers(sheetDoc,data.players);applyKeeperExcelStyles(sheetDoc,stylesDoc,data.players);
     applyPrintSettings(sheetDoc);applyWorkbookPrintArea(workbookDoc);
     zip.file("xl/worksheets/sheet1.xml",serializer.serializeToString(sheetDoc));
     zip.file("xl/workbook.xml",serializer.serializeToString(workbookDoc));
+    zip.file('xl/styles.xml',serializer.serializeToString(stylesDoc));
     return zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",compression:"DEFLATE"});
   }
 
   const api={CARD_CAPACITY,buildCardData,validateCardData,buildCardMarkup,fileBase,selectedSquadIds,formatDateLabel,formatTimeLabel,opponentFor,buildExcelBlob};
-  if(typeof module!=="undefined"&&module.exports)api.__test={setCellText,setCellNumber,findCell,applyExcelRosterLayout,applyPrintSettings};
+  if(typeof module!=="undefined"&&module.exports)api.__test={setCellText,setCellNumber,findCell,applyExcelRosterLayout,applyPrintSettings,applyExcelPlayers,applyKeeperExcelStyles};
   root.SKORRefGameCard=api;
   if(typeof module!=="undefined"&&module.exports)module.exports=api;
   if(typeof document==="undefined")return;
@@ -350,7 +390,7 @@
     render();const check=validateCardData(currentData);if(!check.valid)return;
     const popup=window.open("","_blank");
     if(!popup){status.className="ref-game-card-status visible error";status.textContent="The print window was blocked. Allow pop-ups for this site and try again.";return;}
-    const cssUrl=new URL("ref-game-card.css?v=56.3",window.location.href).href;
+    const cssUrl=new URL("ref-game-card.css?v=58.7",window.location.href).href;
     popup.document.open();popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(fileBase(currentData))}</title><link rel="stylesheet" href="${escapeHtml(cssUrl)}"></head><body class="ref-card-print-body">${buildCardMarkup(currentData)}<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),250));<\/script></body></html>`);popup.document.close();
   });
 
@@ -365,3 +405,4 @@
     finally{excelBtn.disabled=false;excelBtn.textContent=original;}
   });
 })(typeof window!=="undefined"?window:globalThis);
+

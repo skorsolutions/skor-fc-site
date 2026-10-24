@@ -2,6 +2,8 @@
 
 Status: **v55.2 production renderer contract**
 
+**v58.7 keeper extension:** The pitch shirt displays the primary and spare keeper number together (`12 / 30`) with a smaller number font. A parenthesized keeper role appears beneath the player name, including in Numbers Only mode. Bench chips reserve space for both numbers and a separate keeper-role line; their measured height moves following content downward. Potential Positions and substitution labels use the same match-specific names/numbers. These fields persist in the existing lineup JSON; crop geometry and canonical coordinates are unchanged.
+
 This is the durable reference for the lineup picture shown in **Shareable Gameplan Export** and downloaded as PNG or JPG. Read it before changing pitch geometry, player markers, formation mapping, export height, or content beneath the pitch.
 
 ## Product intent
@@ -83,3 +85,4 @@ The export image itself has a stable 1,080-pixel width for reliable sharing. The
 - Check Numbers Only and a TEMP player when those behaviors change.
 - Check a populated bench and enough substitution/Potential Position content to force export-height growth when layout code changes.
 - Confirm preview and PNG/JPG paths both call `buildGameplanSvg()`.
+

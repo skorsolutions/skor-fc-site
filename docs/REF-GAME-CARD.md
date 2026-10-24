@@ -1,6 +1,8 @@
 # Referee Game Card
 
-Build: **v56.3**
+Build: **v58.7**
+
+Match keeper assignments now come from the current lineup's `keeperPlan`. Names retain their full roster identity and append the keeper role in parentheses; the jersey column shows primary / spare, for example `12 / 30`. Shared keeper spare numbers are allowed; duplicate primary numbers remain blocked. Missing required keeper numbers and spare collisions with an outfield player's primary number block both PDF and Excel. PDF places the role on a compact second line beside the player's name to preserve the 26-row, one-page form. Excel writes dual numbers as text and wraps the full name and duty on two lines in a compact keeper-only font, retaining one-page print metadata. The game-card exporter itself remains read-only.
 
 This document defines the Captain Portal referee-card workflow. The feature reproduces the supplied Roswell Recreation & Parks game-card layout as a separate export beside the lineup PNG/JPG actions.
 
@@ -103,3 +105,4 @@ A missing field or scheduled time produces a warning but remains printable becau
 - Open the `.xlsx` in Excel and confirm it prints as exactly one landscape Letter page with no clipped text on either horizontal edge and with **Linesman 2** visible at the bottom.
 - Confirm roster text is vertically centered and fully visible, sequence numbers are centered, and the sequence/jersey columns do not consume unnecessary width.
 - Check desktop and representative phone widths.
+

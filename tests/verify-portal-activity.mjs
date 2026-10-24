@@ -72,7 +72,7 @@ const groups=activity.groupActivity(rows);assert.equal(groups.length,3);assert.e
 
 const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{innerHTML:'',textContent:'',value:'',disabled:false,classList:{contains:()=>true}});return nodes.get(id);};
 let request=async()=>({data:rows,error:null}),canWrite=true;
-const context={window:{SKORPortalActivity:activity,addEventListener(){}},document:{getElementById:node,addEventListener(){},visibilityState:'visible'},Date:class extends Date{static now(){return now;}},Map,console:{warn(){}},setInterval(){},setTimeout,adminApp:{style:{display:'grid'}},portalCanWrite:()=>canWrite,sb:{rpc:(...args)=>request(...args)},gdEsc:v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')};
+const context={window:{SKORPortalActivity:{...activity,relativeActivity:value=>activity.relativeActivity(value,now)},addEventListener(){}},document:{getElementById:node,addEventListener(){},visibilityState:'visible'},Date:class extends Date{static now(){return now;}},Map,console:{warn(){}},setInterval(){},setTimeout,adminApp:{style:{display:'grid'}},portalCanWrite:()=>canWrite,sb:{rpc:(...args)=>request(...args)},gdEsc:v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')};
 vm.createContext(context);
 vm.runInContext('let PLAYER_PORTAL_ACTIVITY=[];'+admin.slice(admin.indexOf('function activityDateTime('),admin.indexOf('function feedbackOpponent(')),context);
 await context.loadPlayerActivity();
@@ -111,3 +111,4 @@ assert.match(admin,/captainActivity\.start\(user.id\)/);assert.match(admin,/capt
 assert.match(player,/playerActivity\.start\(user.id\)/);assert.match(player,/playerActivity\.clear\(\)/);
 assert.doesNotMatch(player,/db\.rpc\('record_my_player_portal_login'\)/);
 console.log('Portal activity verification passed: both portals, restored sessions, visibility/idle throttling, retries, account isolation, last-seen sorting/filtering, report refresh/errors, and source/security contracts.');
+

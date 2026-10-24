@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.6-portal-activity" />
-  <title>SKOR FC Admin | Captain Portal v58.6</title>
+  <meta name="skor-build" content="captain-portal-v58.7-match-keepers" />
+  <title>SKOR FC Admin | Captain Portal v58.7</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="strategy.css?v=58.0" />
-  <link rel="stylesheet" href="ref-game-card.css?v=56.3" />
+  <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
   <style>
     :root{
@@ -1865,7 +1865,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.6</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.7</div>
   </aside>
 
   <main>
@@ -2826,6 +2826,19 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
             </div>
 
+            <div class="mini-panel keeper-plan" id="keeperPlanPanel">
+              <h3>Keepers for this match</h3>
+              <p>Assign the starting keeper and anyone who may cover in goal. Players can share a spare jersey or use different ones. Choosing a starter places him in goal.</p>
+              <label for="keeperSpareNumbers">Spare keeper jersey numbers</label>
+              <input id="keeperSpareNumbers" inputmode="numeric" placeholder="30, 31" aria-describedby="keeperSpareHelp">
+              <p id="keeperSpareHelp">Separate numbers with commas. Saved with the variation and suggested on new boards. Each player can select or type a number.</p>
+              <datalist id="keeperJerseyOptions"></datalist>
+              <label for="keeperAddPlayer">Assign another keeper</label>
+              <select id="keeperAddPlayer"><option value="">Choose a match-squad player…</option></select>
+              <div id="keeperPlanRows"></div>
+              <div class="keeper-plan-status" id="keeperPlanStatus" role="status" aria-live="polite"></div>
+            </div>
+
             <div class="mini-panel temp-player-manager" id="tempPlayerManager">
               <h4>Match Fill-ins / TEMP Players</h4>
               <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
@@ -3167,6 +3180,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </div>
   </div>
 </dialog>
+<link rel="stylesheet" href="keeper-plan.css?v=58.7">
+<script src="keeper-plan.js?v=58.7"></script>
+<script src="keeper-editor.js?v=58.7"></script>
 <script src="ribbon-order.js?v=58.3"></script>
 <script src="temp-player-directory.js?v=58.3"></script>
 <script>
@@ -3259,6 +3275,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   let sharedTinkerVariations = [];
   let lineupCopyContext=null;
   let realtimeChannel = null;
+  let inheritKeeperChoices=false;
   let state = blankState("4-2-3-1");
 
   function isFreeform(formation){ return formation === FREEFORM; }
@@ -3268,7 +3285,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function blankSubRow(index=0){ return {label:"",unit:defaultSubUnit(index),minute:null,out:[],in:[]}; }
   function blankSubs(){ return {firstHalf:[blankSubRow(0)],secondHalf:[blankSubRow(0)]}; }
   function blankState(formation){
-    return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),showSecondHalfSubs:false,labelMode:"names",captainId:"",quote:"",notes:""};
+    return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),showSecondHalfSubs:false,labelMode:"names",captainId:"",quote:"",notes:"",keeperPlan:window.SKORKeeperPlan.normalize(null)};
   }
   function normalizeSubs(value){
     const normalizeIds=v=>{
@@ -3341,6 +3358,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       showSecondHalfSubs:typeof value?.showSecondHalfSubs==="boolean"?value.showSecondHalfSubs:hasStoredSecondHalf,
       labelMode:value?.labelMode==="numbers"?"numbers":"names",
       captainId:String(value?.captainId||""),
+      keeperPlan:window.SKORKeeperPlan.normalize(value?.keeperPlan),
       quote:String(value?.quote||"").slice(0,100),
       notes:String(value?.notes||"").slice(0,280)
     };
@@ -3349,13 +3367,25 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function id(p){ return p.player_key || p.id || (p.number+"-"+p.name); }
   function player(pid){ return roster.find(p=>id(p)===pid); }
   function selectableRoster(){ return roster.filter(p=>!p.archived); }
-  function jerseyLabel(p){ return p?.temp ? (Number.isInteger(Number(p.number))&&Number(p.number)>0?String(Number(p.number)):"TEMP") : String(p?.number??""); }
+  function primaryJerseyLabel(p){ return p?.temp ? (Number.isInteger(Number(p.number))&&Number(p.number)>0?String(Number(p.number)):"TEMP") : String(p?.number??""); }
+  function keeperDetails(p){return window.SKORKeeperPlan.details(state,id(p),primaryJerseyLabel(p));}
+  function jerseyLabel(p){return keeperDetails(p).number;}
+  function keeperSuffix(p){const label=keeperDetails(p).label;return label?' ('+label+')':'';}
+  function renderKeeperPlan(){
+    window.SKORKeeperEditor.render({state,players:matchSquadPlayers(),id,primaryNumber:primaryJerseyLabel,name:p=>p.name,
+      onError:message=>markStatus(message,false),onChange:message=>{inheritKeeperChoices=false;persistDraft();renderAll();markStatus(message);}});
+  }
+  function checkKeepers(snapshot=state){
+    if(snapshot===state){const invalid=document.querySelector('#keeperPlanPanel input:invalid');if(invalid){invalid.reportValidity();return false;}}
+    const errors=window.SKORKeeperPlan.validate(snapshot);
+    if(errors.length){markStatus(errors.join(' '),false);return false;}return true;
+  }
   function playerListLabel(p,short=false){
     if(!p)return "Unknown";
     const name=short?shortName(p.name):p.name;
     const num=jerseyLabel(p);
-    if(p.temp)return num==="TEMP" ? "TEMP "+name : "#"+num+" "+name+" · TEMP";
-    return "#"+num+" "+name;
+    if(p.temp)return (num==="TEMP" ? "TEMP "+name : "#"+num+" "+name+" · TEMP")+keeperSuffix(p);
+    return "#"+num+" "+name+keeperSuffix(p);
   }
   function rebuildCombinedRoster(){
     roster=[...permanentRoster,...matchTempPlayers].sort((a,b)=>{
@@ -3452,7 +3482,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const captain = onPitch && state.captainId===id(p) ? '<span class="captain-badge" title="Captain">C</span>' : '';
     const number=jerseyLabel(p);
     return '<div class="player-peg'+(compact?' compact':'')+' '+modeClass()+'" draggable="true" data-v28-player="'+esc(id(p))+'"'+pitchAttr+'>'+
-      '<div class="jersey'+(p.temp&&number==="TEMP"?' temp-number':'')+'">'+esc(number)+'</div>'+captain+'<div class="peg-name">'+esc(p.name)+'</div></div>';
+      '<div class="jersey'+(number.includes(' / ')?' keeper-dual':'')+(p.temp&&number==="TEMP"?' temp-number':'')+'"><span'+(number.includes(' / ')?' class="keeper-number-pair"':'')+'>'+esc(number)+'</span></div>'+captain+'<div class="peg-name">'+esc(p.name)+'</div>'+(keeperSuffix(p)?'<small class="keeper-tag">'+esc(keeperSuffix(p))+'</small>':'')+'</div>';
   }
   function markStatus(msg,ok=true){
     const el=document.getElementById("lineupStatus");
@@ -3480,7 +3510,12 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function loadDraft(){
     try{
       const raw=localStorage.getItem(draftKey());
+      inheritKeeperChoices=!raw;
       state=raw?normalizeState(JSON.parse(raw)):blankState(document.getElementById("lineupFormation")?.value||"4-2-3-1");
+      if(!raw){
+        const latest=allSharedVariations.filter(v=>Array.isArray(v.state?.keeperPlan?.spareNumbers)).sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at))[0];
+        if(latest)state.keeperPlan.spareNumbers=window.SKORKeeperPlan.normalize(latest.state.keeperPlan).spareNumbers;
+      }
     }catch{ state=blankState(document.getElementById("lineupFormation")?.value||"4-2-3-1"); }
     const formation=document.getElementById("lineupFormation");
     const labels=document.getElementById("lineupLabelMode");
@@ -3497,6 +3532,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
   function loadVariationRecord(rec){
     if(!rec)return;
+    inheritKeeperChoices=false;
     state=normalizeState(clone(rec.state));
     const formation=document.getElementById("lineupFormation");
     const name=document.getElementById("lineupVariationName");
@@ -3642,22 +3678,23 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     let benchChipX=benchChipStartX,benchChipY=benchCardY+78,benchRowCount=benchPlayers.length?1:0;
     const benchChips=benchPlayers.map(p=>{
       const label=playerListLabel(p,true);
-      const width=Math.min(270,Math.max(132,52+(label.length*10)));
+      const width=Math.min(440,Math.max(170,52+(label.length*8)));
       if(benchChipX+width>benchChipMaxX&&benchChipX>benchChipStartX){
         benchChipX=benchChipStartX;
-        benchChipY+=50;
+        benchChipY+=68;
         benchRowCount++;
       }
       const x=benchChipX,y=benchChipY;
       benchChipX+=width+10;
       return `
-        <rect x="${x}" y="${y}" width="${width}" height="40" rx="20" ry="20" fill="#f7f8fa" stroke="#d8dbe1"/>
-        <circle cx="${x+21}" cy="${y+20}" r="14" fill="#801A3D"/>
-        <text x="${x+21}" y="${y+25}" text-anchor="middle" font-size="12" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
-        <text x="${x+42}" y="${y+26}" font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}${p.temp?' · TEMP':''}</text>
+        <rect x="${x}" y="${y}" width="${width}" height="58" rx="20" ry="20" fill="#f7f8fa" stroke="#d8dbe1"/>
+        <rect x="${x+8}" y="${y+12}" width="68" height="32" rx="16" fill="#801A3D"/>
+        <text x="${x+42}" y="${y+33}" text-anchor="middle" font-size="13" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
+        <text x="${x+84}" y="${y+24}" font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}${p.temp?' · TEMP':''}</text>
+        <text x="${x+84}" y="${y+44}" font-size="13" fill="#741f35" font-family="Arial, Helvetica, sans-serif">${esc(keeperSuffix(p))}</text>
       `;
     }).join("");
-    const benchRowsHeight=benchRowCount?(benchRowCount*40)+((benchRowCount-1)*10):44;
+    const benchRowsHeight=benchRowCount?(benchRowCount*58)+((benchRowCount-1)*10):44;
     const benchCardH=78+benchRowsHeight+20;
     const lowerCardsY=benchCardY+benchCardH+26;
     const depthCardX=50,depthCardY=lowerCardsY,depthCardW=480;
@@ -3778,9 +3815,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         ${role}
         <polygon points="${jerseyPoints}" fill="#801A3D" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
         <path d="M ${x-16} ${y-42} L ${x+16} ${y-42} Q ${x+13} ${y-26} ${x} ${y-26} Q ${x-13} ${y-26} ${x-16} ${y-42} Z" fill="#17181c"/>
-        <text x="${x}" y="${y+14}" text-anchor="middle" font-size="${p.temp&&jerseyLabel(p)==='TEMP'?20:36}" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
+        <text x="${x}" y="${y+14}" text-anchor="middle" font-size="${jerseyLabel(p).includes(' / ')?16:p.temp&&jerseyLabel(p)==='TEMP'?20:36}" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
         ${captainBadge}
-        ${name}${p.temp?`<text x="${x}" y="${y+86}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">TEMP</text>`:""}
+        ${name}${keeperSuffix(p)?`<text x="${x}" y="${y+85}" text-anchor="middle" font-size="12" font-weight="800" fill="#ffffff" stroke="#24552f" stroke-width="2" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(keeperSuffix(p))}</text>`:''}${p.temp?`<text x="${x}" y="${y+(keeperSuffix(p)?102:86)}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">TEMP</text>`:""}
       `;
     }).join("");
 
@@ -4481,6 +4518,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       });
     });
     if(isTemp(s.captainId))s.captainId="";
+    s.keeperPlan.assignments={};
     return {snapshot:s,removed};
   }
 
@@ -4507,7 +4545,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const result=stripTempPlayersForCopy(lineupCopyContext.snapshot);
     if(summary){
       const destination=target?formatMatch(target):"Select a game";
-      summary.textContent='A new saved variation will be created under '+destination+'. The source lineup will not be changed.';
+      summary.textContent='A new saved variation will be created under '+destination+'. The source lineup will not be changed. Match-specific keeper assignments are cleared in the copy; choose the destination game’s keepers again.';
     }
     if(warning){
       if(result.removed.length){
@@ -4712,6 +4750,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("mark the Production / Final lineup");return;}
       const rec=library.find(v=>String(v.id)===String(btn.dataset.finalVariation));
       if(!rec||String(rec.event_key)==='tinker')return;
+      if(!checkKeepers(rec.state))return;
       if(rec.is_production===true){
         markStatus('"'+rec.name+'" is already the Production / Final lineup for this game.');
         return;
@@ -4775,6 +4814,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       .order('created_at',{ascending:false});
     if(error){sharedVariations=[];allSharedVariations=[];renderVariations();if(showMessage)markStatus('Shared variations unavailable: '+error.message,false);return;}
     allSharedVariations=data||[];
+    if(inheritKeeperChoices){
+      const latest=allSharedVariations.filter(v=>Array.isArray(v.state?.keeperPlan?.spareNumbers)).sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at))[0];
+      if(latest){state.keeperPlan.spareNumbers=window.SKORKeeperPlan.normalize(latest.state.keeperPlan).spareNumbers;inheritKeeperChoices=false;persistDraft();renderKeeperPlan();}
+    }
     sharedVariations=allSharedVariations.filter(v=>String(v.event_key)===String(eventKey()));
     sharedTinkerVariations=allSharedVariations.filter(v=>String(v.event_key)==='tinker');
     renderEventOptions();
@@ -4792,7 +4835,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       .subscribe();
   }
 
-  function renderCore(){ renderPitch(); renderPool(); renderBench(); renderDepth(); bindDrags(); }
+  function renderCore(){ window.SKORKeeperPlan.prune(state);renderKeeperPlan();renderPitch(); renderPool(); renderBench(); renderDepth(); bindDrags(); }
   function renderSquadChange(){ renderCore(); renderSubPlan(); renderGameplanPreview(); }
   function renderAll(){ renderCore(); renderSubPlan(); renderVariations(); renderGameplanPreview(); }
   function renderEventOptions(){
@@ -4848,6 +4891,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     };
   }
   function removePlayerEverywhere(pid){
+    if(state.keeperPlan?.assignments)delete state.keeperPlan.assignments[pid];
     removeFromField(pid);
     state.bench=(state.bench||[]).filter(x=>x!==pid);
     Object.keys(state.depth||{}).forEach(k=>{state.depth[k]=(state.depth[k]||[]).filter(x=>x!==pid);});
@@ -5093,6 +5137,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
   if(updateProductionBtn)updateProductionBtn.addEventListener('click',async()=>{
     if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("update the Production / Final lineup");return;}
+    if(!checkKeepers())return;
     const finalRec=productionVariationForEvent();
     if(!finalRec){
       markStatus('This game does not have a Production / Final lineup yet.',false);
@@ -5136,6 +5181,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
   if(saveBtn) saveBtn.addEventListener('click', async()=>{
     if(!window.SKORPortalCanWrite?.()){ window.SKORViewerBlocked?.("save lineup variations"); return; }
+    if(!checkKeepers())return;
     const sb=sbClient(); if(!sb){ markStatus('Supabase is not connected.',false); return; }
     const name=document.getElementById('lineupVariationName').value.trim()||'Untitled';
     const originalText=saveBtn.textContent;
@@ -5197,7 +5243,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.0 ready. Strategy Scene Bundles can animate and export as GIFs.");
+  markStatus("Captain Portal v58.7 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,
@@ -5207,7 +5253,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     refreshTempPlayers,
     refreshTempNameDirectory,
     clearTempNameDirectory,
-    jerseysChanged:()=>renderTempPlayerManager(),
+    jerseysChanged:()=>{renderTempPlayerManager();renderKeeperPlan();},
     findVariation:id=>allSharedVariations.find(v=>String(v.id)===String(id))||null,
     loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
     removePermanentPlayer:pid=>{removePlayerEverywhere(String(pid));if(selectedPlayer===String(pid))selectedPlayer=null;persistDraft();renderAll();},
@@ -5230,8 +5276,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="jerseys-bulk.js?v=58.4"></script>
 <script src="jerseys.js?v=58.4"></script>
 <script src="equipment.js?v=58.5"></script>
-<script src="strategy.js?v=58.0"></script>
-<script src="ref-game-card.js?v=56.3"></script>
+<script src="strategy.js?v=58.7"></script>
+<script src="ref-game-card.js?v=58.7"></script>
 <script src="portal-activity.js?v=58.6"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
@@ -6989,6 +7035,14 @@ async function loadPlayerEngagement(){
 
 function officialEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
 function officialPlayerLabel(pid){
+  const key=String(pid||'');
+  const p=key.startsWith('temp:')?MATCH_TEMP_PLAYERS.find(p=>String(p.id)===key.slice(5)):TEAM_ROSTER.find(p=>String(p.player_key||p.id)===key);
+  if(!p)return officialPlayerLabelBase(pid);
+  const d=window.SKORKeeperPlan.details(PRODUCTION_GAMEPLAN?.state||{},key,p.jersey_number??'TEMP');
+  const name=key.startsWith('temp:')?p.display_name:(p.preferred_name||String(p.full_name||'Player').trim().split(/\s+/)[0]);
+  return '#'+d.number+' '+name+(key.startsWith('temp:')?' · TEMP':'')+(d.label?' ('+d.label+')':'');
+}
+function officialPlayerLabelBase(pid){
   const key=String(pid||"");
   if(key.startsWith("temp:")){
     const id=key.slice(5);
@@ -7032,7 +7086,7 @@ function renderProductionGameplan(){
   const formation=s.formation||"4-2-3-1";
   const slots=s.slots||{};
   let starters=[];
-  if(formation==="Freeform"){
+  if(formation==="Freeform"||formation==="Freeform / Custom"){
     starters=Object.keys(s.freeform||{}).map(pid=>({role:"",pid}));
   }else{
     starters=officialFormationSlots(formation).map(role=>({role,pid:slots[role]})).filter(x=>x.pid);
@@ -7462,5 +7516,6 @@ loadAnnouncements();
 
 </body>
 </html>
+
 
 

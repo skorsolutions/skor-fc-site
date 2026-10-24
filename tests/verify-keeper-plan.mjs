@@ -1,0 +1,140 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {createRequire} from 'node:module';
+import {stripTypeScriptTypes} from 'node:module';
+const require=createRequire(import.meta.url),K=require('../keeper-plan.js'),ref=require('../ref-game-card.js');
+const read=file=>fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
+const admin=read('admin.html');
+const fixture=()=>({formation:'4-2-3-1',slots:{GK:'alex',LB:'jordan'},freeform:{},bench:['joe'],depth:{},subs:{firstHalf:[],secondHalf:[]},keeperPlan:K.normalize(null)});
+const roster=[{player_key:'alex',number:12,name:'Alex',fullName:'Alex Smith'},{player_key:'joe',number:15,name:'Joe',fullName:'Joe Smo'},{player_key:'jordan',number:1,name:'Jordan',fullName:'Jordan Lee'}];
+const match={id:'game-fixture',home_team:'SKOR FC',away_team:'Visitors',kickoff:'2026-10-25T21:00:00Z',location:'Test field'};
+let s=fixture();
+assert.equal(K.details(s,'alex',12).label,'starting keeper','legacy GK receives starting label');
+assert.equal(K.setRole(s,'alex','starting_temp'),'');
+assert.equal(K.setRole(s,'joe','secondary_temp'),'');
+assert.equal(K.details(s,'alex',12).number,'12 / 30');
+assert.equal(K.details(s,'joe',15).number,'15 / 30');
+assert.equal(K.details(s,'alex',12).label,'starting temp keeper');
+assert.equal(K.details(s,'joe',15).label,'secondary temp keeper');
+assert.deepEqual(K.validate(s),[]);
+let card=ref.buildCardData({state:s,roster,match});
+assert.equal(ref.validateCardData(card).valid,true,'a shared keeper jersey is valid');
+assert.match(ref.buildCardMarkup(card),/12 \/ 30/);
+assert.match(ref.buildCardMarkup(card),/starting temp keeper/);
+assert.match(ref.buildCardMarkup(card),/secondary temp keeper/);
+s.keeperPlan.assignments.joe.jerseyNumber=31;
+assert.equal(K.details(s,'joe',15).number,'15 / 31');
+assert.equal(K.setRole(s,'jordan','starting'),'');
+assert.equal(s.slots.GK,'jordan');
+assert.ok(s.bench.includes('alex'),'displaced starter moves to bench');
+assert.equal(K.details(s,'jordan',1).number,'1');
+assert.equal(K.details(s,'jordan',1).label,'starting keeper');
+assert.equal(K.details(s,'alex',12).label,'backup keeper');
+assert.equal(K.details(s,'joe',15).label,'backup keeper');
+assert.deepEqual(K.validate(s),[]);
+assert.match(K.setRole(s,'jordan','backup'),/different starting keeper/);
+assert.equal(K.setRole(s,'joe',''),'');
+assert.equal(K.details(s,'joe',15).number,'15');
+assert.equal(K.details(s,'joe',15).label,'');
+assert.equal(roster[0].number,12,'primary roster numbers are immutable');
+const saved=JSON.parse(JSON.stringify(s));
+assert.equal(K.details(saved,'alex',12).number,'12 / 30','JSON save/load preserves assignments');
+assert.equal(K.details(saved,'alex',12).label,'backup keeper');
+for(const value of [0,-1,100,1.5,'abc','',null])assert.equal(K.jersey(value),null);
+assert.equal(K.jersey('31'),31);
+assert.deepEqual(K.normalize({spareNumbers:[30,'31',30,100,null]}).spareNumbers,[30,31]);
+assert.deepEqual(K.normalize(JSON.parse('{"assignments":{"__proto__":{"role":"starting"},"x":{"role":"arbitrary"}}}')).assignments,{});
+s.keeperPlan.assignments.alex.jerseyNumber=null;
+assert.ok(K.validate(s).length);
+assert.equal(ref.validateCardData(ref.buildCardData({state:s,roster,match})).valid,false);
+s.keeperPlan.assignments.alex.jerseyNumber=15;
+assert.match(ref.validateCardData(ref.buildCardData({state:s,roster,match})).errors.join(' '),/conflicts/);
+s=fixture();K.setRole(s,'alex','starting_temp');K.setRole(s,'joe','secondary_temp');
+delete s.slots.GK;K.prune(s);
+assert.equal(s.keeperPlan.assignments.alex,undefined,'removing a squad member clears his keeper assignment');
+assert.ok(K.validate(s).length,'cover assignments require a starting keeper');
+s=fixture();s.formation='Freeform / Custom';s.freeform={alex:{x:50,y:92},jordan:{x:20,y:75}};s.slots={};
+K.setRole(s,'alex','starting_temp');K.setRole(s,'joe','secondary_temp');
+assert.equal(K.startingId(s),'alex');
+K.setRole(s,'joe','starting_temp');
+assert.equal(K.startingId(s),'joe');
+assert.equal(K.details(s,'alex',12).label,'secondary temp keeper');
+assert.ok(s.freeform.joe);assert.ok(!s.bench.includes('joe'));
+assert.deepEqual(K.validate(s),[]);
+// Execute the real editor normalizer and copy path, rather than a mirror of them.
+function fn(source,name){
+  const start=source.indexOf('  function '+name+'(');
+  assert.ok(start>=0,name+' must exist');
+  const tail=source.slice(start+3),end=tail.search(/\n  (?:async )?function |\n  window\./);
+  return source.slice(start,end<0?undefined:start+3+end);
+}
+const context={window:{SKORKeeperPlan:K},formations:{'4-2-3-1':[]},FREEFORM:'Freeform / Custom',isFreeform:f=>f==='Freeform / Custom',clamp:(n,a,b)=>Math.min(b,Math.max(a,n)),depthPositionsForFormation:()=>[],normalizeSubs:x=>x||{firstHalf:[],secondHalf:[]},clone:structuredClone};
+vm.createContext(context);
+for(const name of ['normalizeState','lineupTempIds','stripTempPlayersForCopy'])vm.runInContext(fn(admin,name),context);
+const normalized=context.normalizeState(s);
+assert.equal(K.details(normalized,'joe',15).number,'15 / 30');
+const copy=context.stripTempPlayersForCopy(normalized).snapshot;
+assert.equal(Object.keys(copy.keeperPlan.assignments).length,0,'copy to another game clears temporary keeper decisions');
+assert.deepEqual([...copy.keeperPlan.spareNumbers],[30],'spare choices may be reused');
+// Execute the actual public/Crowd and captain display adapters.
+s=fixture();K.setRole(s,'alex','starting_temp');K.setRole(s,'joe','secondary_temp');
+for(const [file,startName,endName] of [['matches.html','productionPlayer','renderOfficialLineup'],['gameday.html','matchLineupPlayer','matchSubUnitLabel']]){
+  const src=read(file),start=src.indexOf('function '+startName+'('),end=src.indexOf('function '+endName+'(',start);
+  const ctx={window:{SKORKeeperPlan:K},productionLineup:{state:s},productionTempPlayers:[],publicRoster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name})),roster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name}))};
+  vm.runInNewContext(src.slice(start,end),ctx);
+  assert.equal(ctx[startName]('alex').number,'12 / 30');
+  assert.match(ctx[startName]('alex').name,/starting temp keeper/);
+  assert.match(ctx[startName]('joe').name,/secondary temp keeper/);
+}
+const captainContext={window:{SKORKeeperPlan:K},PRODUCTION_GAMEPLAN:{state:s},TEAM_ROSTER:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,preferred_name:p.name})),MATCH_TEMP_PLAYERS:[]};
+vm.runInNewContext(admin.slice(admin.indexOf('function officialPlayerLabel('),admin.indexOf('function officialFormationSlots(')),captainContext);
+assert.equal(captainContext.officialPlayerLabel('alex'),'#12 / 30 Alex (starting temp keeper)');
+// Execute the real SVG renderer with a populated bench and keeper assignments.
+const svgContext={...context,state:s,roster,document:{getElementById:id=>id==='exportIncludeDepthChart'?{checked:true}:{value:'Keeper fixture'}},eventLabel:()=> 'Fixture game',fieldEntries:()=>[{pid:'alex',label:'GK',x:50,y:92},{pid:'jordan',label:'LB',x:17,y:76}],filledFirstHalfSubs:()=>[],filledSecondHalfSubs:()=>[],esc:v=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;'),shortName:n=>n,subUnitLabel:()=>'',svgTextBlock:()=>'',player:pid=>roster.find(p=>p.player_key===pid),id:p=>p.player_key};
+vm.createContext(svgContext);
+for(const name of ['primaryJerseyLabel','keeperDetails','jerseyLabel','keeperSuffix','playerListLabel','buildGameplanSvg'])vm.runInContext(fn(admin,name),svgContext);
+const svg=svgContext.buildGameplanSvg();
+assert.match(svg,/12 \/ 30/);assert.match(svg,/15 \/ 30/);
+assert.match(svg,/\(starting temp keeper\)/);assert.match(svg,/\(secondary temp keeper\)/);
+assert.doesNotMatch(svg,/NaN|undefined/);
+svgContext.state.labelMode='numbers';
+assert.match(svgContext.buildGameplanSvg(),/starting temp keeper/,'keeper duty remains visible in Numbers Only mode');
+// Exercise actual editor events, validation and view-only protection.
+class Input{
+  constructor(dataset={}){this.dataset=dataset;this.value='';this.events={};this.validity='';}
+  addEventListener(name,fn){this.events[name]=fn;}
+  setCustomValidity(value){this.validity=value;}reportValidity(){return !this.validity;}
+}
+const elements=new Map(),element=id=>{if(!elements.has(id))elements.set(id,new Input());return elements.get(id);};
+const box=element('keeperPlanRows');
+box.querySelectorAll=selector=>[...box.innerHTML.matchAll(new RegExp('data-keeper-'+(selector.includes('role')?'role':'number')+'="([^"]+)"','g'))].map(m=>new Input({[selector.includes('role')?'keeperRole':'keeperNumber']:m[1]}));
+// Keep event nodes from the current render for dispatching.
+const baseQuery=box.querySelectorAll;box.querySelectorAll=selector=>{const result=baseQuery(selector);box[selector]=result;return result;};
+let writes=0,allowed=true,blocked=0;
+const editorWindow={SKORKeeperPlan:K,SKORPortalCanWrite:()=>allowed,SKORViewerBlocked:()=>blocked++};
+vm.runInNewContext(read('keeper-editor.js'),{window:editorWindow,document:{getElementById:element}});
+const editorState=fixture();
+const editorContext={state:editorState,players:roster,id:p=>p.player_key,primaryNumber:p=>String(p.number),name:p=>p.name,onError:message=>assert.fail(message),onChange:()=>{writes++;editorWindow.SKORKeeperEditor.render(editorContext);}};
+editorWindow.SKORKeeperEditor.render(editorContext);
+const add=element('keeperAddPlayer');add.value='joe';add.onchange();
+assert.equal(editorState.keeperPlan.assignments.joe.jerseyNumber,30);
+const role=box['[data-keeper-role]'].find(input=>input.dataset.keeperRole==='alex');role.value='starting_temp';role.events.change();
+assert.equal(K.details(editorState,'joe',15).label,'secondary temp keeper');
+const jersey=box['[data-keeper-number]'].find(input=>input.dataset.keeperNumber==='joe');jersey.value='31';jersey.events.change();
+assert.equal(K.details(editorState,'joe',15).number,'15 / 31');
+const invalid=box['[data-keeper-number]'].find(input=>input.dataset.keeperNumber==='joe');invalid.value='ab';invalid.events.change();
+assert.ok(invalid.validity);assert.equal(editorState.keeperPlan.assignments.joe.jerseyNumber,31);
+const before=JSON.stringify(editorState),count=writes;allowed=false;add.value='jordan';add.onchange();
+assert.equal(JSON.stringify(editorState),before);assert.equal(writes,count);assert.equal(blocked,1);
+// The Edge Function packages the exact same keeper rules as the browser.
+assert.equal(read('keeper-plan.js'),read('supabase/functions/generate-pregame-talk/keeper-plan.js'));
+const pregame=read('supabase/functions/generate-pregame-talk/index.ts');
+new vm.Script(stripTypeScriptTypes(pregame.replace(/^import .*;\n/gm,'')));
+assert.match(pregame,/keeper_assignments: keeperPlan\.squadIds/);
+assert.match(pregame,/Keep the primary jersey number as the player's identity/);
+for(const file of ['admin.html','matches.html','gameday.html']){
+  const html=read(file);assert.match(html,/keeper-plan\.js\?v=58\.7/);
+  for(const m of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi))new vm.Script(m[1]);
+}
+console.log('Keeper verification passed: shared/distinct spares, roles, swaps, freeform, validation, JSON roundtrip, copy isolation, referee card, published adapters and packaged AI rules.');
