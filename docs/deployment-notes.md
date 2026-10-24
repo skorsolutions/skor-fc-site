@@ -1,4 +1,4 @@
-# v58.7 — Match keepers and spare jerseys (release prepared)
+# v58.7 — Match keepers and spare jerseys (deployed)
 
 - Adds **Keepers for this match** in Lineups. Choose a regular/temporary starter and potential cover, with an editable spare-number list (initially 30) and a select-or-type jersey field for each keeper. Players may share one spare or receive distinct numbers. Changing the starter moves him to GK and preserves the displaced standard-formation player on the bench.
 - Keeps primary roster/TEMP numbers intact and displays `12 / 30` beside the player's parenthesized duty. Regular starter: **starting keeper / backup keeper**. Temporary starter: **starting temp keeper / secondary temp keeper**. Cover does not promise keeper minutes. Removing an assignment removes its spare number/label; cross-match copies clear assignments while retaining spare suggestions.
@@ -7,8 +7,20 @@
 - **Verification:** Ten relevant suites pass: keepers, referee card, lineup image, Strategy animation, persistent clock, score privacy, ribbon order, TEMP directory, bulk jerseys and portal activity. Tests execute actual editor handlers, viewer protection, shared/distinct numbers, starter swaps, freeform, validation, JSON roundtrip/copy isolation, public/Crowd/captain adapters, SVG rendering and Excel name/number/style generation. Stale build assertions were refreshed; the activity report fixture now supplies its existing fixed test clock to the helper, and workbook inspection uses built-in ZIP decompression instead of a blocked subprocess. An additional Equipment suite reaches a pre-existing stale sign-out-source assertion in unchanged `player-portal.html`; Equipment code is unchanged by this release.
 - **Database verification:** Approved captain RLS context inserted a transient fixture, checked shared spare persistence, marked it Final, changed the secondary spare to 31 through `update_production_lineup_state`, and checked both captain and anonymous published projection. All operations rolled back. Before/after: 37 saved variations, 21 roster rows, identical complete lineup digest `274942cf0c9ec54af5876901291de521`. No real lineup or jersey assignment was changed.
 - **SQL/database status:** No migration, schema, RLS, grants or physical jersey-inventory change. New fields live in existing lineup JSON. An authenticated Edge Function update is part of this release; its authorization, origin restrictions, identity minimization and `store: false` behavior are retained.
-- **Live status:** User explicitly requested coding and deployment. Release is prepared for the existing `main`-branch Cloudflare integration and the updated Edge Function. Deployment success must be confirmed from the exact release commit's Workers Builds check and the active function version. Direct live HTTP and rendered desktop/phone/PDF/Excel checks remain unavailable: the executor proxy cannot be reached and Chromium exits with `setsockopt: Operation not permitted`. These limitations do not constitute visual/browser verification. The connected GitHub tools expose no commit-comment creation operation; do not claim a comment was posted.
+- **Live status:** User explicitly requested coding and deployment. Implementation release [`86ba17a67880f0207dccdf97d95bac5dae21c4db`](https://github.com/skorsolutions/skor-fc-site/commit/86ba17a67880f0207dccdf97d95bac5dae21c4db) was published to `main` from base `2c5cbd3de1b71c428a9128bd11638ef00a80a39c`. Its **Workers Builds: skor-fc-site** check succeeded on 2026-10-24 at 08:07:24 UTC: build `b37a06f2-d25d-4505-920c-110541be0bb5`, deployed version `0fa935f8-9ab0-4a2e-9b4a-7d85028b5298`. The exact 22-file diff and every blob hash match the checked local sources. `generate-pregame-talk` version 14 is ACTIVE with `verify_jwt: true`; independent source readback matches both packaged files. A documentation-only follow-up records these results. Direct live HTTP and rendered desktop/phone/PDF/Excel checks remain unavailable: the executor proxy cannot be reached and Chromium exits with `setsockopt: Operation not permitted`. These limitations do not constitute visual/browser verification. The connected GitHub tools expose no commit-comment creation operation; no comment was posted.
 - Workflow/data contract: `docs/MATCH-KEEPERS.md`. Reload the Captain Portal after deployment, open Lineups → **Keepers for this match**, then save/publish the chosen assignments.
+
+## v58.7 release summary
+
+v58.7 is deployed. Lineups now support starting, temporary and backup keepers with shared or separate spare jerseys. Numbers and labels carry through lineup images, referee PDF/Excel, Game Day, public Matches, Strategy and AI context.
+
+Ten relevant test suites and rollback-only database checks passed. Cloudflare and the pregame function deployments are verified. No migration or real lineup changes were made. Browser visual checks remain unavailable.
+
+Reload the [Captain Portal](https://skorfc.net/admin.html) and open **Lineups → Keepers for this match**.
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/86ba17a67880f0207dccdf97d95bac5dae21c4db)
+
+The connector cannot create GitHub commit comments. This matching summary is recorded in repository documentation and chat; no commit comment was posted.
 
 # v58.6 — Player and captain activity repair (deployed)
 
