@@ -1,6 +1,6 @@
 # Game Day substitution alarm — v58.21
 
-Status: implementation complete; deployment verification pending.
+Status: deployed; production source/version verification passed.
 
 The alarm is an optional local tool in Captain Portal → Game Day, beside the official clock. Captains choose one phone to make the sound; other phones should leave it off. The settings disclosure starts closed. Preview sound checks device volume, and Start alarm on this phone explicitly unlocks browser audio. Active status, Stop alarm and the keep-phone-unlocked note stay visible even when settings are collapsed.
 
@@ -45,4 +45,4 @@ Locked-phone/background alerts are planned for the future **Iskra Sports app**. 
 
 `test:substitution-alarm` executes the real engine across interval/ring/snooze combinations, phases, boundaries, cutoffs, hard stops, stale snapshots, remote restart, timer gaps, auth/match/visibility changes and audio failures. It also executes the audio scheduler with a mock AudioContext to verify finite stops and cleanup, the real tab lease, and the DOM adapter for gesture activation, warning/Stop visibility, wake-lock denial, local settings and stop-during-unlock races. Existing persistent-clock/privacy/inbox/export checks verify surrounding integration.
 
-Real phone audio, volume/output, rendered layout and OS lock/background behavior cannot be verified in this execution environment. Test Preview on the intended unlocked phone before relying on the alarm. Deployment source hashes and Cloudflare production result remain pending.
+Real phone audio, volume/output, rendered layout and OS lock/background behavior cannot be verified in this execution environment. Test Preview on the intended unlocked phone before relying on the alarm. Source release [`5cdfcebe22039b07adf8ddbaa64907890091033c`](https://github.com/skorsolutions/skor-fc-site/commit/5cdfcebe22039b07adf8ddbaa64907890091033c) is live. Cloudflare build `87565d8f-579d-455b-b9a8-6c092bddeea8` succeeded; version `ee68d574-6d17-4557-8b25-a1d392849749`, deployment `38dd390d-9331-49ca-bb26-5bc7617dc7ff`, verified at 100% production traffic. All 13 source hashes and the exact release file set match checked sources. Nine relevant suites passed. A documentation-only follow-up records the production result.

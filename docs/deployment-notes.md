@@ -1,13 +1,27 @@
-# v58.21 — Local Game Day substitution alarm (deployment pending)
+# v58.21 — Local Game Day substitution alarm (deployed)
 
 - Adds a configurable audible sub alarm beside the captain clock: every 10/15/20 minutes within each half, 3/5/10-second rings, Off/30s/1m/2m automatic snooze with one/two repeats, selected match-minute cutoff, independent 10–180-minute elapsed safety stop. Snoozes never shift the regular schedule. No lineup is required.
 - Settings are collapsed by default. Start alarm requires a user gesture on the designated phone; Preview checks sound/phone volume. Active status, Stop alarm and “Keep this phone unlocked with Game Day open for substitution alarms to sound” stay visible. Background/locked-phone alerts are identified as future Iskra Sports app functionality. Same-browser tabs share a renewable local lease; other phones must stay off. Preferences persist locally per account, with no persisted enabled state. Optional screen wake lock is best effort.
 - Pauses/halftime cancel sound/snoozes; resume targets the next upcoming boundary. Full Time/reset/restart, selected cutoff, safety deadline, hidden page, leaving Game Day, account/match/role change or stale clock data stop alarms. Finite Web Audio oscillator stop times prevent a continuous ring if JavaScript is delayed. Missed intervals/snoozes are not replayed.
 - Existing Game Day snapshot refresh supplies the clock. Delayed clock replies for a different selected match are ignored. Existing official clock writes/event stamps and planned wave cadence are preserved; the latter is relabeled Planned wave cadence to distinguish it from the audible alarm interval.
 - **Affected files (13):** `admin.html`, `substitution-alarm.js`, `substitution-alarm.css`, `package.json`, `tests/verify-substitution-alarm.mjs`, `tests/verify-captain-notifications.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/SUBSTITUTION-ALARM.md`, `docs/GAME-DAY-CLOCK.md`, `docs/PROJECT-HANDBOOK.md`, and this note. Captain build v58.21; Player Portal remains v58.18 and homepage v58.15.
-- **Verification:** New deterministic tests cover interval/ring presets, repeat limits, independent cadence, pre-kickoff/mid-half arming, pause/resume/halftime, selected/hard stops, remote reset/restart, stale-clock/no-catch-up behavior, match/account/role/visibility changes, audio failure, finite oscillator schedules, device-tab lease, gesture/stop races, warning visibility, wake-lock denial and cleanup. Nine suites passed: substitution alarm, persistent clock, captain notifications, equipment, score privacy, lineup export, referee card, Strategy animation and ribbon order. Inline scripts parse and page IDs remain unique. Source/production verification pending. Real rendered/browser/phone sound, system volume and lock/background behavior remain unverified in this environment; users must use Preview on the intended phone.
+- **Verification:** New deterministic tests cover interval/ring presets, repeat limits, independent cadence, pre-kickoff/mid-half arming, pause/resume/halftime, selected/hard stops, remote reset/restart, stale-clock/no-catch-up behavior, match/account/role/visibility changes, audio failure, finite oscillator schedules, device-tab lease, gesture/stop races, warning visibility, wake-lock denial and cleanup. Nine suites passed: substitution alarm, persistent clock, captain notifications, equipment, score privacy, lineup export, referee card, Strategy animation and ribbon order. Inline scripts parse and page IDs remain unique. Source/hash/file-set and Cloudflare production verification passed. Real rendered/browser/phone sound, system volume and lock/background behavior remain unverified in this environment; users must use Preview on the intended phone.
 - **SQL/backend:** No migration, database query/write, RPC, permissions, Edge Function or Realtime changes. New code consumes the existing clock feed. No actual production match clock, lineup, feedback receipt or equipment record was edited while preparing this release.
-- **Live status:** Awaiting publication/Cloudflare verification. Connected tools cannot post commit comments.
+- **Live status:** Source release [`5cdfcebe22039b07adf8ddbaa64907890091033c`](https://github.com/skorsolutions/skor-fc-site/commit/5cdfcebe22039b07adf8ddbaa64907890091033c) published from `152582a73b0bdfc83a05557b569b52a9750538e5`. Cloudflare build `87565d8f-579d-455b-b9a8-6c092bddeea8` succeeded; version `ee68d574-6d17-4557-8b25-a1d392849749`, deployment `38dd390d-9331-49ca-bb26-5bc7617dc7ff`, verified at 100% production traffic. All 13 source hashes and the exact release file set match checked sources. Build completed 2026-10-24 19:12:54 UTC. A documentation-only follow-up records results. Connected tools cannot post commit comments; no comment was posted.
+
+## v58.21 release summary
+
+Deployed **v58.21** in **Captain Portal → Game Day**.
+
+- **10/15/20-minute alarms**, short rings and limited automatic snoozes.
+- Silence during pauses/halftime, plus automatic time and safety stops.
+- **Keep-phone-unlocked note** beside the clock.
+
+Open **Substitution alarm → Preview sound → Start alarm on this phone**. Keep Game Day open on one unlocked phone.
+
+Nine test suites passed; no database changes. Physical phone audio and browser visuals remain unverified here.
+
+[Captain Portal](https://skorfc.net/admin.html) · [Release](https://github.com/skorsolutions/skor-fc-site/commit/5cdfcebe22039b07adf8ddbaa64907890091033c). Release notes saved; commit comments are unavailable through connected tools.
 
 # v58.20 — Captain inbox collapsed by default (deployed)
 
