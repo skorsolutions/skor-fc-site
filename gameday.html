@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090a0d">
-<meta name="skor-build" content="gameday-v58.8-readable-lineup-markers">
+<meta name="skor-build" content="gameday-v58.9-clean-player-selection">
 <title>SKOR FC | Match Center v55.0</title>
 <meta name="description" content="SKOR FC crowd-powered live match scoring, referee decision review and Man of the Match voting.">
 <style>
@@ -189,9 +189,9 @@
 }
 
 </style>
-<link rel="stylesheet" href="keeper-plan.css?v=58.8">
+<link rel="stylesheet" href="keeper-plan.css?v=58.9">
 <script src="keeper-plan.js?v=58.7"></script>
-<script src="lineup-marker.js?v=58.8"></script>
+<script src="lineup-marker.js?v=58.9"></script>
 </head>
 <body>
 <header class="top"><div class="wrap topin"><img src="assets/skor fc logo transparent.png" alt="SKOR FC"><div class="brand">SKOR FC GAME DAY</div><div class="spacer"></div><div class="user" id="topUser"></div><button class="logout hidden" id="logoutBtn" type="button">Log out</button></div></header>
@@ -440,7 +440,8 @@ function matchLineupPlayer(pid){
 }
 function withKeeperLabel(pid,p){
   const d=window.SKORKeeperPlan.details(productionLineup?.state||{},pid,p.number);
-  return {...p,number:d.number,name:p.name+(d.label?' ('+d.label+')':''),displayName:p.name,keeperLabel:d.label,keeperStarter:d.role.startsWith('starting')};
+  const name=window.SKORLineupMarker.shortName(p.name,p.temp);
+  return {...p,number:d.number,primaryNumber:String(p.number),name,displayName:name,keeperLabel:d.label,keeperStarter:d.role.startsWith('starting')};
 }
 function matchSubUnitLabel(value){return ({defense:'Defense',midfield:'Midfield',strikers:'Strikers',mixed:'Mixed'})[value]||'Mixed';}
 function renderOfficialLineup(){
@@ -480,7 +481,7 @@ function renderOfficialLineup(){
   }).join("");
 
   const bench=(state.bench||[]).map(matchLineupPlayer);
-  const benchHtml=bench.length?bench.map(p=>`<div class="match-bench-player"><div class="match-bench-num${String(p.number).includes(' / ')?' keeper-dual':''}">${esc(p.number)}</div><div class="match-bench-name">${window.SKORLineupMarker.nameHtml(p.displayName,p.temp)}${p.keeperLabel?'<small class="keeper-tag">('+esc(p.keeperLabel)+')</small>':''}</div></div>`).join(""):'<div class="empty">No bench listed.</div>';
+  const benchHtml=bench.length?bench.map(p=>`<div class="match-bench-player"><div class="match-bench-num">${esc(p.primaryNumber==='TEMP'?'—':p.primaryNumber)}</div><div class="match-bench-name">${window.SKORLineupMarker.nameHtml(p.displayName,p.temp)}</div></div>`).join(""):'<div class="empty">No bench listed.</div>';
 
   const waves=[];
   (state.subs?.firstHalf||[]).forEach((row,i)=>{
@@ -494,8 +495,8 @@ function renderOfficialLineup(){
   const wavesHtml=waves.length?waves.map(w=>{
     const label=String(w.row.label||"").trim();
     const timing=Number(w.row.minute)>0?`${Number(w.row.minute)}'`:`Auto ${Number(session?.sub_interval_minutes)||15}m`;
-    const outs=(w.row.out||[]).map(pid=>{const p=matchLineupPlayer(pid);return `${p.number} ${p.name}`}).join(", ")||"—";
-    const ins=(w.row.in||[]).map(pid=>{const p=matchLineupPlayer(pid);return `${p.number} ${p.name}`}).join(", ")||"—";
+    const outs=(w.row.out||[]).map(pid=>{const p=matchLineupPlayer(pid);return `${p.primaryNumber} ${p.name}`}).join(", ")||"—";
+    const ins=(w.row.in||[]).map(pid=>{const p=matchLineupPlayer(pid);return `${p.primaryNumber} ${p.name}`}).join(", ")||"—";
     return `<div class="match-wave"><div class="match-wave-title">${esc(w.phase)} · Wave ${w.i} · ${esc(timing)} · ${esc(matchSubUnitLabel(w.row.unit))}${label?' — '+esc(label):''}</div><div class="match-wave-copy">OUT: ${esc(outs)}<br>IN: ${esc(ins)}</div></div>`;
   }).join(""):'<div class="empty">No planned substitution waves published.</div>';
 

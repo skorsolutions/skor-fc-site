@@ -94,11 +94,11 @@ assert.deepEqual([...copy.keeperPlan.spareNumbers],[30],'spare choices may be re
 s=fixture();K.setRole(s,'alex','starting_temp');K.setRole(s,'joe','secondary_temp');
 for(const [file,startName,endName] of [['matches.html','productionPlayer','renderOfficialLineup'],['gameday.html','matchLineupPlayer','matchSubUnitLabel']]){
   const src=read(file),start=src.indexOf('function '+startName+'('),end=src.indexOf('function '+endName+'(',start);
-  const ctx={window:{SKORKeeperPlan:K},productionLineup:{state:s},productionTempPlayers:[],publicRoster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name})),roster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name}))};
+  const ctx={window:{SKORKeeperPlan:K,SKORLineupMarker:marker},productionLineup:{state:s},productionTempPlayers:[],publicRoster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name})),roster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name}))};
   vm.runInNewContext(src.slice(start,end),ctx);
   assert.equal(ctx[startName]('alex').number,'12 / 30');
-  assert.match(ctx[startName]('alex').name,/starting temp keeper/);
-  assert.match(ctx[startName]('joe').name,/secondary temp keeper/);
+  assert.equal(ctx[startName]('alex').name,'Alex');assert.match(ctx[startName]('alex').keeperLabel,/starting temp keeper/);
+  assert.equal(ctx[startName]('joe').name,'Joe');assert.match(ctx[startName]('joe').keeperLabel,/secondary temp keeper/);
   ctx.window.SKORLineupMarker=marker;
   ctx.productionLineup.created_at='2026-10-24T12:00:00Z';
   ctx.productionLineup.state=structuredClone(s);ctx.productionLineup.state.slots.LB='temp:anton';ctx.productionLineup.state.bench.push('temp:malik');
@@ -113,9 +113,9 @@ for(const [file,startName,endName] of [['matches.html','productionPlayer','rende
   assert.match(rendered,/>Anton<\/span>/);assert.match(rendered,/>Malik<\/span>/);
   assert.equal((rendered.match(/class="marker-temp">TEMP</g)||[]).length,2);assert.doesNotMatch(rendered,/Anton- TEMP|Malik - TEMP/);
 }
-const captainContext={window:{SKORKeeperPlan:K},PRODUCTION_GAMEPLAN:{state:s},TEAM_ROSTER:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,preferred_name:p.name})),MATCH_TEMP_PLAYERS:[]};
+const captainContext={window:{SKORKeeperPlan:K,SKORLineupMarker:marker},PRODUCTION_GAMEPLAN:{state:s},TEAM_ROSTER:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,preferred_name:p.name})),MATCH_TEMP_PLAYERS:[]};
 vm.runInNewContext(admin.slice(admin.indexOf('function officialPlayerLabel('),admin.indexOf('function officialFormationSlots(')),captainContext);
-assert.equal(captainContext.officialPlayerLabel('alex'),'#12 / 30 Alex (starting temp keeper)');
+assert.equal(captainContext.officialPlayerLabel('alex'),'#12 Alex');
 const strategyMarker={window:{SKORLineupMarker:marker},clamp:(n,a,b)=>Math.min(b,Math.max(a,n)),esc:v=>String(v??'')};
 vm.runInNewContext(fn(read('strategy.js'),'homeMarkup'),strategyMarker);
 const circle=strategyMarker.homeMarkup({id:'temp:anton',name:'Anton- TEMP',number:12,keeperNumber:30,keeperLabel:'starting temp keeper',x:50,y:92});
@@ -127,8 +127,8 @@ const svgContext={...context,state:s,roster,document:{getElementById:id=>id==='e
 vm.createContext(svgContext);
 for(const name of ['primaryJerseyLabel','keeperDetails','jerseyLabel','keeperSuffix','playerListLabel','buildGameplanSvg'])vm.runInContext(fn(admin,name),svgContext);
 const svg=svgContext.buildGameplanSvg();
-assert.match(svg,/12 \/ 30/);assert.match(svg,/15 \/ 30/);
-assert.match(svg,/\(starting temp keeper\)/);assert.match(svg,/\(secondary temp keeper\)/);
+assert.match(svg,/12 \/ 30/);assert.doesNotMatch(svg,/15 \/ 30/);
+assert.match(svg,/\(starting temp keeper\)/);assert.doesNotMatch(svg,/\(secondary temp keeper\)/);
 assert.doesNotMatch(svg,/NaN|undefined/);
 svgContext.state.labelMode='numbers';
 assert.match(svgContext.buildGameplanSvg(),/starting temp keeper/,'keeper duty remains visible in Numbers Only mode');
@@ -136,10 +136,32 @@ roster.push({player_key:'temp:anton',number:44,name:'Anton- TEMP',temp:true},{pl
 svgContext.modeClass=()=> 'mode-names';vm.runInContext(fn(admin,'peg'),svgContext);
 const tempPeg=svgContext.peg(roster[roster.length-2],false,true);assert.match(tempPeg,/>Anton<\/span>/);assert.equal((tempPeg.match(/>TEMP</g)||[]).length,1);
 const starterPeg=svgContext.peg(roster[0],false,true);assert.match(starterPeg,/keeper-number-minor">12<\/span>/);assert.match(starterPeg,/keeper-number-major">30<\/span>/);
+const oldName=roster[0].name;roster[0].name='Alex Fullname';
+const pickerPeg=svgContext.peg(roster[0],true,false);
+assert.match(pickerPeg,/>12<\/div>/);assert.doesNotMatch(pickerPeg,/30|keeper-tag|keeper-number-pair|starting temp keeper|Fullname/);
+roster[0].name=oldName;
+const tempPicker=svgContext.peg({...roster[roster.length-2],name:'Anton Fullname - TEMP'},true,false);
+assert.match(tempPicker,/>Anton<\/span>/);assert.doesNotMatch(tempPicker,/Fullname/);assert.equal((tempPicker.match(/>TEMP</g)||[]).length,1);
+const unnumbered=svgContext.peg({...roster[roster.length-2],name:'Anton Fullname - TEMP',number:null},true,false);
+assert.match(unnumbered,/>Anton<\/span>/);assert.equal((unnumbered.match(/>TEMP</g)||[]).length,1,'an unnumbered TEMP jersey must not add a second TEMP badge');
+vm.runInContext(fn(admin,'tempPlayerFromRow'),svgContext);
+const converted=svgContext.tempPlayerFromRow({id:'ref-fixture',display_name:'Malik Fullname',jersey_number:46});
+assert.equal(converted.name,'Malik');assert.equal(converted.fullName,'Malik Fullname');
+assert.equal(ref.buildCardData({state:{formation:'4-2-3-1',slots:{GK:converted.player_key}},roster:[converted],match}).players[0].name,'Malik Fullname','referee output must retain the complete saved identity');
+const editNodes=new Map(),editNode=id=>{if(!editNodes.has(id))editNodes.set(id,{value:'',style:{}});return editNodes.get(id);};let editHandler;
+const editSource=admin.slice(admin.indexOf('    list.querySelectorAll("[data-temp-edit]")'),admin.indexOf('    list.querySelectorAll("[data-temp-remove]")'));
+const editContext={list:{querySelectorAll:()=>[{dataset:{tempEdit:'ref-fixture'},addEventListener:(_event,handler)=>editHandler=handler}]},matchTempPlayers:[converted],document:{getElementById:editNode},renderTempJerseyOptions(){},savedName:{value:'',disabled:false}};
+vm.runInNewContext(editSource,editContext);editHandler();
+assert.equal(editNode('tempPlayerName').value,'Malik Fullname','editing must restore the complete name instead of overwriting the last name with a short label');
+assert.match(admin,/<details class="panel potential-positions" id="potentialPositionsPanel">/);
+assert.doesNotMatch(admin,/<details[^>]*id="potentialPositionsPanel"[^>]*\bopen\b/);
+assert.doesNotMatch(admin,/\.player-card\.temp-player-card \.peg-name:after/,'legacy duplicate TEMP decoration must be removed');
+assert.match(read('keeper-plan.css'),/@media\(max-width:760px\)\{#lineups \.lineup-match-setup\{grid-template-columns:minmax\(0,1fr\)/);
+assert.doesNotMatch(read('keeper-editor.js'),/class="keeper-plan-preview"/,'the settings form must not repeat a long on-field caption');
 svgContext.state.labelMode='names';svgContext.state.bench.push('temp:anton','temp:malik');
 let tempSvg=svgContext.buildGameplanSvg();assert.match(tempSvg,/>Anton<\/tspan>/);assert.match(tempSvg,/>Malik<\/tspan>/);assert.doesNotMatch(tempSvg,/Anton- TEMP|Malik - TEMP/);
-roster[roster.length-2].name='A much longer temporary player name - TEMP';
-tempSvg=svgContext.buildGameplanSvg();assert.match(tempSvg,/longer temporary/);assert.doesNotMatch(tempSvg,/NaN|undefined/);
+roster[roster.length-2].name='AveryWithLongFirstName LongLastname - TEMP';
+tempSvg=svgContext.buildGameplanSvg();assert.match(tempSvg,/AveryWith/);assert.doesNotMatch(tempSvg,/LongLastname/);assert.doesNotMatch(tempSvg,/NaN|undefined/);
 roster.splice(-2);svgContext.state.bench=svgContext.state.bench.filter(id=>!id.startsWith('temp:'));
 // Exercise actual editor events, validation and view-only protection.
 class Input{

@@ -18,9 +18,10 @@
     const text=String(name??'').trim();
     return temp?text.replace(/\s*(?:[-–—·]\s*TEMP|\(\s*TEMP\s*\))\s*$/i,'').trim()||text:text;
   }
-  function nameHtml(name,temp){return '<span class="marker-name-text">'+esc(displayName(name,temp))+'</span>'+(temp?'<small class="marker-temp">TEMP</small>':'');}
+  function shortName(name,temp){return displayName(name,temp).split(/\s+/)[0]||'Player';}
+  function nameHtml(name,temp,showTag=true){return '<span class="marker-name-text">'+esc(shortName(name,temp))+'</span>'+(temp&&showTag?'<small class="marker-temp">TEMP</small>':'');}
   function nameLines(name,temp,max=14){
-    const words=displayName(name,temp).split(/\s+/),lines=[];let line='';
+    const words=shortName(name,temp).split(/\s+/),lines=[];let line='';
     words.forEach(word=>{
       while(word.length>max){if(line){lines.push(line);line='';}lines.push(word.slice(0,max));word=word.slice(max);}
       if(line&&(line+' '+word).length>max){lines.push(line);line='';}
@@ -28,6 +29,6 @@
     });
     if(line)lines.push(line);return lines.length?lines:[''];
   }
-  const api={parts,numberHtml,numberSvg,displayName,nameHtml,nameLines};root.SKORLineupMarker=api;
+  const api={parts,numberHtml,numberSvg,displayName,shortName,nameHtml,nameLines};root.SKORLineupMarker=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

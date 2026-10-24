@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SKOR FC | Match Center</title>
 <meta name="description" content="SKOR FC match center — upcoming fixtures, team sheets, official match times and past match information.">
-<meta name="skor-build" content="public-match-center-v58.8-readable-lineup-markers">
+<meta name="skor-build" content="public-match-center-v58.9-clean-player-selection">
 <style>
 :root{--bg:#07080a;--panel:#101216;--panel2:#15171b;--line:#2b2e33;--muted:#9ea2a8;--text:#f4f4f5;--maroon:#8f1836;--maroon2:#b51c43;--maroon3:#5e0c22;--max:1180px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}a{color:inherit}img{max-width:100%}.wrap{width:min(var(--max),calc(100% - 42px));margin:0 auto}.card{border:1px solid var(--line);background:linear-gradient(145deg,#14171b,#0c0e11);border-radius:16px;box-shadow:0 18px 45px rgba(0,0,0,.22)}
@@ -58,9 +58,9 @@
 @media(max-width:520px){.official-lineup-head{padding:15px}.pitch-shell{padding:12px}.lineup-player{width:66px}.lineup-jersey{width:42px;height:38px;font-size:13px}.lineup-name{font-size:8px}.bench-grid{grid-template-columns:1fr 1fr}.team-sheet-side{padding:14px}}
 
 </style>
-<link rel="stylesheet" href="keeper-plan.css?v=58.8">
+<link rel="stylesheet" href="keeper-plan.css?v=58.9">
 <script src="keeper-plan.js?v=58.7"></script>
-<script src="lineup-marker.js?v=58.8"></script>
+<script src="lineup-marker.js?v=58.9"></script>
 </head>
 <body>
 <header class="site-header"><div class="wrap nav"><a class="brand" href="index.html"><img src="assets/skor fc logo transparent.png" alt="SKOR FC crest"><span>SKOR FC</span></a><nav class="nav-links"><a href="index.html">Home</a><a class="active" href="matches.html">Matches</a><a href="squad.html">Squad</a><a class="login-btn" href="admin.html">Captain Login</a></nav></div></header>
@@ -158,7 +158,8 @@ function productionPlayer(pid){
 }
 function withKeeperLabel(pid,p){
   const d=window.SKORKeeperPlan.details(productionLineup?.state||{},pid,p.number);
-  return {...p,number:d.number,name:p.name+(d.label?' ('+d.label+')':''),displayName:p.name,keeperLabel:d.label,keeperStarter:d.role.startsWith('starting')};
+  const name=window.SKORLineupMarker.shortName(p.name,p.temp);
+  return {...p,number:d.number,primaryNumber:String(p.number),name,displayName:name,keeperLabel:d.label,keeperStarter:d.role.startsWith('starting')};
 }
 function renderOfficialLineup(){
   const card=document.getElementById("officialLineupCard");
@@ -196,7 +197,7 @@ function renderOfficialLineup(){
   }).join("");
 
   const bench=(state.bench||[]).map(productionPlayer);
-  const benchHtml=bench.length?bench.map(p=>`<div class="bench-player"><div class="bench-number${String(p.number).includes(' / ')?' keeper-dual':''}">${esc(p.number)}</div><div class="bench-name">${window.SKORLineupMarker.nameHtml(p.displayName,p.temp)}${p.keeperLabel?'<small class="keeper-tag">('+esc(p.keeperLabel)+')</small>':''}</div></div>`).join(""):'<div class="empty">No substitutes listed.</div>';
+  const benchHtml=bench.length?bench.map(p=>`<div class="bench-player"><div class="bench-number">${esc(p.primaryNumber==='TEMP'?'—':p.primaryNumber)}</div><div class="bench-name">${window.SKORLineupMarker.nameHtml(p.displayName,p.temp)}</div></div>`).join(""):'<div class="empty">No substitutes listed.</div>';
 
   body.innerHTML=`<div class="team-sheet-layout"><div class="pitch-shell"><div class="tactical-pitch"><div class="pitch-center"></div><div class="pitch-box top"></div><div class="pitch-six top"></div><div class="pitch-box bottom"></div><div class="pitch-six bottom"></div>${markerHtml}</div></div><aside class="team-sheet-side"><div class="team-sheet-section"><h3>Bench</h3><div class="bench-grid">${benchHtml}</div></div></aside></div>`;
 }

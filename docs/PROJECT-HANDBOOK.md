@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.8**.
+Current Captain Portal build: **v58.9** (player-picker cleanup; deployment verification pending).
 Current implementation release: [`2d21e048ec13788350ca223667d5dbd681c4aba8`](https://github.com/skorsolutions/skor-fc-site/commit/2d21e048ec13788350ca223667d5dbd681c4aba8). Cloudflare production build `d6253897-f2df-4251-b08b-5fac1d024f3c` succeeded; deployed version `d6711af8-65ff-4359-bdce-3ec680f9cccb`. All 14 file hashes and the exact release diff match the tested sources. Six affected suites passed. Approved keeper-number hierarchy and readable TEMP labels are deployed across lineup/editor/PNG/JPG/public/Crowd/Strategy presentation. No database or Edge Function change; pregame function remains version 14. Browser visual verification remains blocked by sandbox socket restrictions.
 Production implementation release: [`86ba17a67880f0207dccdf97d95bac5dae21c4db`](https://github.com/skorsolutions/skor-fc-site/commit/86ba17a67880f0207dccdf97d95bac5dae21c4db). Cloudflare production build `b37a06f2-d25d-4505-920c-110541be0bb5` succeeded on 2026-10-24 at 08:07:24 UTC; deployed version `0fa935f8-9ab0-4a2e-9b4a-7d85028b5298`. All 22 release-file blob hashes and the exact file set matched the checked local sources. `generate-pregame-talk` version 14 is ACTIVE with JWT verification enabled; both packaged source files match the release. Ten relevant suites and rollback-only captain/public JSON persistence checks passed. No migration or persistent fixture changes. Browser visual and direct live-source HTTP checks remain unavailable. Workflow and limitations: `docs/MATCH-KEEPERS.md`.
 Previous deployed build: **v58.6**.
@@ -57,6 +57,14 @@ This is the durable handoff document for new chats and future developers. Read i
 - Database migrations require explicit user approval before they are applied.
 
 ## 4. Lineup system rules
+
+### Compact player selection and mobile setup — v58.9
+
+- The player picker shows primary jersey number, short/first name and one TEMP indication. Secondary keeper numbers and duty captions belong to on-field markers and referee output, not the picker, bench, Potential Positions or substitution chips. The existing large/small on-field hierarchy is retained.
+- Short names are presentation values. `tempPlayerFromRow` retains the complete `display_name` as `fullName` for referee PDF/Excel and the explicit full-name edit field. Reusing a saved name still selects/stores the complete identity. No existing database name is rewritten. A legacy CSS pseudo-element that duplicated TEMP was removed; an unnumbered TEMP shirt does not add a second TEMP badge.
+- Match Fill-ins and Keepers are separate equal-width panels below the field/player workspace. At 760 pixels or less they stack at full width, with single-column controls, constrained select/input widths and 44-pixel action targets. They never occupy the narrow mobile player rail. The keeper form retains role/jersey inputs but removes its duplicate long preview caption.
+- Potential Positions is a native, keyboard-accessible `details` panel, closed by default and opened only on demand. Hiding it does not remove saved positions or change the separate export checkbox.
+- No saved lineup schema, roster identity, permission, database or Edge Function change. Referee names and both jersey numbers remain complete. Public/Crowd benches and captain list labels also use short names and primary numbers; on-field and Strategy markers keep keeper details.
 
 ### Number hierarchy and TEMP labels — v58.8
 

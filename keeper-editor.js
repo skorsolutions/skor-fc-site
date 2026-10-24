@@ -36,7 +36,7 @@
       return '<div class="keeper-plan-row"><div class="keeper-plan-person">#'+esc(primaryNumber(p))+' '+esc(name(p))+suffix+'</div>'+
         '<div><label for="keeper-role-'+index+'">Keeper role</label><select id="keeper-role-'+index+'" data-keeper-role="'+esc(pid)+'"><option value="">Outfield / no keeper role</option>'+Object.entries(K.ROLES).map(([role,label])=>'<option value="'+role+'"'+(d.role===role?' selected':'')+'>'+esc(label)+'</option>').join('')+'</select></div>'+
         '<div><label for="keeper-number-'+index+'">Keeper jersey</label><input id="keeper-number-'+index+'" data-keeper-number="'+esc(pid)+'" type="text" inputmode="numeric" list="keeperJerseyOptions" maxlength="2" value="'+esc(a?.jerseyNumber??'')+'" placeholder="'+(d.role==='starting'?'Own #':String(plan.spareNumbers[0]||30))+'"'+(!d.role?' disabled':'')+'></div>'+
-        (d.label?'<div class="keeper-plan-preview">#'+esc(d.number)+' — '+esc(name(p))+suffix+' ('+esc(d.label)+')</div>':'')+'</div>';
+        '</div>';
     }).join(''):'<p>'+ (players.length?'Choose a player above to designate the starting keeper.':'Add players to the field or Substitutes to assign keepers.')+'</p>';
     document.getElementById('keeperPlanStatus').textContent=K.validate(state).join(' ');
     box.querySelectorAll('[data-keeper-role]').forEach(input=>input.addEventListener('change',()=>{

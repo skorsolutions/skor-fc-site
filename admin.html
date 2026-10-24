@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.8-readable-lineup-markers" />
-  <title>SKOR FC Admin | Captain Portal v58.8</title>
+  <meta name="skor-build" content="captain-portal-v58.9-clean-player-selection" />
+  <title>SKOR FC Admin | Captain Portal v58.9</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -454,7 +454,6 @@
     .temp-pill{display:inline-flex;align-items:center;padding:3px 6px;border-radius:999px;background:#7a1830;color:#fff;font-size:.56rem;font-weight:950;letter-spacing:.07em}
     .temp-context{font-size:.68rem;color:var(--muted);margin-top:6px}
     .player-card.temp-player-card{border-style:dashed;background:#fff9fb}
-    .player-card.temp-player-card .peg-name:after{content:" TEMP";font-size:.5rem;color:var(--maroon);font-weight:950}
     .jersey.temp-number{font-size:.68rem!important;letter-spacing:-.03em}
     .bench-player.temp-player,.depth-chip.temp-player,.sub-player-chip.temp-player{border-style:dashed}
 
@@ -1865,7 +1864,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.8</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.9</div>
   </aside>
 
   <main>
@@ -2826,7 +2825,31 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <button class="btn btn-light" id="clearLineupBtn" type="button" style="margin-top:10px;width:100%">Clear Pitch</button>
             </div>
 
-            <div class="mini-panel keeper-plan" id="keeperPlanPanel">
+
+
+          </div>
+        </div>
+
+        <div class="lineup-match-setup" aria-label="Match fill-ins and keeper assignments">
+<div class="mini-panel temp-player-manager" id="tempPlayerManager">
+              <h4>Match Fill-ins / TEMP Players</h4>
+              <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
+              <div class="temp-saved-names">
+                <label for="tempPlayerSavedName">Previous TEMP players</label>
+                <select id="tempPlayerSavedName" disabled><option value="">Loading saved full names…</option></select>
+                <div class="temp-help" id="tempPlayerSavedNameHelp" role="status">Choose a saved full name or enter a new one below. Pick the jersey separately for this game.</div>
+              </div>
+              <div class="temp-player-form">
+                <div><label for="tempPlayerName">Full name for referee sheet</label><input id="tempPlayerName" maxlength="80" placeholder="First and last name" autocomplete="off"></div>
+                <div><label for="tempPlayerJersey">Available jersey</label><select id="tempPlayerJersey"><option value="">No jersey assigned yet</option></select></div>
+                <button class="mini-btn" id="saveTempPlayerBtn" type="button">Add TEMP</button>
+              </div>
+              <input id="tempPlayerEditId" type="hidden">
+              <button class="mini-btn" id="cancelTempPlayerEditBtn" type="button" style="display:none;margin-top:6px">Cancel edit</button>
+              <div class="temp-context" id="tempPlayerContext">Select a scheduled match to manage fill-ins.</div>
+              <div class="temp-player-list" id="tempPlayerList"></div>
+            </div>
+<div class="mini-panel keeper-plan" id="keeperPlanPanel">
               <h3>Keepers for this match</h3>
               <p>Assign the starting keeper and anyone who may cover in goal. Players can share a spare jersey or use different ones. Choosing a starter places him in goal.</p>
               <label for="keeperSpareNumbers">Spare keeper jersey numbers</label>
@@ -2838,34 +2861,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <div id="keeperPlanRows"></div>
               <div class="keeper-plan-status" id="keeperPlanStatus" role="status" aria-live="polite"></div>
             </div>
-
-            <div class="mini-panel temp-player-manager" id="tempPlayerManager">
-              <h4>Match Fill-ins / TEMP Players</h4>
-              <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
-              <div class="temp-saved-names">
-                <label for="tempPlayerSavedName">Previous TEMP players</label>
-                <select id="tempPlayerSavedName" disabled><option value="">Loading saved full names…</option></select>
-                <div class="temp-help" id="tempPlayerSavedNameHelp" role="status">Choose a saved full name or enter a new one below. Pick the jersey separately for this game.</div>
-              </div>
-              <div class="temp-player-form">
-                <div><label for="tempPlayerName">Full name</label><input id="tempPlayerName" maxlength="80" placeholder="First and last name" autocomplete="off"></div>
-                <div><label for="tempPlayerJersey">Available jersey</label><select id="tempPlayerJersey"><option value="">No jersey assigned yet</option></select></div>
-                <button class="mini-btn" id="saveTempPlayerBtn" type="button">Add TEMP</button>
-              </div>
-              <input id="tempPlayerEditId" type="hidden">
-              <button class="mini-btn" id="cancelTempPlayerEditBtn" type="button" style="display:none;margin-top:6px">Cancel edit</button>
-              <div class="temp-context" id="tempPlayerContext">Select a scheduled match to manage fill-ins.</div>
-              <div class="temp-player-list" id="tempPlayerList"></div>
-            </div>
-
-          </div>
         </div>
 
-        <div class="panel">
-          <h2>Potential Positions</h2>
+        <details class="panel potential-positions" id="potentialPositionsPanel">
+          <summary><span class="potential-chevron" aria-hidden="true">▸</span><span>Potential Positions</span></summary>
           <div class="sub">The depth chart automatically matches the selected formation. A player can appear in as many formation positions as needed. This depth chart is saved inside each variation.</div>
           <div class="depth-grid" id="lineupDepthGrid"></div>
-        </div>
+        </details>
 
         <div class="panel">
           <h2>Planned Substitutions</h2>
@@ -3180,10 +3182,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </div>
   </div>
 </dialog>
-<link rel="stylesheet" href="keeper-plan.css?v=58.8">
+<link rel="stylesheet" href="keeper-plan.css?v=58.9">
 <script src="keeper-plan.js?v=58.7"></script>
-<script src="lineup-marker.js?v=58.8"></script>
-<script src="keeper-editor.js?v=58.7"></script>
+<script src="lineup-marker.js?v=58.9"></script>
+<script src="keeper-editor.js?v=58.9"></script>
 <script src="ribbon-order.js?v=58.3"></script>
 <script src="temp-player-directory.js?v=58.3"></script>
 <script>
@@ -3373,7 +3375,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function jerseyLabel(p){return keeperDetails(p).number;}
   function keeperSuffix(p){const label=keeperDetails(p).label;return label?' ('+label+')':'';}
   function renderKeeperPlan(){
-    window.SKORKeeperEditor.render({state,players:matchSquadPlayers(),id,primaryNumber:primaryJerseyLabel,name:p=>p.name,
+    window.SKORKeeperEditor.render({state,players:matchSquadPlayers(),id,primaryNumber:primaryJerseyLabel,name:p=>window.SKORLineupMarker.shortName(p.name,p.temp),
       onError:message=>markStatus(message,false),onChange:message=>{inheritKeeperChoices=false;persistDraft();renderAll();markStatus(message);}});
   }
   function checkKeepers(snapshot=state){
@@ -3383,10 +3385,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
   function playerListLabel(p,short=false){
     if(!p)return "Unknown";
-    const name=short?shortName(p.name):p.name;
-    const num=jerseyLabel(p);
-    if(p.temp)return (num==="TEMP" ? "TEMP "+name : "#"+num+" "+name+" · TEMP")+keeperSuffix(p);
-    return "#"+num+" "+name+keeperSuffix(p);
+    const name=window.SKORLineupMarker.shortName(p.name,p.temp);
+    const num=primaryJerseyLabel(p);
+    if(p.temp)return num==="TEMP"?name+" · TEMP":"#"+num+" "+name+" · TEMP";
+    return "#"+num+" "+name;
   }
   function rebuildCombinedRoster(){
     roster=[...permanentRoster,...matchTempPlayers].sort((a,b)=>{
@@ -3481,9 +3483,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function peg(p,compact,onPitch=false){
     const pitchAttr = onPitch ? ' data-pitch-peg="1"' : '';
     const captain = onPitch && state.captainId===id(p) ? '<span class="captain-badge" title="Captain">C</span>' : '';
-    const number=jerseyLabel(p);
+    const number=onPitch?jerseyLabel(p):primaryJerseyLabel(p);
     return '<div class="player-peg'+(compact?' compact':'')+' '+modeClass()+'" draggable="true" data-v28-player="'+esc(id(p))+'"'+pitchAttr+'>'+
-      '<div class="jersey'+(number.includes(' / ')?' keeper-dual':'')+(p.temp&&number==="TEMP"?' temp-number':'')+'">'+window.SKORLineupMarker.numberHtml(number,onPitch&&keeperDetails(p).role.startsWith('starting'))+'</div>'+captain+'<div class="peg-name">'+window.SKORLineupMarker.nameHtml(p.name,p.temp)+'</div>'+(keeperSuffix(p)?'<small class="keeper-tag">'+esc(keeperSuffix(p))+'</small>':'')+'</div>';
+      '<div class="jersey'+(number.includes(' / ')?' keeper-dual':'')+(p.temp&&number==="TEMP"?' temp-number':'')+'">'+window.SKORLineupMarker.numberHtml(number,onPitch&&keeperDetails(p).role.startsWith('starting'))+'</div>'+captain+'<div class="peg-name">'+window.SKORLineupMarker.nameHtml(p.name,p.temp,number!=="TEMP")+'</div>'+(onPitch&&keeperSuffix(p)?'<small class="keeper-tag">'+esc(keeperSuffix(p))+'</small>':'')+'</div>';
   }
   function markStatus(msg,ok=true){
     const el=document.getElementById("lineupStatus");
@@ -3694,9 +3696,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       return `
         <rect x="${x}" y="${y}" width="${width}" height="${chipHeight}" rx="20" ry="20" fill="#f7f8fa" stroke="#d8dbe1"/>
         <rect x="${x+8}" y="${y+12}" width="68" height="32" rx="16" fill="#801A3D"/>
-        <text x="${x+42}" y="${y+33}" text-anchor="middle" font-size="13" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
+        <text x="${x+42}" y="${y+33}" text-anchor="middle" font-size="13" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(primaryJerseyLabel(p))}</text>
         <text x="${x+84}" y="${y+24}" font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${chipName.map((line,i)=>`<tspan x="${x+84}" dy="${i?20:0}">${esc(line)}</tspan>`).join('')}</text>
-        <text x="${x+84}" y="${y+24+chipName.length*20}" font-size="13" fill="#741f35" font-family="Arial, Helvetica, sans-serif">${esc([p.temp?'TEMP':'',keeperSuffix(p)].filter(Boolean).join(' · '))}</text>
+        <text x="${x+84}" y="${y+24+chipName.length*20}" font-size="13" fill="#741f35" font-family="Arial, Helvetica, sans-serif">${p.temp?'TEMP':''}</text>
       `;
     }).join("");
     const benchRowsHeight=benchPlayers.length?benchChipY-(benchCardY+78)+benchRowHeight:44;
@@ -4197,7 +4199,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const action=p.temp
         ? '<button type="button" class="bench-absent-btn" data-bench-absent="'+esc(pid)+'" title="Remove this TEMP player from the match plan">Remove ✕</button>'
         : '<button type="button" class="bench-absent-btn" data-bench-absent="'+esc(pid)+'" title="Mark absent and remove from this match plan">Absent ✕</button>';
-      return '<div class="bench-player'+(p.temp?' temp-player':'')+'" draggable="true" data-v28-player="'+esc(pid)+'"><span class="bench-player-label"><span>#'+esc(jerseyLabel(p))+'</span> '+window.SKORLineupMarker.nameHtml(p.name,p.temp)+(keeperSuffix(p)?'<small class="keeper-tag">'+esc(keeperSuffix(p))+'</small>':'')+'</span>'+action+'</div>';
+      return '<div class="bench-player'+(p.temp?' temp-player':'')+'" draggable="true" data-v28-player="'+esc(pid)+'"><span class="bench-player-label"><span>'+esc(primaryJerseyLabel(p)==="TEMP"?'':'#'+primaryJerseyLabel(p))+'</span> '+window.SKORLineupMarker.nameHtml(p.name,p.temp)+'</span>'+action+'</div>';
     }).join(''):'<span style="font-size:.8rem;color:var(--muted)">No substitutes listed yet.</span>';
 
     list.querySelectorAll('[data-bench-absent]').forEach(btn=>btn.addEventListener('click',async e=>{
@@ -4891,7 +4893,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       temp_id:String(r.id),
       jersey_inventory_id:r.jersey_inventory_id?String(r.jersey_inventory_id):"",
       number:r.jersey_number===null||r.jersey_number===undefined?null:Number(r.jersey_number),
-      name:String(r.display_name||"Fill-in"),
+      name:window.SKORLineupMarker.shortName(r.display_name||"Fill-in",true),
       fullName:String(r.display_name||"Fill-in"),
       temp:true,
       archived:r.active===false
@@ -4944,12 +4946,12 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     renderTempJerseyOptions(editingId,editingPlayer?.jersey_inventory_id||"");
     context.textContent=active.length?active.length+" match fill-in"+(active.length===1?"":"s")+" available for this game. Jersey choices come from current On Hand inventory.":"No fill-ins added for this match yet. A jersey can stay unassigned until game day.";
     list.innerHTML=active.length?active.map(p=>
-      '<div class="temp-player-row"><strong><span class="temp-pill">TEMP</span><span>'+esc(p.name)+' · '+esc(jerseyLabel(p)==="TEMP"?"Jersey TBD":"#"+jerseyLabel(p))+(p.jersey_inventory_id?'<small class="temp-jersey-detail">'+esc(window.SKORJerseys?.labelFor?.(p.jersey_inventory_id)||"")+'</small>':'')+'</span></strong>'+
+      '<div class="temp-player-row"><strong><span class="temp-pill">TEMP</span><span>'+esc(window.SKORLineupMarker.shortName(p.name,true))+' · '+esc(primaryJerseyLabel(p)==="TEMP"?"Jersey TBD":"#"+primaryJerseyLabel(p))+(p.jersey_inventory_id?'<small class="temp-jersey-detail">'+esc(window.SKORJerseys?.labelFor?.(p.jersey_inventory_id)||"")+'</small>':'')+'</span></strong>'+
       '<div class="temp-player-actions">'+(canWrite?'<button class="mini-btn" type="button" data-temp-edit="'+esc(p.temp_id)+'">Edit</button><button class="mini-btn" type="button" data-temp-remove="'+esc(p.temp_id)+'">Remove</button>':'')+'</div></div>'
     ).join(""):'';
     list.querySelectorAll("[data-temp-edit]").forEach(btn=>btn.addEventListener("click",()=>{
       const p=matchTempPlayers.find(x=>x.temp_id===btn.dataset.tempEdit);if(!p)return;
-      document.getElementById("tempPlayerEditId").value=p.temp_id;document.getElementById("tempPlayerName").value=p.name;renderTempJerseyOptions(p.temp_id,p.jersey_inventory_id);document.getElementById("tempPlayerJersey").value=p.jersey_inventory_id||"";
+      document.getElementById("tempPlayerEditId").value=p.temp_id;document.getElementById("tempPlayerName").value=p.fullName||p.name;renderTempJerseyOptions(p.temp_id,p.jersey_inventory_id);document.getElementById("tempPlayerJersey").value=p.jersey_inventory_id||"";
       if(savedName){savedName.value="";savedName.disabled=true;}
       document.getElementById("saveTempPlayerBtn").textContent="Update TEMP";document.getElementById("cancelTempPlayerEditBtn").style.display="inline-block";
     }));
@@ -5005,7 +5007,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const names=await window.SKORTempDirectory.loadNames(client);
       if(request!==tempDirectoryRequest)return;
       select.replaceChildren(new Option("Choose a previous TEMP player",""));
-      names.forEach(name=>select.add(new Option(name,name)));
+      names.forEach(name=>select.add(new Option(window.SKORLineupMarker.shortName(name,true),name)));
       if(help)help.textContent=names.length?"Saved full names from previous games. Pick the jersey separately for this game.":"No saved full names yet. Enter a first and last name below to remember them for next time.";
     }catch(err){
       if(request!==tempDirectoryRequest)return;
@@ -5250,7 +5252,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.8 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.9 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,
@@ -7046,8 +7048,8 @@ function officialPlayerLabel(pid){
   const p=key.startsWith('temp:')?MATCH_TEMP_PLAYERS.find(p=>String(p.id)===key.slice(5)):TEAM_ROSTER.find(p=>String(p.player_key||p.id)===key);
   if(!p)return officialPlayerLabelBase(pid);
   const d=window.SKORKeeperPlan.details(PRODUCTION_GAMEPLAN?.state||{},key,p.jersey_number??'TEMP');
-  const name=key.startsWith('temp:')?p.display_name:(p.preferred_name||String(p.full_name||'Player').trim().split(/\s+/)[0]);
-  return '#'+d.number+' '+name+(key.startsWith('temp:')?' · TEMP':'')+(d.label?' ('+d.label+')':'');
+  const name=window.SKORLineupMarker.shortName(key.startsWith('temp:')?p.display_name:p.preferred_name||p.full_name,key.startsWith('temp:'));
+  return '#'+(p.jersey_number??'—')+' '+name+(key.startsWith('temp:')?' · TEMP':'');
 }
 function officialPlayerLabelBase(pid){
   const key=String(pid||"");

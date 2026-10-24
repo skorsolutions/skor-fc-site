@@ -22,3 +22,17 @@ body.viewer-mode .keeper-plan input,body.viewer-mode .keeper-plan select{pointer
 #lineups .bench-player-label{display:block;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:720px){#lineups .peg-name{font-size:8px!important;line-height:1.15!important}.marker-temp{font-size:7px}}
 @media(max-width:520px){.keeper-plan-row{grid-template-columns:minmax(0,1fr) 86px}.keeper-tag{font-size:8px;max-width:92px}}
+#lineups .lineup-match-setup{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;min-width:0;align-items:start}
+#lineups .lineup-match-setup>.mini-panel{width:100%;min-width:0;margin:0;padding:16px;box-sizing:border-box}
+#lineups .lineup-match-setup input,#lineups .lineup-match-setup select{min-width:0;max-width:100%;width:100%;min-height:44px;font-size:16px;box-sizing:border-box}
+#lineups .lineup-match-setup label{display:block;white-space:normal;margin-bottom:5px;font-size:.75rem;font-weight:800}
+#lineups .temp-player-form{grid-template-columns:minmax(0,1fr);gap:10px}
+#lineups .temp-player-form .mini-btn,#lineups .temp-player-actions .mini-btn{min-height:44px;white-space:normal}
+#lineups .temp-player-row strong{align-items:flex-start;flex-wrap:wrap}
+#lineups .temp-player-row strong>span:last-child{min-width:0;flex:1;overflow-wrap:anywhere;white-space:normal}
+#lineups .temp-jersey-detail{display:block;white-space:normal;overflow-wrap:anywhere}
+#lineups .potential-positions>summary{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;font-size:1.05rem;font-weight:850;list-style:none}
+#lineups .potential-positions>summary::-webkit-details-marker{display:none}
+#lineups .potential-positions[open] .potential-chevron{transform:rotate(90deg)}
+#lineups .potential-positions .sub{margin-top:12px}
+@media(max-width:760px){#lineups .lineup-match-setup{grid-template-columns:minmax(0,1fr);gap:12px}#lineups .temp-player-row{grid-template-columns:minmax(0,1fr)}#lineups .temp-player-actions{justify-content:flex-start}#lineups .keeper-plan-row{grid-template-columns:minmax(0,1fr)}#lineups .keeper-plan-row>div{min-width:0}#lineups .keeper-plan-row label{margin-top:3px}}
