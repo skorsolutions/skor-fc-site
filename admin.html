@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.13-picker-containment" />
-  <title>SKOR FC Admin | Captain Portal v58.13</title>
+  <meta name="skor-build" content="captain-portal-v58.14-saved-variations" />
+  <title>SKOR FC Admin | Captain Portal v58.14</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1482,7 +1482,7 @@
     body.viewer-mode .viewer-banner{display:flex}
     body.viewer-mode #dashboard .actions .action:not(:first-child){display:none!important}
     body.viewer-mode #announcementForm,body.viewer-mode #practiceForm,body.viewer-mode #matchScheduleForm,body.viewer-mode #rosterForm,body.viewer-mode #fieldForm,body.viewer-mode #payments form{display:none!important}
-    body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete{display:none!important}
+    body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete,body.viewer-mode #tinkerVariationList .variation-delete{display:none!important}
     body.viewer-mode #gameday #statusControls,body.viewer-mode #gameday #gameClockActions,body.viewer-mode #gameday .game-clock-settings,body.viewer-mode #gameday .event-buttons,body.viewer-mode #gameday #eventEditor,body.viewer-mode #gameday #saveMotmBtn,body.viewer-mode #gameday #clearMotmBtn{display:none!important}
     body.viewer-mode #gameday #motmPlayer,body.viewer-mode #gameday #motmReason,body.viewer-mode #gameday #motmManualName,body.viewer-mode #gameday #motmManualNumber,body.viewer-mode #gameday #motmMatchNumber{pointer-events:none;opacity:.72}
     body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups #updateProductionFromCurrentBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups .variation-final,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .sub-move,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
@@ -1864,7 +1864,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.13</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.14</div>
   </aside>
 
   <main>
@@ -2862,13 +2862,19 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="panel lineup-variations-panel" style="margin-top:14px">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
                 <div>
-                  <h2 style="margin-bottom:4px">Saved Variations <span class="variation-count" id="lineupVariationCount">0</span> <span class="shared-badge">SHARED</span></h2>
-                  <div class="sub">Grouped by game. Scroll sideways through saved plans without taking width away from the player panel.</div>
+                  <h2 style="margin-bottom:4px">Saved Game Variations <span class="variation-count" id="lineupVariationCount">0</span> <span class="shared-badge">SHARED</span></h2>
+                  <div class="sub">Saved lineups grouped by game.</div>
                 </div>
-                <button class="mini-btn" id="refreshLineupVariations" type="button">Refresh saved variations</button>
+                <button class="mini-btn" id="refreshLineupVariations" type="button">Refresh saved game variations</button>
               </div>
               <div class="variation-list" id="lineupVariationList" style="margin-top:10px"></div>
             </div>
+
+        <details class="panel saved-tinker-variations" id="savedTinkerVariationsPanel">
+          <summary><span class="saved-tinker-chevron" aria-hidden="true">▸</span><span class="saved-tinker-title">Saved Tinker Variations</span><span class="variation-count" id="tinkerVariationCount">0</span><span class="shared-badge">SHARED</span></summary>
+          <button class="mini-btn" id="refreshSavedTinkerVariations" type="button">Refresh Tinker variations</button>
+          <div class="variation-list" id="tinkerVariationList"></div>
+        </details>
 
         <div class="panel">
           <h2>Planned Substitutions</h2>
@@ -3183,7 +3189,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </div>
   </div>
 </dialog>
-<link rel="stylesheet" href="keeper-plan.css?v=58.13">
+<link rel="stylesheet" href="keeper-plan.css?v=58.14">
 <script src="keeper-plan.js?v=58.10"></script>
 <script src="lineup-marker.js?v=58.13"></script>
 <script src="keeper-editor.js?v=58.9"></script>
@@ -4701,15 +4707,15 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
 
   function renderVariations(){
-    const box=document.getElementById('lineupVariationList');
-    const count=document.getElementById('lineupVariationCount');
-    if(!box)return;
+    const gameBox=document.getElementById('lineupVariationList');
+    const tinkerBox=document.getElementById('tinkerVariationList');
+    if(!gameBox||!tinkerBox)return;
     const library=allSharedVariations.length?allSharedVariations:sharedVariations;
-    if(count)count.textContent=library.length;
-    if(!library.length){
-      box.innerHTML='<div style="font-size:.82rem;color:var(--muted)">No saved variations yet.</div>';
-      return;
-    }
+    const tinkerCount=library.filter(v=>String(v.event_key||'tinker')==='tinker').length;
+    const gameCount=document.getElementById('lineupVariationCount');
+    const tinkerCounter=document.getElementById('tinkerVariationCount');
+    if(gameCount)gameCount.textContent=library.length-tinkerCount;
+    if(tinkerCounter)tinkerCounter.textContent=tinkerCount;
 
     const groups=new Map();
     library.forEach(v=>{
@@ -4729,7 +4735,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       return bd-ad;
     });
 
-    box.innerHTML=ordered.map(group=>{
+    const renderGroup=group=>{
       const cards=group.items
         .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))
         .map(v=>{
@@ -4748,10 +4754,16 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             '<span class="variation-owner">Saved by '+esc(owner)+'</span></button>'+
             '<div class="variation-card-actions">'+finalAction+'<button class="mini-btn variation-copy" type="button" data-copy-variation="'+esc(v.id)+'">Copy to Game</button><button class="mini-btn variation-delete" type="button" data-delete-variation="'+esc(v.id)+'">Delete</button></div></div>';
         }).join('');
+      if(group.key==='tinker')return cards;
       return '<section class="variation-game-group"><div class="variation-game-head"><div class="variation-game-title">'+esc(group.key==='tinker'?'Tinker Boards':group.label)+'</div><span class="variation-game-count">'+group.items.length+'</span></div><div class="variation-game-row">'+cards+'</div></section>';
-    }).join('');
+    };
+    const empty=label=>'<div class="saved-variations-empty">No saved '+label+' variations yet.</div>';
+    gameBox.innerHTML=ordered.filter(group=>group.key!=='tinker').map(renderGroup).join('')||empty('game');
+    tinkerBox.innerHTML=ordered.filter(group=>group.key==='tinker').map(renderGroup).join('')||empty('Tinker');
 
     updateProductionCurrentButton();
+    // Bind the existing actions in both sections without replacing the disclosure itself.
+    [gameBox,tinkerBox].forEach(box=>{
 
     box.querySelectorAll('[data-load-variation]').forEach(btn=>btn.addEventListener('click',async()=>{
       const rec=library.find(v=>String(v.id)===String(btn.dataset.loadVariation));
@@ -4820,6 +4832,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       await refreshVariations(false);
       markStatus('Deleted shared variation "'+rec.name+'".');
     }));
+    });
   }
 
   async function refreshTinkerVariations(){
@@ -5056,6 +5069,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   const addFirstHalfSubBtn=document.getElementById('addFirstHalfSubBtn');
   const addSecondHalfSubBtn=document.getElementById('addSecondHalfSubBtn');
   const refreshBtn=document.getElementById('refreshLineupVariations');
+  const refreshSavedTinkerBtn=document.getElementById('refreshSavedTinkerVariations');
   const exportPngBtn=document.getElementById('exportGameplanPng');
   const exportJpgBtn=document.getElementById('exportGameplanJpg');
 
@@ -5246,7 +5260,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   if(variationNameInput) variationNameInput.addEventListener('input',()=>renderGameplanPreview());
   if(exportPngBtn) exportPngBtn.addEventListener('click',()=>exportGameplanAs('png'));
   if(exportJpgBtn) exportJpgBtn.addEventListener('click',()=>exportGameplanAs('jpg'));
-  if(refreshBtn) refreshBtn.addEventListener('click',()=>refreshVariations(true));
+  [refreshBtn,refreshSavedTinkerBtn].forEach(btn=>{if(btn)btn.addEventListener('click',()=>refreshVariations(true));});
   if(clearBtn) clearBtn.addEventListener('click',()=>{
     if(!confirm('Clear the starting XI / custom board and substitutes? Planned-sub player selections will also be cleared.')) return;
     state.slots={}; state.freeform={}; state.bench=[]; selectedPlayer=null;
@@ -5270,7 +5284,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.13 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.14 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,

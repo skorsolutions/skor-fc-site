@@ -2,6 +2,7 @@
   "name": "skor-fc-site",
   "private": true,
   "scripts": {
+    "test:saved-variations": "node tests/verify-saved-variations.mjs",
     "test:keepers": "node tests/verify-keeper-plan.mjs",
     "test:score-privacy": "node tests/verify-score-privacy.mjs",
     "test:clock": "node tests/verify-match-clock.mjs",
