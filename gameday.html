@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#090a0d">
-<meta name="skor-build" content="gameday-v58.7-match-keepers">
+<meta name="skor-build" content="gameday-v58.8-readable-lineup-markers">
 <title>SKOR FC | Match Center v55.0</title>
 <meta name="description" content="SKOR FC crowd-powered live match scoring, referee decision review and Man of the Match voting.">
 <style>
@@ -189,8 +189,9 @@
 }
 
 </style>
-<link rel="stylesheet" href="keeper-plan.css?v=58.7">
+<link rel="stylesheet" href="keeper-plan.css?v=58.8">
 <script src="keeper-plan.js?v=58.7"></script>
+<script src="lineup-marker.js?v=58.8"></script>
 </head>
 <body>
 <header class="top"><div class="wrap topin"><img src="assets/skor fc logo transparent.png" alt="SKOR FC"><div class="brand">SKOR FC GAME DAY</div><div class="spacer"></div><div class="user" id="topUser"></div><button class="logout hidden" id="logoutBtn" type="button">Log out</button></div></header>
@@ -439,7 +440,7 @@ function matchLineupPlayer(pid){
 }
 function withKeeperLabel(pid,p){
   const d=window.SKORKeeperPlan.details(productionLineup?.state||{},pid,p.number);
-  return {...p,number:d.number,name:p.name+(d.label?' ('+d.label+')':'')};
+  return {...p,number:d.number,name:p.name+(d.label?' ('+d.label+')':''),displayName:p.name,keeperLabel:d.label,keeperStarter:d.role.startsWith('starting')};
 }
 function matchSubUnitLabel(value){return ({defense:'Defense',midfield:'Midfield',strikers:'Strikers',mixed:'Mixed'})[value]||'Mixed';}
 function renderOfficialLineup(){
@@ -472,13 +473,14 @@ function renderOfficialLineup(){
     const p=matchLineupPlayer(m.pid);
     return `<div class="match-player" style="left:${m.x}%;top:${m.y}%">
       <div class="match-role">${esc(m.role||"")}</div>
-      <div class="match-jersey${String(p.number).includes(' / ')?' keeper-dual':''}"><span${String(p.number).includes(' / ')?' class="keeper-number-pair"':''}>${esc(p.number)}</span></div>
-      <div class="match-player-name">${esc(p.name)}${p.temp?' · TEMP':''}</div>
+      <div class="match-jersey${String(p.number).includes(' / ')?' keeper-dual':''}">${window.SKORLineupMarker.numberHtml(p.number,p.keeperStarter)}</div>
+      <div class="match-player-name">${window.SKORLineupMarker.nameHtml(p.displayName,p.temp)}</div>
+      ${p.keeperLabel?'<small class="keeper-tag">('+esc(p.keeperLabel)+')</small>':''}
     </div>`;
   }).join("");
 
   const bench=(state.bench||[]).map(matchLineupPlayer);
-  const benchHtml=bench.length?bench.map(p=>`<div class="match-bench-player"><div class="match-bench-num${String(p.number).includes(' / ')?' keeper-dual':''}">${esc(p.number)}</div><div class="match-bench-name">${esc(p.name)}${p.temp?' · TEMP':''}</div></div>`).join(""):'<div class="empty">No bench listed.</div>';
+  const benchHtml=bench.length?bench.map(p=>`<div class="match-bench-player"><div class="match-bench-num${String(p.number).includes(' / ')?' keeper-dual':''}">${esc(p.number)}</div><div class="match-bench-name">${window.SKORLineupMarker.nameHtml(p.displayName,p.temp)}${p.keeperLabel?'<small class="keeper-tag">('+esc(p.keeperLabel)+')</small>':''}</div></div>`).join(""):'<div class="empty">No bench listed.</div>';
 
   const waves=[];
   (state.subs?.firstHalf||[]).forEach((row,i)=>{

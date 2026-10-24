@@ -2,7 +2,7 @@
 
 Status: **v55.2 production renderer contract**
 
-**v58.7 keeper extension:** The pitch shirt displays the primary and spare keeper number together (`12 / 30`) with a smaller number font. A parenthesized keeper role appears beneath the player name, including in Numbers Only mode. Bench chips reserve space for both numbers and a separate keeper-role line; their measured height moves following content downward. Potential Positions and substitution labels use the same match-specific names/numbers. These fields persist in the existing lineup JSON; crop geometry and canonical coordinates are unchanged.
+**v58.8 marker presentation:** The pitch shirt retains primary / spare order (`12 / 30`). The outfield player's primary number is large and spare small; the starting keeper's primary is small and worn keeper number large. Shared HTML/SVG presentation comes from `lineup-marker.js`. TEMP suffixes are separated into a badge for display, names wrap, and name plates/bench rows expand. Extra marker-name lines add bottom clearance to the lineup card; pitch crop and canonical player coordinates are unchanged. Keeper roles remain visible in Numbers Only mode. Referee PDF/Excel and saved lineup fields retain the v58.7 contract.
 
 This is the durable reference for the lineup picture shown in **Shareable Gameplan Export** and downloaded as PNG or JPG. Read it before changing pitch geometry, player markers, formation mapping, export height, or content beneath the pitch.
 

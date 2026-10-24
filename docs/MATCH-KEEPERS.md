@@ -1,5 +1,7 @@
 # Match keepers — v58.7
 
+**v58.8 display update:** On the field, primary / spare order stays the same. Cover wears a large primary number with a small spare beside it; the starter in goal has a large keeper number and small primary beside it. This follows the user's approved draft. TEMP names such as `Anton- TEMP` and `Malik - TEMP` display the name and one separate TEMP badge, with wrapping and growing name plates rather than ellipses. HTML markers, lineup PNG/JPG, public Matches, Crowd and Strategy exports share the presentation. This changes no saved name, lineup data, referee sheet or AI context, and requires no migration or Edge Function deployment.
+
 In Lineups, add the match squad to the field and Substitutes, then use **Keepers for this match**. The standard formation's GK starts as a regular keeper. Change his role to **starting temp keeper** when an outfield player is covering. Use **Assign another keeper** to add potential cover, and choose or type a keeper jersey number for each player. The spare-number suggestions start at 30 and can contain several numbers, such as `30, 31`.
 
 Selecting a starter moves him into GK and puts a displaced standard-formation keeper on the bench. On a Freeform board, selecting a starter places a bench player near the goal and retains an existing field player's coordinates. Moving another player into the standard GK slot updates who is labeled as the starter. Cover can share the same spare number or use different ones.

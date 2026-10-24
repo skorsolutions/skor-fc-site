@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.7**.
+Current Captain Portal build: **v58.8** (readable lineup markers; deployment verification pending).
 Production implementation release: [`86ba17a67880f0207dccdf97d95bac5dae21c4db`](https://github.com/skorsolutions/skor-fc-site/commit/86ba17a67880f0207dccdf97d95bac5dae21c4db). Cloudflare production build `b37a06f2-d25d-4505-920c-110541be0bb5` succeeded on 2026-10-24 at 08:07:24 UTC; deployed version `0fa935f8-9ab0-4a2e-9b4a-7d85028b5298`. All 22 release-file blob hashes and the exact file set matched the checked local sources. `generate-pregame-talk` version 14 is ACTIVE with JWT verification enabled; both packaged source files match the release. Ten relevant suites and rollback-only captain/public JSON persistence checks passed. No migration or persistent fixture changes. Browser visual and direct live-source HTTP checks remain unavailable. Workflow and limitations: `docs/MATCH-KEEPERS.md`.
 Previous deployed build: **v58.6**.
 Previous production release: [`1ab0a7c329367e87b9f1ee025d5e3235e3f3736c`](https://github.com/skorsolutions/skor-fc-site/commit/1ab0a7c329367e87b9f1ee025d5e3235e3f3736c). Approved migration `20261019065353 repair_portal_activity` is applied and verified. Cloudflare production build `04a9f078-d6cf-4247-bed8-06606fbf0b90` succeeded on 2026-10-19; deployed version `35561a6e-8e15-4605-8b75-0f26ee7de33e`. Exact source hashes/release files were verified. Direct HTTP and rendered browser checks remain unavailable.
@@ -56,6 +56,12 @@ This is the durable handoff document for new chats and future developers. Read i
 - Database migrations require explicit user approval before they are applied.
 
 ## 4. Lineup system rules
+
+### Number hierarchy and TEMP labels — v58.8
+
+- On-field markers preserve primary / spare order. Outfield cover uses a large primary number and small spare; the designated starting keeper uses a small primary number and large keeper number. Single-number players retain their normal size. `lineup-marker.js` supplies shared HTML/SVG presentation for the editor, current-board PNG/JPG, public Matches, Crowd Game Day and Strategy circles/exports.
+- TEMP names wrap instead of clipping. A trailing `- TEMP`, `· TEMP` or `(TEMP)` is removed only for display and shown once as a separate TEMP badge. Stored names/full referee names remain untouched. Export name plates and bench rows grow for wrapped labels; following export cards move down. Names + Numbers and Numbers Only remain supported.
+- This is a presentation-only release. Saved JSON, roster identities, number order, referee PDF/Excel, AI context, database and Edge Function version 14 remain unchanged. No SQL or backend deployment is required. The user approved a generated visual draft of the number hierarchy before implementation.
 
 ### Match-specific keeper assignments — v58.7
 

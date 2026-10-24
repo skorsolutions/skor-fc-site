@@ -41,7 +41,7 @@
   const storageKey=()=>"skorStrategyDraftV2:"+String(lineApi()?.getCaptainKey?.()||"captain");
   const legacyStorageKey=()=>"skorStrategyDraftV1:"+String(lineApi()?.getCaptainKey?.()||"captain");
 
-  function playerName(player){return String(player?.name||"Player").trim().split(/\s+/)[0]||"Player";}
+  function playerName(player){const name=window.SKORLineupMarker?.displayName(player?.name||'Player',player?.temp)||player?.name||'Player';return String(name).trim().split(/\s+/)[0]||'Player';}
   function formationPositions(name,flip=false){
     return (HOME_FORMATIONS[name]||HOME_FORMATIONS["4-4-2"]).map(([role,x,y],index)=>({id:"opp_"+index,label:role,x,y:flip?100-y:y}));
   }
@@ -428,8 +428,12 @@
   function homeMarkup(player){
     const x=player.x*10,y=player.y*6.8;
     const number=player.keeperNumber!==null&&player.keeperNumber!==undefined&&String(player.keeperNumber)!==String(player.number)?player.number+' / '+player.keeperNumber:String(player.number);
-    const keeper=player.keeperLabel?'<text y="69" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">('+esc(player.keeperLabel)+')</text>':'';
-    return '<g class="strategy-svg-home strategy-player-shadow" data-kind="home" data-id="'+esc(player.id)+'" transform="translate('+x+' '+y+')" filter="url(#strategyShadow)"><circle r="44" fill="transparent"/><circle r="29" fill="#741f35" stroke="#fff" stroke-width="4"/><text y="5" text-anchor="middle" fill="#fff" font-size="'+(number.includes(" / ")?11:19)+'" font-weight="950">'+esc(number)+'</text><rect x="-39" y="32" width="78" height="24" rx="12" fill="#17181d" opacity=".94"/><text y="49" text-anchor="middle" fill="#fff" font-size="14" font-weight="850">'+esc(player.name)+'</text>'+keeper+'</g>';
+    const temp=player.temp===true||String(player.id).startsWith('temp:'),lines=window.SKORLineupMarker.nameLines(player.name,temp,12);
+    const width=Math.max(78,...lines.map(line=>line.length*8+16)),height=lines.length*16+10+(temp?14:0);
+    const roleHeight=player.keeperLabel?20:0,labelY=y+32+height+roleHeight>670?-36-height-roleHeight:32;
+    const labelX=clamp(x,width/2+4,996-width/2)-x;
+    const keeper=player.keeperLabel?'<text x="'+labelX+'" y="'+(labelY+height+14)+'" text-anchor="middle" fill="#fff" font-size="10" font-weight="800">('+esc(player.keeperLabel)+')</text>':'';
+    return '<g class="strategy-svg-home strategy-player-shadow" data-kind="home" data-id="'+esc(player.id)+'" transform="translate('+x+' '+y+')" filter="url(#strategyShadow)"><circle r="44" fill="transparent"/><circle r="29" fill="#741f35" stroke="#fff" stroke-width="4"/>'+window.SKORLineupMarker.numberSvg(number,String(player.keeperLabel||'').startsWith('starting'),0,5,19,7)+'<rect x="'+(labelX-width/2)+'" y="'+labelY+'" width="'+width+'" height="'+height+'" rx="12" fill="#17181d" opacity=".94"/><text x="'+labelX+'" y="'+(labelY+17)+'" text-anchor="middle" fill="#fff" font-size="14" font-weight="850">'+lines.map((line,i)=>'<tspan x="'+labelX+'" dy="'+(i?16:0)+'">'+esc(line)+'</tspan>').join('')+'</text>'+(temp?'<text x="'+labelX+'" y="'+(labelY+17+lines.length*16)+'" text-anchor="middle" fill="#ffdf9b" font-size="9" font-weight="900">TEMP</text>':'')+keeper+'</g>';
   }
   function awayMarkup(player,index){
     const x=player.x*10,y=player.y*6.8;

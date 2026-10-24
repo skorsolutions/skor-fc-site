@@ -12,13 +12,13 @@ inlineScripts.forEach((match, index) => {
   new vm.Script(match[1], { filename: `admin.html#inline-${index + 1}` });
 });
 
-assert.match(admin, /captain-portal-v58\.7-match-keepers/);
+assert.match(admin, /captain-portal-v58\.8-readable-lineup-markers/);
 assert.match(admin, /CAPTAIN PORTAL V57\.0/);
 assert.match(admin, /const fullPitchLength=105,opponentPenaltyDepth=16\.5/);
 assert.match(admin, /const visiblePitchLength=fullPitchLength-opponentPenaltyDepth/);
 assert.match(admin, /const pitchW=800,pitchH=Math\.round\(pitchW\*\(visiblePitchLength\/68\)\)/);
 assert.match(admin, /const pitchX=\(W-pitchW\)\/2,pitchY=258/);
-assert.match(admin, /const lineupCardH=\(pitchY\+pitchH\+36\)-lineupCardY/);
+assert.match(admin, /const lineupCardH=\(pitchY\+pitchH\+36\)-lineupCardY\+maxMarkerLabelExtra/);
 assert.match(admin, /const benchCardX=50,benchCardY=lineupCardY\+lineupCardH\+26/);
 assert.match(admin, /canonicalExportCoord\(entry\.x,5,95\)/);
 assert.match(admin, /function croppedExportY\(value\)/);
@@ -30,7 +30,7 @@ assert.match(admin, /<polygon points="\$\{jerseyPoints\}"/);
 assert.match(admin, /clipPath id="gameplanPitchClip"/);
 assert.match(admin, /same vertical pitch, formation spacing, and jersey shirts as the Lineup Builder/);
 assert.doesNotMatch(admin, /<circle cx="\$\{x\}" cy="\$\{y\}" r="44"/);
-assert.match(handbook, /Current Captain Portal build: \*\*v58\.7\*\*/);
+assert.match(handbook, /Current Captain Portal build: \*\*v58\.8\*\*/);
 assert.match(exportDoc, /The exporter must not calculate a new minimum\/maximum from occupied players/);
 assert.match(exportDoc, /Circular markers may still be used in compact bench\/list chips, but never as the on-field lineup player design/);
 assert.match(exportDoc, /opponent's 18-yard line through SKOR's own goal line/);

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.7-match-keepers" />
-  <title>SKOR FC Admin | Captain Portal v58.7</title>
+  <meta name="skor-build" content="captain-portal-v58.8-readable-lineup-markers" />
+  <title>SKOR FC Admin | Captain Portal v58.8</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1865,7 +1865,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.7</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.8</div>
   </aside>
 
   <main>
@@ -3180,8 +3180,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </div>
   </div>
 </dialog>
-<link rel="stylesheet" href="keeper-plan.css?v=58.7">
+<link rel="stylesheet" href="keeper-plan.css?v=58.8">
 <script src="keeper-plan.js?v=58.7"></script>
+<script src="lineup-marker.js?v=58.8"></script>
 <script src="keeper-editor.js?v=58.7"></script>
 <script src="ribbon-order.js?v=58.3"></script>
 <script src="temp-player-directory.js?v=58.3"></script>
@@ -3482,7 +3483,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const captain = onPitch && state.captainId===id(p) ? '<span class="captain-badge" title="Captain">C</span>' : '';
     const number=jerseyLabel(p);
     return '<div class="player-peg'+(compact?' compact':'')+' '+modeClass()+'" draggable="true" data-v28-player="'+esc(id(p))+'"'+pitchAttr+'>'+
-      '<div class="jersey'+(number.includes(' / ')?' keeper-dual':'')+(p.temp&&number==="TEMP"?' temp-number':'')+'"><span'+(number.includes(' / ')?' class="keeper-number-pair"':'')+'>'+esc(number)+'</span></div>'+captain+'<div class="peg-name">'+esc(p.name)+'</div>'+(keeperSuffix(p)?'<small class="keeper-tag">'+esc(keeperSuffix(p))+'</small>':'')+'</div>';
+      '<div class="jersey'+(number.includes(' / ')?' keeper-dual':'')+(p.temp&&number==="TEMP"?' temp-number':'')+'">'+window.SKORLineupMarker.numberHtml(number,onPitch&&keeperDetails(p).role.startsWith('starting'))+'</div>'+captain+'<div class="peg-name">'+window.SKORLineupMarker.nameHtml(p.name,p.temp)+'</div>'+(keeperSuffix(p)?'<small class="keeper-tag">'+esc(keeperSuffix(p))+'</small>':'')+'</div>';
   }
   function markStatus(msg,ok=true){
     const el=document.getElementById("lineupStatus");
@@ -3641,7 +3642,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const visiblePitchPct=100-croppedTopPct;
     const pitchW=800,pitchH=Math.round(pitchW*(visiblePitchLength/68));
     const pitchX=(W-pitchW)/2,pitchY=258;
-    const lineupCardH=(pitchY+pitchH+36)-lineupCardY;
+    const maxMarkerLabelExtra=state.labelMode==='numbers'?0:Math.max(0,...starters.map(entry=>{const p=player(entry.pid);return p?.temp?window.SKORLineupMarker.nameLines(p.name,true).length-1:0;}))*22;
+    const lineupCardH=(pitchY+pitchH+36)-lineupCardY+maxMarkerLabelExtra;
     const showNames=(state.labelMode||"names")!=="numbers";
     const hasFieldPlayers=starters.length>0;
     function canonicalExportCoord(value,min=5,max=95,fallback=50){
@@ -3675,26 +3677,29 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
     const benchCardX=50,benchCardY=lineupCardY+lineupCardH+26,benchCardW=980;
     const benchChipStartX=benchCardX+24,benchChipMaxX=benchCardX+benchCardW-24;
-    let benchChipX=benchChipStartX,benchChipY=benchCardY+78,benchRowCount=benchPlayers.length?1:0;
+    let benchChipX=benchChipStartX,benchChipY=benchCardY+78,benchRowHeight=0;
     const benchChips=benchPlayers.map(p=>{
       const label=playerListLabel(p,true);
       const width=Math.min(440,Math.max(170,52+(label.length*8)));
+      const chipName=window.SKORLineupMarker.nameLines(p.temp?p.name:shortName(p.name),p.temp,Math.max(8,Math.floor((width-96)/9)));
+      const chipHeight=Math.max(58,20+chipName.length*20+22);
       if(benchChipX+width>benchChipMaxX&&benchChipX>benchChipStartX){
         benchChipX=benchChipStartX;
-        benchChipY+=68;
-        benchRowCount++;
+        benchChipY+=benchRowHeight+10;
+        benchRowHeight=0;
       }
       const x=benchChipX,y=benchChipY;
       benchChipX+=width+10;
+      benchRowHeight=Math.max(benchRowHeight,chipHeight);
       return `
-        <rect x="${x}" y="${y}" width="${width}" height="58" rx="20" ry="20" fill="#f7f8fa" stroke="#d8dbe1"/>
+        <rect x="${x}" y="${y}" width="${width}" height="${chipHeight}" rx="20" ry="20" fill="#f7f8fa" stroke="#d8dbe1"/>
         <rect x="${x+8}" y="${y+12}" width="68" height="32" rx="16" fill="#801A3D"/>
         <text x="${x+42}" y="${y+33}" text-anchor="middle" font-size="13" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
-        <text x="${x+84}" y="${y+24}" font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}${p.temp?' · TEMP':''}</text>
-        <text x="${x+84}" y="${y+44}" font-size="13" fill="#741f35" font-family="Arial, Helvetica, sans-serif">${esc(keeperSuffix(p))}</text>
+        <text x="${x+84}" y="${y+24}" font-size="16" font-weight="850" fill="#1f2937" font-family="Arial, Helvetica, sans-serif">${chipName.map((line,i)=>`<tspan x="${x+84}" dy="${i?20:0}">${esc(line)}</tspan>`).join('')}</text>
+        <text x="${x+84}" y="${y+24+chipName.length*20}" font-size="13" fill="#741f35" font-family="Arial, Helvetica, sans-serif">${esc([p.temp?'TEMP':'',keeperSuffix(p)].filter(Boolean).join(' · '))}</text>
       `;
     }).join("");
-    const benchRowsHeight=benchRowCount?(benchRowCount*58)+((benchRowCount-1)*10):44;
+    const benchRowsHeight=benchPlayers.length?benchChipY-(benchCardY+78)+benchRowHeight:44;
     const benchCardH=78+benchRowsHeight+20;
     const lowerCardsY=benchCardY+benchCardH+26;
     const depthCardX=50,depthCardY=lowerCardsY,depthCardW=480;
@@ -3806,7 +3811,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const jerseyPoints=[[20,0],[35,7],[65,7],[80,0],[100,19],[85,34],[78,28],[78,100],[22,100],[22,28],[15,34],[0,19]]
         .map(([px,py])=>`${jerseyLeft+(jerseyW*px/100)},${jerseyTop+(jerseyH*py/100)}`).join(" ");
       const role = !isFreeform(state.formation) && entry.label ? `<text x="${x}" y="${y-59}" text-anchor="middle" font-size="22" font-weight="950" fill="#e8f3ea" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(entry.label)}</text>` : "";
-      const name = showNames ? `<text x="${x}" y="${y+68}" text-anchor="middle" font-size="26" font-weight="900" fill="#ffffff" stroke="#24552f" stroke-width="4" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(shortName(p.name))}</text>` : "";
+      const nameLines=p.temp?window.SKORLineupMarker.nameLines(p.name,true):[shortName(p.name)];
+      const name = showNames ? `<text x="${x}" y="${y+68}" text-anchor="middle" font-size="26" font-weight="900" fill="#ffffff" stroke="#24552f" stroke-width="4" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${nameLines.map((line,i)=>`<tspan x="${x}" dy="${i?22:0}">${esc(line)}</tspan>`).join('')}</text>` : "";
+      const labelExtra=showNames?(nameLines.length-1)*22:0;
       const captainBadge = state.captainId===entry.pid ? `
         <circle cx="${x+44}" cy="${y-39}" r="20" fill="#ffffff" stroke="#801A3D" stroke-width="3"/>
         <text x="${x+44}" y="${y-31}" text-anchor="middle" font-size="20" font-weight="950" fill="#801A3D" font-family="Arial, Helvetica, sans-serif">C</text>
@@ -3815,9 +3822,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         ${role}
         <polygon points="${jerseyPoints}" fill="#801A3D" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
         <path d="M ${x-16} ${y-42} L ${x+16} ${y-42} Q ${x+13} ${y-26} ${x} ${y-26} Q ${x-13} ${y-26} ${x-16} ${y-42} Z" fill="#17181c"/>
-        <text x="${x}" y="${y+14}" text-anchor="middle" font-size="${jerseyLabel(p).includes(' / ')?16:p.temp&&jerseyLabel(p)==='TEMP'?20:36}" font-weight="950" fill="#ffffff" font-family="Arial, Helvetica, sans-serif">${esc(jerseyLabel(p))}</text>
+        ${window.SKORLineupMarker.numberSvg(jerseyLabel(p),keeperDetails(p).role.startsWith('starting'),x,y+14,jerseyLabel(p).includes(' / ')?32:p.temp&&jerseyLabel(p)==='TEMP'?20:36,12)}
         ${captainBadge}
-        ${name}${keeperSuffix(p)?`<text x="${x}" y="${y+85}" text-anchor="middle" font-size="12" font-weight="800" fill="#ffffff" stroke="#24552f" stroke-width="2" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(keeperSuffix(p))}</text>`:''}${p.temp?`<text x="${x}" y="${y+(keeperSuffix(p)?102:86)}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">TEMP</text>`:""}
+        ${name}${keeperSuffix(p)?`<text x="${x}" y="${y+85+labelExtra}" text-anchor="middle" font-size="12" font-weight="800" fill="#ffffff" stroke="#24552f" stroke-width="2" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(keeperSuffix(p))}</text>`:''}${p.temp?`<text x="${x}" y="${y+(keeperSuffix(p)?102:86)+labelExtra}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">TEMP</text>`:""}
       `;
     }).join("");
 
@@ -4190,7 +4197,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const action=p.temp
         ? '<button type="button" class="bench-absent-btn" data-bench-absent="'+esc(pid)+'" title="Remove this TEMP player from the match plan">Remove ✕</button>'
         : '<button type="button" class="bench-absent-btn" data-bench-absent="'+esc(pid)+'" title="Mark absent and remove from this match plan">Absent ✕</button>';
-      return '<div class="bench-player'+(p.temp?' temp-player':'')+'" draggable="true" data-v28-player="'+esc(pid)+'"><span class="bench-player-label">'+esc(playerListLabel(p))+'</span>'+action+'</div>';
+      return '<div class="bench-player'+(p.temp?' temp-player':'')+'" draggable="true" data-v28-player="'+esc(pid)+'"><span class="bench-player-label"><span>#'+esc(jerseyLabel(p))+'</span> '+window.SKORLineupMarker.nameHtml(p.name,p.temp)+(keeperSuffix(p)?'<small class="keeper-tag">'+esc(keeperSuffix(p))+'</small>':'')+'</span>'+action+'</div>';
     }).join(''):'<span style="font-size:.8rem;color:var(--muted)">No substitutes listed yet.</span>';
 
     list.querySelectorAll('[data-bench-absent]').forEach(btn=>btn.addEventListener('click',async e=>{
@@ -5243,7 +5250,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.7 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.8 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,
@@ -5276,7 +5283,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="jerseys-bulk.js?v=58.4"></script>
 <script src="jerseys.js?v=58.4"></script>
 <script src="equipment.js?v=58.5"></script>
-<script src="strategy.js?v=58.7"></script>
+<script src="strategy.js?v=58.8"></script>
 <script src="ref-game-card.js?v=58.7"></script>
 <script src="portal-activity.js?v=58.6"></script>
 <script>

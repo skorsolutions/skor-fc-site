@@ -1,3 +1,13 @@
+# v58.8 — Readable keeper numbers and TEMP names (release prepared)
+
+- Implements the approved visual draft: outfield cover has a large primary number and smaller spare; the starting keeper has a large keeper number and smaller primary. Both retain primary / spare order. Normal single numbers retain their size.
+- Fixes cut-off TEMP names including `Anton- TEMP` and `Malik - TEMP`. Names wrap and TEMP appears once as a separate badge. This is display cleanup only; no saved name is edited. SVG name plates and substitute rows grow, with extra clearance before subsequent export cards.
+- Applies to Lineup Builder markers, PNG/JPG, public Matches, Crowd Game Day and Strategy circles/PNG/GIF. Bench/list chips allow wrapping. Referee PDF/Excel, published JSON, roster numbers, AI context and backend rules are unchanged.
+- **Affected files (14):** `admin.html`, `matches.html`, `gameday.html`, `strategy.js`, `keeper-plan.css`, new `lineup-marker.js`, `tests/verify-keeper-plan.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/LINEUP-EXPORT.md`, `docs/MATCH-KEEPERS.md`, and this note.
+- **Verification:** Six affected suites pass: keepers, lineup export, referee card, Strategy animation, clock and score privacy. Tests execute the actual editor/public/Crowd HTML and SVG renderers, check large/small keeper-number hierarchy, Anton/Malik TEMP badge cleanup, long-name wrapping, name-plate bounds, HTML escaping and existing role/persistence behavior. Browser visual verification remains unavailable: Chromium exits with sandbox `setsockopt: Operation not permitted`; the approved generated picture is a design draft, not an application screenshot.
+- **SQL/database status:** No migration, query, persistent data write, schema/RLS or Edge Function change. The active pregame function remains version 14. Display behavior derives from existing saved keeper duties and TEMP identity flags.
+- **Live status:** Prepared for publication through the existing main-branch Cloudflare integration. Verify the exact source hashes and Workers Builds result before reporting deployment. GitHub commit-comment creation is unavailable through the connected tools; retain the matching summary in repository documentation and chat.
+
 # v58.7 — Match keepers and spare jerseys (deployed)
 
 - Adds **Keepers for this match** in Lineups. Choose a regular/temporary starter and potential cover, with an editable spare-number list (initially 30) and a select-or-type jersey field for each keeper. Players may share one spare or receive distinct numbers. Changing the starter moves him to GK and preserves the displaced standard-formation player on the bench.
