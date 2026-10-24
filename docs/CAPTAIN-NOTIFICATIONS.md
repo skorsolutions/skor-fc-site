@@ -1,6 +1,6 @@
 # Captain notification inbox — v58.19
 
-Status: explicitly approved; database migration applied and verified; frontend deployment pending.
+Status: deployed, database and production version verified.
 
 The dashboard inbox shows equipment requests/updates and player feedback from every game. Feedback includes team/private comments and personal/team reactions, including older or subsequently unpublished games. Inbox links retrieve the chosen match; the normal Game Day list still uses published fixtures. No source records are altered to create notifications.
 
@@ -46,4 +46,4 @@ Post-apply verification passed:
 - Three function bodies match approved SQL exactly. The private helper is INVOKER with client EXECUTE revoked; both public RPCs have empty paths, authenticated-only EXECUTE and explicit captain/identity guards. Receipt RLS is enabled, authenticated private-schema USAGE is denied.
 - Advisors reviewed. The three new notices are intentional: the private RLS receipt table has no client policies ([linter reference](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)); the two authenticated SECURITY DEFINER RPCs enforce captain/self guards ([reference](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable)). No new security ERROR or performance group was introduced. Existing unrelated advisories are unchanged.
 
-Frontend publication and Cloudflare source/hash/traffic verification remain pending. Browser visual verification is unavailable in this execution environment. Supabase project is healthy. Current function/private-schema docs were retrieved through Supabase search; the executor proxy prevented direct changelog access. Connected GitHub tools cannot create commit comments.
+Source release [`b572643e7aad218f82aaf6f123ffcc3e95576357`](https://github.com/skorsolutions/skor-fc-site/commit/b572643e7aad218f82aaf6f123ffcc3e95576357) is deployed. All 18 source hashes and exact release files match checked sources. Cloudflare build `d7d3b241-aab8-4921-ad79-e70714ae2da9` succeeded; production version `c23a0c87-ec01-4a9f-a29a-5ad250e268c0` verified at 100% traffic. A documentation-only follow-up records these results. Browser visual verification is unavailable in this execution environment. Supabase project is healthy. Current function/private-schema docs were retrieved through Supabase search; the executor proxy prevented direct changelog access. Connected GitHub tools cannot create commit comments.
