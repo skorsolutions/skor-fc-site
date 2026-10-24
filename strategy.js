@@ -46,6 +46,7 @@
     return (HOME_FORMATIONS[name]||HOME_FORMATIONS["4-4-2"]).map(([role,x,y],index)=>({id:"opp_"+index,label:role,x,y:flip?100-y:y}));
   }
   function playersFromLineup(snapshot,roster){
+    snapshot=window.SKORKeeperPlan?.hydrate(snapshot,roster)||snapshot;
     const byId=new Map((roster||[]).map(player=>[String(player.player_key||player.id),player]));
     const formation=snapshot?.formation||"4-2-3-1",players=[];
     if(formation==="Freeform / Custom"){

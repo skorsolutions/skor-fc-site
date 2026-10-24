@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.9-clean-player-selection" />
-  <title>SKOR FC Admin | Captain Portal v58.9</title>
+  <meta name="skor-build" content="captain-portal-v58.10-restore-keeper-exports" />
+  <title>SKOR FC Admin | Captain Portal v58.10</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1864,7 +1864,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.9</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.10</div>
   </aside>
 
   <main>
@@ -3183,7 +3183,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   </div>
 </dialog>
 <link rel="stylesheet" href="keeper-plan.css?v=58.9">
-<script src="keeper-plan.js?v=58.7"></script>
+<script src="keeper-plan.js?v=58.10"></script>
 <script src="lineup-marker.js?v=58.9"></script>
 <script src="keeper-editor.js?v=58.9"></script>
 <script src="ribbon-order.js?v=58.3"></script>
@@ -3509,7 +3509,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     if(quote)quote.value=state.quote||"";
     if(notes)notes.value=state.notes||"";
   }
-  function persistDraft(){ try{ localStorage.setItem(draftKey(), JSON.stringify(state)); }catch(e){ console.warn("Could not save lineup draft",e);} renderGameplanPreview(); }
+  function persistDraft(){ state=window.SKORKeeperPlan.hydrate(state,selectableRoster());try{ localStorage.setItem(draftKey(), JSON.stringify(state)); }catch(e){ console.warn("Could not save lineup draft",e);} renderGameplanPreview(); }
   function loadDraft(){
     try{
       const raw=localStorage.getItem(draftKey());
@@ -4844,7 +4844,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       .subscribe();
   }
 
-  function renderCore(){ window.SKORKeeperPlan.prune(state);renderKeeperPlan();renderPitch(); renderPool(); renderBench(); renderDepth(); bindDrags(); }
+  function renderCore(){ window.SKORKeeperPlan.prune(state);state=window.SKORKeeperPlan.hydrate(state,selectableRoster());renderKeeperPlan();renderPitch(); renderPool(); renderBench(); renderDepth(); bindDrags(); }
   function renderSquadChange(){ renderCore(); renderSubPlan(); renderGameplanPreview(); }
   function renderAll(){ renderCore(); renderSubPlan(); renderVariations(); renderGameplanPreview(); }
   function renderEventOptions(){
@@ -4868,6 +4868,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         number:Number(r.jersey_number),
         name:String(r.preferred_name||r.display_name||String(r.full_name||"Player").trim().split(/\s+/)[0]),
         fullName:String(r.full_name||r.display_name||r.preferred_name||"Player"),
+        position:String(r.position||''),
         temp:false,
         archived:false
       }))
@@ -5252,7 +5253,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.9 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.10 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,
@@ -5266,7 +5267,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     findVariation:id=>allSharedVariations.find(v=>String(v.id)===String(id))||null,
     loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
     removePermanentPlayer:pid=>{removePlayerEverywhere(String(pid));if(selectedPlayer===String(pid))selectedPlayer=null;persistDraft();renderAll();},
-    getState:()=>clone(state),
+    getState:()=>clone(window.SKORKeeperPlan.hydrate(state,selectableRoster())),
     getRoster:()=>clone(selectableRoster()),
     listVariations:()=>clone(allSharedVariations),
     getEventLabel:()=>eventLabel(),
@@ -5285,8 +5286,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="jerseys-bulk.js?v=58.4"></script>
 <script src="jerseys.js?v=58.4"></script>
 <script src="equipment.js?v=58.5"></script>
-<script src="strategy.js?v=58.8"></script>
-<script src="ref-game-card.js?v=58.7"></script>
+<script src="strategy.js?v=58.10"></script>
+<script src="ref-game-card.js?v=58.10"></script>
 <script src="portal-activity.js?v=58.6"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";

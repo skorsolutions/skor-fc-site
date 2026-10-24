@@ -52,10 +52,11 @@
   }
 
   function buildCardData({state={},roster=[],match=null,edits={}}={}){
+    const keeper=root.SKORKeeperPlan||(typeof require==='function'?require('./keeper-plan.js'):null);
+    state=keeper?.hydrate(state,roster)||state;
     const byId=new Map((roster||[]).map(player=>[playerId(player),player]));
     const squadIds=selectedSquadIds(state);
     const missingPlayerIds=squadIds.filter(id=>!byId.has(id));
-    const keeper=root.SKORKeeperPlan||(typeof require==='function'?require('./keeper-plan.js'):null);
     const players=squadIds.map(id=>byId.get(id)).filter(Boolean).map(player=>({
       id:playerId(player),
       name:fullPlayerName(player),

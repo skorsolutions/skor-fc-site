@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SKOR FC | Match Center</title>
 <meta name="description" content="SKOR FC match center — upcoming fixtures, team sheets, official match times and past match information.">
-<meta name="skor-build" content="public-match-center-v58.9-clean-player-selection">
+<meta name="skor-build" content="public-match-center-v58.10-restore-keeper-exports">
 <style>
 :root{--bg:#07080a;--panel:#101216;--panel2:#15171b;--line:#2b2e33;--muted:#9ea2a8;--text:#f4f4f5;--maroon:#8f1836;--maroon2:#b51c43;--maroon3:#5e0c22;--max:1180px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}a{color:inherit}img{max-width:100%}.wrap{width:min(var(--max),calc(100% - 42px));margin:0 auto}.card{border:1px solid var(--line);background:linear-gradient(145deg,#14171b,#0c0e11);border-radius:16px;box-shadow:0 18px 45px rgba(0,0,0,.22)}
@@ -59,7 +59,7 @@
 
 </style>
 <link rel="stylesheet" href="keeper-plan.css?v=58.9">
-<script src="keeper-plan.js?v=58.7"></script>
+<script src="keeper-plan.js?v=58.10"></script>
 <script src="lineup-marker.js?v=58.9"></script>
 </head>
 <body>
@@ -157,7 +157,8 @@ function productionPlayer(pid){
   return withKeeperLabel(pid,p?{name:p.display_name,number:p.jersey_number,temp:false}:{name:"Player",number:"?",temp:false});
 }
 function withKeeperLabel(pid,p){
-  const d=window.SKORKeeperPlan.details(productionLineup?.state||{},pid,p.number);
+  const resolved=window.SKORKeeperPlan.hydrate(productionLineup?.state||{},publicRoster);
+  const d=window.SKORKeeperPlan.details(resolved,pid,p.number);
   const name=window.SKORLineupMarker.shortName(p.name,p.temp);
   return {...p,number:d.number,primaryNumber:String(p.number),name,displayName:name,keeperLabel:d.label,keeperStarter:d.role.startsWith('starting')};
 }
@@ -224,7 +225,7 @@ async function load(){
   if(!db){renderLists();return;}
   try{
     const [rosterRes,fieldsRes,matchRes]=await Promise.all([
-      db.from("public_roster").select("player_key,display_name,jersey_number,sort_order").order("sort_order",{ascending:true}),
+      db.from("public_roster").select("player_key,display_name,jersey_number,position,sort_order").order("sort_order",{ascending:true}),
       db.from("public_fields").select("id,name,address,field_number,surface,parking_notes,sort_order").order("sort_order",{ascending:true}),
       db.from("matches").select("id,slug,kickoff,arrival_at,status,home_team,away_team,location,home_logo,away_logo,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number").eq("published",true).order("kickoff",{ascending:true})
     ]);

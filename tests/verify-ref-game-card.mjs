@@ -128,7 +128,7 @@ const keeperStyle=xfs.children[Number(refCard.__test.findCell(fakeDoc,'B11').get
 assert.equal(keeperStyle.getElementsByTagNameNS('','alignment')[0].getAttribute('wrapText'),'1');
 assert.equal(fonts.children[Number(keeperStyle.getAttribute('fontId'))].children[0].getAttribute('val'),'8','keeper rows fit both name and duty inside the one-page card');
 
-assert.match(admin,/captain-portal-v58\.9-clean-player-selection/);
+assert.match(admin,/captain-portal-v58\.10-restore-keeper-exports/);
 assert.match(admin,/CAPTAIN PORTAL V57\.0/);
 assert.match(admin,/id="openRefGameCardBtn"/);
 assert.match(admin,/id="downloadRefGameCardExcel"/);
@@ -136,7 +136,7 @@ assert.match(admin,/id="printRefGameCard"/);
 assert.match(admin,/fullName:String\(r\.full_name/);
 assert.match(admin,/getSelectedMatch:/);
 assert.match(admin,/jszip@3\.10\.1/);
-assert.match(admin,/ref-game-card\.js\?v=58\.7/);
+assert.match(admin,/ref-game-card\.js\?v=58\.10/);
 assert.match(refCardSource,/function ensureCell\(doc,address\)/);
 assert.match(refCardSource,/if\(!cell&&!clean\)return/);
 assert.match(refCardSource,/if\(!cell&&blank\)return/);
@@ -145,7 +145,7 @@ assert.match(css,/grid-template-rows:48px 158px minmax\(0,1fr\)/);
 assert.match(css,/\.ref-card-field-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-report-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-roster\{[^}]*font-size:12\.5px\}/);
-assert.match(handbook,/Current Captain Portal build: \*\*v58\.9\*\*/);
+assert.match(handbook,/Current Captain Portal build: \*\*v58\.10\*\*/);
 
 assert.ok(fs.existsSync(templatePath),"the sanitized Excel template must be present");
 const template=fs.readFileSync(templatePath);

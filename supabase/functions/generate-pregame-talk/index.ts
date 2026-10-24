@@ -3,6 +3,7 @@ import './keeper-plan.js';
 const keeperPlan = (globalThis as typeof globalThis & { SKORKeeperPlan: {
   details: (state: unknown, pid: string, number: unknown) => { number: string; label: string; jerseyNumber: number | null };
   squadIds: (state: unknown) => string[];
+  hydrate: (state: Record<string, unknown>, roster: unknown[]) => Record<string, unknown>;
 } }).SKORKeeperPlan;
 
 const ALLOWED_ORIGINS = new Set([
@@ -105,7 +106,7 @@ Deno.serve(async (req: Request) => {
       .select("id,match_id,captain_name,team_performance,improvements_since_last_game,lineup_execution,strategy_execution,opponent_adjustments,standouts,tactical_observations,issues,position_changes,practice_focus,additional_notes,completed_at")
       .eq("status", "completed").order("completed_at", { ascending: false }).limit(6),
     client.rpc("get_match_rsvp_attendance", { p_match_id: matchId }),
-    client.from("team_roster").select("id,player_key,full_name,preferred_name,jersey_number,active").order("jersey_number", { ascending: true }),
+    client.from("team_roster").select("id,player_key,full_name,preferred_name,jersey_number,position,active").order("jersey_number", { ascending: true }),
     client.from("captain_player_name_aliases").select("alias,player_id").eq("resolution", "player"),
     client.from("captain_ai_player_comment_refs").select("comment_id,match_id,created_at").order("created_at", { ascending: false }),
     client.rpc("get_production_lineup", { p_match_id: matchId }),
@@ -260,7 +261,7 @@ Deno.serve(async (req: Request) => {
     }];
   });
   const buildLineupContext = (rawState: unknown, meta: { status: string; name: string; updated_at: unknown }) => {
-    const lineupState = objectValue(rawState);
+    const lineupState = keeperPlan.hydrate(objectValue(rawState), rosterResult.data ?? []);
     if (!Object.keys(lineupState).length) return null;
     const formation = clean(lineupState.formation, 40) || "Unspecified";
     const slots = objectValue(lineupState.slots);

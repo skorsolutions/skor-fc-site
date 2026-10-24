@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.9**.
+Current Captain Portal build: **v58.10** (legacy keeper restoration; deployment verification pending).
 Latest implementation release: [`6ab72d06a4a7e80e10066952dc47c4593a4434bb`](https://github.com/skorsolutions/skor-fc-site/commit/6ab72d06a4a7e80e10066952dc47c4593a4434bb). Cloudflare production build `00edd3a0-8bba-4c72-b4d4-09824d162f1e` succeeded; deployed version `5a897dbd-bd67-47ca-984b-9d1c46e969d5`. All 14 source hashes and the exact release file set match checked files. Seven affected suites and HTML structure checks passed. The compact picker, responsive setup panels and closed Potential Positions are deployed. Full referee names and keeper data remain intact. No database or Edge Function changes. Browser visual checks remain blocked by sandbox socket restrictions.
 Current implementation release: [`2d21e048ec13788350ca223667d5dbd681c4aba8`](https://github.com/skorsolutions/skor-fc-site/commit/2d21e048ec13788350ca223667d5dbd681c4aba8). Cloudflare production build `d6253897-f2df-4251-b08b-5fac1d024f3c` succeeded; deployed version `d6711af8-65ff-4359-bdce-3ec680f9cccb`. All 14 file hashes and the exact release diff match the tested sources. Six affected suites passed. Approved keeper-number hierarchy and readable TEMP labels are deployed across lineup/editor/PNG/JPG/public/Crowd/Strategy presentation. No database or Edge Function change; pregame function remains version 14. Browser visual verification remains blocked by sandbox socket restrictions.
 Production implementation release: [`86ba17a67880f0207dccdf97d95bac5dae21c4db`](https://github.com/skorsolutions/skor-fc-site/commit/86ba17a67880f0207dccdf97d95bac5dae21c4db). Cloudflare production build `b37a06f2-d25d-4505-920c-110541be0bb5` succeeded on 2026-10-24 at 08:07:24 UTC; deployed version `0fa935f8-9ab0-4a2e-9b4a-7d85028b5298`. All 22 release-file blob hashes and the exact file set matched the checked local sources. `generate-pregame-talk` version 14 is ACTIVE with JWT verification enabled; both packaged source files match the release. Ten relevant suites and rollback-only captain/public JSON persistence checks passed. No migration or persistent fixture changes. Browser visual and direct live-source HTTP checks remain unavailable. Workflow and limitations: `docs/MATCH-KEEPERS.md`.
@@ -58,6 +58,13 @@ This is the durable handoff document for new chats and future developers. Read i
 - Database migrations require explicit user approval before they are applied.
 
 ## 4. Lineup system rules
+
+### Legacy keeper restoration — v58.10
+
+- Older saved variations and browser drafts may contain a GK slot without any `keeperPlan`. `SKORKeeperPlan.hydrate(state, roster)` restores a default starting-temp assignment only when that starter has a known outfield roster position and no explicit keeper assignment. It uses the board's first spare number, defaulting to 30. Actual Keeper/GK positions, unknown positions and explicit captain choices are preserved. The helper is pure and does not rewrite the input snapshot.
+- Hydration runs before editor rendering, local draft persistence, `getState`/referee export, public/Crowd presentation, Strategy import and protected AI lineup context. The canonical editor roster now includes the existing position field, and public Matches requests position from the existing public roster view. This restores both the primary/spare pair and the starting-temp-keeper label, while keeping the off-field picker primary-only.
+- The user-identified upcoming Balanced variation was repaired with the #18 / 30 starting-temp assignment. Only its `keeperPlan` and update timestamp changed; all other state and the Production/Final flag were verified unchanged. No bulk lineup rewrite or schema migration. This specific data repair was authorized by the user's request to restore the missing assignment.
+- `keeper-plan.js` and the pregame function's packaged copy must remain identical. The Edge Function includes roster positions only to resolve the existing keeper projection; its AI output still exposes the limited player identity and keeper duties, without adding roster-position data. An authenticated Edge Function deployment is required for this release.
 
 ### Compact player selection and mobile setup — v58.9
 

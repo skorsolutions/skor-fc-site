@@ -25,6 +25,18 @@
     const plan=normalize(state?.keeperPlan),field=new Set(Object.keys(state?.freeform||{}));
     return Object.keys(plan.assignments).find(pid=>field.has(pid)&&['starting','starting_temp'].includes(plan.assignments[pid].role))||'';
   }
+  function hydrate(state,roster=[]){
+    if(!state||typeof state!=='object'||isFreeform(state))return state;
+    const pid=startingId(state),plan=normalize(state.keeperPlan);
+    if(!pid||Object.hasOwn(plan.assignments,pid))return state;
+    const p=roster.find(p=>[p?.player_key,p?.id].some(key=>key!==undefined&&String(key)===pid));
+    const position=String(p?.position||'').trim();
+    // Legacy boards have a GK slot but no keeperPlan. Infer only from a known
+    // outfield roster position; explicit choices and genuine keepers win.
+    if(!position||/\b(?:gk|goalkeeper|keeper|goalie)\b/i.test(position)||!(/\b(?:midfield(?:er)?|defen[cs]e|defender|forward|striker|wing(?:er)?|back|lb|rb|cb|lcb|rcb|cm|cdm|cam|st|lw|rw|lm|rm|lwb|rwb)\b/i.test(position)))return state;
+    plan.assignments[pid]={role:'starting_temp',jerseyNumber:plan.spareNumbers[0]??30};
+    return {...state,keeperPlan:plan};
+  }
   function details(state,pid,primaryNumber){
     const key=String(pid||''),plan=normalize(state?.keeperPlan),a=plan.assignments[key];
     const starter=startingId(state),start=plan.assignments[starter];
@@ -85,7 +97,7 @@
     }
     state.keeperPlan=plan;return '';
   }
-  const api={ROLES,jersey,normalize,squadIds,startingId,details,prune,validate,setRole};
+  const api={ROLES,jersey,normalize,squadIds,startingId,hydrate,details,prune,validate,setRole};
   root.SKORKeeperPlan=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
