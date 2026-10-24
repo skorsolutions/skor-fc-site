@@ -12,7 +12,7 @@ new vm.Script(source);
 for(const html of [admin,player]){
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(new Set(ids).size,ids.length,'unique HTML IDs');
   for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g))if(!/\bsrc=/.test(match[1])&&!/application\//.test(match[1]))new vm.Script(match[2]);
-  assert.match(html,/equipment\.css\?v=58\.5/);assert.match(html,/equipment\.js\?v=58\.5/);
+  assert.match(html,/equipment\.css\?v=58\.5/);assert.match(html,/equipment\.js\?v=58\.19/);
 }
 assert.match(admin,/data-view="equipment"/);assert.match(admin,/SKOREquipment\?\.mount\(\{rootId:"captainEquipment",client:sb,mode:"captain"\}\)/);
 assert.match(admin,/if\(id==="equipment"\)window\.SKOREquipment\?\.refresh\(\)/);
@@ -79,11 +79,12 @@ function fixture(mode='captain'){
       if(action==='transfer')state.items.filter(i=>p.ids.includes(i.id)||p.ids.includes(i.parent_id)).forEach(i=>{i.holder_key=p.holder_key;i.holder_name=state.people.find(x=>x.key===p.holder_key).name;});
       if(action==='report')state.reports.push({...p,id:'report',status:'missing',reporter_key:state.actor_key,reporter_name:'Sample Player',is_mine:true});
       if(action==='message')state.messages.push({...p,id:'message',report_id:p.id,author_key:state.actor_key,author_name:'Sample Player',recipient_key:p.to_key,recipient_name:'Other Captain',created_at:new Date().toISOString()});
+      if(action==='read_notification')state.notifications.find(n=>n.id===p.id).read=true;
       const result={ok:true,summary:'Saved: '+action,id:p.id||'new',photo_path:p.photo_path||null};receipts.set(p.request_id,result);return {data:result};
     },storage:{from(bucket){assert.equal(bucket,'skor-equipment');return{async createSignedUrls(paths){return {data:paths.map(path=>({path,signedUrl:'https://example.invalid/private/'+path}))};},async upload(path,file,options){uploads.push({path,file,options});return {data:{path}};},async remove(paths){removals.push(paths);return{};}};}}};
-  const win={SKORPortalCanWrite:()=>canWrite};const context={window:win,document:{getElementById:()=>root},crypto:{randomUUID},FormData:FormDataMock,console};vm.runInNewContext(source,context);
+  const events=[];const win={SKORPortalCanWrite:()=>canWrite,CustomEvent:class {constructor(type){this.type=type;}},dispatchEvent:event=>events.push(event.type)};const context={window:win,document:{getElementById:()=>root},crypto:{randomUUID},FormData:FormDataMock,console};vm.runInNewContext(source,context);
   const find=s=>{const n=root.querySelector(s);assert.ok(n,'element exists: '+s);return n;};
-  return {root,win,db,writes,uploads,removals,get state(){return state;},get mutations(){return mutations;},setState(s){state=s;},setActor(v){actor=v;},authEvent(event,id){authListener?.(event,id?{user:{id}}:null);},setCanWrite(v){canWrite=v;},setReadError(v){readError=v;},setWriteError(v){writeError=v;},setWriteDelay(v){writeDelay=v;},setReadDelay(v){readDelay=v;},setAuthDelay(v){authDelay=v;},find,
+  return {root,win,db,writes,uploads,removals,events,get state(){return state;},get mutations(){return mutations;},setState(s){state=s;},setActor(v){actor=v;},authEvent(event,id){authListener?.(event,id?{user:{id}}:null);},setCanWrite(v){canWrite=v;},setReadError(v){readError=v;},setWriteError(v){writeError=v;},setWriteDelay(v){writeDelay=v;},setReadDelay(v){readDelay=v;},setAuthDelay(v){authDelay=v;},find,
     mount:()=>win.SKOREquipment.mount({rootId:'root',client:db,mode}),
     click:async(action,id)=>{const target=root.querySelectorAll(`[data-eq-action="${action}"]`).find(n=>id===undefined||n.dataset.id===id);assert.ok(target,action);assert.equal(target.disabled,false,action+' enabled');await root.fire('click',target);},
     tab:async key=>root.fire('click',find(`[data-eq-tab="${key}"]`)),set(name,value){find(`[name="${name}"]`).value=value;},submit:()=>root.fire('submit',find('form')),
@@ -143,4 +144,13 @@ const search=filtered.find('[data-eq-filter="query"]');search.value='Cones';awai
 const unavailable=fixture();unavailable.state.items[0].available=0;unavailable.state.items[1].missing=1;unavailable.state.items[1].available=0;await unavailable.mount();assert.equal(unavailable.find('[data-eq-action="request"][data-id="bag"]').disabled,true);assert.match(unavailable.find('.eq-content').innerHTML,/1 missing/);
 const savedButOffline=fixture();await savedButOffline.mount();await savedButOffline.click('request','cone');savedButOffline.set('due_date','2099-01-01');savedButOffline.setReadError(new Error('refresh offline'));await savedButOffline.submit();assert.equal(savedButOffline.state.loans.length,1);assert.equal(savedButOffline.find('dialog').open,false,'acknowledged writes close the draft even if subsequent refresh fails');assert.match(savedButOffline.find('.eq-main-notice').textContent,/Could not refresh/);
 
-console.log('Equipment controller checks passed: connected portals, approval/pickup/return states, bag custody, role visibility, private reports/messages/photos, retries, duplicate clicks, failed saves and account races. SQL security/concurrency contracts passed; PostgreSQL execution and rendered browser verification remain separate checks.');
+const inbox=fixture();inbox.state.notifications=[{id:'note',body:'A player requested cones.',audience:'captains',created_at:'2026-10-24',read:false}];await inbox.mount();
+assert.deepEqual(inbox.events,['skor:equipment-notifications'],'equipment snapshot notifies the dashboard inbox');
+await inbox.tab('notifications');assert.match(inbox.find('.eq-content').innerHTML,/Mark read/);
+inbox.win.SKOREquipment.applyNotificationRead('note');assert.doesNotMatch(inbox.find('.eq-content').innerHTML,/Mark read/);assert.equal(inbox.writes.length,0,'dashboard acknowledgment updates equipment display without a duplicate write');
+await inbox.win.SKOREquipment.openNotification({loan_id:'loan'});assert.match(inbox.find('.eq-tabs').innerHTML,/Requests &amp; returns|Requests & returns/);assert.equal(inbox.writes.length,0,'opening a notification does not mark it read');
+await inbox.tab('notifications');const eventsBefore=inbox.events.length;await inbox.click('read_notification','note');assert.equal(inbox.state.notifications[0].read,true);assert.ok(inbox.events.length>eventsBefore,'marking read inside equipment refreshes dashboard counts');
+const preserved=fixture();preserved.state.notifications=[{id:'note',read:false}];await preserved.mount();await preserved.click('request','cone');preserved.set('note','Keep this draft');preserved.win.SKOREquipment.applyNotificationRead('note');assert.equal(preserved.find('dialog').open,true);assert.equal(preserved.find('[name="note"]').value,'Keep this draft','read synchronization preserves an open borrowing form');
+const playerEvents=fixture('player');await playerEvents.mount();assert.equal(playerEvents.events.length,0,'player equipment does not trigger captain inbox refreshes');
+
+console.log('Equipment controller checks passed: connected portals, approval/pickup/return states, bag custody, role visibility, private reports/messages/photos, retries, duplicate clicks, failed saves, account races and dashboard notification synchronization. SQL security/concurrency contracts passed; PostgreSQL execution and rendered browser verification remain separate checks.');

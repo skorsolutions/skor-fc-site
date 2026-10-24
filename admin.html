@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.17-match-record" />
-  <title>SKOR FC Admin | Captain Portal v58.17</title>
+  <meta name="skor-build" content="captain-portal-v58.19-captain-notifications" />
+  <title>SKOR FC Admin | Captain Portal v58.19</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
+  <link rel="stylesheet" href="captain-notifications.css?v=58.19" />
   <link rel="stylesheet" href="strategy.css?v=58.0" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
@@ -1854,7 +1855,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <strong>SKOR FC</strong>
     </div>
     <div class="nav">
-      <button class="active" data-view="dashboard">⌂ <span>Dashboard</span></button>
+      <button class="active" data-view="dashboard">⌂ <span>Dashboard <span data-captain-unread="all" hidden></span></span></button>
       <button data-view="gameday">⚽ <span>Game Day</span></button>
       <button data-view="notebook">▤ <span>Notebook</span></button>
       <button data-view="attendance">✓ <span>Attendance</span></button>
@@ -1863,7 +1864,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="schedule">◷ <span>Schedule</span></button>
       <button data-view="roster">♟ <span>Roster</span></button>
       <button data-view="jerseys">◫ <span>Jerseys</span></button>
-      <button data-view="equipment">◈ <span>Equipment</span></button>
+      <button data-view="equipment">◈ <span>Equipment <span data-captain-unread="equipment" hidden></span></span></button>
       <button data-view="lineups">▦ <span>Lineups</span></button>
       <button data-view="strategy">◇ <span>Strategy</span></button>
       <button data-view="fields">⌖ <span>Fields</span></button>
@@ -1871,7 +1872,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.17</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.19</div>
   </aside>
 
   <main>
@@ -1906,6 +1907,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="metric"><span>Join Requests</span><strong>0</strong></div>
         <div class="metric"><span>Unpaid Fees</span><strong>0</strong></div>
       </div>
+
+      <div class="panel captain-notifications" id="captainNotifications" hidden></div>
 
       <div class="panel dashboard-injury-panel" id="dashboardInjuryPanel">
         <span class="pill dashboard-pill">Injury List</span>
@@ -1971,17 +1974,6 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <button class="btn btn-primary" type="button" id="notebookDashboardPromptBtn">Start Debrief</button>
       </div>
 
-      <div class="panel dashboard-feedback-panel" id="dashboardFeedbackPanel">
-        <div class="dashboard-feedback-head">
-          <div>
-            <span class="pill dashboard-pill">Player Feedback</span>
-            <h2 style="margin:12px 0 4px">Recent feedback from players</h2>
-            <div class="sub">Comments left in the Player Portal. Open the match to review them in <strong>Game Day → RSVP & Player Feedback</strong>.</div>
-          </div>
-          <span class="dashboard-feedback-count" id="dashboardFeedbackCount">0</span>
-        </div>
-        <div class="dashboard-feedback-list" id="dashboardFeedbackList"><div class="sub">Loading recent feedback…</div></div>
-      </div>
     </section>
 
     <section class="view" id="gameday">
@@ -5294,7 +5286,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.17 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.19 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5326,7 +5318,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="jerseys-bulk.js?v=58.4"></script>
 <script src="jerseys.js?v=58.4"></script>
-<script src="equipment.js?v=58.5"></script>
+<script src="equipment.js?v=58.19"></script>
+<script src="captain-notifications.js?v=58.19"></script>
 <script src="strategy.js?v=58.10"></script>
 <script src="ref-game-card.js?v=58.10"></script>
 <script src="portal-activity.js?v=58.6"></script>
@@ -5334,6 +5327,11 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const captainInbox=window.SKORCaptainNotifications.mount({rootId:'captainNotifications',client:sb,
+  onOpenFeedback:openFeedbackFromDashboard,
+  onOpenEquipment:async row=>{openView('equipment');if(!await window.SKOREquipment.openNotification(row))throw Error('Equipment could not open.');},
+  onEquipmentRead:id=>window.SKOREquipment?.applyNotificationRead(id)
+});
 const captainActivity=window.SKORPortalActivity.createTracker({client:sb,portal:"captain",onRecorded:refreshVisiblePlayerActivity,onError:()=>{console.warn("Captain activity could not be recorded; it will retry while the portal is active.");}});
 window.SKORSupabase = sb;
 
@@ -5373,6 +5371,7 @@ function clearAuthError(){
   authError.style.display = "none";
 }
 function showLogin(){
+  captainInbox?.clear();
   portalSessionVersion++;captainActivityUser=null;
   captainActivity.clear();
   clearPlayerActivity();
@@ -5402,7 +5401,7 @@ function showDashboard(user,access){
   loadTeamRoster();
   loadTeamFields().then(()=>loadScheduleManager());
   loadGameDayMatches();
-  loadDashboardFeedback();
+  if(portalCanWrite())void captainInbox?.start(user.id);else captainInbox?.clear();
   window.SKORJerseys?.init();
   window.SKOREquipment?.mount({rootId:"captainEquipment",client:sb,mode:"captain"});
   window.SKORNotebook?.init();
@@ -5458,6 +5457,7 @@ googleLogin.addEventListener("click", async ()=>{
 });
 
 logoutBtn.addEventListener("click", async ()=>{
+  captainInbox?.clear();
   captainActivity.clear();
   clearPlayerActivity();
   await sb.auth.signOut();
@@ -5507,6 +5507,7 @@ function openView(id){
   if(id==="lineups")window.SKORLineup?.refreshTempNameDirectory();
   if(id==="jerseys")window.SKORJerseys?.activate();
   if(id==="equipment")window.SKOREquipment?.refresh();
+  if(id==="dashboard")void captainInbox?.refresh();
   if(id==="notebook")window.SKORNotebook?.activate();
   if(id==="strategy")window.SKORStrategy?.activate();
   window.scrollTo({top:0,behavior:"smooth"});
@@ -5579,7 +5580,6 @@ let TEAM_ATTENDANCE_STATS={present_count:0,absent_count:0,excused_count:0,eligib
 let TEAM_ATTENDANCE_BY_PLAYER=[];
 let TEAM_ATTENDANCE_MATRIX=[];
 let PLAYER_PORTAL_ACTIVITY=[];
-let DASHBOARD_FEEDBACK=[];
 const AI_PLAYER_COMMENT_TABLE="captain_ai_player_comment_refs";
 const AI_PLAYER_COMMENT_SELECTION=new Map();
 let AI_PLAYER_COMMENT_LOADING=null;
@@ -6166,20 +6166,8 @@ window.SKORRemoveAiPlayerComment=removeAiPlayerComment;
 async function openFeedbackFromDashboard(matchId){
   openView("gameday");
   await loadGameDayMatches(matchId);
+  if(gameDaySelected?.id!==matchId)throw Error('This match could not be opened.');
   setTimeout(()=>document.getElementById("playerEngagementPanel")?.scrollIntoView({behavior:"smooth",block:"start"}),100);
-}
-function renderDashboardFeedback(){
-  const list=document.getElementById("dashboardFeedbackList"),count=document.getElementById("dashboardFeedbackCount");if(!list||!count)return;
-  const rows=DASHBOARD_FEEDBACK||[];
-  const recent7=rows.filter(x=>Date.now()-new Date(x.created_at).getTime()<=7*24*60*60*1000).length;
-  count.textContent=recent7||rows.length||0;count.title=recent7?`${recent7} comment${recent7===1?'':'s'} in the last 7 days`:`${rows.length} recent comment${rows.length===1?'':'s'}`;
-  list.innerHTML=rows.length?rows.slice(0,6).map(x=>`<div class="dashboard-feedback-item"><div><strong>#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong> <span class="feedback-visibility ${x.visibility==='captains'?'captains':''}">${x.visibility==='captains'?'Captains Only':'Team'}</span><div class="dashboard-feedback-meta">${gdEsc(activityDateTime(x.created_at))} · vs ${gdEsc(feedbackOpponent(x))}</div><div class="dashboard-feedback-comment">${gdEsc(feedbackPreview(x.comment))}</div></div><button class="btn btn-light dashboard-feedback-open" type="button" onclick="openFeedbackFromDashboard('${gdEsc(x.match_id)}')">Open Match</button></div>`).join(''):'<div class="sub">No player feedback has been posted yet.</div>';
-}
-async function loadDashboardFeedback(){
-  if(!portalCanWrite())return;
-  const {data,error}=await sb.rpc("get_recent_player_feedback",{p_limit:12});
-  if(error){const list=document.getElementById("dashboardFeedbackList");if(list)list.innerHTML='<div class="sub">Run the v51.12 SQL migration to enable the feedback inbox.</div>';return;}
-  DASHBOARD_FEEDBACK=data||[];renderDashboardFeedback();
 }
 
 function attendanceRateClass(rate){
@@ -7192,7 +7180,12 @@ document.getElementById("productionOpenLineupBtn")?.addEventListener("click",()=
 });
 
 async function loadGameDayMatches(preferredId=null){
-  const {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_player_key,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
+  let {data,error}=await sb.from("matches").select("id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_player_key,man_of_match_reason").eq("published",true).order("kickoff",{ascending:true});
+  if(preferredId&&!data?.some(m=>m.id===preferredId)){
+    const specific=await sb.from('matches').select('id,slug,kickoff,home_team,away_team,location,status,published,man_of_match_player_name,man_of_match_player_number,man_of_match_roster_player_number,man_of_match_player_key,man_of_match_reason').eq('id',preferredId).maybeSingle();
+    if(specific.error||!specific.data)throw Error('This match is no longer available.');
+    data=[...(data||[]),specific.data];error=null;
+  }
   if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v57.0";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");

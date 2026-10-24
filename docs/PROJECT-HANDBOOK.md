@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.17**.
+Current Captain Portal build: **v58.19** (database applied; frontend deployment pending).
 Player Portal build: **v58.18**.
 Current public homepage build: **v58.15**.
 Latest Player Portal release: [`0a6b259b0c9d11277ed239965a4ba77a6b8f1486`](https://github.com/skorsolutions/skor-fc-site/commit/0a6b259b0c9d11277ed239965a4ba77a6b8f1486), **v58.18 expandable sections**. My Match Record stays visible; Next Matches, Match History, Equipment & Lost + Found and Match Feedback start collapsed. Cloudflare build `1e18a485-26fd-468a-bad9-f9bfc2740878` succeeded; version `57993916-619d-4843-a682-65563c454def` verified at 100% production traffic. All three source hashes/exact release files verified; four relevant suites plus HTML/feedback interaction checks passed. No database/backend changes. Browser visual verification and commit comments remain unavailable.
@@ -311,6 +311,14 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 - Duplicate or ambiguous names, such as two players with the same first name, require jersey-aware resolution.
 
 ## 9. Attendance, RSVP, and player feedback
+
+### Captain notification inbox — v58.19 (approved database applied; frontend deployment pending)
+
+- A prominent inbox directly below Dashboard metrics combines Equipment & Lost + Found notifications with Player Portal comments/private captain messages and reactions from all games. No recency, current-game, season or publication cutoff applies to feedback. Old/unpublished matches are fetched individually for a captain following an inbox link; normal Game Day scheduling still lists published matches.
+- Unread counts are personal to the authenticated captain. Equipment uses existing `skor_equipment.notification_reads` so Mark read in either Dashboard or Equipment agrees. Feedback uses proposed private `skor_private.captain_feedback_reads` keyed by caller, source kind and source ID, storing the exact source revision. Edits become unread again; stale revisions cannot acknowledge unseen changes. Existing feedback starts unread per captain; no historical reading is guessed. No source request/comment/reaction is rewritten.
+- Inbox defaults to Unread, with All updates, ten-item Newer/Older pages, separate Equipment/Player feedback counts, manual refresh and visible-page 30-second checks. Navigation badges show personal total/equipment unread. Opening a destination or viewing Dashboard does not acknowledge a notification; Mark read for me is explicit. Equipment reads/actions notify the inbox immediately, and dashboard acknowledgments update the mounted Equipment list without replacing drafts.
+- The new read-only snapshot and acknowledgment RPCs require authenticated captain/super-admin access, have empty search paths and no caller-supplied identity. Private schema/table/helper access is revoked from clients; table RLS is enabled. Ordinary players, viewers and anonymous sessions cannot use the inbox APIs. Requests are invalidated and private UI cleared on sign-out/account changes. Refresh failures are visible, retaining labeled stale snapshots rather than false zero counts.
+- Approved migration and verification workflow: `docs/CAPTAIN-NOTIFICATIONS.md` and `docs/sql/CAPTAIN-NOTIFICATIONS.sql`. Nine suites and read-only source-query fixtures for two principals passed. Approved migration `20261024182232 add_captain_notifications` is applied; all three function bodies/ACLs match source. Rolled-back live tests confirm two-captain isolation, equipment/feedback acknowledgments, edited-version handling and ordinary-player/anonymous/private-helper denials. Existing seven source-table digests and empty receipt tables are unchanged. Frontend publication is pending; browser visual verification remains unavailable. Player Portal remains v58.18, with dashboard visible and four lower disclosures closed by default.
 
 ### Player Portal expandable sections — v58.18
 

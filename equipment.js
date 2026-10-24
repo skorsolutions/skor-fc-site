@@ -69,6 +69,7 @@
         if(started!==epoch||sequence!==loadSequence)return false;
         if(!signed.error)(signed.data||[]).forEach(p=>{if(p.signedUrl&&/^https?:\/\//.test(p.signedUrl))photos.set(p.path,p.signedUrl);});
       }
+      notifyCaptains();
       return true;
     }catch(e){
       if(started===epoch&&sequence===loadSequence){
@@ -240,6 +241,7 @@
       if(result.error)throw result.error;
       if(result.data?.ok!==true)throw new Error("The save could not be verified. Refresh before retrying.");
       acknowledged=true;
+      notifyCaptains();
       acceptedPhoto=result.data.photo_path;
       if(options.modal){root.querySelector("dialog").close();dialogContext=null;}
       if(action==="transfer")selected.clear();
@@ -253,5 +255,19 @@
       if(started===epoch){setBusy(false);if(acknowledged)await refresh();}
     }
   }
-  window.SKOREquipment={mount,refresh,clear};
+  function notifyCaptains(){
+    if(mode==='captain'&&typeof window.CustomEvent==='function')window.dispatchEvent?.(new window.CustomEvent('skor:equipment-notifications'));
+  }
+  function applyNotificationRead(id){
+    const row=data?.notifications.find(n=>n.id===id);if(!row)return;
+    row.read=true;if(tab==='notifications')draw();
+  }
+  async function openNotification(row){
+    if(!userId||busy)return false;
+    if(!await refresh())return false;
+    tab=row.report_id?'lost':row.loan_id?'loans':'notifications';
+    if(row.report_id)archive=report(row.report_id)?.status==='returned';
+    draw();root.querySelector('.eq-content')?.scrollIntoView?.({behavior:'smooth',block:'start'});return true;
+  }
+  window.SKOREquipment={mount,refresh,clear,applyNotificationRead,openNotification};
 })();
