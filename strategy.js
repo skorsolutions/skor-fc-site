@@ -26,7 +26,7 @@
   ];
 
   let initialized=false,activeTool="move",interaction=null,draft=null,saveTimer=null,sharedRecord=null;
-  let strategyLibrary=[],bundleLibrary=[],sharedLoading=false,bundleLoading=false,preview=null;
+  let strategyLibrary=[],bundleLibrary=[],sharedLoading=false,bundleLoading=false,preview=null,cloneContext=null;
 
   const $=id=>document.getElementById(id);
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
@@ -80,13 +80,13 @@
   function normalizeScene(raw,index,opponentFormation){
     const scene=raw&&typeof raw==="object"?raw:{},rawSteps=Array.isArray(scene.subScenes)&&scene.subScenes.length?scene.subScenes:[scene];
     const subScenes=rawSteps.slice(0,12).map((step,stepIndex)=>normalizeSubScene(step,scene,stepIndex,opponentFormation)),type=TYPE_LABELS[scene.type]?scene.type:"offense";
-    return {id:String(scene.id||uid("scene")),sourceBundleId:isUuid(scene.sourceBundleId)?String(scene.sourceBundleId):null,name:String(scene.name||"Scene Bundle "+(index+1)).slice(0,70),type,category:CATEGORY_LABELS[scene.category]?scene.category:(CATEGORY_LABELS[type]?type:"other"),points:String(scene.points||scene.coaching_points||"").slice(0,600),activeSubSceneId:subScenes.some(step=>step.id===scene.activeSubSceneId)?scene.activeSubSceneId:subScenes[0].id,subScenes};
+    return {id:String(scene.id||uid("scene")),sourceBundleId:isUuid(scene.sourceBundleId)?String(scene.sourceBundleId):null,copyAsNew:scene.copyAsNew===true,name:String(scene.name||"Scene Bundle "+(index+1)).slice(0,70),type,category:CATEGORY_LABELS[scene.category]?scene.category:(CATEGORY_LABELS[type]?type:"other"),points:String(scene.points||scene.coaching_points||"").slice(0,600),activeSubSceneId:subScenes.some(step=>step.id===scene.activeSubSceneId)?scene.activeSubSceneId:subScenes[0].id,subScenes};
   }
   function normalizeDraft(value){
     if(!value||!Array.isArray(value.scenes)||!value.scenes.length)return null;
     value.title=String(value.title||"Match Strategy").slice(0,70);
     value.source=value.source&&typeof value.source==="object"?value.source:currentSource();
-    if(!value.source.matchId&&value.source.id==="current"){const currentMatch=String(lineApi()?.getEventKey?.()||"");value.source.matchId=isUuid(currentMatch)?currentMatch:null;}
+    if(!value.source.matchId&&value.source.id==="current"&&!value.source.eventKey){const currentMatch=String(lineApi()?.getEventKey?.()||"");value.source.matchId=isUuid(currentMatch)?currentMatch:null;}
     value.source.eventKey=String(value.source.eventKey||value.source.matchId||"tinker");
     value.source.eventLabel=String(value.source.eventLabel||"Tinker / No Game").slice(0,180);
     value.source.variationId=isUuid(value.source.variationId)?String(value.source.variationId):null;
@@ -115,12 +115,14 @@
     const rawEventKey=String(lineApi()?.getEventKey?.()||"tinker"),eventKey=isUuid(rawEventKey)?rawEventKey:"tinker";
     return {id:"current",label:"Current working lineup",eventKey,eventLabel:lineApi()?.getEventLabel?.()||"Tinker / No Game",matchId:isUuid(eventKey)?eventKey:null,variationId:null,state:lineApi()?.getState?.()||{},roster:lineApi()?.getRoster?.()||[]};
   }
-  function selectedSource(){
-    const value=$("strategyLineupSource")?.value||"current";if(value==="current")return currentSource();
-    const id=value.replace(/^saved:/,""),rec=(lineApi()?.listVariations?.()||[]).find(item=>String(item.id)===id);if(!rec)return currentSource();
+  function sourceByValue(value,strict=false){
+    if(value==="current")return currentSource();
+    const id=value.replace(/^saved:/,""),rec=(lineApi()?.listVariations?.()||[]).find(item=>String(item.id)===id);
+    if(!rec){if(strict)throw Error('The selected lineup is no longer available. Refresh the lineup list.');return currentSource();}
     const eventKey=isUuid(rec.event_key)?String(rec.event_key):"tinker";
     return {id:"saved:"+id,label:rec.name||"Saved lineup",eventKey,eventLabel:rec.event_label||"Tinker / No Game",matchId:isUuid(eventKey)?eventKey:null,variationId:isUuid(rec.id)?String(rec.id):null,state:rec.state||{},roster:lineApi()?.getRoster?.()||[]};
   }
+  function selectedSource(){return sourceByValue($("strategyLineupSource")?.value||"current");}
   function refreshSources(){
     const select=$("strategyLineupSource");if(!select)return;
     const current=select.value||"current",records=lineApi()?.listVariations?.()||[],groups=new Map();
@@ -137,6 +139,7 @@
   function recordIsPublished(record){return record?.status==="published"&&record?.ai_context_enabled===true;}
   function formatStamp(value){const date=new Date(value);return Number.isNaN(date.valueOf())?"Unknown time":date.toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});}
   function syncSharedRecord(){
+    if(draft?.copyAsNew){sharedRecord=null;return null;}
     const key=sourceEventKey(),title=normalizedTitle(draft?.title);
     sharedRecord=strategyLibrary.find(item=>String(item.event_key)===key&&normalizedTitle(item.title)===title)||null;return sharedRecord;
   }
@@ -146,6 +149,7 @@
     if(sharedLoading){if(save)save.textContent="Saving…";if(publish)publish.textContent="Publishing…";}
     else{if(save)save.textContent="Save Strategy";if(publish)publish.textContent=recordIsPublished(sharedRecord)?"Update Published AI Strategy":"Publish for AI";}
     if(saveBundle)saveBundle.textContent=bundleLoading?"Saving bundle…":"Save Scene Bundle";
+    for(const id of ['strategyCloneAll','strategyCloneBundle','strategyImportLineup'])if($(id))$(id).disabled=sharedLoading||bundleLoading;
   }
   function renderStrategyLibrary(){
     const host=$("strategyLibrary"),count=$("strategyLibraryCount");if(!host)return;
@@ -171,6 +175,7 @@
           '<span class="strategy-library-meta">Lineup: '+esc(record.lineup_name||"Saved snapshot")+'</span>'+
           '<span class="strategy-library-meta">Updated '+esc(formatStamp(record.updated_at))+'</span></button>'+
           '<div class="strategy-library-actions"><button class="mini-btn" type="button" data-strategy-load="'+esc(record.id)+'">Load</button>'+
+          '<button class="mini-btn" type="button" data-strategy-clone="'+esc(record.id)+'">Clone to lineup</button>'+
           (record.match_id?'<button class="mini-btn" type="button" data-strategy-publish="'+esc(record.id)+'">'+(published?'Republish':'Publish AI')+'</button>':'')+
           '<button class="mini-btn strategy-danger" type="button" data-strategy-remove="'+esc(record.id)+'">Delete</button></div></article>';
       }).join("");
@@ -183,6 +188,7 @@
       loadSharedStrategy(record);await saveSharedStrategy("published");
     }));
     host.querySelectorAll("[data-strategy-remove]").forEach(button=>button.addEventListener("click",()=>deleteSavedStrategy(button.dataset.strategyRemove)));
+    host.querySelectorAll('[data-strategy-clone]').forEach(button=>button.addEventListener('click',()=>openClone('strategy',button.dataset.strategyClone)));
   }
   async function refreshLibrary({quiet=false}={}){
     if(!sb()){strategyLibrary=[];sharedRecord=null;renderStrategyLibrary();updateSharedControls();if(!quiet)setSharedStatus("Supabase is not connected. Your local recovery copy is still available.","error");return false;}
@@ -199,14 +205,17 @@
     if(!record){setSharedStatus(draft?.source?.matchId?"This named strategy has not been saved yet. Save it for every captain, or publish it for AI.":"This Tinker strategy has not been saved yet. Save it so every captain can load it; Tinker strategies cannot be published for AI.");return;}
     setSharedStatus(recordIsPublished(record)?"Saved and published for AI · Updated "+formatStamp(record.updated_at):"Saved for all captains · Not available to AI · Updated "+formatStamp(record.updated_at),recordIsPublished(record)?"published":"");
   }
-  function loadSharedStrategy(record=sharedRecord){
-    if(!record)return;stopPreview();sharedRecord=record;
+  function strategyFromRecord(record){
     const previousSource=draft?.source||{},sourceVariation=(lineApi()?.listVariations?.()||[]).find(item=>String(item.id)===String(record.source_lineup_variation_id||""));
-    draft=normalizeDraft({
+    return normalizeDraft({
       version:2,title:record.title,
       source:{id:record.source_lineup_variation_id?"saved:"+record.source_lineup_variation_id:"current",label:record.lineup_name||"Saved lineup snapshot",eventKey:record.event_key||record.match_id||"tinker",eventLabel:record.event_label||sourceVariation?.event_label||(String(previousSource.matchId)===String(record.match_id)?previousSource.eventLabel:"")||"Tinker / No Game",matchId:record.match_id,variationId:record.source_lineup_variation_id||null,formation:record.lineup_snapshot?.formation||"Custom",state:clone(record.lineup_snapshot||{}),roster:clone(lineApi()?.getRoster?.()||previousSource.roster||[])},
       opponentFormation:record.opponent_formation,showLanes:record.show_lanes,activeSceneId:record.scenes?.[0]?.id||"",scenes:clone(record.scenes||[]),savedAt:record.updated_at
     });
+  }
+  function loadSharedStrategy(record=sharedRecord){
+    if(!record)return;stopPreview();sharedRecord=record;
+    draft=strategyFromRecord(record);
     renderAll();persist();renderStrategyLibrary();updateSharedControls();
     setSharedStatus(recordIsPublished(record)?"Published strategy loaded. Changes remain local until you save or republish.":"Saved captain strategy loaded. Changes remain local until you select Save Strategy.",recordIsPublished(record)?"published":"");
     $("strategy")?.scrollIntoView({behavior:"smooth",block:"start"});
@@ -236,7 +245,12 @@
     draft.scenes.forEach(scene=>{scene.name=replace(scene.name,replacements);scene.points=replace(scene.points,replacements);scene.subScenes.forEach(step=>{step.name=replace(step.name,replacements);(step.drawings||[]).forEach(item=>{if(item.type==="text")item.text=replace(item.text,replacements);});});});
     renderAll();persist();
   }
-  async function saveOrOverwriteStrategy(payload,userId){
+  async function saveOrOverwriteStrategy(payload,userId,insertOnly=false){
+    if(insertOnly){
+      const result=await sb().from(STRATEGY_TABLE).insert({...payload,created_by:userId}).select(STRATEGY_COLUMNS).single();
+      if(result.error)throw result.error.code==='23505'?Error('A strategy with this name already exists for that game. Rename your copy before saving.'):result.error;
+      return {record:result.data,overwritten:false,wasPublished:false};
+    }
     const titleKey=normalizedTitle(payload.title),lookup=await sb().from(STRATEGY_TABLE).select("id,title,status,ai_context_enabled").eq("event_key",payload.event_key).eq("title_key",titleKey).maybeSingle();
     if(lookup.error)throw lookup.error;
     if(lookup.data){const result=await sb().from(STRATEGY_TABLE).update(payload).eq("id",lookup.data.id).select(STRATEGY_COLUMNS).single();if(result.error)throw result.error;return {record:result.data,overwritten:true,wasPublished:recordIsPublished(lookup.data)};}
@@ -258,11 +272,13 @@
     if(sharedLoading)return;
     if(status==="published"&&!draft?.source?.matchId){setSharedStatus("Save this Tinker strategy to the captain library, or start from a scheduled-game lineup before publishing for AI.","error");return;}
     if(!sb()){setSharedStatus("Supabase is not connected. Your local draft is still safe on this device.","error");return;}
+    const savingDraft=draft;
     sharedLoading=true;updateSharedControls();setSharedStatus(status==="published"?"Saving and publishing this named strategy for AI…":"Saving this named strategy for every captain…");
     try{
       if(status==="published"&&window.SKORNotebook?.reviewPlayerNames){const review=await window.SKORNotebook.reviewPlayerNames(strategyNameCheckText());if(!review?.ok)throw new Error("Publishing paused so player names can be clarified.");applyStrategyNameReplacements(review.replacements||[]);}
       const {data:userData,error:userError}=await sb().auth.getUser();if(userError||!userData?.user)throw new Error(userError?.message||"Captain login required.");
-      const saved=await saveOrOverwriteStrategy(sharedPayload(userData.user.id),userData.user.id);sharedRecord=saved.record;
+      if(draft!==savingDraft)throw Error('The editor changed. Review the current strategy and save again.');
+      const saved=await saveOrOverwriteStrategy(sharedPayload(userData.user.id),userData.user.id,draft.copyAsNew===true);savingDraft.copyAsNew=false;sharedRecord=saved.record;
       if(status==="published"){const publishResult=await sb().rpc("publish_match_strategy",{p_strategy_id:sharedRecord.id});if(publishResult.error)throw publishResult.error;}
       await refreshLibrary({quiet:true});sharedRecord=strategyLibrary.find(item=>String(item.id)===String(saved.record.id))||saved.record;
       persist();renderStrategyLibrary();updateSharedControls();
@@ -276,6 +292,87 @@
 
   function bundleScene(record){
     return normalizeScene({id:uid("scene"),sourceBundleId:record.id,name:record.name,type:record.scene_type,category:record.category,points:record.coaching_points,subScenes:clone(record.subscenes||[])},0,record.opponent_formation||draft?.opponentFormation||"4-4-2");
+  }
+  function bundleSource(record){
+    return {id:record.source_lineup_variation_id?'saved:'+record.source_lineup_variation_id:'current',label:record.lineup_name||'Saved bundle lineup',eventKey:record.event_key||record.match_id||'tinker',eventLabel:record.event_label||'Tinker / No Game',matchId:record.match_id||null,variationId:record.source_lineup_variation_id||null,state:clone(record.lineup_snapshot||{}),roster:clone(lineApi()?.getRoster?.()||[])};
+  }
+  function cancelClone(){cloneContext=null;const dialog=$('strategyCloneDialog');if(dialog?.open)dialog.close();}
+  function cloneTarget(){
+    if(!cloneContext)throw Error('Choose a strategy or bundle to copy.');
+    if(cloneContext.append){if(draft!==cloneContext.editorDraft)throw Error('The editor changed. Reopen the copy preview.');return clone(draft.source);}
+    return sourceByValue($('strategyCloneLineup').value,true);
+  }
+  function cloneUsedNames(target){
+    if(cloneContext.append)return [...bundleLibrary.filter(r=>String(r.event_key)===sourceEventKey(target)&&r.category===cloneContext.scenes[0].category).map(r=>r.name),...draft.scenes.filter(s=>s.category===cloneContext.scenes[0].category).map(s=>s.name)];
+    return [...strategyLibrary.filter(r=>String(r.event_key)===sourceEventKey(target)).map(r=>r.title),...(draft&&sourceEventKey(draft.source)===sourceEventKey(target)?[draft.title]:[])];
+  }
+  function clonePlan(target){return window.SKORStrategyReuse.plan({sourceState:cloneContext.source.state,targetState:target.state,targetPlayers:playersFromLineup(target.state,target.roster),scenes:cloneContext.scenes,formations:HOME_FORMATIONS});}
+  function refreshClonePreview(resetName=false){
+    if(!cloneContext)return;
+    const error=$('strategyCloneError'),preview=$('strategyClonePreview'),submit=$('strategyCloneSubmit');error.textContent='';preview.innerHTML='';submit.disabled=true;cloneContext.previewKey=null;
+    try{
+      if(!window.SKORPortalCanWrite?.()||cloneContext.owner!==String(lineApi()?.getCaptainKey?.()||''))throw Error('Captain account changed. Close this preview and reopen it.');
+      if(sharedLoading||bundleLoading)throw Error('Wait for the current save to finish.');
+      if(cloneContext.append&&draft.scenes.length>=20)throw Error('A strategy can contain up to 20 Scene Bundles.');
+      const target=cloneTarget(),result=clonePlan(target);
+      $('strategyCloneFormations').textContent='Source: '+(cloneContext.source.state?.formation||'Unknown')+' → Target: '+(target.state?.formation||'Unknown');
+      if(resetName)$('strategyCloneName').value=window.SKORStrategyReuse.uniqueName(cloneContext.name+' Copy',cloneUsedNames(target));
+      if(!result.ok)throw Error(result.reason);
+      const name=$('strategyCloneName').value.trim();if(!name)throw Error('Enter a name for the copy.');
+      if(cloneUsedNames(target).some(x=>normalizedTitle(x)===normalizedTitle(name)))throw Error('That name is already in use here. Choose a new name for your copy.');
+      preview.innerHTML='<p>'+result.bundleCount+' bundle'+(result.bundleCount===1?'':'s')+' · '+result.stepCount+' animation step'+(result.stepCount===1?'':'s')+' · '+esc(result.formation)+'</p><table><thead><tr><th>Position</th><th>Source player</th><th>Target player</th></tr></thead><tbody>'+result.mapping.map(row=>{
+        const label=p=>esc('#'+p.number+(p.keeperNumber!==null&&p.keeperNumber!==undefined&&String(p.keeperNumber)!==String(p.number)?' / '+p.keeperNumber:'')+' '+p.name);
+        return '<tr><th>'+esc(row.role)+'</th><td>'+label(row.from)+'</td><td>'+label(row.to)+'</td></tr>';
+      }).join('')+'</tbody></table>';
+      cloneContext.previewKey=JSON.stringify({id:target.id,eventKey:sourceEventKey(target),variationId:target.variationId,state:target.state,players:result.mapping.map(row=>row.to)});
+      submit.disabled=false;
+    }catch(e){error.textContent=e.message||'Could not prepare the copy.';}
+  }
+  function openClone(kind,id=null,append=false){
+    if(!window.SKORPortalCanWrite?.())return;
+    if(sharedLoading||bundleLoading){setSharedStatus('Wait for the current save to finish.','error');return;}
+    try{
+      let source,scenes,name,opponentFormation,showLanes;
+      if(kind==='strategy'){
+        const record=id?strategyLibrary.find(r=>String(r.id)===String(id)):null;
+        if(id&&!record)throw Error('That saved strategy is no longer available. Refresh the library.');
+        if(record&&(record.scenes?.length>20||record.scenes?.some(s=>s.subScenes?.length>12)))throw Error('This strategy exceeds the supported bundle or step count.');
+        const template=record?strategyFromRecord(record):normalizeDraft(clone(draft));if(!template)throw Error('Load a strategy first.');
+        ({source,scenes,title:name,opponentFormation,showLanes}=template);
+      }else{
+        const record=id?bundleLibrary.find(r=>String(r.id)===String(id)):null;
+        if(id&&!record)throw Error('That saved bundle is no longer available. Refresh the library.');
+        const scene=record?bundleScene(record):clone(activeScene());if(!scene)throw Error('Choose a bundle first.');
+        source=record?bundleSource(record):clone(draft.source);
+        scenes=[scene];name=scene.name;opponentFormation=record?.opponent_formation||draft.opponentFormation;showLanes=record?record.show_lanes!==false:draft.showLanes;
+      }
+      stopPreview();cloneContext={kind,append,source:clone(source),scenes:clone(scenes),name,opponentFormation,showLanes,owner:String(lineApi()?.getCaptainKey?.()||''),editorDraft:draft};
+      $('strategyCloneHeading').textContent=append?'Add bundle for the current lineup':kind==='strategy'?'Clone strategy to lineup':'Clone bundle to lineup';
+      $('strategyCloneSource').textContent=name+' · '+(source.label||'Source lineup');
+      const select=$('strategyCloneLineup');
+      if(append){select.innerHTML='<option value="editor">'+esc(draft.source.label||'Current strategy lineup')+'</option>';select.disabled=true;}
+      else{refreshSources();select.innerHTML=$('strategyLineupSource').innerHTML;select.disabled=false;select.value=$('strategyLineupSource').value||'current';}
+      $('strategyCloneSubmit').textContent=append?'Add bundle copy':'Create draft copy';
+      $('strategyCloneDraftNotice').textContent=append?'The other bundles in your current strategy stay as they are.':'This opens a new draft in the editor. Save any other unsaved work first. Saved originals stay unchanged.';
+      refreshClonePreview(true);$('strategyCloneDialog').showModal();
+    }catch(e){cloneContext=null;setSharedStatus('Could not prepare copy: '+e.message,'error');}
+  }
+  function applyClone(event){
+    event?.preventDefault();if(!cloneContext)return;
+    const reviewed=cloneContext.previewKey;
+    refreshClonePreview();if($('strategyCloneSubmit').disabled)return;
+    if(reviewed!==cloneContext.previewKey){$('strategyCloneError').textContent='The target lineup changed. Review the refreshed player mapping, then confirm the copy again.';return;}
+    const context=cloneContext,target=cloneTarget(),result=clonePlan(target);
+    if(!result.ok){$('strategyCloneError').textContent=result.reason;return;}
+    const scenes=window.SKORStrategyReuse.remap(context.scenes,result,uid),name=$('strategyCloneName').value.trim();
+    if(context.append){scenes[0].name=name;const index=draft.scenes.indexOf(activeScene())+1;draft.scenes.splice(index,0,scenes[0]);draft.activeSceneId=scenes[0].id;}
+    else{
+      const existingNames=category=>bundleLibrary.filter(r=>String(r.event_key)===sourceEventKey(target)&&r.category===category).map(r=>r.name),used=new Map();
+      for(const scene of scenes){if(!used.has(scene.category))used.set(scene.category,existingNames(scene.category));const names=used.get(scene.category);scene.name=window.SKORStrategyReuse.uniqueName(scene.name,names);names.push(scene.name);}
+      draft=freshDraft(target);draft.title=name;draft.scenes=scenes;draft.activeSceneId=scenes[0].id;draft.opponentFormation=context.opponentFormation;draft.showLanes=context.showLanes;draft.copyAsNew=true;sharedRecord=null;
+    }
+    cancelClone();renderAll();persist();renderStrategyLibrary();updateSharedControls();
+    setSharedStatus(context.append?'Added a lineup-matched snapshot. Library edits will not alter this copy. Review coaching text and player names before saving.':'Created a new lineup-matched draft. Review coaching text and player names, tweak the steps, then Save Strategy. Nothing is published for AI.');
   }
   function bundlePayload(scene,userId){
     const matchId=isUuid(draft?.source?.matchId)?String(draft.source.matchId):null;
@@ -302,8 +399,9 @@
           '<span class="strategy-library-badge">'+esc(CATEGORY_LABELS[record.category]||"Other")+'</span>'+
           '<span class="strategy-library-meta">'+stepCount+' animation step'+(stepCount===1?'':'s')+' · '+esc(TYPE_LABELS[record.scene_type]||"Strategy")+'</span>'+
           '<span class="strategy-library-meta">Updated '+esc(formatStamp(record.updated_at))+'</span></div>'+
-          '<div class="strategy-library-actions"><button class="mini-btn" type="button" data-bundle-edit="'+esc(record.id)+'">Edit</button>'+
-          '<button class="mini-btn" type="button" data-bundle-add="'+esc(record.id)+'">Add copy</button>'+
+          '<div class="strategy-library-actions"><button class="mini-btn" type="button" data-bundle-edit="'+esc(record.id)+'">Edit original</button>'+
+          '<button class="mini-btn" type="button" data-bundle-add="'+esc(record.id)+'">Add to current</button>'+
+          '<button class="mini-btn" type="button" data-bundle-clone="'+esc(record.id)+'">Clone to lineup</button>'+
           '<button class="mini-btn" type="button" data-bundle-gif="'+esc(record.id)+'">GIF</button>'+
           '<button class="mini-btn strategy-danger" type="button" data-bundle-remove="'+esc(record.id)+'">Delete</button></div></article>';
       }).join("");
@@ -314,6 +412,7 @@
     host.querySelectorAll("[data-bundle-add]").forEach(button=>button.addEventListener("click",()=>addBundleToStrategy(button.dataset.bundleAdd)));
     host.querySelectorAll("[data-bundle-gif]").forEach(button=>button.addEventListener("click",()=>{const record=bundleLibrary.find(item=>String(item.id)===String(button.dataset.bundleGif));if(record)exportGif(bundleScene(record),{title:record.name,source:record.event_label,showLanes:record.show_lanes});}));
     host.querySelectorAll("[data-bundle-remove]").forEach(button=>button.addEventListener("click",()=>deleteSceneBundle(button.dataset.bundleRemove)));
+    host.querySelectorAll('[data-bundle-clone]').forEach(button=>button.addEventListener('click',()=>openClone('bundle',button.dataset.bundleClone)));
   }
   async function refreshBundleLibrary({quiet=false}={}){
     if(!sb()){bundleLibrary=[];renderBundleLibrary();return false;}
@@ -331,38 +430,39 @@
     if(bundleLoading)return;const scene=activeScene();if(!scene)return;
     if(!scene.name.trim()){setSharedStatus("Enter a Scene Bundle name before saving.","error");return;}
     if(!sb()){setSharedStatus("Supabase is not connected. The bundle is still in your local strategy draft.","error");return;}
+    const savingDraft=draft;
     bundleLoading=true;updateSharedControls();setSharedStatus("Saving Scene Bundle for every captain…");
     try{
       const {data:userData,error:userError}=await sb().auth.getUser();if(userError||!userData?.user)throw new Error(userError?.message||"Captain login required.");
+      if(draft!==savingDraft)throw Error('The editor changed. Review the current strategy and save again.');
       const payload=bundlePayload(scene,userData.user.id),nameKey=normalizedTitle(payload.name);
       const linked=bundleLibrary.find(item=>String(item.id)===String(scene.sourceBundleId)&&String(item.event_key)===payload.event_key);
       let result,overwritten=false;
-      if(linked){result=await sb().from(BUNDLE_TABLE).update(payload).eq("id",linked.id).select(BUNDLE_COLUMNS).single();overwritten=true;}
+      if(scene.copyAsNew){result=await sb().from(BUNDLE_TABLE).insert({...payload,created_by:userData.user.id}).select(BUNDLE_COLUMNS).single();if(result.error?.code==='23505')throw Error('A bundle with this name already exists in that game/category. Rename your copy before saving.');}
+      else if(linked){result=await sb().from(BUNDLE_TABLE).update(payload).eq("id",linked.id).select(BUNDLE_COLUMNS).single();overwritten=true;}
       else{
         const lookup=await sb().from(BUNDLE_TABLE).select("id").eq("event_key",payload.event_key).eq("category",payload.category).eq("name_key",nameKey).maybeSingle();
         if(lookup.error)throw lookup.error;
         if(lookup.data){result=await sb().from(BUNDLE_TABLE).update(payload).eq("id",lookup.data.id).select(BUNDLE_COLUMNS).single();overwritten=true;}
         else result=await sb().from(BUNDLE_TABLE).insert({...payload,created_by:userData.user.id}).select(BUNDLE_COLUMNS).single();
       }
-      if(result.error)throw result.error;scene.sourceBundleId=result.data.id;
+      if(result.error)throw result.error;scene.sourceBundleId=result.data.id;scene.copyAsNew=false;
       await refreshBundleLibrary({quiet:true});persist();renderAll();
       setSharedStatus((overwritten?"Updated":"Saved")+' Scene Bundle "'+result.data.name+'". Strategy copies remain snapshots until explicitly saved again.',"published");
     }catch(error){setSharedStatus("Could not save the Scene Bundle: "+(error.message||error),"error");}
     finally{bundleLoading=false;updateSharedControls();}
   }
   function loadBundleForEdit(id){
-    const record=bundleLibrary.find(item=>String(item.id)===String(id)),current=activeScene();if(!record||!current)return;
+    if(!window.SKORPortalCanWrite?.()||sharedLoading||bundleLoading)return;
+    const record=bundleLibrary.find(item=>String(item.id)===String(id));if(!record)return;
+    if(!confirm('Edit the original saved bundle "'+record.name+'" with its original lineup? This replaces the editor draft. Save any other unsaved work first. To use different players, choose Clone to lineup.'))return;
     stopPreview();const scene=bundleScene(record);scene.id=uid("scene");scene.subScenes.forEach(step=>{step.id=uid("step");});scene.activeSubSceneId=scene.subScenes[0].id;
-    const index=draft.scenes.indexOf(current);draft.scenes.splice(index,1,scene);draft.activeSceneId=scene.id;
+    draft=freshDraft(bundleSource(record));draft.title=window.SKORStrategyReuse.uniqueName(record.name+' Strategy',strategyLibrary.filter(r=>String(r.event_key)===sourceEventKey()).map(r=>r.title));draft.copyAsNew=true;
+    draft.scenes=[scene];draft.activeSceneId=scene.id;draft.opponentFormation=record.opponent_formation||'4-4-2';draft.showLanes=record.show_lanes!==false;sharedRecord=null;
     renderAll();queuePersist();setSharedStatus('Loaded "'+record.name+'" for editing. Save Scene Bundle updates this library record; Save Strategy updates only the strategy snapshot.');
   }
   function addBundleToStrategy(id){
-    const record=bundleLibrary.find(item=>String(item.id)===String(id));if(!record)return;
-    if(draft.scenes.length>=20){alert("A strategy can contain up to 20 Scene Bundles.");return;}
-    stopPreview();const scene=bundleScene(record);scene.id=uid("scene");scene.subScenes.forEach(step=>{step.id=uid("step");});scene.activeSubSceneId=scene.subScenes[0].id;
-    const active=activeScene(),index=active?draft.scenes.indexOf(active)+1:draft.scenes.length;
-    draft.scenes.splice(index,0,scene);draft.activeSceneId=scene.id;renderAll();queuePersist();
-    setSharedStatus('Added a snapshot of "'+record.name+'" to this strategy. Library edits will not alter this copy.');
+    openClone('bundle',id,true);
   }
   async function deleteSceneBundle(id){
     const record=bundleLibrary.find(item=>String(item.id)===String(id));if(!record)return;
@@ -596,6 +696,13 @@
   }
 
   function bind(){
+    $('strategyCloneAll').addEventListener('click',()=>openClone('strategy'));
+    $('strategyCloneBundle').addEventListener('click',()=>openClone('bundle'));
+    $('strategyCloneLineup').addEventListener('change',()=>refreshClonePreview(true));
+    $('strategyCloneName').addEventListener('input',()=>refreshClonePreview());
+    $('strategyCloneCancel').addEventListener('click',cancelClone);
+    $('strategyCloneDialog').addEventListener('cancel',cancelClone);
+    $('strategyCloneForm').addEventListener('submit',applyClone);
     $("strategyImportLineup").addEventListener("click",importLineup);$("strategyOpponentFormation").addEventListener("change",changeOpponentFormation);
     $("strategyShowLanes").addEventListener("change",event=>{draft.showLanes=event.target.checked;renderPitch();queuePersist();});
     document.querySelectorAll("[data-strategy-tool]").forEach(button=>button.addEventListener("click",()=>{stopPreview();setTool(button.dataset.strategyTool);}));
@@ -625,6 +732,6 @@
   }
   function activate(){init();refreshSources();renderAll();refreshSharedStatus();}
 
-  window.SKORStrategy={init,activate,refreshSources,refreshSharedStatus,loadForMatch,getDraft:()=>clone(draft),renderExportSvg:()=>exportSvgMarkup(activeScene(),activeSubScene()),__test:{normalizeDraft,interpolateFrame,sceneForStorage}};
+  window.SKORStrategy={init,activate,refreshSources,refreshSharedStatus,loadForMatch,cancelClone,getDraft:()=>clone(draft),renderExportSvg:()=>exportSvgMarkup(activeScene(),activeSubScene()),__test:{normalizeDraft,interpolateFrame,sceneForStorage,playersFromLineup,saveOrOverwriteStrategy,sharedPayload,bundlePayload}};
 })();
 

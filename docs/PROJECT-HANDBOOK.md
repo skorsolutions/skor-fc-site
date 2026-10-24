@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.22**.
+Current Captain Portal build: **v58.23** (deployment pending).
 Player Portal build: **v58.18**.
 Current public homepage build: **v58.15**.
 Latest Captain Portal release: [`f6f2fd56473df6d3384be05ac3fe513fb568c8fb`](https://github.com/skorsolutions/skor-fc-site/commit/f6f2fd56473df6d3384be05ac3fe513fb568c8fb), **v58.22 Game Day engagement dashboard**. Unified directly below Man of the Match, with default-closed roster/attendance, visible attendance reminder and visible feedback. Cloudflare build `df4c3d2c-21d1-42e1-af36-5088bfd53332` succeeded; version `70180640-8eba-4944-8f5c-c94694ab2547`, deployment `7f2a7a83-a480-49d2-8a04-8f7ce8002ea9`, verified at 100% production traffic. All seven source hashes and the exact release file set match checked sources. Seven relevant suites and HTML/script-preservation checks passed; no database change. Browser visual verification remains unavailable.
@@ -283,6 +283,15 @@ See `docs/GAME-DAY-CLOCK.md` for the complete state/action/data contract and ope
 - Strategy is a phone-capable working surface. Tabs, scene actions, tools, pitch, and coaching controls must stay inside the viewport with touch-friendly targets.
 - **Export bundle GIF** creates one looping GIF for the selected bundle entirely in the captain's browser. The tactical frames are not uploaded to another service.
 - **Export selected step PNG** exports only the current sub-scene. Both formats retain the strategy/bundle/step label and coaching points for WhatsApp sharing.
+
+### Reuse strategies and bundles with another lineup — v58.23
+
+- Clone strategy to lineup copies every bundle and sub-scene to a new target-lineup draft. Clone bundle to lineup starts a new one-bundle strategy draft; the library's Add to current action appends a mapped bundle to the current strategy. All paths use the same preview/validation. Current editor and saved-library sources are supported; scheduled-game and Tinker targets use existing lineup choices.
+- Home actors map by source lineup slot to the same target formation role, never jersey/name/current coordinates. Every frame's movements, opponents, ball, marks, labels and ordering are deep-copied. Target player identities, numbers and keeper metadata replace source identities; compatibility first-frame mirrors also use target players. Scene/step IDs are regenerated and bundle-library links cleared.
+- Exact standard formations must match. Different/unknown/custom formations, empty/duplicate slots, missing target roster records and steps with an inconsistent source squad block copying with a clear explanation. This version requires a complete source/target lineup and all eleven actors in each step. A target that changes during preview requires the refreshed mapping to be reviewed and confirmed again. TEMP target details must be loaded in Lineups first; no identities are inferred from spare jerseys.
+- Copies have a new name, remain drafts and are excluded from AI until explicitly published. The first strategy save and first bundle-library save are insert-only; same-name conflicts never fall back to updating an original. The local copy-as-new guard survives recovery/reload. Normal existing saves retain their name-based update rules after a copy has been saved under its own name. Explicit Tinker source metadata never inherits the currently selected match on reload.
+- Coaching notes and text labels are copied unchanged, with a visible review reminder for player names/strengths. Edit original on a bundle deliberately loads its own lineup and requires confirmation, avoiding mixed old/new-lineup snapshots. Clone dialogs close at logout and reject changed captain context. Existing shared tables/RLS and AI publication are reused without a migration or Edge Function change. Future AI generation is not implemented; stable role metadata and this mapper are a foundation for it.
+- Validation/operational details: `docs/STRATEGY-REUSE.md`. Real browser/GIF download and signed-in production copy/save remain unverified; tests execute the real mapper, preview/apply/save controllers, serialization/reload and SVG export with synthetic data.
 
 ### Strategy persistence and AI publication
 

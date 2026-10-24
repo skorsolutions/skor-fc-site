@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.22-game-day-engagement" />
-  <title>SKOR FC Admin | Captain Portal v58.22</title>
+  <meta name="skor-build" content="captain-portal-v58.23-strategy-reuse" />
+  <title>SKOR FC Admin | Captain Portal v58.23</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
-  <link rel="stylesheet" href="strategy.css?v=58.0" />
+  <link rel="stylesheet" href="strategy.css?v=58.23" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
   <style>
@@ -1877,7 +1877,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.22</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.23</div>
   </aside>
 
   <main>
@@ -3008,7 +3008,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <label for="strategyLineupSource">Lineup source</label>
             <select id="strategyLineupSource"><option value="current">Current working lineup</option></select>
           </div>
-          <button class="btn btn-primary" id="strategyImportLineup" type="button">Start from lineup</button>
+          <div class="strategy-source-actions">
+            <button class="btn btn-primary" id="strategyImportLineup" type="button">Start from lineup</button>
+            <button class="btn btn-light" id="strategyCloneAll" type="button">Clone strategy to lineup</button>
+          </div>
           <div class="strategy-field">
             <label for="strategyOpponentFormation">Opponent formation</label>
             <select id="strategyOpponentFormation"><option>4-4-2</option><option>4-3-3</option><option>4-2-3-1</option><option>4-5-1</option><option>3-5-2</option><option>3-2-3-2</option><option>3-4-3</option><option>5-3-2</option><option value="Custom / Freeform">Custom / Freeform</option></select>
@@ -3024,6 +3027,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <button class="mini-btn" id="strategyMoveSceneRight" type="button">Later →</button>
             <button class="mini-btn" id="strategyRenameScene" type="button">Rename</button>
             <button class="mini-btn" id="strategyDuplicateScene" type="button">Duplicate</button>
+            <button class="mini-btn" id="strategyCloneBundle" type="button">Clone bundle to lineup</button>
             <button class="mini-btn strategy-danger" id="strategyDeleteScene" type="button">Remove</button>
           </div>
         </div>
@@ -3121,6 +3125,23 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="strategy-library" id="strategyLibrary"><div class="strategy-library-empty">Loading saved strategies…</div></div>
         </div>
       </div>
+      <dialog class="strategy-clone-dialog" id="strategyCloneDialog" aria-labelledby="strategyCloneHeading">
+        <form id="strategyCloneForm">
+          <header><h2 id="strategyCloneHeading">Clone strategy to lineup</h2><p id="strategyCloneSource"></p></header>
+          <div class="strategy-clone-fields">
+            <label for="strategyCloneLineup">Target lineup</label>
+            <select id="strategyCloneLineup"></select>
+            <label for="strategyCloneName">New copy name</label>
+            <input id="strategyCloneName" maxlength="70" required>
+            <p class="strategy-clone-formations" id="strategyCloneFormations"></p>
+            <p class="strategy-clone-error" id="strategyCloneError" role="alert"></p>
+            <div class="strategy-clone-preview" id="strategyClonePreview"></div>
+            <p class="strategy-clone-note">Players match by formation position. Movement, ball positions, opponents, arrows and step order are copied. Coaching notes and text labels stay unchanged—review player names and adapt the play for their strengths.</p>
+            <p class="strategy-clone-note" id="strategyCloneDraftNotice"></p>
+          </div>
+          <footer><button class="btn btn-light" id="strategyCloneCancel" type="button">Cancel</button><button class="btn btn-primary" id="strategyCloneSubmit" type="submit" disabled>Create draft copy</button></footer>
+        </form>
+      </dialog>
     </section>
 
     <section class="view" id="fields">
@@ -5318,7 +5339,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.22 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.23 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5353,7 +5374,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="equipment.js?v=58.19"></script>
 <script src="captain-notifications.js?v=58.20"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
-<script src="strategy.js?v=58.10"></script>
+<script src="strategy-reuse.js?v=58.23"></script>
+<script src="strategy.js?v=58.23"></script>
 <script src="ref-game-card.js?v=58.10"></script>
 <script src="portal-activity.js?v=58.6"></script>
 <script>
@@ -5404,6 +5426,7 @@ function clearAuthError(){
   authError.style.display = "none";
 }
 function showLogin(){
+  window.SKORStrategy?.cancelClone();
   substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
   portalSessionVersion++;captainActivityUser=null;
@@ -5492,6 +5515,7 @@ googleLogin.addEventListener("click", async ()=>{
 });
 
 logoutBtn.addEventListener("click", async ()=>{
+  window.SKORStrategy?.cancelClone();
   substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
   captainActivity.clear();

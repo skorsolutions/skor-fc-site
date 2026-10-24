@@ -1,7 +1,7 @@
 # Strategy Scene Bundles and Animation
 
-Last updated: 2026-09-27 ET
-Captain Portal build: **v58.0**
+Last updated: 2026-10-24 UTC
+Captain Portal build: **v58.23** (reuse feature prepared for deployment)
 
 ## Purpose and vocabulary
 
@@ -106,3 +106,10 @@ Only an explicitly AI-published scheduled-game Strategy is read by `generate-pre
 - On phone and desktop, test bundle/step reordering, preview, GIF download, PNG download, and library grouping.
 - Verify an old flat Strategy loads as one-step bundles.
 - Verify an explicitly published Strategy reaches AI with ordered sub-scenes; verify a draft/Tinker Strategy does not.
+
+
+## v58.23 strategy and bundle reuse
+
+Clone the whole strategy or an individual bundle to a same-formation lineup, with a player-by-position preview. Add to current maps a saved bundle into the current strategy's lineup. Different formations and incomplete/unmappable squads block the operation. Every step, ball path, opponent and coaching mark is copied; target player/keeper identities replace source identities. Copies are independent drafts with insert-only first saves, fresh scene/step IDs and no source-library linkage. Explicit Edit original loads the original bundle's own lineup after confirmation.
+
+Review unchanged coaching notes/text labels for named players and strengths. Copies never auto-publish for AI, and AI-generated GIFs remain future work. Existing global preview-speed choices and GIF rendering are retained; this release does not introduce a new per-step timing schema. Full rules, limits and test evidence: [STRATEGY-REUSE.md](STRATEGY-REUSE.md).
