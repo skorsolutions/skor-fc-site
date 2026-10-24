@@ -1,10 +1,20 @@
-# v58.20 — Captain inbox collapsed by default (deployment pending)
+# v58.20 — Captain inbox collapsed by default (deployed)
 
 - Captain inbox is now a compact native disclosure, closed by default. Its title, personal unread count and chevron stay visible; tap the header to expand/collapse. The list, filters and actions stay inside the body. Polling/read/equipment refreshes preserve the current choice, and sign-out/account changes reset it to closed.
 - **Affected files (10):** `admin.html`, `captain-notifications.js`, `captain-notifications.css`, `tests/verify-captain-notifications.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/CAPTAIN-NOTIFICATIONS.md`, `docs/PROJECT-HANDBOOK.md`, and this note. Captain v58.20; Player Portal remains v58.18 and homepage v58.15.
-- **Verification:** Captain notification tests now exercise default-closed markup, expanded/collapsed state retention across refresh/equipment signals, unread summary updates while closed, and sign-out reset. Existing independent read receipts, all-game feedback and equipment behavior remain covered. Six relevant suites passed: captain notifications, equipment, score privacy, lineup export, referee card and Strategy animation. Inline scripts parse. Production verification pending. Browser visual review remains unavailable.
+- **Verification:** Captain notification tests now exercise default-closed markup, expanded/collapsed state retention across refresh/equipment signals, unread summary updates while closed, and sign-out reset. Existing independent read receipts, all-game feedback and equipment behavior remain covered. Six relevant suites passed: captain notifications, equipment, score privacy, lineup export, referee card and Strategy animation. Inline scripts parse. Production deployment verified. Browser visual review remains unavailable.
 - **SQL/backend:** No database query/write, migration, permission, RPC or Edge Function changes. Existing equipment/feedback receipts and their synchronization are unchanged; the controller and server contracts are untouched.
-- **Live status:** Awaiting publication and Cloudflare verification. Commit comments are unavailable through connected tools.
+- **Live status:** Source release [`32f85d296c4edb5ac24b08c8610a1fbd03a6142b`](https://github.com/skorsolutions/skor-fc-site/commit/32f85d296c4edb5ac24b08c8610a1fbd03a6142b) published from `1d0047d3f96da3f341cc9ec490298740aec0f713`. Cloudflare build `062e9f27-92e4-4494-923b-083dd099a6fb` succeeded; version `bd2d2b10-50c4-4a55-ae82-3c1ac33e5471`, deployment `99e0d6df-97ed-4970-b083-6c9dacff29e7`, verified at 100% production traffic. All ten source hashes and the exact release file set match checked sources. Build completed at 2026-10-24 18:31:46 UTC. This documentation-only follow-up records the result. Commit comments are unavailable through connected tools; no comment was posted.
+
+## v58.20 release summary
+
+Deployed **v58.20**. Captain inbox now starts **collapsed**, with its unread count visible. Tap the header to expand; refreshes preserve your choice.
+
+Six checks passed; no database changes. Browser visual review remains unavailable.
+
+Refresh the [Captain Portal](https://skorfc.net/admin.html). [Release](https://github.com/skorsolutions/skor-fc-site/commit/32f85d296c4edb5ac24b08c8610a1fbd03a6142b).
+
+Release notes saved; commit comments are unavailable through connected tools.
 
 # v58.19 — Captain dashboard notifications and personal read status (deployed)
 

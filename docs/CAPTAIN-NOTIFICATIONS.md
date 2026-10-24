@@ -1,6 +1,8 @@
 # Captain notification inbox — v58.19 / v58.20
 
-Status: v58.19 database/inbox deployed; v58.20 collapsed presentation prepared for deployment.
+Status: v58.19 database/inbox and v58.20 collapsed presentation deployed.
+
+v58.20 release [`32f85d296c4edb5ac24b08c8610a1fbd03a6142b`](https://github.com/skorsolutions/skor-fc-site/commit/32f85d296c4edb5ac24b08c8610a1fbd03a6142b): Cloudflare build `062e9f27-92e4-4494-923b-083dd099a6fb` succeeded; version `bd2d2b10-50c4-4a55-ae82-3c1ac33e5471`, deployment `99e0d6df-97ed-4970-b083-6c9dacff29e7`, verified at 100% production traffic. All ten source hashes and the exact release file set match checked sources. Six relevant suites passed, including disclosure-state retention and live summary-count updates. No database change.
 
 The v58.20 dashboard inbox starts collapsed with its live unread count beside the heading. Tap the native summary to expand or collapse it; body refreshes preserve that choice, and signing out resets it to closed.
 
