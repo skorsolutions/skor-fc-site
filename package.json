@@ -2,6 +2,7 @@
   "name": "skor-fc-site",
   "private": true,
   "scripts": {
+    "test:dues": "node tests/verify-team-dues.mjs",
     "test:strategy-reuse": "node tests/verify-strategy-reuse.mjs",
     "test:substitution-alarm": "node tests/verify-substitution-alarm.mjs",
     "test:captain-notifications": "node tests/verify-captain-notifications.mjs",

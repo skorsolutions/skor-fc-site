@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.23-strategy-reuse" />
-  <title>SKOR FC Admin | Captain Portal v58.23</title>
+  <meta name="skor-build" content="captain-portal-v58.24-team-dues" />
+  <title>SKOR FC Admin | Captain Portal v58.24</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
+  <link rel="stylesheet" href="team-dues.css?v=58.24" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
   <link rel="stylesheet" href="strategy.css?v=58.23" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
@@ -1877,7 +1878,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.23</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.24</div>
   </aside>
 
   <main>
@@ -1910,7 +1911,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="metric"><span>Team Attendance</span><strong id="dashboardAttendanceRate">—</strong><small id="dashboardAttendanceDetail">No attendance recorded</small></div>
         <div class="metric"><span>Next Practice</span><strong id="dashboardNextPractice">—</strong></div>
         <div class="metric"><span>Join Requests</span><strong>0</strong></div>
-        <div class="metric"><span>Unpaid Fees</span><strong>0</strong></div>
+        <div class="metric"><span>Players owing · current season</span><strong id="duesDashboardCount">—</strong></div>
       </div>
 
       <details class="panel captain-notifications" id="captainInboxDisclosure" hidden>
@@ -3177,9 +3178,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </section>
 
     <section class="view" id="payments">
-      <div class="panel"><h2>Payments</h2><div class="sub">Post external payment links for league, tournament or practice fees.</div>
-        <form class="form"><div class="fieldrow"><div><label>Fee name</label><input placeholder="Fall 2026 League Fee"></div><div><label>Amount</label><input placeholder="$125"></div></div><div><label>Payment URL</label><input placeholder="https://..."></div><button class="btn btn-primary" type="button">Publish Fee</button></form>
-      </div>
+      <div class="panel team-dues" id="captainDues"><p>Captain access is required to view the team ledger.</p></div>
     </section>
 
     <section class="view" id="sponsors">
@@ -5339,7 +5338,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.23 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.24 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5373,6 +5372,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="jerseys.js?v=58.4"></script>
 <script src="equipment.js?v=58.19"></script>
 <script src="captain-notifications.js?v=58.20"></script>
+<script src="team-dues.js?v=58.24"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="strategy-reuse.js?v=58.23"></script>
 <script src="strategy.js?v=58.23"></script>
@@ -5387,6 +5387,22 @@ const captainInbox=window.SKORCaptainNotifications.mount({rootId:'captainNotific
   onOpenEquipment:async row=>{openView('equipment');if(!await window.SKOREquipment.openNotification(row))throw Error('Equipment could not open.');},
   onEquipmentRead:id=>window.SKOREquipment?.applyNotificationRead(id)
 });
+let TEAM_DUES_SNAPSHOT=null;
+const teamDues=window.SKORTeamDues.mount({rootId:'captainDues',client:sb,canWrite:()=>portalCanWrite(),onBalances:snapshot=>{
+  TEAM_DUES_SNAPSHOT=snapshot;
+  const g=snapshot?.groups.find(g=>g.is_current),mm=g?snapshot.members.filter(m=>m.group_id===g.id):null;
+  document.getElementById('duesDashboardCount').textContent=mm?mm.filter(m=>m.active&&m.balance_cents>0).length:'—';
+  document.getElementById('duesDashboardCount').title=snapshot?'Ledger updated '+new Date(snapshot.as_of).toLocaleString():'Ledger unavailable';
+  document.querySelectorAll('[data-dues-roster]').forEach(host=>host.innerHTML=rosterDuesContent(host.dataset.duesRoster));
+}});
+function renderRosterDues(playerId){return '<span class="roster-dues-wrap" data-dues-roster="'+rosterEsc(playerId)+'">'+rosterDuesContent(playerId)+'</span>';}
+function rosterDuesContent(playerId){
+  const g=TEAM_DUES_SNAPSHOT?.groups.find(g=>g.is_current);
+  const b=g?TEAM_DUES_SNAPSHOT.members.find(m=>m.group_id===g.id&&m.player_id===playerId):null;
+  const label=!TEAM_DUES_SNAPSHOT?'Dues unavailable':b?(b.balance_cents>0?window.SKORTeamDues.money(b.balance_cents)+' owed':b.status):'Dues not assigned';
+  const tags=TEAM_DUES_SNAPSHOT?.members.filter(m=>m.player_id===playerId&&m.active&&m.group_id!==g?.id).map(m=>TEAM_DUES_SNAPSHOT.groups.find(x=>x.id===m.group_id)?.tag).filter(Boolean)||[];
+  return '<small class="roster-dues">'+rosterEsc(g?.name||'Current season')+' · '+rosterEsc(label)+'</small>'+tags.map(tag=>'<small class="roster-dues">Tag: '+rosterEsc(tag)+'</small>').join('');
+}
 const captainActivity=window.SKORPortalActivity.createTracker({client:sb,portal:"captain",onRecorded:refreshVisiblePlayerActivity,onError:()=>{console.warn("Captain activity could not be recorded; it will retry while the portal is active.");}});
 window.SKORSupabase = sb;
 
@@ -5429,6 +5445,7 @@ function showLogin(){
   window.SKORStrategy?.cancelClone();
   substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
+  teamDues?.clear();
   portalSessionVersion++;captainActivityUser=null;
   captainActivity.clear();
   clearPlayerActivity();
@@ -5460,6 +5477,7 @@ function showDashboard(user,access){
   loadTeamFields().then(()=>loadScheduleManager());
   loadGameDayMatches();
   if(portalCanWrite())void captainInbox?.start(user.id);else captainInbox?.clear();
+  if(portalCanWrite())void teamDues?.start(user.id);else teamDues?.clear();
   window.SKORJerseys?.init();
   window.SKOREquipment?.mount({rootId:"captainEquipment",client:sb,mode:"captain"});
   window.SKORNotebook?.init();
@@ -5518,6 +5536,7 @@ logoutBtn.addEventListener("click", async ()=>{
   window.SKORStrategy?.cancelClone();
   substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
+  teamDues?.clear();
   captainActivity.clear();
   clearPlayerActivity();
   await sb.auth.signOut();
@@ -5549,7 +5568,7 @@ const meta = {
   strategy:["Strategy","Turn saved lineups into private visual tactics and shareable coaching scenes."],
   fields:["Fields","Store field locations, maps and parking notes."],
   join:["Join Requests","Review prospective players."],
-  payments:["Payments","Post team fee links and payment details."],
+  payments:["Payments","Plan team costs, assign dues and record external payments."],
   sponsors:["Sponsors","Manage sponsor information and website links."]
 };
 function openView(id){
@@ -5569,6 +5588,7 @@ function openView(id){
   if(id==="jerseys")window.SKORJerseys?.activate();
   if(id==="equipment")window.SKOREquipment?.refresh();
   if(id==="dashboard")void captainInbox?.refresh();
+  if(["dashboard","payments","roster"].includes(id))void teamDues?.refresh();
   if(id==="notebook")window.SKORNotebook?.activate();
   if(id==="strategy")window.SKORStrategy?.activate();
   window.scrollTo({top:0,behavior:"smooth"});
@@ -5938,7 +5958,7 @@ function renderRosterTable(){
   body.innerHTML=TEAM_ROSTER.map(p=>`
     <tr class="${p.active===false?'roster-former-row':''}">
       <td><strong>#${rosterEsc(p.jersey_number)}</strong></td>
-      <td class="roster-name-cell"><strong>${rosterEsc(p.full_name)}</strong><small><b>Public:</b> ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</small><small>${rosterEsc(p.bio||"Bio pending.")}</small></td>
+      <td class="roster-name-cell"><strong>${rosterEsc(p.full_name)}</strong><small><b>Public:</b> ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</small><small>${rosterEsc(p.bio||"Bio pending.")}</small>${renderRosterDues(p.id)}</td>
       <td>${rosterEsc(p.position||"Player")}</td>
       <td class="roster-new-cell">
         <span class="roster-new-state ${p.is_new?"on":"off"}">${p.is_new?"New Player":"Established"}</span>
