@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.21**.
+Current Captain Portal build: **v58.22** (deployment pending).
 Player Portal build: **v58.18**.
 Current public homepage build: **v58.15**.
 Latest Captain Portal release: [`5cdfcebe22039b07adf8ddbaa64907890091033c`](https://github.com/skorsolutions/skor-fc-site/commit/5cdfcebe22039b07adf8ddbaa64907890091033c), **v58.21 substitution alarm**. Cloudflare build `87565d8f-579d-455b-b9a8-6c092bddeea8` succeeded; version `ee68d574-6d17-4557-8b25-a1d392849749`, deployment `38dd390d-9331-49ca-bb26-5bc7617dc7ff`, verified at 100% production traffic. All 13 source hashes and the exact release file set match checked sources. Nine suites passed; no database/backend change. Actual phone sound/volume, rendered layout and lock/background behavior remain unverified; use Preview on the intended phone. Player Portal remains v58.18 and homepage v58.15.
@@ -322,6 +322,12 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 - Duplicate or ambiguous names, such as two players with the same first name, require jersey-aware resolution.
 
 ## 9. Attendance, RSVP, and player feedback
+
+### Game Day engagement dashboard — v58.22
+
+- The approved RSVP & Player Feedback dashboard stays directly below Man of the Match within Game Day, using the existing selected match and navigation. Its five summary counts and Player Feedback/reactions/private captain chat stay visible. It is one unified full-width panel, not a separate captain navigation view.
+- Full Roster RSVP and Match Attendance are independent native disclosures, closed by default on a fresh page load. Attendance's summary includes the always-visible note: “Remember to fill out the match attendance before or after the game.” Lists, attendance metrics/edit actions and explanatory text are hidden until expanded. The open/closed choice survives list refreshes and attendance saves because only the existing inner list containers are rerendered.
+- The existing panel/list/control IDs, read/write guards, attendance save/summary math, private replies, AI selection and inbox links remain unchanged. Inbox feedback links still scroll to the parent dashboard, with feedback visible below the collapsed lists. No database, RPC, permission, Edge Function, lineup/export or alarm behavior changes.
 
 ### Captain notification inbox — v58.19 / v58.20
 

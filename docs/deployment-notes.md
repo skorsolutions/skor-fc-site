@@ -1,3 +1,13 @@
+# v58.22 — Compact RSVP & Player Feedback dashboard in Game Day (deployment pending)
+
+- Implements the corrected approved preview directly under Man of the Match in Game Day. RSVP counts, reactions and player feedback remain visible within one unified full-width dashboard; no new page, navigation item or match selector.
+- Full Roster RSVP and Match Attendance use independent native disclosures closed by default. The attendance reminder stays in the visible summary: “Remember to fill out the match attendance before or after the game.” Attendance metrics/list/edit actions live inside its expandable body. Current disclosure choices survive list refreshes/saves.
+- Existing roster/attendance/feedback IDs and all data/access/save/reply/AI/inbox-link logic are retained. Viewer visibility still applies to the containing dashboard. Native keyboard/touch summaries have visible focus, chevrons and wrapping headings; feedback stays outside both disclosures.
+- **Affected files (7):** `admin.html`, `tests/verify-captain-notifications.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, and this note. Captain v58.22; Player Portal remains v58.18 and homepage v58.15.
+- **Verification:** Seven suites passed: persistent clock, substitution alarm, captain notifications, score privacy, lineup export, referee card and Strategy animation. HTML structure checks confirm the unified dashboard directly follows Man of the Match, both native disclosures default closed, reminder belongs to the visible attendance summary, and feedback/counts are outside disclosures. All original inline JavaScript is byte-identical except the ready-build label, retaining attendance persistence, private replies, AI selection and inbox links. No production records were edited for verification. Rendered browser/phone visual verification remains unavailable; the user approved the corrected screenshot-based draft.
+- **SQL/backend:** No database query/write, migration, RPC, permission, Edge Function or Realtime change. Existing attendance records, inbox receipts, alarms, lineups/keepers and exports are unchanged.
+- **Live status:** Awaiting publication and Cloudflare verification. Connected tools cannot post commit comments.
+
 # v58.21 — Local Game Day substitution alarm (deployed)
 
 - Adds a configurable audible sub alarm beside the captain clock: every 10/15/20 minutes within each half, 3/5/10-second rings, Off/30s/1m/2m automatic snooze with one/two repeats, selected match-minute cutoff, independent 10–180-minute elapsed safety stop. Snoozes never shift the regular schedule. No lineup is required.
