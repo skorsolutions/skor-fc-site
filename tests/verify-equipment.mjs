@@ -17,7 +17,8 @@ for(const html of [admin,player]){
 assert.match(admin,/data-view="equipment"/);assert.match(admin,/SKOREquipment\?\.mount\(\{rootId:"captainEquipment",client:sb,mode:"captain"\}\)/);
 assert.match(admin,/if\(id==="equipment"\)window\.SKOREquipment\?\.refresh\(\)/);
 assert.match(player,/SKOREquipment\?\.mount\(\{rootId:"playerEquipment",client:db,mode:"player"\}\)/);
-assert.match(player,/if\(event==='SIGNED_OUT'\)\{\s*window\.SKOREquipment\?\.clear/);
+const signedOut=player.slice(player.indexOf("if(event==='SIGNED_OUT'){"),player.indexOf("if(s?.user&&!portalAuthorized)"));
+assert.match(signedOut,/window\.SKOREquipment\?\.clear\(\)/,'sign-out must clear equipment even when other portal controllers clear first');
 assert.doesNotMatch(css,/\b(?:aside|\.nav|\.app|\.view)\b/,'feature CSS must not override navigation');
 assert.match(css,/min-height:44px/);assert.match(css,/@media\(max-width:600px\)/);assert.match(css,/max-height:calc\(100dvh - 24px\)/);
 assert.match(css,/overflow-y:auto/);assert.match(css,/minmax\(min\(100%,250px\),1fr\)/);

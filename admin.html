@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.16-homepage-button" />
-  <title>SKOR FC Admin | Captain Portal v58.16</title>
+  <meta name="skor-build" content="captain-portal-v58.17-match-record" />
+  <title>SKOR FC Admin | Captain Portal v58.17</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1871,7 +1871,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.16</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.17</div>
   </aside>
 
   <main>
@@ -2236,7 +2236,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <div class="panel">
         <span class="pill">Season View</span>
         <h2 style="margin:12px 0 4px">Player Attendance</h2>
-        <div class="sub">Every active permanent SKOR FC player in one view. Attendance is Captain-confirmed in Game Day. Excused matches are tracked but do not lower the attendance percentage.</div>
+        <div class="sub">Every active permanent SKOR FC player in one view. Attendance is Captain-confirmed in Game Day. Totals include completed, published matches only. Excused and unmarked matches do not lower the attendance percentage.</div>
         <div class="attendance-page-controls">
           <div class="control"><label for="attendanceSearch">Find player</label><input id="attendanceSearch" type="search" placeholder="Name or jersey number"></div>
           <div class="control"><label for="attendanceStatusFilter">Player status</label><select id="attendanceStatusFilter"><option value="all">All Players</option><option value="active">Active</option><option value="injured">Injured</option></select></div>
@@ -2249,7 +2249,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <div class="panel" style="margin-top:18px">
         <span class="pill">By Match</span>
         <h2 style="margin:12px 0 4px">Attendance History</h2>
-        <div class="sub">Latest 12 past/final matches. Unmarked cells make older games that still need backfill easy to spot.</div>
+        <div class="sub">Latest 12 completed, published matches. Unmarked cells remain unknown, not absent.</div>
         <div class="attendance-legend"><span><i class="attendance-cell present">P</i> Present</span><span><i class="attendance-cell absent">A</i> Absent</span><span><i class="attendance-cell excused">E</i> Excused</span><span><i class="attendance-cell unmarked">—</i> Unmarked</span></div>
         <div class="attendance-matrix-wrap" style="margin-top:12px"><div id="attendanceMatrixHost"><div class="attendance-empty">Loading match history…</div></div></div>
       </div>
@@ -5294,7 +5294,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.16 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.17 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,
