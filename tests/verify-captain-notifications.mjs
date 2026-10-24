@@ -11,9 +11,11 @@ if(process.argv.includes('--sql-fixture')){
   for(const [a,b] of Object.entries({'public.player_match_comments':'fixture_comments','public.player_match_reactions':'fixture_reactions','public.team_roster':'fixture_roster','public.matches':'fixture_matches','skor_equipment.notification_reads':'fixture_equipment_reads','skor_equipment.notifications':'fixture_equipment','skor_private.captain_feedback_reads':'fixture_feedback_reads','auth.uid()':'(select user_id from fixture_actor)'}))query=query.replaceAll(a,b);
   process.stdout.write(fixture.replace('/* ITEMS_QUERY */',query));process.exit(0);
 }
-assert.match(admin,/captain-portal-v58\.19-captain-notifications/);
+assert.match(admin,/captain-portal-v58\.20-collapsed-inbox/);
 assert.match(admin,/captainInbox\?\.clear\(\)/);assert.match(admin,/portalCanWrite\(\)\)void captainInbox\?\.start\(user.id\)/);
 assert.ok(admin.indexOf('id="captainNotifications"')<admin.indexOf('id="dashboardInjuryPanel"'));
+const disclosureTag=admin.match(/<details[^>]*id="captainInboxDisclosure"[^>]*>/)?.[0];assert.ok(disclosureTag);assert.doesNotMatch(disclosureTag,/\sopen(?:\s|=|>)/,'inbox starts collapsed');
+assert.match(admin,/data-cn-summary-count/);
 assert.doesNotMatch(admin,/DASHBOARD_FEEDBACK|get_recent_player_feedback/);
 assert.match(admin,/if\(preferredId&&!data\?\.some/,'old/unpublished matches can be explicitly opened by captains');
 assert.match(sql,/primary key \(user_id,kind,source_id\)/);
@@ -67,13 +69,17 @@ for(const file of ['admin.html','player-portal.html'])for(const script of read(f
 controller.clear();assert.equal(timers.size,0);
 // Exercise the actual DOM event adapter and rendered badge updates.
 signedIn='captain-b';const badges=[{dataset:{captainUnread:'all'}},{dataset:{captainUnread:'equipment'}}];
-const root={hidden:true,innerHTML:'',handlers:{},addEventListener(n,fn){this.handlers[n]=fn;},contains:()=>true,append(){}};
+const summaryCount={setAttribute(name,value){this[name]=value;}},disclosure={hidden:true,open:false,querySelector:()=>summaryCount};
+const root={hidden:true,innerHTML:'',handlers:{},addEventListener(n,fn){this.handlers[n]=fn;},contains:()=>true,closest:()=>disclosure,append(){}};
 const doc={visibilityState:'visible',getElementById:()=>root,querySelectorAll:()=>badges,addEventListener(){},createElement:()=>({setAttribute(){}})};
 const listeners={},win={addEventListener:(n,fn)=>{listeners[n]=fn;}};let openedEquipment=0,openedFeedback=0,synced=0;
 const mounted=N.mount({rootId:'inbox',client,doc,win,onOpenEquipment:async()=>{openedEquipment++;},onOpenFeedback:async id=>{assert.equal(id,'old-match');openedFeedback++;},onEquipmentRead:()=>{synced++;}});
-await mounted.start('captain-b');assert.equal(root.hidden,false);assert.equal(badges[0].textContent,23);assert.match(root.innerHTML,/Captain inbox/);
+await mounted.start('captain-b');assert.equal(root.hidden,false);assert.equal(badges[0].textContent,23);assert.match(root.innerHTML,/Unread status is yours/);assert.equal(disclosure.hidden,false);assert.equal(disclosure.open,false);assert.equal(summaryCount.textContent,23);
+disclosure.open=true;await mounted.refresh();assert.equal(disclosure.open,true,'refresh preserves expanded choice');
+disclosure.open=false;await listeners['skor:equipment-notifications']();assert.equal(disclosure.open,false,'equipment refresh preserves collapsed choice');
 const click=async attrs=>{const b={dataset:attrs,disabled:false,closest(){return this;},hasAttribute(name){return Object.hasOwn(attrs,name.replace(/^data-/,'').replace(/-([a-z])/g,(_,c)=>c.toUpperCase()));}};await root.handlers.click({target:b});};
 const receiptCount=receipts.size;await click({cnOpen:'0'});await click({cnOpen:'1'});assert.equal(openedEquipment,1);assert.equal(openedFeedback,1);assert.equal(receipts.size,receiptCount,'opening either destination cannot mark read');
 await click({cnRead:'0'});assert.equal(synced,1);assert.equal(badges[1].textContent,0);assert.equal(badges[1].hidden,true);
-mounted.clear();assert.equal(root.hidden,true);assert.equal(root.innerHTML,'');assert.equal(badges[0].hidden,true);
+assert.equal(summaryCount.textContent,22,'summary count updates while closed');assert.equal(disclosure.open,false);
+disclosure.open=true;mounted.clear();assert.equal(root.hidden,true);assert.equal(root.innerHTML,'');assert.equal(badges[0].hidden,true);assert.equal(disclosure.hidden,true);assert.equal(disclosure.open,false,'sign-out resets disclosure for the next account');
 console.log('Captain notifications verified: independent receipts, equipment sync, all-game pagination, edited feedback, explicit read actions, errors, visibility polling, concurrency, account isolation, escaping and SQL access contracts.');

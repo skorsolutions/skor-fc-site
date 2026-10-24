@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.19-captain-notifications" />
-  <title>SKOR FC Admin | Captain Portal v58.19</title>
+  <meta name="skor-build" content="captain-portal-v58.20-collapsed-inbox" />
+  <title>SKOR FC Admin | Captain Portal v58.20</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
-  <link rel="stylesheet" href="captain-notifications.css?v=58.19" />
+  <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
   <link rel="stylesheet" href="strategy.css?v=58.0" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
@@ -1872,7 +1872,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.19</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.20</div>
   </aside>
 
   <main>
@@ -1908,7 +1908,10 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="metric"><span>Unpaid Fees</span><strong>0</strong></div>
       </div>
 
-      <div class="panel captain-notifications" id="captainNotifications" hidden></div>
+      <details class="panel captain-notifications" id="captainInboxDisclosure" hidden>
+        <summary class="cn-summary"><h2>Captain inbox</h2><span class="cn-count" data-cn-summary-count aria-label="Unread notifications">—</span></summary>
+        <div class="cn-body" id="captainNotifications" hidden></div>
+      </details>
 
       <div class="panel dashboard-injury-panel" id="dashboardInjuryPanel">
         <span class="pill dashboard-pill">Injury List</span>
@@ -5286,7 +5289,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.19 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.20 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5319,7 +5322,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="jerseys-bulk.js?v=58.4"></script>
 <script src="jerseys.js?v=58.4"></script>
 <script src="equipment.js?v=58.19"></script>
-<script src="captain-notifications.js?v=58.19"></script>
+<script src="captain-notifications.js?v=58.20"></script>
 <script src="strategy.js?v=58.10"></script>
 <script src="ref-game-card.js?v=58.10"></script>
 <script src="portal-activity.js?v=58.6"></script>

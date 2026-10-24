@@ -1,6 +1,8 @@
-# Captain notification inbox — v58.19
+# Captain notification inbox — v58.19 / v58.20
 
-Status: deployed, database and production version verified.
+Status: v58.19 database/inbox deployed; v58.20 collapsed presentation prepared for deployment.
+
+The v58.20 dashboard inbox starts collapsed with its live unread count beside the heading. Tap the native summary to expand or collapse it; body refreshes preserve that choice, and signing out resets it to closed.
 
 The dashboard inbox shows equipment requests/updates and player feedback from every game. Feedback includes team/private comments and personal/team reactions, including older or subsequently unpublished games. Inbox links retrieve the chosen match; the normal Game Day list still uses published fixtures. No source records are altered to create notifications.
 

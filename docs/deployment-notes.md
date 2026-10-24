@@ -1,3 +1,11 @@
+# v58.20 — Captain inbox collapsed by default (deployment pending)
+
+- Captain inbox is now a compact native disclosure, closed by default. Its title, personal unread count and chevron stay visible; tap the header to expand/collapse. The list, filters and actions stay inside the body. Polling/read/equipment refreshes preserve the current choice, and sign-out/account changes reset it to closed.
+- **Affected files (10):** `admin.html`, `captain-notifications.js`, `captain-notifications.css`, `tests/verify-captain-notifications.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/CAPTAIN-NOTIFICATIONS.md`, `docs/PROJECT-HANDBOOK.md`, and this note. Captain v58.20; Player Portal remains v58.18 and homepage v58.15.
+- **Verification:** Captain notification tests now exercise default-closed markup, expanded/collapsed state retention across refresh/equipment signals, unread summary updates while closed, and sign-out reset. Existing independent read receipts, all-game feedback and equipment behavior remain covered. Six relevant suites passed: captain notifications, equipment, score privacy, lineup export, referee card and Strategy animation. Inline scripts parse. Production verification pending. Browser visual review remains unavailable.
+- **SQL/backend:** No database query/write, migration, permission, RPC or Edge Function changes. Existing equipment/feedback receipts and their synchronization are unchanged; the controller and server contracts are untouched.
+- **Live status:** Awaiting publication and Cloudflare verification. Commit comments are unavailable through connected tools.
+
 # v58.19 — Captain dashboard notifications and personal read status (deployed)
 
 - Adds a prominent Dashboard inbox for equipment requests/updates and player feedback (team/private comments plus reactions) from any game. Personal total/equipment badges appear on the existing navigation. Separate unread counts, Unread/All updates filters, ten-item paging, full message text and direct destination links replace the old twelve-comment/six-visible recent-feedback list.

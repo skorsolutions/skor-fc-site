@@ -1,5 +1,9 @@
 /* Captain Dashboard inbox, matching the existing console. */
 .captain-notifications{margin-top:18px;border-color:#d9c1c9}
+.cn-summary{display:flex;align-items:center;gap:12px;min-height:44px;list-style:none;cursor:pointer;touch-action:manipulation;border-radius:8px}
+.cn-summary::-webkit-details-marker{display:none}.cn-summary h2{margin:0;flex:1;min-width:0;font-size:20px;overflow-wrap:anywhere}
+.cn-summary:after{content:"";width:10px;height:10px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);flex:0 0 auto;margin:0 4px 6px}
+.captain-notifications[open]>.cn-summary:after{transform:rotate(225deg);margin-bottom:0}.cn-summary:focus-visible{outline:2px solid #801a3d;outline-offset:4px}.cn-body{margin-top:16px}
 .cn-head,.cn-row,.cn-actions,.cn-totals{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .cn-head{justify-content:space-between;align-items:flex-start}
 .cn-head h2{margin:12px 0 6px}.cn-head>div{min-width:0}

@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.19**.
+Current Captain Portal build: **v58.20** (deployment pending).
 Player Portal build: **v58.18**.
 Current public homepage build: **v58.15**.
 Latest Captain Portal release: [`b572643e7aad218f82aaf6f123ffcc3e95576357`](https://github.com/skorsolutions/skor-fc-site/commit/b572643e7aad218f82aaf6f123ffcc3e95576357), **v58.19 captain inbox**. Approved migration `20261024182232 add_captain_notifications` is applied with exact function/ACL readback. Nine suites and rolled-back live two-captain/player/anonymous checks passed; original records are unchanged. All 18 source hashes/exact release files verified. Cloudflare build `d7d3b241-aab8-4921-ad79-e70714ae2da9` succeeded, version `c23a0c87-ec01-4a9f-a29a-5ad250e268c0` verified at 100% production traffic. Player Portal remains v58.18 and homepage v58.15. Browser visual review and commit-comment creation remain unavailable.
@@ -313,8 +313,9 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 
 ## 9. Attendance, RSVP, and player feedback
 
-### Captain notification inbox — v58.19
+### Captain notification inbox — v58.19 / v58.20
 
+- In v58.20 the inbox is a native details/summary card, closed by default. Its compact Captain inbox heading, live personal unread count and chevron remain visible. Filters, full messages and actions appear on expansion. Refresh/polling, read acknowledgments and equipment signals replace only the body and count, preserving the user's open/closed choice. Sign-out/account changes hide and reset the disclosure to closed.
 - A prominent inbox directly below Dashboard metrics combines Equipment & Lost + Found notifications with Player Portal comments/private captain messages and reactions from all games. No recency, current-game, season or publication cutoff applies to feedback. Old/unpublished matches are fetched individually for a captain following an inbox link; normal Game Day scheduling still lists published matches.
 - Unread counts are personal to the authenticated captain. Equipment uses existing `skor_equipment.notification_reads` so Mark read in either Dashboard or Equipment agrees. Feedback uses private `skor_private.captain_feedback_reads` keyed by caller, source kind and source ID, storing the exact source revision. Edits become unread again; stale revisions cannot acknowledge unseen changes. Existing feedback starts unread per captain; no historical reading is guessed. No source request/comment/reaction is rewritten.
 - Inbox defaults to Unread, with All updates, ten-item Newer/Older pages, separate Equipment/Player feedback counts, manual refresh and visible-page 30-second checks. Navigation badges show personal total/equipment unread. Opening a destination or viewing Dashboard does not acknowledge a notification; Mark read for me is explicit. Equipment reads/actions notify the inbox immediately, and dashboard acknowledgments update the mounted Equipment list without replacing drafts.
