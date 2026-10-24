@@ -1,11 +1,26 @@
-# v58.14 — Separate saved game and Tinker variations (prepared)
+# v58.14 — Separate saved game and Tinker variations (deployed)
 
 - Implements the approved mock using the current site's card and button styles. Saved Game Variations is first and visible, with only game-linked groups. Saved Tinker Variations is a separate native disclosure below it, collapsed by default; tap its heading to expand or hide it. Each section has its own count and refresh button.
 - Full-width Tinker cards retain loading, Copy to Game and Delete. Existing game actions retain Production / Final. Both lists use the original action handlers and write checks; viewer delete controls are hidden in both lists. Rerenders preserve the disclosure's current open/closed state.
 - **Affected files (9):** `admin.html`, `keeper-plan.css`, `package.json`, `tests/verify-saved-variations.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, and this note.
 - **Verification:** Five affected suites passed: saved variations, keepers, lineup export, referee card and Strategy animation. The actual renderer is exercised with mixed game/Tinker fixtures, separate counts and empty states, load/copy/delete actions in both lists, game-only publication, viewer write guards, escaping and preserved keeper snapshots. Default-closed markup, disclosure state retention, refresh wiring and wrapping/mobile CSS are checked. Save/overwrite handler, saved-record query functions, board loading and gameplan SVG source are byte-for-byte unchanged from v58.13. Rendered browser verification remains unavailable in this environment.
 - **SQL/backend status:** No database query/write, migration, permission or Edge Function change performed. Existing save/overwrite/query code, saved records, publication flags, keeper numbers and exports are preserved.
-- **Live status:** Awaiting source publication and Cloudflare build verification. Connected tools cannot create commit comments; a matching release summary will be recorded here and in chat.
+- **Live status:** Source release [`b12f341e090e8e428dc588a84faeaa66373acdc4`](https://github.com/skorsolutions/skor-fc-site/commit/b12f341e090e8e428dc588a84faeaa66373acdc4) published to main from `9d998b43fdd62480b781888eba421fafff54af69`. Workers Builds succeeded: build `57e75020-1305-416f-ad9c-8146ea7f8604`, production version `b318fc1d-a516-4e08-80d7-1a21d81152a8`. All nine source hashes and the exact release file set match checked local files. A documentation-only follow-up records verification. Commit-comment creation is unavailable through connected tools; no comment was posted.
+
+## v58.14 release summary
+
+Deployed **v58.14**.
+
+- **Saved Game Variations** stays visible first.
+- **Saved Tinker Variations** sits below, collapsed by default. Tap its heading to expand or hide it.
+
+Existing boards, keeper numbers and exports are preserved. Five test suites passed; no database or backend changes.
+
+Production deployment is verified. Browser visual review remains unavailable.
+
+Reload the [Captain Portal](https://skorfc.net/admin.html). [Release](https://github.com/skorsolutions/skor-fc-site/commit/b12f341e090e8e428dc588a84faeaa66373acdc4).
+
+Release notes are saved; connected tools cannot post commit comments.
 
 # v58.13 — Contain the mobile player picker (deployed)
 
