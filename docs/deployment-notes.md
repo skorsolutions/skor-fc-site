@@ -1,4 +1,4 @@
-# v58.11 — Export number readability and builder spacing (release prepared)
+# v58.11 — Export number readability and builder spacing (deployed)
 
 - Enlarges only the small number in the gameplan keeper pair from 12 to 18 SVG pixels; large number remains 32 and slash 12. Before/after SVG equality, after normalizing that font, verifies the rest of the export is unchanged.
 - Separates builder position tags into their own row above the jersey, removing absolute overlay/z-index that obscured numbers. Pure display coordinates spread crowded formation rows and leave space between defenders and GK. Canonical formation maps, saved slots, freeform and exported coordinates are unchanged.
@@ -6,7 +6,23 @@
 - **Affected files (11):** `admin.html`, `keeper-plan.css`, `lineup-marker.js`, `tests/verify-keeper-plan.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/LINEUP-EXPORT.md`, `docs/MATCH-KEEPERS.md`, and this note.
 - **Verification:** Tests check all six standard formations at narrow-phone, narrow-desktop and wide field sizes with conservative marker envelopes; no overlaps or clipped edge bounds. Actual measured-height math handles larger labels, hidden builders and bottom clearance; canonical formation arrays are unchanged. SVG scope comparison verifies the requested export-only font change. Six affected suites pass: keepers, lineup export, referee card, Strategy animation, clock and score privacy. Chromium remains blocked by sandbox `setsockopt: Operation not permitted`, so rendered browser review is unverified.
 - **SQL/backend status:** No database query/write, migration, schema/permission or Edge Function change. Existing keeper assignments and referee details are retained; pregame function remains version 15.
-- **Live status:** Prepared for the existing main-branch Cloudflare integration; verify the exact source hashes/file set and production check before reporting deployment. Commit-comment creation is unavailable through the connected GitHub tools; retain the matching summary in documentation and chat.
+- **Live status:** Source release [`08d7dfffe51e3414399ffcd4de2a49031f23295c`](https://github.com/skorsolutions/skor-fc-site/commit/08d7dfffe51e3414399ffcd4de2a49031f23295c) was published to main from `a7e7a6ed803f9bb6e74d47dd11443fa4e00ea484`. Its Workers Builds check succeeded: build `1c4b0d0f-dc4f-4ab4-932b-effe2f24f399`, production version `5be24081-33bf-4192-ad01-7780b8a4800d`. All 11 hashes and exact file set match the checked local sources. A documentation-only follow-up records verification. Commit-comment creation is unavailable through connected GitHub tools; no comment was posted.
+
+## v58.11 release summary
+
+Deployed **v58.11**.
+
+- Export: the smaller **18** in **18 / 30** is 50% larger; the rest is unchanged.
+- Builder: position tags sit above jerseys, with more space between formation markers.
+- Phones: full-width field with the player picker above it.
+
+Saved positions, keeper assignments and referee sheets are unchanged. Six test suites passed; browser visual review remains unavailable.
+
+Reload the [Captain Portal](https://skorfc.net/admin.html).
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/08d7dfffe51e3414399ffcd4de2a49031f23295c)
+
+The connector cannot create commit comments. This matching summary is recorded in documentation and chat; no commit comment was posted.
 
 # v58.10 — Restore legacy keeper numbers and referee notes (deployed)
 
