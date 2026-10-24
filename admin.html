@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.11-builder-spacing" />
-  <title>SKOR FC Admin | Captain Portal v58.11</title>
+  <meta name="skor-build" content="captain-portal-v58.12-compact-workspace" />
+  <title>SKOR FC Admin | Captain Portal v58.12</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1864,7 +1864,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.11</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.12</div>
   </aside>
 
   <main>
@@ -2801,18 +2801,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
                 <div class="pitch-box top"></div><div class="six-box top"></div><div class="pitch-box bottom"></div><div class="six-box bottom"></div>
               </div>
             </div>
-            <div class="panel lineup-variations-panel" style="margin-top:14px">
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
-                <div>
-                  <h2 style="margin-bottom:4px">Saved Variations <span class="variation-count" id="lineupVariationCount">0</span> <span class="shared-badge">SHARED</span></h2>
-                  <div class="sub">Grouped by game. Scroll sideways through saved plans without taking width away from the player panel.</div>
-                </div>
-                <button class="mini-btn" id="refreshLineupVariations" type="button">Refresh saved variations</button>
-              </div>
-              <div class="variation-list" id="lineupVariationList" style="margin-top:10px"></div>
-            </div>
 
-            <div class="panel" style="margin-top:14px">
+            <div class="panel lineup-bench-panel">
               <h2>Substitutes</h2><div class="sub">Drag players here to designate matchday substitutes. Drag them back to the player pool to remove them.</div>
               <div class="bench-zone" id="lineupBench"><div class="bench-list" id="lineupBenchList"></div></div>
             </div>
@@ -2831,8 +2821,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </div>
 
         <div class="lineup-match-setup" aria-label="Match fill-ins and keeper assignments">
-<div class="mini-panel temp-player-manager" id="tempPlayerManager">
-              <h4>Match Fill-ins / TEMP Players</h4>
+<details class="mini-panel temp-player-manager" id="tempPlayerManager">
+              <summary><span class="setup-chevron" aria-hidden="true">▸</span>Match Fill-ins / TEMP Players</summary>
               <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
               <div class="temp-saved-names">
                 <label for="tempPlayerSavedName">Previous TEMP players</label>
@@ -2848,9 +2838,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <button class="mini-btn" id="cancelTempPlayerEditBtn" type="button" style="display:none;margin-top:6px">Cancel edit</button>
               <div class="temp-context" id="tempPlayerContext">Select a scheduled match to manage fill-ins.</div>
               <div class="temp-player-list" id="tempPlayerList"></div>
-            </div>
-<div class="mini-panel keeper-plan" id="keeperPlanPanel">
-              <h3>Keepers for this match</h3>
+            </details>
+<details class="mini-panel keeper-plan" id="keeperPlanPanel">
+              <summary><span class="setup-chevron" aria-hidden="true">▸</span>Keeper assignments</summary>
               <p>Assign the starting keeper and anyone who may cover in goal. Players can share a spare jersey or use different ones. Choosing a starter places him in goal.</p>
               <label for="keeperSpareNumbers">Spare keeper jersey numbers</label>
               <input id="keeperSpareNumbers" inputmode="numeric" placeholder="30, 31" aria-describedby="keeperSpareHelp">
@@ -2860,7 +2850,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <select id="keeperAddPlayer"><option value="">Choose a match-squad player…</option></select>
               <div id="keeperPlanRows"></div>
               <div class="keeper-plan-status" id="keeperPlanStatus" role="status" aria-live="polite"></div>
-            </div>
+            </details>
         </div>
 
         <details class="panel potential-positions" id="potentialPositionsPanel">
@@ -2868,6 +2858,17 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="sub">The depth chart automatically matches the selected formation. A player can appear in as many formation positions as needed. This depth chart is saved inside each variation.</div>
           <div class="depth-grid" id="lineupDepthGrid"></div>
         </details>
+
+        <div class="panel lineup-variations-panel" style="margin-top:14px">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
+                <div>
+                  <h2 style="margin-bottom:4px">Saved Variations <span class="variation-count" id="lineupVariationCount">0</span> <span class="shared-badge">SHARED</span></h2>
+                  <div class="sub">Grouped by game. Scroll sideways through saved plans without taking width away from the player panel.</div>
+                </div>
+                <button class="mini-btn" id="refreshLineupVariations" type="button">Refresh saved variations</button>
+              </div>
+              <div class="variation-list" id="lineupVariationList" style="margin-top:10px"></div>
+            </div>
 
         <div class="panel">
           <h2>Planned Substitutions</h2>
@@ -3182,9 +3183,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </div>
   </div>
 </dialog>
-<link rel="stylesheet" href="keeper-plan.css?v=58.11">
+<link rel="stylesheet" href="keeper-plan.css?v=58.12">
 <script src="keeper-plan.js?v=58.10"></script>
-<script src="lineup-marker.js?v=58.11"></script>
+<script src="lineup-marker.js?v=58.12"></script>
 <script src="keeper-editor.js?v=58.9"></script>
 <script src="ribbon-order.js?v=58.3"></script>
 <script src="temp-player-directory.js?v=58.3"></script>
@@ -3380,7 +3381,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       onError:message=>markStatus(message,false),onChange:message=>{inheritKeeperChoices=false;persistDraft();renderAll();markStatus(message);}});
   }
   function checkKeepers(snapshot=state){
-    if(snapshot===state){const invalid=document.querySelector('#keeperPlanPanel input:invalid');if(invalid){invalid.reportValidity();return false;}}
+    if(snapshot===state){const invalid=document.querySelector('#keeperPlanPanel input:invalid');if(invalid){invalid.closest("details").open=true;invalid.reportValidity();return false;}}
     const errors=window.SKORKeeperPlan.validate(snapshot);
     if(errors.length){markStatus(errors.join(' '),false);return false;}return true;
   }
@@ -4087,8 +4088,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     }
     if(!isFreeform(state.formation)&&pitch.clientWidth>0){
       const markers=Array.from(pitch.querySelectorAll('.formation-slot'),slot=>({x:parseFloat(slot.style.left),y:parseFloat(slot.style.top),width:slot.offsetWidth,height:slot.offsetHeight}));
-      const needed=window.SKORLineupMarker.builderHeight(markers,pitch.clientWidth,pitch.clientHeight);
-      if(needed>pitch.clientHeight)pitch.style.minHeight=(needed+pitch.offsetHeight-pitch.clientHeight)+'px';
+      const scale=window.SKORLineupMarker.builderScale(markers,pitch.clientWidth,pitch.clientHeight);
+      pitch.style.setProperty('--lineup-marker-scale',String(scale));
     }
     if(!pitchSizeObserver&&window.ResizeObserver){
       pitchObservedWidth=pitch.clientWidth;
@@ -5269,7 +5270,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.11 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.12 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,

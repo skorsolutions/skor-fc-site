@@ -2,6 +2,8 @@
 
 Status: **v55.2 production renderer contract**
 
+**v58.12 compact builder:** The field/picker workspace is compact and side by side. Builder coordinates and measured marker scaling are display-only. The gameplan SVG renderer is byte-for-byte unchanged from v58.11, including large keeper number, readable secondary number and keeper notes. Referee PDF/Excel are unchanged.
+
 **v58.11 export adjustment:** Only the small numeral in a keeper pair grows from 12 to 18 SVG pixels. The large numeral stays 32 and slash stays 12. A comparison against the previous renderer produced identical SVG after normalizing that one font size. All pitch geometry, roles, notes, names, bench, dimensions and referee behavior are unchanged. Builder-only spacing uses a separate display helper and measured layout; it never changes canonical/export coordinates.
 
 **v58.9 picker/label cleanup:** All player labels use short names. On-field jerseys keep the approved primary / spare hierarchy and keeper-duty note; bench, Potential Positions and substitution labels use primary numbers without keeper captions. TEMP appears once. Full names remain available to referee PDF/Excel and the deliberate name-entry/edit field. The Potential Positions editor is closed by default; its export checkbox and saved contents are independent of editor visibility. No saved data or pitch geometry changes.

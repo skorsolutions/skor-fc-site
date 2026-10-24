@@ -1,3 +1,13 @@
+# v58.12 — Approved compact lineup workspace (prepared)
+
+- Implements the approved layout draft: compact 6:7 field left, two-column scrolling Players immediately right, and Substitutes directly beneath the field. Workspace width is capped at 760px, with side-by-side columns retained on phones. Saved Variations moves outside the workspace. Match Fill-ins and Keeper assignments become closed native disclosures alongside the existing closed Potential Positions.
+- Replaces automatic pitch-height growth with measured marker scaling and display-only row bands. Position tags remain above jerseys and clear of numbers. Drag/tap controls and all original IDs are preserved. Invalid keeper input opens its disclosure before validation.
+- Preserves primary/spare emphasis and keeper notes on the field. Off-field cards keep primary numbers, short names and a single TEMP tag. Gameplan SVG, referee PDF/Excel, public/Game Day/Strategy, saved formation coordinates and keeper assignments are unchanged.
+- **Affected files (11):** `admin.html`, `keeper-plan.css`, `lineup-marker.js`, `tests/verify-keeper-plan.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/LINEUP-EXPORT.md`, `docs/MATCH-KEEPERS.md`, and this note.
+- **Verification:** Seven suites passed: keepers, lineup export, referee card, Strategy animation, clock, score privacy and saved TEMP directory. All six formations fit conservative marker envelopes inside fixed 6:7 fields at five widths (175–600px), without overlaps or edge clipping. Tests cover unchanged canonical coordinates, responsive side-by-side columns, closed disclosures and opening invalid keeper input before validation. HTML parsing verifies unique controls, bench directly beneath pitch, the shared workspace and saved plans outside it. The actual restored-keeper gameplan SVG is byte-for-byte identical to v58.11; referee and public/Game Day/Strategy adapters pass. Browser rendering remains unverified because Chromium is blocked by sandbox socket restrictions.
+- **SQL/backend status:** No database query/write, migration, schema/permission or Edge Function change. Pregame function remains version 15.
+- **Live status:** Awaiting source publication and Cloudflare build verification. Connected GitHub tools cannot create commit comments; the matching release summary will be recorded here and in chat.
+
 # v58.11 — Export number readability and builder spacing (deployed)
 
 - Enlarges only the small number in the gameplan keeper pair from 12 to 18 SVG pixels; large number remains 32 and slash 12. Before/after SVG equality, after normalizing that font, verifies the rest of the export is unchanged.

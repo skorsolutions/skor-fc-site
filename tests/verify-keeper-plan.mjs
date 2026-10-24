@@ -25,23 +25,38 @@ for(const [name,shape] of Object.entries(formationContext.formations)){
   const original=JSON.stringify(shape),layout=marker.builderPositions(shape);
   assert.equal(JSON.stringify(shape),original,'builder layout must not change canonical formation/export coordinates');
   assert.deepEqual(Array.from(layout,p=>p[0]),Array.from(shape,p=>p[0]));
-  for(const [width,height,boxW,boxH] of [[280,760,52,94],[360,850,64,116],[600,1058,64,116]]){
-    layout.forEach(p=>{assert.ok(p[1]*width/100>=boxW/2);assert.ok(p[1]*width/100+boxW/2<=width);assert.ok(p[2]*height/100+boxH/2<=height);});
+  for(const width of [175,220,320,480,600]){
+    const height=width*7/6;
+    // Conservative native marker dimensions include a wrapped name and keeper duty.
+    const markers=layout.map(p=>({x:p[1],y:p[2],width:84,height:160}));
+    const scale=marker.builderScale(markers,width,height),boxW=84*scale,boxH=160*scale;
+    assert.ok(scale>0&&scale<=1);
+    layout.forEach(p=>{
+      assert.ok(p[1]*width/100>=boxW/2);
+      assert.ok(p[1]*width/100+boxW/2<=width);
+      assert.ok(p[2]*height/100>=boxH/2);
+      assert.ok(p[2]*height/100+boxH/2<=height);
+    });
     for(let i=0;i<layout.length;i++)for(let j=i+1;j<layout.length;j++){
       const a=layout[i],b=layout[j];
-      const clearX=Math.abs(a[1]-b[1])*width/100>=boxW+4,clearY=Math.abs(a[2]-b[2])*height/100>=boxH+4;
+      const clearX=Math.abs(a[1]-b[1])*width/100>=boxW+4*scale-.001;
+      const clearY=Math.abs(a[2]-b[2])*height/100>=boxH+4*scale-.001;
       assert.ok(clearX||clearY,`${name} ${width}px: ${a[0]} and ${b[0]} marker envelopes overlap`);
     }
   }
 }
-assert.match(read('keeper-plan.css'),/\.formation-slot \.slot-label\{position:static!important/);
-assert.match(read('keeper-plan.css'),/@media\(max-width:520px\)\{#lineups \.lineup-workspace\{grid-template-columns:minmax\(0,1fr\)!important/);
-const tallMarkers=[{x:50,y:92,width:64,height:150},{x:50,y:77.5,width:64,height:130}];
-const fitted=marker.builderHeight(tallMarkers,360,850);
-assert.ok(fitted>850,'actual tall labels must enlarge the builder');
-assert.ok((92-77.5)*fitted/100>=(150+130)/2+6);
-assert.ok((100-92)*fitted/100>=150/2+6,'bottom labels stay inside the builder');
-assert.equal(marker.builderHeight(tallMarkers,0,850),850,'hidden builder waits for a visible width');
+const compactCss=read('keeper-plan.css');
+assert.match(compactCss,/\.formation-slot \.slot-label\{position:static!important/);
+assert.match(compactCss,/grid-template-columns:minmax\(0,1fr\) clamp\(96px,29%,160px\)!important/);
+assert.doesNotMatch(compactCss,/min-height:(?:760|850)px/);
+assert.match(compactCss,/aspect-ratio:6\/7;min-height:0;max-height:none/);
+assert.match(compactCss,/\.lineup-players-panel\{position:absolute;inset:0/);
+assert.doesNotMatch(admin,/builderHeight/,'the builder must not grow to accommodate labels');
+const tallMarkers=[{x:50,y:88,width:84,height:200},{x:50,y:68.5,width:84,height:180}];
+const fitted=marker.builderScale(tallMarkers,220,220*7/6);
+assert.ok(fitted<220/480,'actual tall labels scale inside a compact pitch');
+assert.ok((88-68.5)*220*7/600>=(200+180)/2*fitted+4*fitted-.001);
+assert.equal(marker.builderScale(tallMarkers,0,0),1,'hidden builder waits for a visible width');
 const fixture=()=>({formation:'4-2-3-1',slots:{GK:'alex',LB:'jordan'},freeform:{},bench:['joe'],depth:{},subs:{firstHalf:[],secondHalf:[]},keeperPlan:K.normalize(null)});
 const roster=[{player_key:'alex',number:12,name:'Alex',fullName:'Alex Smith'},{player_key:'joe',number:15,name:'Joe',fullName:'Joe Smo'},{player_key:'jordan',number:1,name:'Jordan',fullName:'Jordan Lee'}];
 const match={id:'game-fixture',home_team:'SKOR FC',away_team:'Visitors',kickoff:'2026-10-25T21:00:00Z',location:'Test field'};
@@ -122,6 +137,10 @@ function fn(source,name){
   const tail=source.slice(start+3),end=tail.search(/\n  (?:async )?function |\n  window\./);
   return source.slice(start,end<0?undefined:start+3+end);
 }
+const keeperPanel={open:false};
+const validationContext={state:fixture(),window:{SKORKeeperPlan:K},document:{querySelector:()=>({closest:()=>keeperPanel,reportValidity:()=>assert.equal(keeperPanel.open,true,'open the disclosure before focusing invalid input')})}};
+vm.createContext(validationContext);vm.runInContext(fn(admin,'checkKeepers'),validationContext);
+assert.equal(validationContext.checkKeepers(),false);
 const context={window:{SKORKeeperPlan:K,SKORLineupMarker:marker},formations:{'4-2-3-1':[]},FREEFORM:'Freeform / Custom',isFreeform:f=>f==='Freeform / Custom',clamp:(n,a,b)=>Math.min(b,Math.max(a,n)),depthPositionsForFormation:()=>[],normalizeSubs:x=>x||{firstHalf:[],secondHalf:[]},clone:structuredClone};
 vm.createContext(context);
 for(const name of ['normalizeState','lineupTempIds','stripTempPlayersForCopy'])vm.runInContext(fn(admin,name),context);
@@ -200,6 +219,10 @@ vm.runInNewContext(editSource,editContext);editHandler();
 assert.equal(editNode('tempPlayerName').value,'Malik Fullname','editing must restore the complete name instead of overwriting the last name with a short label');
 assert.match(admin,/<details class="panel potential-positions" id="potentialPositionsPanel">/);
 assert.doesNotMatch(admin,/<details[^>]*id="potentialPositionsPanel"[^>]*\bopen\b/);
+for(const id of ['tempPlayerManager','keeperPlanPanel']){
+  assert.match(admin,new RegExp('<details[^>]*id="'+id+'"[^>]*>'));
+  assert.doesNotMatch(admin,new RegExp('<details[^>]*id="'+id+'"[^>]*\\bopen\\b'));
+}
 assert.doesNotMatch(admin,/\.player-card\.temp-player-card \.peg-name:after/,'legacy duplicate TEMP decoration must be removed');
 assert.match(read('keeper-plan.css'),/@media\(max-width:760px\)\{#lineups \.lineup-match-setup\{grid-template-columns:minmax\(0,1fr\)/);
 assert.doesNotMatch(read('keeper-editor.js'),/class="keeper-plan-preview"/,'the settings form must not repeat a long on-field caption');

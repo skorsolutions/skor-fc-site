@@ -44,23 +44,24 @@
       if(gap>=24)return;
       row.forEach((p,i)=>{p[1]=10+i*80/(row.length-1);});
     });
-    result.forEach(p=>{if(p[2]>=70&&p[2]<90)p[2]=Math.min(p[2],77.5);});
+    // Display-only row bands; saved slots and exported formation coordinates stay canonical.
+    rows.forEach((row,i)=>row.forEach(p=>{p[2]=rows.length===1?50:10+i*78/(rows.length-1);}));
     return result;
   }
-  function builderHeight(markers,width,baseHeight,gap=6){
-    if(!(width>0))return baseHeight;
-    let height=baseHeight;
+  function builderScale(markers,width,height,gap=4){
+    if(!(width>0&&height>0))return 1;
+    let scale=Math.min(1,width/480);
     markers.forEach(p=>{
-      if(p.y>0)height=Math.max(height,(p.height/2+gap)*100/p.y);
-      if(p.y<100)height=Math.max(height,(p.height/2+gap)*100/(100-p.y));
+      const halfW=p.width/2+gap,halfH=p.height/2+gap;
+      scale=Math.min(scale,p.x*width/100/halfW,(100-p.x)*width/100/halfW,p.y*height/100/halfH,(100-p.y)*height/100/halfH);
     });
     markers.forEach((a,i)=>markers.slice(i+1).forEach(b=>{
-      const dy=Math.abs(a.y-b.y);
-      if(dy<.001||Math.abs(a.x-b.x)*width/100>=(a.width+b.width)/2+gap)return;
-      height=Math.max(height,((a.height+b.height)/2+gap)*100/dy);
+      const clearX=Math.abs(a.x-b.x)*width/100/((a.width+b.width)/2+gap);
+      const clearY=Math.abs(a.y-b.y)*height/100/((a.height+b.height)/2+gap);
+      scale=Math.min(scale,Math.max(clearX,clearY));
     }));
-    return Math.ceil(height);
+    return Math.max(0,scale);
   }
-  const api={parts,numberHtml,numberSvg,displayName,shortName,nameHtml,nameLines,builderPositions,builderHeight};root.SKORLineupMarker=api;
+  const api={parts,numberHtml,numberSvg,displayName,shortName,nameHtml,nameLines,builderPositions,builderScale};root.SKORLineupMarker=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
