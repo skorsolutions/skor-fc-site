@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.14-saved-variations" />
-  <title>SKOR FC Admin | Captain Portal v58.14</title>
+  <meta name="skor-build" content="captain-portal-v58.16-homepage-button" />
+  <title>SKOR FC Admin | Captain Portal v58.16</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -39,7 +39,13 @@
     .nav button.active{box-shadow:inset 3px 0 0 var(--maroon)}
     .aside-bottom{position:static;margin-top:auto;padding:12px 8px 0;border-top:1px solid #25262b;color:#9b9da3;font-size:.76rem;line-height:1.35;flex:0 0 auto}
     main{padding:22px;min-width:0;overflow-x:hidden}
-    .top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+    .top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+    .portal-header-title{flex:1;min-width:0}
+    .portal-header-actions{display:flex;flex:0 0 100%;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
+    .portal-header-actions .ribbon-order-trigger{margin-top:0}
+    .portal-home-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%;min-height:44px;padding:8px 10px;border:1px solid #dfd4d7;border-radius:9px;background:#fff;color:#111216;font-size:.75rem;font-weight:800;text-decoration:none}
+    .portal-home-link svg{width:18px;height:18px;flex:none}
+    .portal-home-link:focus-visible{outline:3px solid #b75471;outline-offset:2px}
     .top h1{margin:0;font-size:2rem;letter-spacing:-.04em}
     .top p{margin:5px 0 0;color:var(--muted)}
     .user{display:flex;align-items:center;gap:10px}
@@ -566,7 +572,8 @@
       .top{margin-bottom:10px;gap:8px;align-items:center!important}
       .top h1{font-size:1.35rem;line-height:1.08}
       .top p{font-size:.75rem;line-height:1.3;margin-top:3px}
-      .user{gap:5px}
+      .user{gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:50%}
+      .portal-home-link{font-size:.7rem}
       .user .name{display:none!important}
       .avatar{width:32px;height:32px;font-size:.78rem}
       .logout-btn{min-height:36px;padding:6px 8px;font-size:.7rem}
@@ -1864,21 +1871,24 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.14</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.16</div>
   </aside>
 
   <main>
     <div class="top">
-      <div>
+      <div class="portal-header-title">
         <h1 id="pageTitle">Captain Dashboard</h1>
         <p id="pageSub">Manage the team without touching the website code.</p>
-        <button class="ribbon-order-trigger" id="ribbonOrderToggle" type="button" hidden aria-haspopup="dialog" aria-controls="ribbonOrderDialog" aria-expanded="false" title="Unlock to reorder your features">🔒 Ribbon locked</button>
       </div>
       <div class="user">
         <span class="portal-role-badge" id="portalRoleBadge">CAPTAIN</span>
         <div class="avatar" id="userAvatar">C</div>
         <div class="name"><strong id="userName">Captain</strong><br><small id="userEmail" style="color:var(--muted)">Admin</small></div>
         <button class="logout-btn" id="logoutBtn" type="button">Log out</button>
+      </div>
+      <div class="portal-header-actions">
+        <a class="portal-home-link" id="captainHomepageLink" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z"/></svg><span>Homepage</span></a>
+        <button class="ribbon-order-trigger" id="ribbonOrderToggle" type="button" hidden aria-haspopup="dialog" aria-controls="ribbonOrderDialog" aria-expanded="false" title="Unlock to reorder your features">🔒 Ribbon locked</button>
       </div>
     </div>
 
@@ -5284,7 +5294,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.14 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.16 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,

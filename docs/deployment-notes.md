@@ -1,3 +1,12 @@
+# v58.16 — Captain console Homepage button (prepared)
+
+- Adds the approved compact Homepage button to the shared captain-console header beside Ribbon locked. Opens the existing public homepage in the same tab, matching the player portal, and remains available from every console section.
+- Header actions have their own wrapping row with keyboard focus and a 44px minimum target. Mobile title/account layout can shrink/wrap to avoid crowding. The existing ribbon lock control retains its identity, visibility and permissions; the new link is outside the feature ribbon.
+- **Affected files (6):** `admin.html`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, and this note. Captain build is v58.16; public homepage remains v58.15.
+- **Verification:** Four affected suites passed: ribbon order, lineup export, referee card and Strategy animation. HTML checks confirm one link in the shared header outside section views, the same current-tab destination as the player portal, preserved ribbon lock ID/default visibility and a wrapping 44px action row. Feature-navigation markup and all application/auth scripts are byte-for-byte unchanged except the ready-build message. Rendered browser verification remains unavailable in this environment.
+- **SQL/backend status:** No database query/write, migration, permission or Edge Function change. Native link only; existing auth/logout, lineup/keeper/export, saved-variation and homepage data logic are unchanged.
+- **Live status:** Awaiting source publication and production build verification. Connected tools cannot post commit comments; a matching release summary will be recorded here and in chat.
+
 # v58.15 — Homepage kit labels and spacing (deployed)
 
 - Implements the approved homepage draft: removes the duplicate large Maroon Kit / White Kit captions and retains each image's existing label. Descriptive alt text is retained. Original PNG assets are unchanged.
