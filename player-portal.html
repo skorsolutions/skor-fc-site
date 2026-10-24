@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v58.17-match-record" />
+<meta name="skor-build" content="player-portal-v58.18-expandable-sections" />
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <link rel="stylesheet" href="equipment.css?v=58.5">
@@ -29,6 +29,7 @@
 @media(max-width:850px){.portal-grid,.section-grid,.feedback-layout{grid-template-columns:1fr}.hero{grid-template-columns:150px 1fr;min-height:250px}.avatar{width:140px;height:175px}.hero-copy h1{font-size:40px}.hero-number{font-size:165px}.stats{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:560px){.wrap{width:calc(100% - 18px)}.screen{padding-top:16px}.card{padding:15px}.hero{display:block;padding-top:18px}.avatar{width:122px;height:144px;margin-bottom:14px}.hero-copy h1{font-size:38px}.hero-number{font-size:150px;top:-16px}.stats{grid-template-columns:repeat(2,1fr)}.email-actions,.code-actions,.edit-grid{grid-template-columns:1fr}.top-name{display:none}.title{font-size:32px}}
 .match-record-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.record-breakdown{margin:12px 0}.record-awards{display:flex;gap:10px 16px;flex-wrap:wrap;color:#aeb4bc;font-size:12px}.record-awards strong{color:#fff;margin-left:4px}.record-rule{font-size:11px;line-height:1.45;color:#8f96a0}.record-sync{font-size:11px;line-height:1.45;color:#aeb4bc}.record-sync.error{color:#ffb0bf}.record-attendance{display:inline-block;margin-top:9px;border:1px solid #3a3f46;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:800}.record-attendance.present{color:#9de2bf;background:#183629}.record-attendance.absent{color:#f0a5b5;background:#3d1d25}.record-attendance.excused{color:#efd5a1}.record-attendance.unmarked{color:#aeb4bc}#refreshMatchRecordBtn,#showMoreMatchHistory{min-height:44px}#myMatchRecord .sectionhead{align-items:flex-start;flex-wrap:wrap}#myMatchRecord .sectionhead>div{min-width:0}
+.portal-sections{align-items:start}.portal-disclosure{min-width:0}.portal-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:54px;list-style:none;cursor:pointer;touch-action:manipulation;border-radius:8px}.portal-disclosure>summary::-webkit-details-marker{display:none}.portal-disclosure>summary>div{min-width:0}.portal-disclosure>summary h2{margin:6px 0 0;font-size:20px;overflow-wrap:anywhere}.portal-disclosure>summary:after{content:"";width:12px;height:12px;border-right:3px solid currentColor;border-bottom:3px solid currentColor;transform:rotate(45deg);flex:0 0 auto;margin:0 5px 7px}.portal-disclosure[open]>summary:after{transform:rotate(225deg);margin-bottom:0}.portal-disclosure>summary:focus-visible{outline:2px solid #d3637c;outline-offset:5px}.portal-disclosure-body{margin-top:16px}.portal-disclosure-body>.sectionhead{align-items:center;flex-wrap:wrap}#equipmentDisclosure .eq-head h2{display:none}
 </style>
 </head>
 <body>
@@ -116,23 +117,33 @@
     </div>
   </div>
 
-  <div class="section section-grid">
-    <div class="card">
-      <div class="sectionhead"><div><div class="eyebrow">Coming Up</div><h2>My Next Matches</h2></div><button class="calendar-btn" id="addAllMatchesCalendarBtn" type="button">Add All to Calendar</button></div>
+  <div class="section section-grid portal-sections">
+    <details class="card portal-disclosure" id="nextMatchesDisclosure">
+      <summary><div><div class="eyebrow">Coming Up</div><h2>My Next Matches</h2></div></summary>
+      <div class="portal-disclosure-body">
+      <div class="sectionhead"><button class="calendar-btn" id="addAllMatchesCalendarBtn" type="button">Add All to Calendar</button></div>
       <div class="match-list" id="upcomingMatches"><div class="sub">Loading schedule…</div></div>
-    </div>
-    <div class="card">
-      <div class="sectionhead"><div><div class="eyebrow">My Record</div><h2>My Match History</h2></div></div>
+      </div>
+    </details>
+    <details class="card portal-disclosure" id="matchHistoryDisclosure">
+      <summary><div><div class="eyebrow">My Record</div><h2>My Match History</h2></div></summary>
+      <div class="portal-disclosure-body">
       <p class="sub">Completed team fixtures in your recorded history. Unmarked attendance stays unknown.</p>
       <div class="match-list" id="recentMatches"><div class="sub">Loading match history…</div></div>
       <button class="btn ghost hidden" id="showMoreMatchHistory" type="button" style="margin-top:10px">Show more matches</button>
-    </div>
+      </div>
+    </details>
   </div>
 
-  <div class="section card" id="playerEquipment"></div>
+  <details class="section card portal-disclosure" id="equipmentDisclosure">
+    <summary><div><div class="eyebrow">Equipment</div><h2>Equipment &amp; Lost + Found</h2></div></summary>
+    <div class="portal-disclosure-body" id="playerEquipment"></div>
+  </details>
 
-  <div class="section card" id="feedbackSection">
-    <div class="sectionhead"><div><div class="eyebrow">Make Your Voice Count</div><h2 id="feedbackTitle">Match Feedback</h2></div><span class="pill" id="feedbackMatchPill">Choose a match</span></div>
+  <details class="section card portal-disclosure" id="feedbackSection">
+    <summary><div><div class="eyebrow">Make Your Voice Count</div><h2>Match Feedback</h2></div></summary>
+    <div class="portal-disclosure-body">
+    <div class="sectionhead"><h3 id="feedbackTitle" style="margin:0">Match Feedback</h3><span class="pill" id="feedbackMatchPill">Choose a match</span></div>
     <div class="feedback-layout">
       <div>
         <div class="feedback-card">
@@ -167,7 +178,8 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+  </details>
 
   <div class="section card hidden" id="editProfileCard">
     <div class="sectionhead"><div><div class="eyebrow">Player-Owned Profile</div><h2>Edit My Profile</h2></div><button class="btn ghost" id="cancelProfileEdit" type="button">Close</button></div>
@@ -327,7 +339,7 @@ async function loadPortal(){
   window.SKOREquipment?.mount({rootId:"playerEquipment",client:db,mode:"player"});
   historyVisibleCount=6;
   await matchRecordController.start(user.id);
-  if(recent.length)await selectFeedbackMatch(recent[0].match_id);
+  if(recent.length)await selectFeedbackMatch(recent[0].match_id,false);
 }
 function renderProfile(){
   $('topName').textContent=profile.display_name||'Player';$('heroNumber').textContent=profile.jersey_number??'';$('playerDisplayName').textContent=profile.display_name||'Player';$('playerNumber').textContent=`#${profile.jersey_number??'--'}`;$('playerPosition').textContent=profile.position||'Player';$('playerBio').textContent=profile.bio||'Bio pending.';$('newPlayerBadge').classList.toggle('hidden',!profile.is_new);
@@ -461,9 +473,10 @@ function renderRecent(){
   $('recentMatches').querySelectorAll('[data-feedback]').forEach(b=>b.addEventListener('click',()=>selectFeedbackMatch(b.dataset.feedback)));
 }
 
-async function selectFeedbackMatch(matchId){
+async function selectFeedbackMatch(matchId,reveal=true){
   feedbackMatchId=matchId;const m=recent.find(x=>x.match_id===matchId);$('feedbackTitle').textContent=m?`Feedback · ${opponent(m)}`:'Match Feedback';$('feedbackMatchPill').textContent=m?dt(m.kickoff):'Selected';
-  await Promise.all([loadComments(),loadReactions()]);$('feedbackSection').scrollIntoView({behavior:'smooth',block:'start'});
+  if(reveal){$('feedbackSection').open=true;$('feedbackSection').scrollIntoView({behavior:'smooth',block:'start'});}
+  await Promise.all([loadComments(),loadReactions()]);
 }
 async function loadComments(){
   if(!feedbackMatchId)return;

@@ -1,3 +1,13 @@
+# v58.18 — Player Portal expandable sections (deployment pending)
+
+- Implements the approved draft: My Next Matches, My Match History, Equipment & Lost + Found and Match Feedback start collapsed and expand independently. My Match Record remains a fully visible dashboard. Existing card styling, responsive match grid, calendar/RSVP, equipment and feedback controls are retained.
+- Native details/summary headers support keyboard and touch with wrapping titles, focus outlines and chevrons. Content refreshes preserve disclosure state and form drafts. The equipment renderer mounts inside the disclosure; its duplicate inner title is hidden only here.
+- Initial feedback selection no longer scrolls or opens the section. Open Match Feedback from history opens it before scrolling; a user's later close is preserved while requests finish.
+- **Affected files (3):** `player-portal.html`, `docs/PROJECT-HANDBOOK.md`, and this note. Player Portal v58.18; Captain Portal v58.17 and homepage v58.15 remain unchanged.
+- **Verification:** Match-record, equipment, portal-activity and score-privacy suites pass. HTML parser confirms balanced structure, unique IDs, exactly four default-closed disclosures, dashboard outside disclosures and controls in the correct bodies. Executed feedback selector verifies initial closed/no-scroll behavior, explicit open/scroll and closing during a pending load. Inline JavaScript parses; all other portal JavaScript is byte-for-byte unchanged. Rendered browser review remains unavailable.
+- **SQL/backend status:** No database query/write, migration, RPC, permission or Edge Function change performed for this release. Existing data, captain console, homepage, lineups, keeper numbers and exports are unchanged.
+- **Live status:** Awaiting publication and Cloudflare production verification. Commit-comment creation remains unavailable through connected tools.
+
 # v58.17 — My Match Record and shared attendance rules (deployed)
 
 - Replaces Player Portal Milestones / SKOR Career with My Match Record, games attended, explicit attendance breakdown, official contributions, compact awards/cards, completed-match history, Refresh and last-refreshed status. No fabricated badges or failed-request zeros.

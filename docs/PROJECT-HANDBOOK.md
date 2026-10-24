@@ -2,7 +2,7 @@
 
 Last updated: 2026-10-24 UTC
 Current Captain Portal build: **v58.17**.
-Player Portal build: **v58.17**.
+Player Portal build: **v58.18** (expandable sections; deployment pending).
 Current public homepage build: **v58.15**.
 Latest homepage release: [`07f2ef6d2ccc4838f767abda719b24603da8ca2a`](https://github.com/skorsolutions/skor-fc-site/commit/07f2ef6d2ccc4838f767abda719b24603da8ca2a), **v58.15 kit labels**. Cloudflare production build `4d78c3dd-da3b-421b-9cda-e4eec107ed75` succeeded; version `f3742920-052e-4a9d-8831-0ed6e2dc97a3`. All three hashes and the exact release file set match checked sources. Duplicate kit captions and reserved empty space are removed; original image labels and alt text remain. Homepage checks plus score-privacy and persistent-clock suites passed. No database/backend change. Rendered browser verification remains unavailable.
 Latest display release: [`20d8f324e1f5918476d34c406482dced46c15dfe`](https://github.com/skorsolutions/skor-fc-site/commit/20d8f324e1f5918476d34c406482dced46c15dfe), **v58.17 My Match Record**. Approved migration `20261024164008 sync_player_match_record` is applied; all nine function bodies match source. Seven suites and live role checks across 12 linked players (3 captains) passed; seven application-table digests are unchanged. Exact 17-file release and source hashes verified. Initial Cloudflare upload failed with API 10013; retry `6cf4bcd6-cfbb-4ac0-aede-8bbb0308fb01` of the same commit succeeded, version `e49e884d-eca3-4177-ab16-f7fd9e09b24b` verified at 100% production traffic. Player/Captain v58.17 is deployed; homepage remains v58.15. Browser visual review remains unavailable.
@@ -310,6 +310,13 @@ See `docs/STRATEGY-ANIMATION.md` for the complete model, persistence, export, se
 - Duplicate or ambiguous names, such as two players with the same first name, require jersey-aware resolution.
 
 ## 9. Attendance, RSVP, and player feedback
+
+### Player Portal expandable sections — v58.18
+
+- My Match Record remains fully visible as the dashboard. My Next Matches, My Match History, Equipment & Lost + Found and Match Feedback use independent native details/summary disclosures, closed on a fresh page load. Current open/closed choices survive content refreshes; no accordion grouping or stored preference forces another section closed/open.
+- Summary headers use the existing dark cards, maroon eyebrows, wrapping headings, chevrons, keyboard focus and touch targets. Phone layout stacks the cards; desktop match cards keep their two-column grid without stretching closed cards. Calendar, RSVP, history paging, equipment and all feedback controls remain inside their section bodies with original IDs. The equipment mount remains an inner div, so its renderer cannot replace the disclosure header; its duplicate inner title is hidden only in this portal.
+- Initial feedback-match selection loads the latest conversation without opening or scrolling. Open Match Feedback from history expands Feedback before scrolling; closing it while data loads remains respected. Collapsing only hides existing content and preserves drafts. Dashboard polling and all data/auth logic remain unchanged.
+- Player-Portal-only release; Captain Portal remains v58.17 and homepage v58.15. No database, RPC, migration, permission, Edge Function, lineup or export changes. Four related suites and HTML/feedback interaction checks passed; rendered browser review remains unavailable.
 
 ### My Match Record — v58.17
 
