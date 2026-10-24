@@ -1,6 +1,6 @@
 # Player match record — v58.17
 
-Status: user approved the database update and deployment on 2026-10-24. Migration `20261024164008 sync_player_match_record` is applied and verified; frontend publication is pending.
+Status: deployed. User approved the database update and deployment on 2026-10-24. Migration `20261024164008 sync_player_match_record` is applied and verified. Source [`20d8f324e1f5918476d34c406482dced46c15dfe`](https://github.com/skorsolutions/skor-fc-site/commit/20d8f324e1f5918476d34c406482dced46c15dfe) is deployed through successful Cloudflare retry `6cf4bcd6-cfbb-4ac0-aede-8bbb0308fb01`, version `e49e884d-eca3-4177-ab16-f7fd9e09b24b`, verified at 100% production traffic.
 
 The approved change replaces the player portal's career/milestone section with a factual record of completed matches. Existing attendance, official events and awards remain the source; no historical application records are rewritten.
 
@@ -40,4 +40,4 @@ Approval was received before applying the migration through the connected Supaba
 
 ## Current production status
 
-Database migration `20261024164008 sync_player_match_record` is applied and verified. Frontend publication/build verification is pending; the public homepage remains v58.15.
+Database migration `20261024164008 sync_player_match_record` and both portal clients are deployed and verified. Exact 17-file release and hashes match checked source. Initial push build `b58c998f-6deb-4a6d-933b-f24945f4a60c` failed on Cloudflare assets-upload-session API error 10013. A manual retry of the identical source commit succeeded without application or pipeline changes. Cloudflare deployments readback confirms version `e49e884d-eca3-4177-ab16-f7fd9e09b24b` at 100%. The first GitHub build check may retain its failed status; production success is verified through the Cloudflare build API/logs and deployment version. Public homepage remains v58.15. A documentation-only follow-up records verification; connected tools cannot post commit comments.
