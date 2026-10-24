@@ -1,11 +1,21 @@
-# v58.15 — Homepage kit labels and spacing (prepared)
+# v58.15 — Homepage kit labels and spacing (deployed)
 
 - Implements the approved homepage draft: removes the duplicate large Maroon Kit / White Kit captions and retains each image's existing label. Descriptive alt text is retained. Original PNG assets are unchanged.
 - Removes the 320px minimum card height, fixed mobile height and reserved caption padding. Cards now fit their images with balanced padding, reducing unused space while keeping the same side-by-side layout, gradients, borders, header and join panel.
 - **Affected files (3):** `index.html`, `docs/PROJECT-HANDBOOK.md`, and this note. Public homepage metadata is v58.15; Captain Portal stays v58.14.
 - **Verification:** Score-privacy and persistent-clock suites passed. Homepage source checks confirm two original image paths and descriptive alt text, no duplicate visible captions, content-sized cards with balanced padding and retained two-column layout. All homepage data scripts are byte-for-byte unchanged. Rendered browser verification remains unavailable in this environment.
 - **SQL/backend status:** No database query/write, migration, permission or Edge Function change. Captain, inventory, saved lineups, keeper logic, exports and homepage data scripts are unchanged.
-- **Live status:** Awaiting source publication and production build verification. Connected tools cannot post commit comments; a matching release summary will be recorded here and in chat.
+- **Live status:** Source release [`07f2ef6d2ccc4838f767abda719b24603da8ca2a`](https://github.com/skorsolutions/skor-fc-site/commit/07f2ef6d2ccc4838f767abda719b24603da8ca2a) published to main from `a681e24967e15e32592544645e1be29989513f99`. Workers Builds succeeded: build `4d78c3dd-da3b-421b-9cda-e4eec107ed75`, production version `f3742920-052e-4a9d-8831-0ed6e2dc97a3`. All three file hashes and the exact release file set match checked local source. Documentation-only follow-up records deployment verification. Commit-comment creation is unavailable through connected tools; no comment was posted.
+
+## v58.15 release summary
+
+Deployed **v58.15**: each kit name appears once, and the cards fit the shirts without the extra empty space.
+
+Homepage checks and two test suites passed. No database or backend changes. Production deployment is verified; rendered browser review remains unavailable.
+
+Refresh the [homepage](https://skorfc.net/). [Release](https://github.com/skorsolutions/skor-fc-site/commit/07f2ef6d2ccc4838f767abda719b24603da8ca2a).
+
+Release notes are saved; connected tools cannot post commit comments.
 
 # v58.14 — Separate saved game and Tinker variations (deployed)
 
