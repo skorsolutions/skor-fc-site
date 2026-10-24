@@ -1,0 +1,10 @@
+/* Local substitution alarm controls inside the official clock. */
+.sub-alarm{margin-top:12px;padding:12px;border:1px solid #41464f;border-radius:12px;background:#181b21;min-width:0}
+.sub-alarm[hidden],.sub-alarm [hidden]{display:none!important}
+.sub-alarm summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:9px;list-style:none;font-weight:850;font-size:14px}
+.sub-alarm summary::-webkit-details-marker{display:none}.sub-alarm summary:before{content:'▸';color:#d67a93}.sub-alarm details[open]>summary:before{content:'▾'}
+.sub-alarm summary:focus-visible,.sub-alarm button:focus-visible{outline:2px solid #e2a0b3;outline-offset:3px}.sub-alarm-badge{font-size:11px;border:1px solid #745663;border-radius:999px;padding:4px 8px;color:#f5c3d1;margin-left:auto}
+.sub-alarm-help,.sub-alarm-note{font-size:12px;line-height:1.5;color:#c8ccd3;margin:10px 0}.sub-alarm-note{padding:10px;border-radius:8px;border:1px solid #8b7039;background:#302715;color:#ffe5a6}
+.sub-alarm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}.sub-alarm label{display:grid;gap:5px;font-size:12px;color:#e0e2e6}.sub-alarm select,.sub-alarm input{width:100%;min-width:0;min-height:44px;padding:9px;border:1px solid #555c68;border-radius:8px;background:#22262f;color:#fff;font:inherit;font-size:14px}
+.sub-alarm input:disabled,.sub-alarm select:disabled{opacity:.65}.sub-alarm-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.sub-alarm .btn{min-height:44px}.sub-alarm-stop{margin-top:10px;width:100%;background:#8b213f;color:#fff;border:1px solid #bb5471;border-radius:9px;padding:12px;font-weight:900;cursor:pointer}.sub-alarm-status{font-size:13px;line-height:1.5;margin-top:8px;color:#f3d6de;font-variant-numeric:tabular-nums}
+@media(max-width:420px){.sub-alarm-grid{grid-template-columns:1fr}.sub-alarm-actions .btn{flex:1}}

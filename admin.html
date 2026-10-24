@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.20-collapsed-inbox" />
-  <title>SKOR FC Admin | Captain Portal v58.20</title>
+  <meta name="skor-build" content="captain-portal-v58.21-substitution-alarm" />
+  <title>SKOR FC Admin | Captain Portal v58.21</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
+  <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
   <link rel="stylesheet" href="strategy.css?v=58.0" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
@@ -1872,7 +1873,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.20</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.21</div>
   </aside>
 
   <main>
@@ -2000,7 +2001,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <div class="game-clock-alert" id="gameClockAlert"></div>
             <div class="game-clock-settings">
               <div><label for="gameClockHalfLength">Half length</label><select id="gameClockHalfLength"><option value="45">45 minutes</option><option value="40">40 minutes</option></select></div>
-              <div><label for="gameClockSubInterval">Sub reminders</label><select id="gameClockSubInterval"><option value="15">Every 15 minutes</option><option value="10">Every 10 minutes</option></select></div>
+              <div><label for="gameClockSubInterval">Planned wave cadence</label><select id="gameClockSubInterval"><option value="15">Every 15 minutes</option><option value="10">Every 10 minutes</option></select></div>
             </div>
             <div class="game-clock-actions" id="gameClockActions">
               <button class="btn btn-primary" type="button" data-clock-action="start_first_half">Start 1st Half</button>
@@ -2012,6 +2013,26 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <button class="btn btn-light clock-danger" type="button" data-clock-action="reset">Reset Clock</button>
             </div>
             <div class="sub-clock-card" id="gameClockSubAlert"><strong>Substitution reminders</strong><span>Publish a lineup with planned waves to show the next change here.</span></div>
+            <section class="sub-alarm" id="substitutionAlarm" hidden aria-label="Substitution alarm">
+              <details>
+                <summary>Substitution alarm <span class="sub-alarm-badge" id="subAlarmBadge">Off</span></summary>
+                <p class="sub-alarm-help">Start on one phone only. Rings at the selected interval within each half, using the official match clock. Each ring stops automatically. Use Preview and check your phone volume before kickoff.</p>
+                <div class="sub-alarm-grid">
+                  <label>Alarm interval<select id="subAlarmInterval"><option value="10">Every 10 minutes</option><option value="15" selected>Every 15 minutes</option><option value="20">Every 20 minutes</option></select></label>
+                  <label>Ring duration<select id="subAlarmRing"><option value="3">3 seconds</option><option value="5" selected>5 seconds</option><option value="10">10 seconds</option></select></label>
+                  <label>Automatic snooze<select id="subAlarmSnooze"><option value="0">Off</option><option value="30">30 seconds after ringing</option><option value="60" selected>1 minute after ringing</option><option value="120">2 minutes after ringing</option></select></label>
+                  <label>Snooze repeats<select id="subAlarmRepeats"><option value="1">Once</option><option value="2">Twice</option></select></label>
+                  <label>Stop at match minute<input id="subAlarmStopMinute" type="number" min="1" max="180" step="1" value="90" inputmode="numeric"></label>
+                  <label>Safety stop after arming (minutes)<input id="subAlarmSafety" type="number" min="10" max="180" step="1" value="120" inputmode="numeric"></label>
+                </div>
+                <p class="sub-alarm-help">Pauses and halftime are silent. Full Time, Reset, switching matches, leaving Game Day or the safety time limit stop the alarm. Snoozes never shift the next interval.</p>
+                <div class="sub-alarm-actions"><button class="btn btn-light" id="subAlarmPreview" type="button">Preview sound</button><button class="btn btn-primary" id="subAlarmStart" type="button">Start alarm on this phone</button></div>
+                <p class="sub-alarm-help">Locked-phone and background alerts are planned for the Iskra Sports app.</p>
+              </details>
+              <div class="sub-alarm-status" id="subAlarmStatus" role="status">Off · Choose settings to start on this phone.</div>
+              <div class="sub-alarm-note" id="subAlarmPhoneNote" hidden>🔔 Keep this phone unlocked with Game Day open for substitution alarms to sound.</div>
+              <button class="sub-alarm-stop" id="subAlarmStop" type="button" hidden>Stop alarm</button>
+            </section>
           </div>
         </div>
 
@@ -5289,7 +5310,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.20 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.21 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5323,6 +5344,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="jerseys.js?v=58.4"></script>
 <script src="equipment.js?v=58.19"></script>
 <script src="captain-notifications.js?v=58.20"></script>
+<script src="substitution-alarm.js?v=58.21"></script>
 <script src="strategy.js?v=58.10"></script>
 <script src="ref-game-card.js?v=58.10"></script>
 <script src="portal-activity.js?v=58.6"></script>
@@ -5374,6 +5396,7 @@ function clearAuthError(){
   authError.style.display = "none";
 }
 function showLogin(){
+  substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
   portalSessionVersion++;captainActivityUser=null;
   captainActivity.clear();
@@ -5400,6 +5423,7 @@ function showDashboard(user,access){
   document.getElementById("userAvatar").textContent = (fullName.trim()[0] || "C").toUpperCase();
   window.SKORLineup?.setCaptain(user.id || email || "captain");
   applyPortalRoleUI();
+  substitutionAlarm?.contextChanged();
   window.SKORRibbonOrder?.init(user);
   loadTeamRoster();
   loadTeamFields().then(()=>loadScheduleManager());
@@ -5460,6 +5484,7 @@ googleLogin.addEventListener("click", async ()=>{
 });
 
 logoutBtn.addEventListener("click", async ()=>{
+  substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
   captainActivity.clear();
   clearPlayerActivity();
@@ -5496,6 +5521,7 @@ const meta = {
   sponsors:["Sponsors","Manage sponsor information and website links."]
 };
 function openView(id){
+  if(id!=="gameday")substitutionAlarm?.stop('Alarm stopped when leaving Game Day.');
   if(id==="notebook"&&!portalCanWrite()){viewerBlocked("open the Captain Notebook");return;}
   if(id==="strategy"&&!portalCanWrite()){viewerBlocked("open the private Strategy workspace");return;}
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
@@ -5593,6 +5619,7 @@ let PRODUCTION_GAMEPLAN=null;
 window.gameDaySelected=null;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
 const gameClockDisplay=document.getElementById("gameClockDisplay"),gameClockPhase=document.getElementById("gameClockPhase"),gameClockSecondary=document.getElementById("gameClockSecondary"),gameClockAlert=document.getElementById("gameClockAlert"),gameClockHalfLength=document.getElementById("gameClockHalfLength"),gameClockSubInterval=document.getElementById("gameClockSubInterval"),gameClockActions=document.getElementById("gameClockActions"),gameClockSubAlert=document.getElementById("gameClockSubAlert"),eventClockPreview=document.getElementById("eventClockPreview");
+const substitutionAlarm=window.SKORSubstitutionAlarm.mount({rootId:'substitutionAlarm',getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id,matchStatus:gameDaySelected?.status})});
 function gdEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
 function playerValue(p){return `roster|${p.number}|${p.name}`;}
 function tempPlayerValue(p){return `temp|${p.id}`;}
@@ -6747,16 +6774,19 @@ async function controlGameClock(action){
   if(!gameDaySelected?.id){alert("Select a match first.");return;}
   if(action==="reset"&&!confirm("Reset the official clock to 00:00 and return this match to Scheduled? Existing event timestamps will be kept."))return;
   if(action==="full_time"&&!confirm("Record Full Time at the current official clock time?"))return;
+  const requestedMatchId=gameDaySelected.id;
   const buttons=[...(gameClockActions?.querySelectorAll("button")||[])];buttons.forEach(btn=>btn.disabled=true);
   const {data,error}=await sb.rpc("control_match_clock",{
-    p_match_id:gameDaySelected.id,
+    p_match_id:requestedMatchId,
     p_action:action,
     p_half_length_minutes:Number(gameClockHalfLength.value),
     p_sub_interval_minutes:Number(gameClockSubInterval.value)
   });
   buttons.forEach(btn=>btn.disabled=false);
+  if(gameDaySelected?.id!==requestedMatchId)return;
   if(error){alert("Could not update the match clock: "+error.message);return;}
   gameClockState=Array.isArray(data)?(data[0]||null):(data||null);
+  substitutionAlarm?.updateClock(requestedMatchId,gameClockState);
   const statusByAction={start_first_half:"first_half",halftime:"halftime",start_second_half:"second_half",full_time:"final",reset:"scheduled"};
   if(statusByAction[action])gameDaySelected.status=statusByAction[action];
   renderGameClock();renderGameDay();await loadCrowdAdmin();
@@ -6837,12 +6867,15 @@ function renderCrowdAdmin(){
   renderGameClock();
 }
 async function loadCrowdAdmin(){
+  const requestedMatchId=gameDaySelected?.id;
   crowdSession=null;gameClockState=null;crowdInvite=null;crowdParticipants=[];
   ["crowdScoreAdmin","crowdParticipantCount","crowdConfirmedCount","crowdPendingCount","crowdRefCount","crowdMotmCount"].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=id==="crowdScoreAdmin"?"0–0":"0";});
   if(!gameDaySelected?.id){crowdStatus("Select a match first.");renderCrowdAdmin();return;}
   const s=await sb.from("game_day_sessions").select("id,match_id,active,motm_voting_open,ref_review_open,expires_at,created_at,clock_phase,clock_running,clock_elapsed_seconds,clock_started_at,clock_phase_started_at,half_length_minutes,sub_interval_minutes,clock_updated_at").eq("match_id",gameDaySelected.id).maybeSingle();
+  if(gameDaySelected?.id!==requestedMatchId)return;
   if(s.error){crowdStatus("Crowd Scoring is not installed yet. Run the v40 SQL, then the v41 adaptive-consensus SQL.");renderCrowdAdmin();return;}
   crowdSession=s.data||null;gameClockState=crowdSession;
+  substitutionAlarm?.updateClock(requestedMatchId,gameClockState);
   if(!crowdSession){crowdStatus("No crowd-scoring session for this match yet.");renderCrowdAdmin();return;}
   const [inv,people,events,reports,refs,motm]=await Promise.all([
     sb.from("game_day_invites").select("id,invite_code,active,expires_at,created_at").eq("session_id",crowdSession.id).eq("active",true).order("created_at",{ascending:false}).limit(1),
@@ -7193,7 +7226,7 @@ async function loadGameDayMatches(preferredId=null){
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v57.0";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
-  gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;window.SKORLineup?.setEvents(gameDayMatches,false);await loadAiPlayerCommentSelection({force:true});await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
+  gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;substitutionAlarm?.contextChanged();window.SKORLineup?.setEvents(gameDayMatches,false);await loadAiPlayerCommentSelection({force:true});await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
@@ -7202,7 +7235,7 @@ async function loadGameDayEvents(){
   renderGameDay();
   await loadPlayerEngagement();
 }
-gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;window.gameDaySelected=gameDaySelected;await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadProductionGameplan(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();});
+gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;window.gameDaySelected=gameDaySelected;substitutionAlarm?.contextChanged();await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadProductionGameplan(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();});
 function openEventEditor(type,event=null){
   currentEventType=type;editingEventId=event?.id||null;eventEditor.classList.add("open");
   const titles={skor_goal:"SKOR Goal",opponent_goal:"Opponent Goal",opponent_own_goal:"Opponent Own Goal",skor_own_goal:"SKOR Own Goal",skor_yellow_card:"SKOR Yellow Card",skor_red_card:"SKOR Red Card",opponent_yellow_card:"Opponent Yellow Card",opponent_red_card:"Opponent Red Card",skor_foul:"SKOR Foul",opponent_foul:"Opponent Foul"};

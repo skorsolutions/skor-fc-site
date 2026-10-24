@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.20**.
+Current Captain Portal build: **v58.21** (deployment pending).
 Player Portal build: **v58.18**.
 Current public homepage build: **v58.15**.
 Latest Captain Portal release: [`32f85d296c4edb5ac24b08c8610a1fbd03a6142b`](https://github.com/skorsolutions/skor-fc-site/commit/32f85d296c4edb5ac24b08c8610a1fbd03a6142b), **v58.20 collapsed inbox**. Cloudflare build `062e9f27-92e4-4494-923b-083dd099a6fb` succeeded; version `bd2d2b10-50c4-4a55-ae82-3c1ac33e5471`, deployment `99e0d6df-97ed-4970-b083-6c9dacff29e7`, verified at 100% production traffic. All ten source hashes and the exact release file set match checked sources. Six relevant suites passed; no database/backend change. Unread count stays visible, refreshes retain disclosure choice, sign-out resets it closed. Browser visual review remains unavailable.
@@ -248,6 +248,14 @@ See `docs/REF-GAME-CARD.md` for the complete field mapping, ordering rules, vali
 - The public RPC returns only `match_id`, clock phase/running state, elapsed seconds, start anchor, half length, and update time for published matches. It does not expose Crowd access state, invite codes, participants, captain identity, or write access.
 - The home featured match and current-game schedule row show the same official clock. Match Center shows it on both the selected scoreboard and current-game list row.
 - v58.1 Match Center refreshes match status and timestamped non-goal event records every 30 seconds while the local official clock continues smoothly every second. It does not render or request goal records.
+
+### Audible substitution alarm — v58.21
+
+- Game Day adds an opt-in, local alarm on the designated phone. Settings are collapsed by default; active status, Stop alarm and the unlocked-phone note stay beside the clock. A captain must tap Start alarm to unlock audio. Settings may persist per account in this browser; enabled state never persists or auto-starts after reload.
+- Audible intervals are 10/15/20 minutes within each half, independent of the existing server-backed planned-wave 10/15-minute cadence. No lineup is required. Arming mid-half targets the next upcoming boundary; half-end boundaries are silent. Short 3/5/10-second chimes have finite Web Audio stop times. Snooze is Off/30/60/120 seconds after a ring, once/twice, and never shifts the next regular interval.
+- Official pause and halftime cancel current sound/snoozes and wait silently; resumed play schedules the next boundary. Full Time, Reset/restart, selected match-minute cutoff, 10–180-minute elapsed safety limit, match/account/role change, hidden/locked page, leaving Game Day and stale clock updates stop the alarm. It never replays missed rings after suspension. Clock snapshots use the existing Game Day refresh; no new backend reads/writes or migrations.
+- Only start on one phone. A short renewable browser-storage lease prevents simultaneous tabs on that same browser; it cannot elect one device across captains/phones. Optional screen wake lock is best effort. Visible note: “Keep this phone unlocked with Game Day open for substitution alarms to sound.” Locked/background alarms belong to the future Iskra Sports app. Use Preview to check system volume; physical phone audio/background behavior cannot be verified in this environment.
+- Timing, finite-audio, bounded snooze, phase/stop, stale-source, lease, permission/account and browser-adapter tests are in `tests/verify-substitution-alarm.mjs`; full operational contract in `docs/SUBSTITUTION-ALARM.md`. Existing official clock actions, event stamps, planned waves, public/Crowd projections, keeper/export and personal inbox contracts remain unchanged.
 
 ### Substitution reminder rules
 

@@ -2,6 +2,7 @@
   "name": "skor-fc-site",
   "private": true,
   "scripts": {
+    "test:substitution-alarm": "node tests/verify-substitution-alarm.mjs",
     "test:captain-notifications": "node tests/verify-captain-notifications.mjs",
     "test:saved-variations": "node tests/verify-saved-variations.mjs",
     "test:match-record": "node tests/verify-player-match-record.mjs",

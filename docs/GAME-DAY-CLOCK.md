@@ -177,3 +177,12 @@ Because the updated clients select new columns, production must be released in t
 - Tap **Start 2nd Half** at the restart.
 - Tap **Full Time** at the final whistle.
 - Open/close Crowd Scoring independently as needed.
+
+
+## v58.21 local audible substitution alarm
+
+The Captain Game Day clock includes a separate optional 10/15/20-minute audible alarm; the existing planned-wave cadence remains 10/15 and all official RPC/data contracts stay unchanged. The alarm consumes successful existing clock snapshots and never controls the clock or sends additional backend requests.
+
+Settings start collapsed. The designated alarm phone requires an explicit Start alarm tap, open Game Day and an unlocked screen. Active status, an unlocked-phone note and Stop alarm remain visible. Finite 3/5/10-second chimes, limited automatic snoozes and independent selected-match-minute/elapsed-time stops are built in. Pauses and halftime are silent; full time/reset, context changes, hidden pages and stale clock data stop the alarm. No catch-up rings or persisted auto-arming. The future Iskra Sports app may provide locked/background alerts.
+
+Details and verification: [SUBSTITUTION-ALARM.md](SUBSTITUTION-ALARM.md).
