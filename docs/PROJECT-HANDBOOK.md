@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-10-24 UTC
-Current Captain Portal build: **v58.10**.
+Current Captain Portal build: **v58.11** (builder spacing and export-number sizing; deployment verification pending).
 Current keeper-restoration release: [`1c4b2c45d51fabb265e2db7ffe877d48cf490b75`](https://github.com/skorsolutions/skor-fc-site/commit/1c4b2c45d51fabb265e2db7ffe877d48cf490b75). Cloudflare production build `7f8b4f15-e118-4f27-a7a0-8899e68fc302` succeeded; version `0adeb322-190a-4a38-bc18-0626b18dc3ac`. All 15 source hashes and the exact release file set match the checked sources. Seven affected suites passed. `generate-pregame-talk` version 15 is ACTIVE with JWT verification enabled and exact packaged-source readback. The user-identified upcoming #18 / 30 starting-temp assignment is repaired and independently verified, with other state/publication flag preserved. No schema migration. Browser visual verification remains unavailable.
 Latest implementation release: [`6ab72d06a4a7e80e10066952dc47c4593a4434bb`](https://github.com/skorsolutions/skor-fc-site/commit/6ab72d06a4a7e80e10066952dc47c4593a4434bb). Cloudflare production build `00edd3a0-8bba-4c72-b4d4-09824d162f1e` succeeded; deployed version `5a897dbd-bd67-47ca-984b-9d1c46e969d5`. All 14 source hashes and the exact release file set match checked files. Seven affected suites and HTML structure checks passed. The compact picker, responsive setup panels and closed Potential Positions are deployed. Full referee names and keeper data remain intact. No database or Edge Function changes. Browser visual checks remain blocked by sandbox socket restrictions.
 Current implementation release: [`2d21e048ec13788350ca223667d5dbd681c4aba8`](https://github.com/skorsolutions/skor-fc-site/commit/2d21e048ec13788350ca223667d5dbd681c4aba8). Cloudflare production build `d6253897-f2df-4251-b08b-5fac1d024f3c` succeeded; deployed version `d6711af8-65ff-4359-bdce-3ec680f9cccb`. All 14 file hashes and the exact release diff match the tested sources. Six affected suites passed. Approved keeper-number hierarchy and readable TEMP labels are deployed across lineup/editor/PNG/JPG/public/Crowd/Strategy presentation. No database or Edge Function change; pregame function remains version 14. Browser visual verification remains blocked by sandbox socket restrictions.
@@ -59,6 +59,14 @@ This is the durable handoff document for new chats and future developers. Read i
 - Database migrations require explicit user approval before they are applied.
 
 ## 4. Lineup system rules
+
+### Builder spacing and readable export secondary number — v58.11
+
+- The gameplan image's small keeper-pair numeral increases from 12 to 18 SVG pixels. The large numeral remains 32 and the separator remains 12; a before/after SVG comparison verifies no other export change.
+- Standard-formation builder display positions come from the pure `lineup-marker.js` `builderPositions` helper. Crowded rows of three or more players spread horizontally; the defensive display line is capped at 77.5% to leave room above GK. Canonical formation maps, saved slots, freeform coordinates and exported coordinates remain unchanged.
+- Position tags occupy a separate flex row above the shirt, with static positioning and no overlay z-index. Builder markers have bounded widths; the standard builder pitch has more vertical room. After rendering, measured marker widths/heights determine extra pitch height when needed. A width-only ResizeObserver recalculates on viewport changes without a height-notification loop.
+- At 520 pixels or less, the player picker sits above a full-width pitch, keeping the field out of the narrow rail layout. Match setup panels, hidden Potential Positions, primary-only picker, full referee names and keeper assignments remain as released in v58.9/58.10.
+- This is a frontend-only release. No database write, schema, permission, AI context or Edge Function change.
 
 ### Legacy keeper restoration — v58.10
 

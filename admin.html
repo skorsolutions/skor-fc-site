@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.10-restore-keeper-exports" />
-  <title>SKOR FC Admin | Captain Portal v58.10</title>
+  <meta name="skor-build" content="captain-portal-v58.11-builder-spacing" />
+  <title>SKOR FC Admin | Captain Portal v58.11</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1864,7 +1864,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.10</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.11</div>
   </aside>
 
   <main>
@@ -3182,9 +3182,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </div>
   </div>
 </dialog>
-<link rel="stylesheet" href="keeper-plan.css?v=58.9">
+<link rel="stylesheet" href="keeper-plan.css?v=58.11">
 <script src="keeper-plan.js?v=58.10"></script>
-<script src="lineup-marker.js?v=58.9"></script>
+<script src="lineup-marker.js?v=58.11"></script>
 <script src="keeper-editor.js?v=58.9"></script>
 <script src="ribbon-order.js?v=58.3"></script>
 <script src="temp-player-directory.js?v=58.3"></script>
@@ -3278,6 +3278,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   let sharedTinkerVariations = [];
   let lineupCopyContext=null;
   let realtimeChannel = null;
+  let pitchSizeObserver=null,pitchObservedWidth=0;
   let inheritKeeperChoices=false;
   let state = blankState("4-2-3-1");
 
@@ -3824,7 +3825,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         ${role}
         <polygon points="${jerseyPoints}" fill="#801A3D" stroke="#ffffff" stroke-width="3" stroke-linejoin="round"/>
         <path d="M ${x-16} ${y-42} L ${x+16} ${y-42} Q ${x+13} ${y-26} ${x} ${y-26} Q ${x-13} ${y-26} ${x-16} ${y-42} Z" fill="#17181c"/>
-        ${window.SKORLineupMarker.numberSvg(jerseyLabel(p),keeperDetails(p).role.startsWith('starting'),x,y+14,jerseyLabel(p).includes(' / ')?32:p.temp&&jerseyLabel(p)==='TEMP'?20:36,12)}
+        ${window.SKORLineupMarker.numberSvg(jerseyLabel(p),keeperDetails(p).role.startsWith('starting'),x,y+14,jerseyLabel(p).includes(' / ')?32:p.temp&&jerseyLabel(p)==='TEMP'?20:36,18,12)}
         ${captainBadge}
         ${name}${keeperSuffix(p)?`<text x="${x}" y="${y+85+labelExtra}" text-anchor="middle" font-size="12" font-weight="800" fill="#ffffff" stroke="#24552f" stroke-width="2" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">${esc(keeperSuffix(p))}</text>`:''}${p.temp?`<text x="${x}" y="${y+(keeperSuffix(p)?102:86)+labelExtra}" text-anchor="middle" font-size="15" font-weight="950" fill="#ffffff" stroke="#24552f" stroke-width="3" paint-order="stroke" font-family="Arial, Helvetica, sans-serif">TEMP</text>`:""}
       `;
@@ -4015,6 +4016,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function renderPitch(){
     const pitch=document.getElementById("lineupPitch");
     if(!pitch)return;
+    pitch.style.minHeight='';
     pitch.querySelectorAll('.dynamic-pitch-item').forEach(el=>el.remove());
     pitch.classList.toggle('freeform-mode', isFreeform(state.formation));
     pitch.dataset.freeformHelp = 'Freeform custom board: drag players anywhere, or tap a player then tap the pitch.';
@@ -4057,7 +4059,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         pitch.appendChild(btn);
       });
     } else {
-      (formations[state.formation]||formations['4-2-3-1']).forEach(([label,x,y])=>{
+      window.SKORLineupMarker.builderPositions(formations[state.formation]||formations['4-2-3-1']).forEach(([label,x,y])=>{
         const slot=document.createElement('button');
         const p=player(state.slots[label]);
         slot.type='button';
@@ -4082,6 +4084,20 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         });
         pitch.appendChild(slot);
       });
+    }
+    if(!isFreeform(state.formation)&&pitch.clientWidth>0){
+      const markers=Array.from(pitch.querySelectorAll('.formation-slot'),slot=>({x:parseFloat(slot.style.left),y:parseFloat(slot.style.top),width:slot.offsetWidth,height:slot.offsetHeight}));
+      const needed=window.SKORLineupMarker.builderHeight(markers,pitch.clientWidth,pitch.clientHeight);
+      if(needed>pitch.clientHeight)pitch.style.minHeight=(needed+pitch.offsetHeight-pitch.clientHeight)+'px';
+    }
+    if(!pitchSizeObserver&&window.ResizeObserver){
+      pitchObservedWidth=pitch.clientWidth;
+      pitchSizeObserver=new ResizeObserver(entries=>{
+        const width=entries[0]?.contentRect.width||0;
+        if(Math.abs(width-pitchObservedWidth)<1)return;
+        pitchObservedWidth=width;renderPitch();
+      });
+      pitchSizeObserver.observe(pitch);
     }
   }
 
@@ -5253,7 +5269,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.10 ready. Assign match keepers and spare jerseys in Lineups.");
+  markStatus("Captain Portal v58.11 ready. Assign match keepers and spare jerseys in Lineups.");
 
   window.SKORLineup={
     setRoster,

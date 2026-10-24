@@ -2,6 +2,8 @@
 
 Status: **v55.2 production renderer contract**
 
+**v58.11 export adjustment:** Only the small numeral in a keeper pair grows from 12 to 18 SVG pixels. The large numeral stays 32 and slash stays 12. A comparison against the previous renderer produced identical SVG after normalizing that one font size. All pitch geometry, roles, notes, names, bench, dimensions and referee behavior are unchanged. Builder-only spacing uses a separate display helper and measured layout; it never changes canonical/export coordinates.
+
 **v58.9 picker/label cleanup:** All player labels use short names. On-field jerseys keep the approved primary / spare hierarchy and keeper-duty note; bench, Potential Positions and substitution labels use primary numbers without keeper captions. TEMP appears once. Full names remain available to referee PDF/Excel and the deliberate name-entry/edit field. The Potential Positions editor is closed by default; its export checkbox and saved contents are independent of editor visibility. No saved data or pitch geometry changes.
 
 **v58.8 marker presentation:** The pitch shirt retains primary / spare order (`12 / 30`). The outfield player's primary number is large and spare small; the starting keeper's primary is small and worn keeper number large. Shared HTML/SVG presentation comes from `lineup-marker.js`. TEMP suffixes are separated into a badge for display, names wrap, and name plates/bench rows expand. Extra marker-name lines add bottom clearance to the lineup card; pitch crop and canonical player coordinates are unchanged. Keeper roles remain visible in Numbers Only mode. Referee PDF/Excel and saved lineup fields retain the v58.7 contract.

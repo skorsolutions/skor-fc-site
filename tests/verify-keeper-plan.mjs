@@ -19,6 +19,29 @@ assert.equal(marker.displayName('Malik - TEMP',false),'Malik - TEMP','presentati
 assert.doesNotMatch(marker.nameHtml('<img onerror=alert(1)> - TEMP',true),/<img/);
 assert.ok(marker.nameLines('A long temporary player name - TEMP',true,12).every(line=>line.length<=12));
 const admin=read('admin.html');
+const formationContext={};
+vm.runInNewContext(admin.slice(admin.indexOf('  const formations = {'),admin.indexOf('  const FREEFORM =')).replace('const formations =','globalThis.formations ='),formationContext);
+for(const [name,shape] of Object.entries(formationContext.formations)){
+  const original=JSON.stringify(shape),layout=marker.builderPositions(shape);
+  assert.equal(JSON.stringify(shape),original,'builder layout must not change canonical formation/export coordinates');
+  assert.deepEqual(Array.from(layout,p=>p[0]),Array.from(shape,p=>p[0]));
+  for(const [width,height,boxW,boxH] of [[280,760,52,94],[360,850,64,116],[600,1058,64,116]]){
+    layout.forEach(p=>{assert.ok(p[1]*width/100>=boxW/2);assert.ok(p[1]*width/100+boxW/2<=width);assert.ok(p[2]*height/100+boxH/2<=height);});
+    for(let i=0;i<layout.length;i++)for(let j=i+1;j<layout.length;j++){
+      const a=layout[i],b=layout[j];
+      const clearX=Math.abs(a[1]-b[1])*width/100>=boxW+4,clearY=Math.abs(a[2]-b[2])*height/100>=boxH+4;
+      assert.ok(clearX||clearY,`${name} ${width}px: ${a[0]} and ${b[0]} marker envelopes overlap`);
+    }
+  }
+}
+assert.match(read('keeper-plan.css'),/\.formation-slot \.slot-label\{position:static!important/);
+assert.match(read('keeper-plan.css'),/@media\(max-width:520px\)\{#lineups \.lineup-workspace\{grid-template-columns:minmax\(0,1fr\)!important/);
+const tallMarkers=[{x:50,y:92,width:64,height:150},{x:50,y:77.5,width:64,height:130}];
+const fitted=marker.builderHeight(tallMarkers,360,850);
+assert.ok(fitted>850,'actual tall labels must enlarge the builder');
+assert.ok((92-77.5)*fitted/100>=(150+130)/2+6);
+assert.ok((100-92)*fitted/100>=150/2+6,'bottom labels stay inside the builder');
+assert.equal(marker.builderHeight(tallMarkers,0,850),850,'hidden builder waits for a visible width');
 const fixture=()=>({formation:'4-2-3-1',slots:{GK:'alex',LB:'jordan'},freeform:{},bench:['joe'],depth:{},subs:{firstHalf:[],secondHalf:[]},keeperPlan:K.normalize(null)});
 const roster=[{player_key:'alex',number:12,name:'Alex',fullName:'Alex Smith'},{player_key:'joe',number:15,name:'Joe',fullName:'Joe Smo'},{player_key:'jordan',number:1,name:'Jordan',fullName:'Jordan Lee'}];
 const match={id:'game-fixture',home_team:'SKOR FC',away_team:'Visitors',kickoff:'2026-10-25T21:00:00Z',location:'Test field'};
@@ -148,7 +171,7 @@ const legacySvgContext={...svgContext,state:restored,player:pid=>legacyRoster.fi
 vm.createContext(legacySvgContext);
 for(const name of ['primaryJerseyLabel','keeperDetails','jerseyLabel','keeperSuffix','playerListLabel','buildGameplanSvg'])vm.runInContext(fn(admin,name),legacySvgContext);
 const restoredSvg=legacySvgContext.buildGameplanSvg();
-assert.match(restoredSvg,/keeper-number-minor" font-size="12">18<\/tspan>/);assert.match(restoredSvg,/keeper-number-major" font-size="32">30<\/tspan>/);assert.match(restoredSvg,/\(starting temp keeper\)/);
+assert.match(restoredSvg,/keeper-number-minor" font-size="18">18<\/tspan>/);assert.match(restoredSvg,/keeper-number-major" font-size="32">30<\/tspan>/);assert.match(restoredSvg,/\(starting temp keeper\)/);
 assert.match(svg,/12 \/ 30/);assert.doesNotMatch(svg,/15 \/ 30/);
 assert.match(svg,/\(starting temp keeper\)/);assert.doesNotMatch(svg,/\(secondary temp keeper\)/);
 assert.doesNotMatch(svg,/NaN|undefined/);
