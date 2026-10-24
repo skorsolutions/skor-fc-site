@@ -51,6 +51,8 @@ assert.match(compactCss,/grid-template-columns:minmax\(0,1fr\) clamp\(96px,29%,1
 assert.doesNotMatch(compactCss,/min-height:(?:760|850)px/);
 assert.match(compactCss,/aspect-ratio:6\/7;min-height:0;max-height:none/);
 assert.match(compactCss,/\.lineup-players-panel\{position:absolute;inset:0/);
+assert.match(compactCss,/\.lineup-players-panel\{position:absolute;inset:0;height:100%;max-height:100%;min-height:0;box-sizing:border-box;align-self:stretch;z-index:auto/,'the mobile start alignment must not let the picker size itself to the full roster');
+assert.match(compactCss,/\.lineup-side\{[^}]*overflow:hidden;isolation:isolate/,'the rail must contain painting within the field/bench workspace');
 assert.doesNotMatch(admin,/builderHeight/,'the builder must not grow to accommodate labels');
 const tallMarkers=[{x:50,y:88,width:84,height:200},{x:50,y:68.5,width:84,height:180}];
 const fitted=marker.builderScale(tallMarkers,220,220*7/6);

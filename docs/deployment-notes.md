@@ -1,3 +1,12 @@
+# v58.13 — Contain the mobile player picker (prepared)
+
+- Fixes the player rail overlapping Match Fill-ins and Keeper assignments on mobile. The panel now has explicit 100% height and max-height, border-box sizing, stretch alignment and its own vertical scrolling. The rail wrapper clips overflow and isolates painting. This overrides legacy mobile start alignment, which let the auto-height absolute panel size itself to the full roster.
+- Keeps the approved compact field left, players right and bench directly below the field. Keeper-number emphasis, notes, gameplan/referee exports, drag/tap controls and saved lineup state are unchanged.
+- **Affected files (8):** `admin.html`, `keeper-plan.css`, `tests/verify-keeper-plan.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, and this note.
+- **Verification:** Four affected suites passed: keepers, lineup export, referee card and Strategy animation. CSS checks cover explicit panel height/max-height, border-box sizing, stretch alignment and wrapper clipping/isolation. Existing formation bounds, primary/spare keeper rendering and export behavior checks pass. Browser launch remains blocked; an additional-permissions browser attempt did not complete and was aborted. No rendered mobile verification is claimed.
+- **SQL/backend status:** No database query/write, migration, permission or Edge Function change.
+- **Live status:** Awaiting source publication and production build. Connected tools cannot create commit comments; the matching release summary will be recorded here and in chat.
+
 # v58.12 — Approved compact lineup workspace (deployed)
 
 - Implements the approved layout draft: compact 6:7 field left, two-column scrolling Players immediately right, and Substitutes directly beneath the field. Workspace width is capped at 760px, with side-by-side columns retained on phones. Saved Variations moves outside the workspace. Match Fill-ins and Keeper assignments become closed native disclosures alongside the existing closed Potential Positions.
