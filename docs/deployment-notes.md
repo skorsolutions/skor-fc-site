@@ -1,3 +1,12 @@
+# v58.15 — Homepage kit labels and spacing (prepared)
+
+- Implements the approved homepage draft: removes the duplicate large Maroon Kit / White Kit captions and retains each image's existing label. Descriptive alt text is retained. Original PNG assets are unchanged.
+- Removes the 320px minimum card height, fixed mobile height and reserved caption padding. Cards now fit their images with balanced padding, reducing unused space while keeping the same side-by-side layout, gradients, borders, header and join panel.
+- **Affected files (3):** `index.html`, `docs/PROJECT-HANDBOOK.md`, and this note. Public homepage metadata is v58.15; Captain Portal stays v58.14.
+- **Verification:** Score-privacy and persistent-clock suites passed. Homepage source checks confirm two original image paths and descriptive alt text, no duplicate visible captions, content-sized cards with balanced padding and retained two-column layout. All homepage data scripts are byte-for-byte unchanged. Rendered browser verification remains unavailable in this environment.
+- **SQL/backend status:** No database query/write, migration, permission or Edge Function change. Captain, inventory, saved lineups, keeper logic, exports and homepage data scripts are unchanged.
+- **Live status:** Awaiting source publication and production build verification. Connected tools cannot post commit comments; a matching release summary will be recorded here and in chat.
+
 # v58.14 — Separate saved game and Tinker variations (deployed)
 
 - Implements the approved mock using the current site's card and button styles. Saved Game Variations is first and visible, with only game-linked groups. Saved Tinker Variations is a separate native disclosure below it, collapsed by default; tap its heading to expand or hide it. Each section has its own count and refresh button.

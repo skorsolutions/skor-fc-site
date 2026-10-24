@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="public-home-v58.1-private-match-scores">
+<meta name="skor-build" content="public-home-v58.15-kit-labels">
 <title>SKOR FC | Over 30 Soccer in Roswell, Georgia</title>
 <meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, player season stats, practices, and club updates.">
 <style>
@@ -174,7 +174,7 @@ img{max-width:100%}
 .kits-card{padding:28px;overflow:hidden}
 .kits-row{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:19px}
 .kit{
-  min-height:320px;
+  min-height:0;
   border-radius:14px;
   border:1px solid #31353a;
   display:flex;
@@ -183,7 +183,7 @@ img{max-width:100%}
   justify-content:flex-start;
   position:relative;
   overflow:hidden;
-  padding:18px 16px 60px;
+  padding:18px 16px;
 }
 .kit.maroon{background:linear-gradient(145deg,#521021,#14070c)}
 .kit.white{background:linear-gradient(145deg,#202328,#101215)}
@@ -194,16 +194,6 @@ img{max-width:100%}
   height:auto;
   object-fit:contain;
   filter:drop-shadow(0 18px 28px rgba(0,0,0,.35));
-}
-.kit strong{
-  position:absolute;
-  bottom:16px;
-  left:16px;
-  right:16px;
-  text-align:center;
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em
 }
 .join-card{padding:34px;background:
   radial-gradient(circle at 85% 10%,rgba(184,27,67,.32),transparent 34%),
@@ -321,7 +311,6 @@ img{max-width:100%}
   .player-info h3{font-size:18px}
   .feature-grid{grid-template-columns:1fr}
   .kits-row{gap:10px}
-  .kit{height:175px}
   .join-card{padding:24px}
   .join-card h2{font-size:38px}
   .sponsors-grid{grid-template-columns:repeat(2,1fr)}
@@ -522,11 +511,9 @@ img{max-width:100%}
         <div class="kits-row">
           <div class="kit maroon">
             <img src="assets/maroon-kit.png" alt="SKOR FC Maroon Kit">
-            <strong>Maroon Kit</strong>
           </div>
           <div class="kit white">
             <img src="assets/white-kit.png" alt="SKOR FC White Kit">
-            <strong>White Kit</strong>
           </div>
         </div>
       </div>

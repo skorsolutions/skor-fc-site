@@ -2,6 +2,8 @@
 
 Last updated: 2026-10-24 UTC
 Current Captain Portal build: **v58.14**.
+Current public homepage build: **v58.15**.
+Latest homepage release: **v58.15 kit labels**, prepared for deployment; see newest deployment note.
 Latest display release: [`b12f341e090e8e428dc588a84faeaa66373acdc4`](https://github.com/skorsolutions/skor-fc-site/commit/b12f341e090e8e428dc588a84faeaa66373acdc4), **v58.14 separate saved variations**. Cloudflare production build `57e75020-1305-416f-ad9c-8146ea7f8604` succeeded; version `b318fc1d-a516-4e08-80d7-1a21d81152a8`. All nine hashes and the exact release file set match checked sources. Five affected suites passed, including actual two-list renderer/action tests. Game variations remain visible; Tinker variations are a separate default-closed disclosure. Save/query/export source and saved data remain unchanged. No database/backend change. Rendered browser verification remains unavailable.
 Current keeper-restoration release: [`1c4b2c45d51fabb265e2db7ffe877d48cf490b75`](https://github.com/skorsolutions/skor-fc-site/commit/1c4b2c45d51fabb265e2db7ffe877d48cf490b75). Cloudflare production build `7f8b4f15-e118-4f27-a7a0-8899e68fc302` succeeded; version `0adeb322-190a-4a38-bc18-0626b18dc3ac`. All 15 source hashes and the exact release file set match the checked sources. Seven affected suites passed. `generate-pregame-talk` version 15 is ACTIVE with JWT verification enabled and exact packaged-source readback. The user-identified upcoming #18 / 30 starting-temp assignment is repaired and independently verified, with other state/publication flag preserved. No schema migration. Browser visual verification remains unavailable.
 Latest implementation release: [`6ab72d06a4a7e80e10066952dc47c4593a4434bb`](https://github.com/skorsolutions/skor-fc-site/commit/6ab72d06a4a7e80e10066952dc47c4593a4434bb). Cloudflare production build `00edd3a0-8bba-4c72-b4d4-09824d162f1e` succeeded; deployed version `5a897dbd-bd67-47ca-984b-9d1c46e969d5`. All 14 source hashes and the exact release file set match checked files. Seven affected suites and HTML structure checks passed. The compact picker, responsive setup panels and closed Potential Positions are deployed. Full referee names and keeper data remain intact. No database or Edge Function changes. Browser visual checks remain blocked by sandbox socket restrictions.
@@ -27,6 +29,12 @@ This is the durable handoff document for new chats and future developers. Read i
 - Architecture: static HTML/CSS/JavaScript frontend using the Supabase browser client. There is no framework build step for ordinary frontend changes.
 - Backend: Supabase Postgres, Auth, Storage, RPCs, Row Level Security, and Edge Functions.
 - AI: OpenAI is called only from authenticated Supabase Edge Functions. The OpenAI key must remain server-side.
+
+### Homepage kit presentation — v58.15
+
+- The maroon and white PNG assets already include their kit-name labels. Do not add duplicate visible captions beneath them. Keep descriptive image alt text for accessibility.
+- Homepage kit cards use content height and balanced padding. No 320px minimum height, fixed mobile height or bottom caption reservation; original jersey images, gradients, borders, two-column kit layout and adjoining join card remain intact.
+- This is a public-homepage-only release. Captain Portal remains v58.14; no backend, inventory, database, lineup, keeper or export changes.
 
 ## 2. Main surfaces
 
