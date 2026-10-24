@@ -1,11 +1,21 @@
-# v58.13 — Contain the mobile player picker (prepared)
+# v58.13 — Contain the mobile player picker (deployed)
 
 - Fixes the player rail overlapping Match Fill-ins and Keeper assignments on mobile. The panel now has explicit 100% height and max-height, border-box sizing, stretch alignment and its own vertical scrolling. The rail wrapper clips overflow and isolates painting. This overrides legacy mobile start alignment, which let the auto-height absolute panel size itself to the full roster.
 - Keeps the approved compact field left, players right and bench directly below the field. Keeper-number emphasis, notes, gameplan/referee exports, drag/tap controls and saved lineup state are unchanged.
 - **Affected files (8):** `admin.html`, `keeper-plan.css`, `tests/verify-keeper-plan.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, and this note.
 - **Verification:** Four affected suites passed: keepers, lineup export, referee card and Strategy animation. CSS checks cover explicit panel height/max-height, border-box sizing, stretch alignment and wrapper clipping/isolation. Existing formation bounds, primary/spare keeper rendering and export behavior checks pass. Browser launch remains blocked; an additional-permissions browser attempt did not complete and was aborted. No rendered mobile verification is claimed.
 - **SQL/backend status:** No database query/write, migration, permission or Edge Function change.
-- **Live status:** Awaiting source publication and production build. Connected tools cannot create commit comments; the matching release summary will be recorded here and in chat.
+- **Live status:** Source release [`3ff1e3bd2978ce035226df9a5c08bdbd3c87f594`](https://github.com/skorsolutions/skor-fc-site/commit/3ff1e3bd2978ce035226df9a5c08bdbd3c87f594) published to main from `ce9a800e86cb2d5d9bb6fd5edbc70cee501bf07c`. Workers Builds succeeded: build `4634e9aa-0f4e-4362-957a-c02fceb0ac29`, production version `f22346ee-92ea-4a78-be11-6f127690de6d`. All eight hashes and the exact release file set match checked local sources. Documentation-only follow-up records verification. Commit-comment creation is unavailable; no comment was posted.
+
+## v58.13 release summary
+
+Deployed **v58.13**. The player list now scrolls within the field-and-bench area, with overflow contained above Match Fill-ins and Keeper assignments.
+
+Keeper numbers and exports are preserved. Four test suites passed; no database changes. Production deployment succeeded. Mobile browser visual verification remains unavailable.
+
+Reload the [Captain Portal](https://skorfc.net/admin.html). [Release](https://github.com/skorsolutions/skor-fc-site/commit/3ff1e3bd2978ce035226df9a5c08bdbd3c87f594).
+
+Release notes are saved; connected tools cannot post commit comments.
 
 # v58.12 — Approved compact lineup workspace (deployed)
 
