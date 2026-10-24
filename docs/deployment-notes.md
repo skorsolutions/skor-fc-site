@@ -1,11 +1,27 @@
-# v58.10 — Restore legacy keeper numbers and referee notes (release prepared)
+# v58.10 — Restore legacy keeper numbers and referee notes (deployed)
 
 - Fixes an unhandled older-board path: a saved GK slot without `keeperPlan` was labeled as a regular starting keeper, so neither the field image nor referee export had a spare number or temporary-keeper note. The new pure hydration helper supplies the configured first spare (default 30) for a known outfield starter, preserving explicit choices, genuine keepers and unknown positions.
 - Runs restoration before editor/draft rendering and saves, current-board/referee export, public/Crowd rendering, Strategy import and protected AI lineup context. The field retains large keeper/small primary sizing; the referee PDF/Excel retain full names, both numbers and parenthesized duty. The player picker stays short-name/primary-only.
 - **Affected files (15):** `admin.html`, `matches.html`, `gameday.html`, `strategy.js`, `keeper-plan.js`, `ref-game-card.js`, `supabase/functions/generate-pregame-talk/index.ts`, `supabase/functions/generate-pregame-talk/keeper-plan.js`, `tests/verify-keeper-plan.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/MATCH-KEEPERS.md`, and this note.
 - **Verification:** Exact legacy #18 GK fixture with a Midfield roster position restores 18 / 30, large 30/small 18, and `(starting temp keeper)` in the SVG and referee markup. Tests cover custom spare 31, explicit regular-keeper override, real Keeper position, unknown position, pure non-mutating reads, full referee identity and unchanged primary-only picker behavior. Seven affected suites passed: keepers, lineup export, referee card, Strategy animation, TEMP directory, clock and score privacy. Browser visual checks remain blocked by sandbox socket restrictions.
 - **SQL/data status:** No migration, schema or permission change. One user-identified upcoming Balanced variation received only `keeperPlan` for #18 / 30 starting temp keeper and an update timestamp. Independent UPDATE return verifies all non-keeper state and publication status preserved; preserved-state digest `b4d5830e3724b8b08f7f24ed9aec6e5a`. No other lineup was changed or published. Independent readback confirms the repaired assignment, preserved-state digest and unchanged publication status; total saved lineups remains 37. The authenticated pregame Edge Function also packages the same helper; JWT/captain checks remain enabled.
-- **Live status:** Application release and Edge Function deployment pending verification through the exact release's Cloudflare check and active function source readback. Connected GitHub tools cannot create commit comments; record the matching summary in repository documentation and chat.
+- **Live status:** Source release [`1c4b2c45d51fabb265e2db7ffe877d48cf490b75`](https://github.com/skorsolutions/skor-fc-site/commit/1c4b2c45d51fabb265e2db7ffe877d48cf490b75) was published to main from `271ca99c6044df3e4fdacbf57f8d42a380bbf41f`. Its Workers Builds check succeeded: build `7f8b4f15-e118-4f27-a7a0-8899e68fc302`, production version `0adeb322-190a-4a38-bc18-0626b18dc3ac`. All 15 source hashes and exact file set match checked sources. `generate-pregame-talk` version 15 is ACTIVE, JWT verification remains enabled, and both deployed source files match. The targeted saved assignment is repaired and independently read back. A documentation-only follow-up records these results. Connected GitHub tools cannot create commit comments; no commit comment was posted.
+
+## v58.10 release summary
+
+Restored and deployed **v58.10**.
+
+- Field and lineup image: **18 / 30**, with large **30**, small **18**, and **(starting temp keeper)**.
+- Referee PDF/Excel: full name, both numbers, and the keeper note.
+- Player picker stays primary-number-only.
+
+Jason’s saved Balanced assignment is repaired; the rest of the lineup is preserved. Seven test suites passed and deployment is verified. Browser visual review remains unavailable.
+
+Reload the [Captain Portal](https://skorfc.net/admin.html) before exporting.
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/1c4b2c45d51fabb265e2db7ffe877d48cf490b75)
+
+The connector cannot create commit comments. This matching summary is recorded in documentation and chat; no commit comment was posted.
 
 # v58.9 — Clean player selection and mobile match setup (deployed)
 
