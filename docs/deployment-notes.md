@@ -1,4 +1,4 @@
-# v58.8 — Readable keeper numbers and TEMP names (release prepared)
+# v58.8 — Readable keeper numbers and TEMP names (deployed)
 
 - Implements the approved visual draft: outfield cover has a large primary number and smaller spare; the starting keeper has a large keeper number and smaller primary. Both retain primary / spare order. Normal single numbers retain their size.
 - Fixes cut-off TEMP names including `Anton- TEMP` and `Malik - TEMP`. Names wrap and TEMP appears once as a separate badge. This is display cleanup only; no saved name is edited. SVG name plates and substitute rows grow, with extra clearance before subsequent export cards.
@@ -6,7 +6,23 @@
 - **Affected files (14):** `admin.html`, `matches.html`, `gameday.html`, `strategy.js`, `keeper-plan.css`, new `lineup-marker.js`, `tests/verify-keeper-plan.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, `docs/LINEUP-EXPORT.md`, `docs/MATCH-KEEPERS.md`, and this note.
 - **Verification:** Six affected suites pass: keepers, lineup export, referee card, Strategy animation, clock and score privacy. Tests execute the actual editor/public/Crowd HTML and SVG renderers, check large/small keeper-number hierarchy, Anton/Malik TEMP badge cleanup, long-name wrapping, name-plate bounds, HTML escaping and existing role/persistence behavior. Browser visual verification remains unavailable: Chromium exits with sandbox `setsockopt: Operation not permitted`; the approved generated picture is a design draft, not an application screenshot.
 - **SQL/database status:** No migration, query, persistent data write, schema/RLS or Edge Function change. The active pregame function remains version 14. Display behavior derives from existing saved keeper duties and TEMP identity flags.
-- **Live status:** Prepared for publication through the existing main-branch Cloudflare integration. Verify the exact source hashes and Workers Builds result before reporting deployment. GitHub commit-comment creation is unavailable through the connected tools; retain the matching summary in repository documentation and chat.
+- **Live status:** Implementation release [`2d21e048ec13788350ca223667d5dbd681c4aba8`](https://github.com/skorsolutions/skor-fc-site/commit/2d21e048ec13788350ca223667d5dbd681c4aba8) was published to main from `38c5ed633f9d09c2a398eea3558d98ac2a53a04f`. Its Workers Builds check succeeded: production build `d6253897-f2df-4251-b08b-5fac1d024f3c`, version `d6711af8-65ff-4359-bdce-3ec680f9cccb`. All 14 source hashes and the exact release file set match the checked local sources. A documentation-only follow-up records verification. GitHub commit-comment creation is unavailable through the connected tools; no commit comment was posted.
+
+## v58.8 release summary
+
+Deployed **v58.8**.
+
+- Outfield cover: large primary number, smaller spare.
+- Starting keeper: large keeper number, smaller primary.
+- Anton/Malik TEMP labels wrap with a separate TEMP badge.
+
+Updated across lineup views, image exports, Game Day and Strategy. Six test suites passed; no database changes. Browser visual verification remains unavailable.
+
+Reload the [Captain Portal](https://skorfc.net/admin.html).
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/2d21e048ec13788350ca223667d5dbd681c4aba8)
+
+GitHub commit comments are unavailable through the connected tools. This matching summary is recorded in documentation and chat; no commit comment was posted.
 
 # v58.7 — Match keepers and spare jerseys (deployed)
 
