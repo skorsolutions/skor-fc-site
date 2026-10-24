@@ -1,11 +1,21 @@
-# v58.16 — Captain console Homepage button (prepared)
+# v58.16 — Captain console Homepage button (deployed)
 
 - Adds the approved compact Homepage button to the shared captain-console header beside Ribbon locked. Opens the existing public homepage in the same tab, matching the player portal, and remains available from every console section.
 - Header actions have their own wrapping row with keyboard focus and a 44px minimum target. Mobile title/account layout can shrink/wrap to avoid crowding. The existing ribbon lock control retains its identity, visibility and permissions; the new link is outside the feature ribbon.
 - **Affected files (6):** `admin.html`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `tests/verify-strategy-animation.mjs`, `docs/PROJECT-HANDBOOK.md`, and this note. Captain build is v58.16; public homepage remains v58.15.
 - **Verification:** Four affected suites passed: ribbon order, lineup export, referee card and Strategy animation. HTML checks confirm one link in the shared header outside section views, the same current-tab destination as the player portal, preserved ribbon lock ID/default visibility and a wrapping 44px action row. Feature-navigation markup and all application/auth scripts are byte-for-byte unchanged except the ready-build message. Rendered browser verification remains unavailable in this environment.
 - **SQL/backend status:** No database query/write, migration, permission or Edge Function change. Native link only; existing auth/logout, lineup/keeper/export, saved-variation and homepage data logic are unchanged.
-- **Live status:** Awaiting source publication and production build verification. Connected tools cannot post commit comments; a matching release summary will be recorded here and in chat.
+- **Live status:** Source release [`e792ce30b54c95ce6d0fe7ddddc624a076ba17db`](https://github.com/skorsolutions/skor-fc-site/commit/e792ce30b54c95ce6d0fe7ddddc624a076ba17db) published to main from `e0ce23338b481e084ad314ff6909cad1b8969c41`. Workers Builds succeeded: build `d9d6f0dc-8a22-406f-8884-38d2a5e89448`, production version `4d9bc514-98ef-4061-a9f9-4b1e3d7a1198`. All six hashes and the exact release file set match checked local sources. Documentation-only follow-up records verified deployment. Commit-comment creation is unavailable through connected tools; no comment was posted.
+
+## v58.16 release summary
+
+Deployed **v58.16**. **Homepage** now appears beside **Ribbon locked** in the captain console header, available from every section. It opens the public homepage in the same tab.
+
+Four checks passed; no database or backend changes. Production deployment is verified; browser visual review remains unavailable.
+
+Reload the [Captain Console](https://skorfc.net/admin.html). [Release](https://github.com/skorsolutions/skor-fc-site/commit/e792ce30b54c95ce6d0fe7ddddc624a076ba17db).
+
+Release notes are saved; connected tools cannot post commit comments.
 
 # v58.15 — Homepage kit labels and spacing (deployed)
 
