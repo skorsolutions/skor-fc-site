@@ -1,13 +1,30 @@
-# v58.23 — Reuse strategies and bundles with same-formation lineups (deployment pending)
+# v58.23 — Reuse strategies and bundles with same-formation lineups (deployed)
 
 - Adds Clone strategy to lineup and Clone bundle to lineup for the current editor and saved libraries. Whole strategies retain all bundles/steps; a bundle can start a new one-bundle draft or be added to the current strategy. A native dialog shows source/target formations, a new copy name, bundle/step counts and every position-to-player replacement before applying.
 - Fixed formation roles map source players to target players, including target TEMP/keeper identity and jersey metadata. Movement, opponents, ball, marks and ordering are deep-copied. Fresh scene/step IDs and cleared library links keep copies independent. Coaching notes/text remain unchanged, with a reminder to review names and player strengths. Preview target changes require another confirmation of the refreshed mapping.
 - Mismatched/unknown/custom formations, empty/duplicate positions, unavailable target roster details and inconsistent step actors block copying. Both snapshots and every step must contain the full formation. Existing eleven-step saved bundle shape was inspected read-only: all eleven actors are present in every frame and source slots match; partial older snapshots correctly require a complete source before reuse.
 - First saves of copied strategies/bundles are insert-only and never update an original on name conflicts; copy guards persist in local recovery. Existing ordinary name-based save/update behavior remains after a new copy is first saved. Clones are drafts and do not publish for AI. Explicit Tinker copies retain Tinker identity on reload. Edit original loads the saved bundle's original lineup after confirmation, while Add to current now maps to current players instead of blindly inserting old actors. Clone dialogs close on logout and reject account changes.
 - **Affected files (14):** `admin.html`, `strategy.js`, `strategy.css`, `strategy-reuse.js`, `package.json`, `tests/verify-strategy-reuse.mjs`, `tests/verify-strategy-animation.mjs`, `tests/verify-captain-notifications.mjs`, `tests/verify-lineup-export.mjs`, `tests/verify-ref-game-card.mjs`, `docs/STRATEGY-REUSE.md`, `docs/STRATEGY-ANIMATION.md`, `docs/PROJECT-HANDBOOK.md`, and this note. Captain v58.23; Player Portal v58.18 and homepage v58.15 are preserved.
-- **Verification:** Strategy reuse and existing animation tests pass. The reuse suite executes real role mapping for all eight formations, 11-step/two-bundle copies, role swaps, keeper/TEMP replacement, deep-copy/original preservation, compatibility mirrors, source/target guards, dialog preview/apply, changed-target review, new strategy/bundle inserts, duplicate conflicts, original bundle editing, save/reload, Tinker identity and SVG actor rendering. Ten suites passed: strategy reuse, Strategy animation, keepers, lineup export, referee card, score privacy, captain notifications, persistent clock, substitution alarm and ribbon order. All inline scripts parse and page IDs are unique. Source/production verification pending. Real rendered phone/desktop, browser GIF download and a signed-in production copy/save remain unverified in this environment.
+- **Verification:** Strategy reuse and existing animation tests pass. The reuse suite executes real role mapping for all eight formations, 11-step/two-bundle copies, role swaps, keeper/TEMP replacement, deep-copy/original preservation, compatibility mirrors, source/target guards, dialog preview/apply, changed-target review, new strategy/bundle inserts, duplicate conflicts, original bundle editing, save/reload, Tinker identity and SVG actor rendering. Ten suites passed: strategy reuse, Strategy animation, keepers, lineup export, referee card, score privacy, captain notifications, persistent clock, substitution alarm and ribbon order. All inline scripts parse and page IDs are unique. Source/hash/file-set and Cloudflare production verification passed. Real rendered phone/desktop, browser GIF download and a signed-in production copy/save remain unverified in this environment.
 - **SQL/backend:** No migration, table/grant/RLS/RPC/Edge Function changes. Existing strategy/bundle tables and publication RPC are reused. Only aggregate, read-only shape checks of existing records and Supabase insert documentation retrieval were performed; no production strategy, bundle, lineup, publication, feedback or equipment data was edited.
-- **Live status:** Awaiting publication and Cloudflare verification. Future AI-generated GIFs are not implemented. Connected tools cannot post commit comments.
+- **Live status:** Source release [`95e7c05d1ebaa4834fd6a6a65f2d8851ac831d6b`](https://github.com/skorsolutions/skor-fc-site/commit/95e7c05d1ebaa4834fd6a6a65f2d8851ac831d6b) published from `715679246c9e8ff1f428c0a0a16db8b4060853ba`. Cloudflare build `95e7fb31-7297-4c94-b89a-c4e4bbe73324` succeeded; version `e2053d6a-3606-4fc4-a22b-465af40c6aac`, deployment `b6efb814-6332-4d48-99aa-7b704dabc6d3`, verified at 100% production traffic. All 14 source hashes and the exact release file set match checked sources. Build completed at 2026-10-24 20:44:03 UTC. A documentation-only follow-up records verification. Future AI-generated GIFs are not implemented. Connected tools cannot post commit comments; no comment was posted.
+
+## v58.23 release summary
+
+Deployed **v58.23**.
+
+- Clone a **whole strategy or individual bundle** to another lineup.
+- Players map by **position**, preserving every step and movement.
+- Different formations or incomplete player tracks block copying.
+- Copies start as **separate drafts**, leaving saved originals untouched.
+
+In **Strategy**, choose **Clone to lineup → target lineup → review replacements → Create draft copy**. Then tweak, save and export the GIF.
+
+Review copied coaching text for player names. AI-generated GIFs remain future work.
+
+Ten test suites passed; no database migration. Browser copy/save/GIF download remains unverified here.
+
+[Captain Portal](https://skorfc.net/admin.html) · [Release](https://github.com/skorsolutions/skor-fc-site/commit/95e7c05d1ebaa4834fd6a6a65f2d8851ac831d6b). Release notes saved; connected tools cannot post commit comments.
 
 # v58.22 — Compact RSVP & Player Feedback dashboard in Game Day (deployed)
 

@@ -1,6 +1,6 @@
 # Reusing strategies and bundles — v58.23
 
-Status: built and tested; source/deployment verification pending.
+Status: deployed; production source/version verified.
 
 ## Captain workflow
 
@@ -40,7 +40,7 @@ Copying depends on the saved source snapshot, not a later edited lineup variatio
 
 Existing Strategy animation, keeper, lineup/referee export, clock/alarm, inbox, privacy and ribbon checks cover surrounding behavior. Read-only production shape inspection confirmed the existing eleven-step library bundle has eleven actors per frame, with no actor outside its saved source slots; the three saved strategies have slot snapshots, and an older partial strategy is handled by the incomplete-source guard. No production copy/save or data rewrite was performed during verification.
 
-Real phone/desktop rendering, browser GIF download and an actual signed-in production save cannot be verified in this environment. Source hash/file-set and Cloudflare production checks remain pending.
+Real phone/desktop rendering, browser GIF download and an actual signed-in production save cannot be verified in this environment. Source release [`95e7c05d1ebaa4834fd6a6a65f2d8851ac831d6b`](https://github.com/skorsolutions/skor-fc-site/commit/95e7c05d1ebaa4834fd6a6a65f2d8851ac831d6b) is live. Cloudflare build `95e7fb31-7297-4c94-b89a-c4e4bbe73324` succeeded; version `e2053d6a-3606-4fc4-a22b-465af40c6aac`, deployment `b6efb814-6332-4d48-99aa-7b704dabc6d3`, verified at 100% production traffic. All 14 source hashes and the exact release file set match checked sources. Ten relevant suites passed; this documentation-only follow-up records the production result.
 
 ## Future AI work
 

@@ -1,7 +1,7 @@
 # Strategy Scene Bundles and Animation
 
 Last updated: 2026-10-24 UTC
-Captain Portal build: **v58.23** (reuse feature prepared for deployment)
+Captain Portal build: **v58.23** (reuse feature deployed)
 
 ## Purpose and vocabulary
 
