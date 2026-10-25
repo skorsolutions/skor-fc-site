@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.24-team-dues" />
-  <title>SKOR FC Admin | Captain Portal v58.24</title>
+  <meta name="skor-build" content="captain-portal-v58.25-guest-profiles" />
+  <title>SKOR FC Admin | Captain Portal v58.25</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
-  <link rel="stylesheet" href="team-dues.css?v=58.24" />
+  <link rel="stylesheet" href="team-dues.css?v=58.25" />
+  <link rel="stylesheet" href="guest-profiles.css?v=58.25" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
   <link rel="stylesheet" href="strategy.css?v=58.23" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
@@ -1878,7 +1879,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.24</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.25</div>
   </aside>
 
   <main>
@@ -2235,6 +2236,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
                   <div class="engagement-stat"><strong id="attUnmarked">0</strong><span>Unmarked</span></div>
                 </div>
                 <div class="attendance-list" id="matchAttendanceList"><div class="sub">Select a match to manage attendance.</div></div>
+                <div class="team-dues" id="guestMatchAttendance"></div>
                 <div class="attendance-note">Attendance stat = Present ÷ (Present + Absent). Excused matches are tracked but excluded from the percentage.</div>
               </div>
             </details>
@@ -2614,6 +2616,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </section>
 
     <section class="view" id="roster">
+      <div class="guest-tabs" role="tablist" aria-label="Player directory"><button class="btn btn-light" type="button" data-roster-tab="regular" role="tab" aria-selected="true">Regular roster</button><button class="btn btn-light" type="button" data-roster-tab="guests" role="tab" aria-selected="false">Guest / TEMP directory</button></div>
+      <div id="regularRosterWorkspace">
       <div class="content-grid roster-admin-grid">
         <div class="panel">
           <h2 id="rosterFormTitle">Add Player</h2>
@@ -2709,6 +2713,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           </div>
         </div>
       </div>
+      </div>
+      <div class="panel team-dues" id="guestDirectory" hidden></div>
     </section>
 
 
@@ -2858,6 +2864,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         <div class="lineup-match-setup" aria-label="Match fill-ins and keeper assignments">
 <details class="mini-panel temp-player-manager" id="tempPlayerManager">
               <summary><span class="setup-chevron" aria-hidden="true">▸</span>Match Fill-ins / TEMP Players</summary>
+              <div class="team-dues" id="guestLineupTools"></div>
               <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
               <div class="temp-saved-names">
                 <label for="tempPlayerSavedName">Previous TEMP players</label>
@@ -3179,6 +3186,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
     <section class="view" id="payments">
       <div class="panel team-dues" id="captainDues"><p>Captain access is required to view the team ledger.</p></div>
+      <div class="panel team-dues" id="participationPayments"></div>
     </section>
 
     <section class="view" id="sponsors">
@@ -3194,6 +3202,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       </div>
     </section>
   
+    <dialog class="dues-dialog team-dues" id="guestCaptainDialog"><div data-gp-dialog-body></div><p class="dues-error" data-gp-error role="alert"></p><button type="button" data-gp="close">Close</button></dialog>
     <dialog class="lineup-copy-dialog" id="copyLineupDialog">
       <div class="lineup-copy-shell">
         <div class="lineup-copy-head">
@@ -3453,7 +3462,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     return "#"+num+" "+name;
   }
   function rebuildCombinedRoster(){
-    roster=[...permanentRoster,...matchTempPlayers].sort((a,b)=>{
+    roster=[...permanentRoster.filter(p=>!window.SKORGuestProfiles?.captain?.isMatchAlias(p.player_key,selectedRealMatchId())),...matchTempPlayers].sort((a,b)=>{
       if(!!a.temp!==!!b.temp)return a.temp?1:-1;
       const an=Number(a.number),bn=Number(b.number);
       if(Number.isFinite(an)&&Number.isFinite(bn)&&an!==bn)return an-bn;
@@ -5338,7 +5347,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.24 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.25 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5372,7 +5381,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="jerseys.js?v=58.4"></script>
 <script src="equipment.js?v=58.19"></script>
 <script src="captain-notifications.js?v=58.20"></script>
-<script src="team-dues.js?v=58.24"></script>
+<script src="team-dues.js?v=58.25"></script>
+<script src="guest-profiles.js?v=58.25"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="strategy-reuse.js?v=58.23"></script>
 <script src="strategy.js?v=58.23"></script>
@@ -5403,6 +5413,16 @@ function rosterDuesContent(playerId){
   const tags=TEAM_DUES_SNAPSHOT?.members.filter(m=>m.player_id===playerId&&m.active&&m.group_id!==g?.id).map(m=>TEAM_DUES_SNAPSHOT.groups.find(x=>x.id===m.group_id)?.tag).filter(Boolean)||[];
   return '<small class="roster-dues">'+rosterEsc(g?.name||'Current season')+' · '+rosterEsc(label)+'</small>'+tags.map(tag=>'<small class="roster-dues">Tag: '+rosterEsc(tag)+'</small>').join('');
 }
+const guestDirectory=window.SKORGuestProfiles.mountCaptain({client:sb,canWrite:()=>portalCanWrite(),
+  getLineupMatch:()=>window.SKORLineup?.getSelectedMatch()?.id||null,
+  getGameDayMatch:()=>gameDaySelected?.id||null,
+  onChanged:change=>{if(change.identityChanged){void loadTeamRoster();void window.SKORLineup?.refreshTempPlayers(false);void loadPlayerEngagement();}else if(change.engagementChanged)void loadPlayerEngagement();void teamDues?.refresh();}
+});
+window.SKORGuestProfiles.captain=guestDirectory;
+document.querySelectorAll('[data-roster-tab]').forEach(button=>button.addEventListener('click',()=>{
+  const guests=button.dataset.rosterTab==='guests';document.getElementById('regularRosterWorkspace').hidden=guests;document.getElementById('guestDirectory').hidden=!guests;
+  document.querySelectorAll('[data-roster-tab]').forEach(b=>b.setAttribute('aria-selected',String(b===button)));if(guests)void guestDirectory?.refresh();
+}));
 const captainActivity=window.SKORPortalActivity.createTracker({client:sb,portal:"captain",onRecorded:refreshVisiblePlayerActivity,onError:()=>{console.warn("Captain activity could not be recorded; it will retry while the portal is active.");}});
 window.SKORSupabase = sb;
 
@@ -5423,6 +5443,7 @@ window.SKORViewerBlocked=viewerBlocked;
 function applyPortalRoleUI(){
   const viewer=PORTAL_ACCESS.role==="viewer";
   const superAdmin=PORTAL_ACCESS.role==="super_admin";
+  const guestTab=document.querySelector('[data-roster-tab="guests"]');if(guestTab)guestTab.disabled=viewer;
   document.body.classList.toggle("viewer-mode",viewer);
   const badge=document.getElementById("portalRoleBadge");
   if(badge){
@@ -5446,6 +5467,7 @@ function showLogin(){
   substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
   teamDues?.clear();
+  guestDirectory?.clear();
   portalSessionVersion++;captainActivityUser=null;
   captainActivity.clear();
   clearPlayerActivity();
@@ -5477,7 +5499,7 @@ function showDashboard(user,access){
   loadTeamFields().then(()=>loadScheduleManager());
   loadGameDayMatches();
   if(portalCanWrite())void captainInbox?.start(user.id);else captainInbox?.clear();
-  if(portalCanWrite())void teamDues?.start(user.id);else teamDues?.clear();
+  if(portalCanWrite()){void teamDues?.start(user.id);void guestDirectory?.start(user.id);}else{teamDues?.clear();guestDirectory?.clear();}
   window.SKORJerseys?.init();
   window.SKOREquipment?.mount({rootId:"captainEquipment",client:sb,mode:"captain"});
   window.SKORNotebook?.init();
@@ -5537,6 +5559,7 @@ logoutBtn.addEventListener("click", async ()=>{
   substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
   teamDues?.clear();
+  guestDirectory?.clear();
   captainActivity.clear();
   clearPlayerActivity();
   await sb.auth.signOut();
@@ -5589,6 +5612,7 @@ function openView(id){
   if(id==="equipment")window.SKOREquipment?.refresh();
   if(id==="dashboard")void captainInbox?.refresh();
   if(["dashboard","payments","roster"].includes(id))void teamDues?.refresh();
+  if(["payments","roster","lineups","gameday"].includes(id)){void guestDirectory?.refresh();guestDirectory?.renderMatchTools();}
   if(id==="notebook")window.SKORNotebook?.activate();
   if(id==="strategy")window.SKORStrategy?.activate();
   window.scrollTo({top:0,behavior:"smooth"});
@@ -5677,7 +5701,7 @@ function playerValue(p){return `roster|${p.number}|${p.name}`;}
 function tempPlayerValue(p){return `temp|${p.id}`;}
 function rosterOptions(includeNone=false){
   const first=includeNone?'<option value="">Unassisted / No assist</option>':'<option value="">Select player…</option>';
-  const roster='<optgroup label="Roster">'+ROSTER.map(p=>`<option value="${gdEsc(playerValue(p))}">#${p.number} ${gdEsc(p.name)}</option>`).join("")+'</optgroup>';
+  const roster='<optgroup label="Roster">'+ROSTER.filter(p=>!window.SKORGuestProfiles?.captain?.isMatchAlias(p.player_key,gameDaySelected?.id)).map(p=>`<option value="${gdEsc(playerValue(p))}">#${p.number} ${gdEsc(p.name)}</option>`).join("")+'</optgroup>';
   const temps=MATCH_TEMP_PLAYERS.length?'<optgroup label="Match Fill-ins / TEMP">'+MATCH_TEMP_PLAYERS.map(p=>`<option value="${gdEsc(tempPlayerValue(p))}">${p.jersey_number?`#${p.jersey_number} ${gdEsc(p.display_name)} · TEMP`:`TEMP — ${gdEsc(p.display_name)}`}</option>`).join("")+'</optgroup>':'';
   const assigned=new Set(ROSTER.map(p=>Number(p.number)));
   const availableExtras=EXTRA_JERSEY_NUMBERS.filter(n=>!assigned.has(Number(n)));
@@ -5955,7 +5979,7 @@ function renderRosterTable(){
     body.innerHTML='<tr><td colspan="11">No players found.</td></tr>';
     return;
   }
-  body.innerHTML=TEAM_ROSTER.map(p=>`
+  body.innerHTML=TEAM_ROSTER.filter(p=>!p.is_guest).map(p=>`
     <tr class="${p.active===false?'roster-former-row':''}">
       <td><strong>#${rosterEsc(p.jersey_number)}</strong></td>
       <td class="roster-name-cell"><strong>${rosterEsc(p.full_name)}</strong><small><b>Public:</b> ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</small><small>${rosterEsc(p.bio||"Bio pending.")}</small>${renderRosterDues(p.id)}</td>
@@ -6384,7 +6408,7 @@ function updateDashboardAnnouncement(items){
 async function loadTeamRoster(showMessage=false){
   const {data,error}=await sb
     .from("team_roster")
-    .select("id,player_key,full_name,preferred_name,email,phone,jersey_number,position,bio,is_new,photo_url,sort_order,active,portal_enabled,departure_status,departed_at,departure_note,departed_by,created_at")
+    .select("id,player_key,full_name,preferred_name,email,phone,jersey_number,position,bio,is_new,photo_url,sort_order,active,portal_enabled,departure_status,departed_at,departure_note,departed_by,created_at,is_guest")
     .order("sort_order",{ascending:true})
     .order("created_at",{ascending:true});
   if(error){
@@ -7027,21 +7051,23 @@ function startCrowdSummaryRefresh(){if(crowdSummaryTimer)clearInterval(crowdSumm
 startCrowdSummaryRefresh();
 
 
-function engagementPlayerName(id){const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));return p?`#${p.jersey_number} ${p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0]}`:'Player';}
+function engagementPlayerName(id){const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));const guest=window.SKORGuestProfiles?.captain?.attendanceRows(gameDaySelected?.id).find(g=>g.roster_player_id===id);return p?`${guest?(guest.jersey_number==null?'Jersey TBD':'#'+guest.jersey_number):'#'+p.jersey_number} ${p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0]}`:'Player';}
 function rsvpAdminLabel(status){return status==='going'?'Going':status==='out'?"Can't Make It":'No Response';}
 function attendanceAdminLabel(status){return status==='present'?'Present':status==='absent'?'Absent':status==='excused'?'Excused':'Unmarked';}
 function renderMatchAttendance(){
   const list=document.getElementById('matchAttendanceList');if(!list)return;
-  const rows=MATCH_RSVP_ATTENDANCE||[];
-  document.getElementById('attPresent').textContent=rows.filter(x=>x.attendance_status==='present').length;
-  document.getElementById('attAbsent').textContent=rows.filter(x=>x.attendance_status==='absent').length;
-  document.getElementById('attExcused').textContent=rows.filter(x=>x.attendance_status==='excused').length;
-  document.getElementById('attUnmarked').textContent=rows.filter(x=>!x.attendance_status).length;
+  const boundGuests=window.SKORGuestProfiles?.captain?.boundAttendance(gameDaySelected?.id)||[];
+  const allAttendance=MATCH_RSVP_ATTENDANCE||[];
+  const rows=allAttendance.filter(x=>!boundGuests.includes(x.roster_player_id));
+  document.getElementById('attPresent').textContent=allAttendance.filter(x=>x.attendance_status==='present').length;
+  document.getElementById('attAbsent').textContent=allAttendance.filter(x=>x.attendance_status==='absent').length;
+  document.getElementById('attExcused').textContent=allAttendance.filter(x=>x.attendance_status==='excused').length;
+  document.getElementById('attUnmarked').textContent=allAttendance.filter(x=>!x.attendance_status).length;
   list.innerHTML=rows.length?rows.map(x=>{
     const current=x.attendance_status||'';
     const rsvp=rsvpAdminLabel(x.rsvp_status);
     const injury=x.playing_status==='injured'?' · Injured':'';
-    return `<div class="attendance-row"><div class="attendance-person"><strong>#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong><small>RSVP: ${gdEsc(rsvp)}${gdEsc(injury)}</small></div><div class="attendance-actions"><button class="mini-btn ${current==='present'?'selected present':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="present">Present</button><button class="mini-btn ${current==='absent'?'selected absent':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="absent">Absent</button><button class="mini-btn ${current==='excused'?'selected excused':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="excused">Excused</button>${current?`<button class="mini-btn clear-attendance" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="unmarked">Clear</button>`:''}</div></div>`;
+    return `<div class="attendance-row"><div class="attendance-person"><strong>${x.jersey_number==null?'Guest / jersey TBD':'#'+gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong><small>RSVP: ${gdEsc(rsvp)}${gdEsc(injury)}</small></div><div class="attendance-actions"><button class="mini-btn ${current==='present'?'selected present':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="present">Present</button><button class="mini-btn ${current==='absent'?'selected absent':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="absent">Absent</button><button class="mini-btn ${current==='excused'?'selected excused':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="excused">Excused</button>${current?`<button class="mini-btn clear-attendance" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="unmarked">Clear</button>`:''}</div></div>`;
   }).join(''):'<div class="sub">No active permanent roster players found.</div>';
   list.querySelectorAll('[data-attendance-player]').forEach(btn=>btn.addEventListener('click',()=>setMatchAttendance(btn.dataset.attendancePlayer,btn.dataset.attendanceStatus)));
 }
@@ -7097,7 +7123,7 @@ function renderCaptainFeedbackThread(comment,replies){
     </div>
     <div class="captain-chat-status" data-private-reply-status="${gdEsc(comment.id)}"></div>`:"";
   return `<div class="engagement-item ${isPrivate?'feedback-private':'feedback-team'}">
-    <div class="feedback-comment-head"><div class="feedback-comment-source"><strong>${gdEsc(`#${comment.jersey_number} ${comment.display_name}`)}</strong> · ${isPrivate?'Captains Only':'Team'}</div><button class="mini-btn feedback-ai-select ${selectedForAi?'selected':''}" type="button" data-ai-player-comment="${gdEsc(comment.id)}" aria-pressed="${selectedForAi?'true':'false'}">${selectedForAi?'Selected for AI ✓':'Use with AI'}</button></div>
+    <div class="feedback-comment-head"><div class="feedback-comment-source"><strong>${gdEsc(`${comment.jersey_number==null?'Guest':'#'+comment.jersey_number} ${comment.display_name}`)}</strong> · ${isPrivate?'Captains Only':'Team'}</div><button class="mini-btn feedback-ai-select ${selectedForAi?'selected':''}" type="button" data-ai-player-comment="${gdEsc(comment.id)}" aria-pressed="${selectedForAi?'true':'false'}">${selectedForAi?'Selected for AI ✓':'Use with AI'}</button></div>
     <div>${gdEsc(comment.comment)}</div>
     <small>${new Date(comment.created_at).toLocaleString()}</small>
     ${isPrivate?`<div class="captain-chat-thread">${repliesHtml||'<div class="sub">No captain replies yet.</div>'}${composer}</div>`:""}
@@ -7123,7 +7149,9 @@ async function loadPlayerEngagement(){
     reaction.innerHTML='';availList.innerHTML='';if(attendanceList)attendanceList.innerHTML='<div class="sub">Run the v51.2 RSVP / attendance SQL migration.</div>';return;
   }
 
-  MATCH_RSVP_ATTENDANCE=a.data||[];
+  const guestRows=window.SKORGuestProfiles?.captain?.attendanceRows(matchId)||[];
+  MATCH_RSVP_ATTENDANCE=(a.data||[]).filter(row=>!guestRows.some(g=>g.roster_player_id===row.roster_player_id)).concat(guestRows);
+  window.SKORGuestProfiles?.captain?.renderMatchTools();
   const rows=MATCH_RSVP_ATTENDANCE,rx=r.data||[],comments=c.data||[];
   const replies=chat.error?[]:(chat.data||[]);
 
@@ -7156,7 +7184,7 @@ async function loadPlayerEngagement(){
   const labels={great:'🔥 Great',good:'👍 Good',average:'😐 Average',rough:'👎 Rough'};
   const line=(scope,key)=>rx.filter(x=>x[scope]===key).length;
   reaction.innerHTML=['great','good','average','rough'].map(k=>`<div class="reaction-line"><span>${labels[k]}</span><span>Team ${line('team_reaction',k)} · Self ${line('self_reaction',k)}</span></div>`).join('');
-  availList.innerHTML=rows.length?rows.map(x=>`<div class="engagement-item rsvp-roster-item"><div><strong>#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong>${x.rsvp_note?`<small>${gdEsc(x.rsvp_note)}</small>`:''}</div><div><span class="rsvp-badge ${x.rsvp_status||'none'}">${gdEsc(rsvpAdminLabel(x.rsvp_status))}</span>${x.playing_status==='injured'?'<span class="rsvp-badge injured">Injured</span>':''}</div></div>`).join(''):'<div class="sub">No active roster players found.</div>';
+  availList.innerHTML=rows.length?rows.map(x=>`<div class="engagement-item rsvp-roster-item"><div><strong>${x.jersey_number==null?'Guest / jersey TBD':'#'+gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong>${x.rsvp_note?`<small>${gdEsc(x.rsvp_note)}</small>`:''}</div><div><span class="rsvp-badge ${x.rsvp_status||'none'}">${gdEsc(rsvpAdminLabel(x.rsvp_status))}</span>${x.playing_status==='injured'?'<span class="rsvp-badge injured">Injured</span>':''}</div></div>`).join(''):'<div class="sub">No active roster players found.</div>';
   renderMatchAttendance();
 }
 

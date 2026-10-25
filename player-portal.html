@@ -4,11 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v58.24-team-dues" />
+<meta name="skor-build" content="player-portal-v58.25-guest-profiles" />
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <link rel="stylesheet" href="equipment.css?v=58.5">
-<link rel="stylesheet" href="team-dues.css?v=58.24">
+<link rel="stylesheet" href="team-dues.css?v=58.25">
+<link rel="stylesheet" href="guest-profiles.css?v=58.25">
 <style>
 :root{--bg:#07080a;--panel:#111318;--panel2:#171a20;--line:#30343b;--text:#f5f5f6;--muted:#969ca5;--maroon:#8f1836;--maroon2:#b51c43;--green:#2f7a5c;--amber:#a37a28;--red:#a33b4e}
 *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at 80% 0,#241018 0,#08090b 31%,#07080a 58%);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif}button,input,select,textarea{font:inherit}button{touch-action:manipulation}.wrap{width:min(1050px,calc(100% - 28px));margin:auto}.hidden{display:none!important}
@@ -72,6 +73,10 @@
   </div>
 </section>
 
+<section class="screen guest-portal" id="guestPortalScreen">
+  <div class="team-dues guest-portal" id="guestPortalContent"></div><div class="card team-dues" id="guestDues"></div>
+  <dialog class="dues-dialog team-dues" id="guestPortalDialog"><div data-dues-dialog-body></div><button type="button" data-guest-close>Close</button></dialog>
+</section>
 <section class="screen" id="portalScreen">
   <div class="portal-grid">
     <div class="card hero">
@@ -197,7 +202,9 @@
 <script src="player-match-record.js?v=58.17"></script>
 <script src="keeper-plan.js?v=58.10"></script>
 <script src="event-animation.js?v=58.24"></script>
-<script src="team-dues.js?v=58.24"></script>
+<script src="team-dues.js?v=58.25"></script>
+<script src="guest-profiles.js?v=58.25"></script>
+<script src="guest-portal.js?v=58.25"></script>
 <script>
 const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -205,6 +212,7 @@ const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const playerActivity=window.SKORPortalActivity.createTracker({client:db,portal:"player",onError:()=>console.warn("Player activity could not be recorded; it will retry while the portal is active.")});
 const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
 const myDues=window.SKORTeamDues.mount({rootId:'myDues',client:db,mode:'player'});
+const guestPortal=window.SKORGuestPortal.mount({client:db,onAccessChanged:()=>{portalAuthorized=false;setTimeout(()=>authorizePlayer(),0);}});
 let user=null,profile=null,upcoming=[],recent=[],feedbackMatchId=null,myReaction={self_reaction:null,team_reaction:null};
 let playingStatus={playing_status:'active',status_updated_at:null};
 let matchRecord=null,matchRecordPhase='idle',historyVisibleCount=6;
@@ -239,7 +247,7 @@ async function authorizePlayer(session=null){
     user=session?.user||null;
     if(!user){show('loginScreen');return;}
 
-    const {error}=await db.rpc('claim_player_portal');
+    const {data:portalMode,error}=await db.rpc('resolve_player_portal');
     if(error){
       $('deniedMessage').textContent=error.message||'This login is not authorized for a SKOR player profile.';
       $('logoutBtn').classList.remove('hidden');
@@ -248,6 +256,8 @@ async function authorizePlayer(session=null){
     }
 
     portalAuthorized=true;
+    if(portalMode?.mode==='guest'){matchRecordController.clear();myDues.clear();guestPortal.clear();playerActivity.clear();window.SKOREquipment?.clear();$('logoutBtn').classList.remove('hidden');$('topName').textContent='Guest player';await guestPortal.start(user.id);show('guestPortalScreen');return;}
+    guestPortal.clear();
     void playerActivity.start(user.id);
     $('logoutBtn').classList.remove('hidden');
     syncCaptainPortalButton();
@@ -255,7 +265,7 @@ async function authorizePlayer(session=null){
     await loadPortal();
     show('portalScreen');
   }catch(err){
-    matchRecordController.clear();myDues.clear();
+    matchRecordController.clear();myDues.clear();guestPortal.clear();
     console.error('Player Portal authorization/load error',err);
     $('deniedMessage').textContent=err?.message||'The Player Portal could not finish loading. Please try again.';
     $('logoutBtn').classList.remove('hidden');
@@ -293,13 +303,13 @@ $('googleBtn').addEventListener('click',async()=>{
 });
 $('emailLoginBtn').addEventListener('click',async()=>{const email=$('playerEmail').value.trim().toLowerCase();if(!email)return status('loginStatus','Enter your email address.',true);sessionStorage.setItem('skorPlayerAuthEmail',email);status('loginStatus','Sending secure sign-in email…');const {error}=await db.auth.signInWithOtp({email,options:{emailRedirectTo:`${location.origin}/player-portal.html`,shouldCreateUser:true}});if(error)return status('loginStatus',error.message,true);$('emailCodeRow').classList.remove('hidden');status('loginStatus','Check your email. Use the secure link, or enter the one-time code here if your message contains a code.');});
 $('verifyEmailCodeBtn').addEventListener('click',async()=>{const email=($('playerEmail').value.trim().toLowerCase()||sessionStorage.getItem('skorPlayerAuthEmail')||'');const token=$('playerEmailCode').value.trim();if(!email||!token)return status('loginStatus','Enter the email address and one-time code.',true);status('loginStatus','Verifying…');const {error}=await db.auth.verifyOtp({email,token,type:'email'});if(error)status('loginStatus',error.message,true);});
-async function logout(){matchRecordController.clear();myDues.clear();historyVisibleCount=6;playerActivity.clear();window.SKOREquipment?.clear();portalAuthorized=false;user=null;await db.auth.signOut();sessionStorage.removeItem('skorPlayerAuthEmail');location.href='player-portal.html';}
+async function logout(){matchRecordController.clear();myDues.clear();guestPortal.clear();historyVisibleCount=6;playerActivity.clear();window.SKOREquipment?.clear();portalAuthorized=false;user=null;await db.auth.signOut();sessionStorage.removeItem('skorPlayerAuthEmail');location.href='player-portal.html';}
 $('logoutBtn').addEventListener('click',logout);$('deniedLogoutBtn').addEventListener('click',logout);
 $('homepageBtn').addEventListener('click',()=>{location.href='index.html';});
 $('captainPortalBtn').addEventListener('click',()=>{location.href='admin.html';});
 db.auth.onAuthStateChange((event,s)=>{
   if(event==='SIGNED_OUT'){
-    matchRecordController.clear();myDues.clear();historyVisibleCount=6;
+    matchRecordController.clear();myDues.clear();guestPortal.clear();historyVisibleCount=6;
     playerActivity.clear();
     window.SKOREquipment?.clear();
     user=null;

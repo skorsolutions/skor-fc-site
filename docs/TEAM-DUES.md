@@ -88,3 +88,7 @@ Deployed **v58.24** to the Captain and Player Portals.
 Open **Captain Portal → Payments**. Create a new season/event to use Run Numbers. Browser visual/GIF download checks remain unverified.
 
 [Captain Portal](https://skorfc.net/admin.html) · [Release](https://github.com/skorsolutions/skor-fc-site/commit/4eb3aadc58cd9cd154a68fc45a612f8f25638bbb). Release notes are saved; the connector cannot post commit comments.
+
+## v58.25 prepared integration
+
+Guest/event profiles and reviewed individual participation fees are described in [GUEST-PROFILES.md](GUEST-PROFILES.md). New guest fees default off. Individual balances use the same append-only ledger, receipts and own-portal projections; shared-cost scenarios exclude individual assessments. Original Fall 2026 paid memberships are protected. The exact extension SQL was approved and applied as `20261025000902 add_guest_profiles_and_participation_dues`; real-role rollback checks pass. Frontend publication is pending.

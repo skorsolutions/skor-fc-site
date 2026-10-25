@@ -72,7 +72,7 @@ assert(!projection.includes("'points'"));assert(!projection.includes("'lineup_sn
 for(const file of ['admin.html','player-portal.html']){
   const html=fs.readFileSync(file,'utf8');const ids=[...html.matchAll(/\bid="([^"]+)"/g)].filter(m=>!m[1].includes('${')).map(m=>m[1]);
   // Dynamic generated template IDs can repeat in source; static document IDs are checked below with the HTML parser in QA.
-  assert(html.includes('team-dues.js?v=58.24'));assert(html.includes('team-dues.css?v=58.24'));
+  assert(html.includes('team-dues.js?v=58.25'));assert(html.includes('team-dues.css?v=58.25'));
   let index=0;for(const [,attr,body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(/\bsrc=/.test(attr)||/type="(?:application\/json|module)"/.test(attr))continue;new vm.Script(body,{filename:file+'#'+(++index)});}
 }
 assert(fs.readFileSync('admin.html','utf8').includes('${renderRosterDues(p.id)}'));

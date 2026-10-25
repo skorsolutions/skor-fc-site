@@ -64,7 +64,7 @@ for (const file of ['players.html','squad.html']) {
 }
 assert.doesNotMatch(pages['gameday.html'],/id="crowdScore"|id="pendingScore"|function crowdScore/);
 assert.match(pages['gameday.html'],/visibleEvents\.map/);
-assert.match(pages['player-portal.html'],/claim_player_portal/);
+assert.match(pages['player-portal.html'],/resolve_player_portal/);
 assert.match(pages['player-portal.html'],/get_my_match_record/);
 assert.match(pages['player-portal.html'],/m\.skor_score}–\$\{m\.opponent_score/);
 assert.match(pages['admin.html'],/from\("match_events"\)/);
