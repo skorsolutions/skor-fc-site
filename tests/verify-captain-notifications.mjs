@@ -11,7 +11,7 @@ if(process.argv.includes('--sql-fixture')){
   for(const [a,b] of Object.entries({'public.player_match_comments':'fixture_comments','public.player_match_reactions':'fixture_reactions','public.team_roster':'fixture_roster','public.matches':'fixture_matches','skor_equipment.notification_reads':'fixture_equipment_reads','skor_equipment.notifications':'fixture_equipment','skor_private.captain_feedback_reads':'fixture_feedback_reads','auth.uid()':'(select user_id from fixture_actor)'}))query=query.replaceAll(a,b);
   process.stdout.write(fixture.replace('/* ITEMS_QUERY */',query));process.exit(0);
 }
-assert.match(admin,/captain-portal-v58\.25-guest-profiles/);
+assert.match(admin,/captain-portal-v58\.26-post-match-entry/);
 assert.match(admin,/captainInbox\?\.clear\(\)/);assert.match(admin,/portalCanWrite\(\)\)void captainInbox\?\.start\(user.id\)/);
 assert.ok(admin.indexOf('id="captainNotifications"')<admin.indexOf('id="dashboardInjuryPanel"'));
 const disclosureTag=admin.match(/<details[^>]*id="captainInboxDisclosure"[^>]*>/)?.[0];assert.ok(disclosureTag);assert.doesNotMatch(disclosureTag,/\sopen(?:\s|=|>)/,'inbox starts collapsed');

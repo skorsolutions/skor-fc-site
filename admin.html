@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.25-guest-profiles" />
-  <title>SKOR FC Admin | Captain Portal v58.25</title>
+  <meta name="skor-build" content="captain-portal-v58.26-post-match-entry" />
+  <title>SKOR FC Admin | Captain Portal v58.26</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
   <link rel="stylesheet" href="team-dues.css?v=58.25" />
   <link rel="stylesheet" href="guest-profiles.css?v=58.25" />
+  <link rel="stylesheet" href="post-match-entry.css?v=58.26" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
   <link rel="stylesheet" href="strategy.css?v=58.23" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
@@ -1879,7 +1880,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.25</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.26</div>
   </aside>
 
   <main>
@@ -2051,7 +2052,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         </div>
 
         <div class="panel gameday-events-panel">
-          <h2>Record Event</h2>
+          <div class="pm-launch"><h2>Record Event</h2><button class="btn btn-primary" type="button" id="openPostMatch" disabled>Record after game</button><p>Enter goals, assists and cards for both halves, then save together.</p></div>
           <div class="sub">Score changes are generated from the events below, so correcting an event also corrects the score.</div>
           <div class="event-buttons">
             <div class="event-group-label">Goals</div>
@@ -3202,6 +3203,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       </div>
     </section>
   
+    <dialog class="pm-dialog" id="postMatchDialog" aria-labelledby="postMatchTitle"><div class="pm-header"><h2 id="postMatchTitle">Record after game</h2><button type="button" data-pm="close" aria-label="Close post-match entry">×</button></div><div id="postMatchBody"></div></dialog>
     <dialog class="dues-dialog team-dues" id="guestCaptainDialog"><div data-gp-dialog-body></div><p class="dues-error" data-gp-error role="alert"></p><button type="button" data-gp="close">Close</button></dialog>
     <dialog class="lineup-copy-dialog" id="copyLineupDialog">
       <div class="lineup-copy-shell">
@@ -5347,7 +5349,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.25 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.26 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5383,6 +5385,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="captain-notifications.js?v=58.20"></script>
 <script src="team-dues.js?v=58.25"></script>
 <script src="guest-profiles.js?v=58.25"></script>
+<script src="post-match-entry.js?v=58.26"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="strategy-reuse.js?v=58.23"></script>
 <script src="strategy.js?v=58.23"></script>
@@ -5443,6 +5446,7 @@ window.SKORViewerBlocked=viewerBlocked;
 function applyPortalRoleUI(){
   const viewer=PORTAL_ACCESS.role==="viewer";
   const superAdmin=PORTAL_ACCESS.role==="super_admin";
+  postMatchEntry?.contextChanged();
   const guestTab=document.querySelector('[data-roster-tab="guests"]');if(guestTab)guestTab.disabled=viewer;
   document.body.classList.toggle("viewer-mode",viewer);
   const badge=document.getElementById("portalRoleBadge");
@@ -5468,6 +5472,7 @@ function showLogin(){
   captainInbox?.clear();
   teamDues?.clear();
   guestDirectory?.clear();
+  postMatchEntry?.clear();
   portalSessionVersion++;captainActivityUser=null;
   captainActivity.clear();
   clearPlayerActivity();
@@ -5560,6 +5565,7 @@ logoutBtn.addEventListener("click", async ()=>{
   captainInbox?.clear();
   teamDues?.clear();
   guestDirectory?.clear();
+  postMatchEntry?.clear();
   captainActivity.clear();
   clearPlayerActivity();
   await sb.auth.signOut();
@@ -5696,6 +5702,11 @@ window.gameDaySelected=null;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
 const gameClockDisplay=document.getElementById("gameClockDisplay"),gameClockPhase=document.getElementById("gameClockPhase"),gameClockSecondary=document.getElementById("gameClockSecondary"),gameClockAlert=document.getElementById("gameClockAlert"),gameClockHalfLength=document.getElementById("gameClockHalfLength"),gameClockSubInterval=document.getElementById("gameClockSubInterval"),gameClockActions=document.getElementById("gameClockActions"),gameClockSubAlert=document.getElementById("gameClockSubAlert"),eventClockPreview=document.getElementById("eventClockPreview");
 const substitutionAlarm=window.SKORSubstitutionAlarm.mount({rootId:'substitutionAlarm',getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id,matchStatus:gameDaySelected?.status})});
+const postMatchEntry=window.SKORPostMatch.mount({client:sb,
+  getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id||null}),
+  onSaved:async matchId=>{await loadGameDayMatches(matchId);await loadDashboardAttendance();void guestDirectory?.refresh();}
+});
+
 function gdEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
 function playerValue(p){return `roster|${p.number}|${p.name}`;}
 function tempPlayerValue(p){return `temp|${p.id}`;}
@@ -6879,7 +6890,7 @@ function gdScore(){
 }
 function gdEventLabel(e){
   const player=`${gdEsc(e.player_name||"Player")}${e.player_number?` #${gdEsc(e.player_number)}`:""}`;
-  if(e.event_type==="skor_goal")return `⚽ ${player}${e.assist_player_name||e.assist_player_number?` · Assist: ${gdEsc(e.assist_player_name||"Player")}${e.assist_player_number?` #${gdEsc(e.assist_player_number)}`:""}`:" · Unassisted"}`;
+  if(e.event_type==="skor_goal")return `⚽ ${player}${e.assist_player_name||e.assist_player_number?` · Assist: ${gdEsc(e.assist_player_name||"Player")}${e.assist_player_number?` #${gdEsc(e.assist_player_number)}`:""}`:e.assist_status==="unknown"?" · Assist unknown":" · Unassisted"}`;
   if(e.event_type==="opponent_goal")return `⚽ Opponent Goal`;
   if(e.event_type==="opponent_own_goal")return `⚽ Opponent Own Goal — SKOR +1`;
   if(e.event_type==="skor_own_goal")return `⚽ SKOR Own Goal — Opponent +1`;
@@ -6900,13 +6911,14 @@ function renderMotm(){
   if(motmName||motmNumber||reason.value){preview.style.display="block";preview.innerHTML=`<strong>${motmNumber?`#${gdEsc(motmNumber)} `:""}${gdEsc(motmName||"Unnamed player")}</strong><small>Man of the Match</small><div style="margin-top:7px">${gdEsc(reason.value)}</div>`;}else{preview.style.display="none";preview.innerHTML="";}
 }
 function renderGameDay(){
+  postMatchEntry?.contextChanged();
   if(!gameDaySelected)return;
   document.getElementById("gameDayHome").childNodes[0].nodeValue=gameDaySelected.home_team;
   document.getElementById("gameDayAway").childNodes[0].nodeValue=gameDaySelected.away_team;
   document.getElementById("gameDayHomeRole").textContent=gameDaySelected.home_team==="SKOR FC"?"SKOR FC":"Opponent";
   document.getElementById("gameDayAwayRole").textContent=gameDaySelected.away_team==="SKOR FC"?"SKOR FC":"Opponent";
   const sc=gdScore();document.getElementById("gameDayScore").textContent=`${sc.home} – ${sc.away}`;
-  eventLog.innerHTML=gameDayEvents.length?gameDayEvents.map(e=>`<div class="event-log-item"><div><strong>${gdEventLabel(e)}</strong><br><small>${clockStampLabel(e.clock_elapsed_seconds,e.clock_period)} · Event ${e.sequence??""}</small></div><div class="event-actions"><button class="mini-btn" type="button" onclick="editGameEvent('${e.id}')">Edit</button><button class="mini-btn" type="button" onclick="deleteGameEvent('${e.id}')">Delete</button></div></div>`).join(""):'<div style="color:var(--muted);font-size:.9rem">No events recorded yet.</div>';
+  eventLog.innerHTML=gameDayEvents.length?gameDayEvents.map(e=>`<div class="event-log-item"><div><strong>${gdEventLabel(e)}</strong><br><small>${e.entry_source==="post_match"?`${e.half==="second"?"2nd Half":"1st Half"} · Post-match · Minute not recorded`:clockStampLabel(e.clock_elapsed_seconds,e.clock_period)} · Event ${e.sequence??""}</small></div><div class="event-actions"><button class="mini-btn" type="button" onclick="editGameEvent('${e.id}')">Edit</button><button class="mini-btn" type="button" onclick="deleteGameEvent('${e.id}')">Delete</button></div></div>`).join(""):'<div style="color:var(--muted);font-size:.9rem">No events recorded yet.</div>';
   renderGameClock();
   renderMotm();
 }
@@ -7302,7 +7314,7 @@ async function loadGameDayMatches(preferredId=null){
     if(specific.error||!specific.data)throw Error('This match is no longer available.');
     data=[...(data||[]),specific.data];error=null;
   }
-  if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];return;}
+  if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];postMatchEntry?.contextChanged();return;}
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v57.0";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
@@ -7310,12 +7322,12 @@ async function loadGameDayMatches(preferredId=null){
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
-  const {data,error}=await sb.from("match_events").select("id,match_id,event_type,player_name,player_number,roster_player_number,roster_player_key,assist_player_name,assist_player_number,assist_roster_player_number,assist_roster_player_key,half,sequence,clock_period,clock_elapsed_seconds,clock_recorded_at,created_at").eq("match_id",gameDaySelected.id).order("sequence",{ascending:true});
+  const {data,error}=await sb.from("match_events").select("id,match_id,event_type,player_name,player_number,roster_player_number,roster_player_key,assist_player_name,assist_player_number,assist_roster_player_number,assist_roster_player_key,half,sequence,clock_period,clock_elapsed_seconds,clock_recorded_at,entry_source,assist_status,created_at").eq("match_id",gameDaySelected.id).order("sequence",{ascending:true});
   if(error){backendBox.className="backend-warning";backendBox.textContent="Could not load match events: "+error.message;gameDayEvents=[];}else{backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected.";gameDayEvents=data||[];}
   renderGameDay();
   await loadPlayerEngagement();
 }
-gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;window.gameDaySelected=gameDaySelected;substitutionAlarm?.contextChanged();await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadProductionGameplan(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();});
+gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;postMatchEntry?.contextChanged();window.gameDaySelected=gameDaySelected;substitutionAlarm?.contextChanged();await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadProductionGameplan(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();});
 function openEventEditor(type,event=null){
   currentEventType=type;editingEventId=event?.id||null;eventEditor.classList.add("open");
   const titles={skor_goal:"SKOR Goal",opponent_goal:"Opponent Goal",opponent_own_goal:"Opponent Own Goal",skor_own_goal:"SKOR Own Goal",skor_yellow_card:"SKOR Yellow Card",skor_red_card:"SKOR Red Card",opponent_yellow_card:"Opponent Yellow Card",opponent_red_card:"Opponent Red Card",skor_foul:"SKOR Foul",opponent_foul:"Opponent Foul"};

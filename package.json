@@ -2,6 +2,7 @@
   "name": "skor-fc-site",
   "private": true,
   "scripts": {
+    "test:post-match": "node tests/verify-post-match-entry.mjs",
     "test:guest-profiles": "node tests/verify-guest-profiles.mjs",
     "test:dues": "node tests/verify-team-dues.mjs",
     "test:strategy-reuse": "node tests/verify-strategy-reuse.mjs",
@@ -25,6 +26,3 @@
     "wrangler": "4.129.0"
   }
 }
-
-
-
