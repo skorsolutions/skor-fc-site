@@ -2,6 +2,7 @@
   "name": "skor-fc-site",
   "private": true,
   "scripts": {
+    "test:previous-temps": "node tests/verify-previous-temp-directory.mjs",
     "test:optional-numbers": "node tests/verify-optional-squad-numbers.mjs",
     "test:sub-waves": "node tests/verify-sub-wave-plan.mjs",
     "test:post-match": "node tests/verify-post-match-entry.mjs",

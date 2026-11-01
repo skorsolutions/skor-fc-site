@@ -1,7 +1,7 @@
 # SKOR FC Project Handbook
 
 Last updated: 2026-11-01 UTC
-Current Captain Portal build: **v58.28**. Deployed.
+Current Captain Portal build: **v58.29**. Deployment pending verification.
 Player Portal build: **v58.28**. Deployed.
 Current public homepage build: **v58.15**.
 Latest Captain/Player release: **v58.28 optional permanent numbers and saved match jerseys**. Cloudflare build `a60255c6-ec07-41c2-9c17-5ee911c9e5fa` succeeded for source release [`4196c7a14c031ee12a220b4d814004edfd4b0884`](https://github.com/skorsolutions/skor-fc-site/commit/4196c7a14c031ee12a220b4d814004edfd4b0884); version `f9758b21-de0c-41b5-bb5c-ddaa4ef5d443`, deployment `5023f189-ac1c-4bbd-99bb-9656bb9dd119`, is verified at 100% production traffic. Build completed at 2026-11-01 20:07:29 UTC. All 30 source blob hashes and the exact release file set match checked source. The build log confirms the same deployed version. Exact approved migration `20261101193858 allow_optional_squad_numbers` is applied with three matching stored bodies, verified constraints/ACLs, four passing real-role rollback suites and all six original data fingerprints preserved (22 roster identities, 87 events, 45 lineups, 20 opening-paid memberships, one guest profile/link). Pregame Edge Function version 16 is ACTIVE with JWT verification and exact three-file readback. All 21 local suites pass. Public Squad/Players and Player Portal use TBD; regular match jerseys stay in saved JSON and flow through keeper/referee/image, Game Day, Strategy and approved AI projections. No actual players were promoted or renumbered. Existing intentional definer-API warnings and unrelated advisors are documented; no new feature ERROR or missing FK. Browser visuals and commit comments remain unavailable. Workflow: `docs/OPTIONAL-SQUAD-NUMBERS.md`.
@@ -114,6 +114,13 @@ Guest fees default off and require reviewed completed, published, linked season 
 - Database migrations require explicit user approval before they are applied.
 
 ## 4. Lineup system rules
+
+### Existing TEMP appearances in the guest directory — v58.29
+
+- Roster → Guest / TEMP directory displays existing reusable profiles and a separate Previous TEMP players section with all unlinked saved appearances. Whitespace/case name groups are a browsing aid only; each row shows its exact game/jersey and retains its original TEMP UUID. Profile filter choices do not hide this history section. Polling preserves opened name groups.
+- Create profile prefills the saved name for review, retains a stable new ID/request for retry, and opens a separate unchecked identity/game confirmation. Link to existing profile reuses enabled guest/promoted profiles; already-linked alternative TEMP identities in the same game are excluded. Each confirmed link updates the existing private alias map through the protected API and exposes the profile's Games & stats/Add to regular season actions. No identity merge is inferred from names/numbers.
+- Stale snapshots, busy saves and viewer roles cannot start the history workflow. Submit handlers require an enabled eligible target and explicit confirmation, retain exact retries and suppress stale completion/error UI after closing/switching dialogs or accounts. Account reset scrubs private dialog contents. Both original profile-card and new per-appearance linking use the same confirmation check.
+- Existing controller/auth/RPC code is byte-identical; only UI uses existing get_guest_console/create/bind_game operations. No SQL, new RPC, grant/RLS, Edge Function or actual data migration. Existing TEMP jersey/inventory values, saved lineups, attendance/stats, payment ledger and optional permanent-number promotion remain. Mobile uses native name-group disclosures, stacked wrapping 44px buttons and focused controls. Workflow: `docs/GUEST-PROFILES.md`.
 
 ### Optional permanent numbers and saved match jerseys — v58.28
 

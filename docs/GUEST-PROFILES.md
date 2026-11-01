@@ -2,6 +2,18 @@
 
 Status: database deployed with explicit user approval on 2026-10-25. Exact SQL SHA-256 `297d620a73f7883087ebfd9f76310434717e7df7463b05231cec9ee537109ee7` is applied as `20261025000902 add_guest_profiles_and_participation_dues`. Captain/Player Portal v58.25 is deployed. Cloudflare build `72f15b5c-05dc-42a1-9db3-9186249197c9` succeeded for source commit [`28db5868872aa55a0ab8628bbcfe9e6d41f9da37`](https://github.com/skorsolutions/skor-fc-site/commit/28db5868872aa55a0ab8628bbcfe9e6d41f9da37); version `a39b4760-36a9-4ad5-8d0c-a2d3bc1b688f`, deployment `4c2d4660-9c5f-4acf-ac40-ac0811c4491c`, is verified at 100% production traffic. All 21 source blob hashes and the exact release file set match the checked source. Build completed at 2026-10-25 00:13:13 UTC.
 
+## Previous TEMP directory — v58.29
+
+Roster → Guest / TEMP directory includes reusable profiles and a separate Previous TEMP players section. The latter shows every unlinked saved TEMP entry, grouped by whitespace/case-normalized saved name for browsing only. Each appearance retains its exact game and jersey; groups are not assumed to be one identity. The section stays visible under Guest, Promoted and All profile filters, and refreshes preserve opened name groups.
+
+Expand a saved name to see each game. Choose Create profile to prefill the stored name, review/edit the full name and optional email, then create it with its permanent number TBD. Profile creation opens a separate appearance-link review with the new profile selected and an unchecked confirmation box. Confirm the exact person and game to link. Choose Link to existing profile for subsequent appearances of that person, or whenever the profile already exists. The directory then opens the linked profile for Games & stats or Add to regular season. Promotion retains the existing optional-number workflow.
+
+Enabled reusable and promoted profiles are available for reviewed links. A profile already linked to a different TEMP identity in the same game is excluded. Each link uses the existing exact TEMP/match/profile IDs and requires the named confirmation checkbox; no jersey, inventory binding, existing lineup key, attendance, event or ledger row is rewritten by the frontend. The server's existing identity/role/conflict checks remain authoritative. No name/jersey merge or bulk linking is automatic.
+
+Creation and linking are separate confirmed saves, with cached request IDs per source appearance and stable new-profile IDs for retry. A lost create response can be retried without creating another identity. If creation succeeds but history refresh fails, refresh before linking; the created profile remains available. Closing/switching a dialog, losing access or changing account cannot reopen a stale review. Account changes clear private dialog content/errors. Stale snapshots disable new history actions. Phone actions stack with wrapping text, 44px controls and keyboard focus.
+
+This is a frontend-only fix using the existing protected get_guest_console, manage_guest_profile(create) and manage_guest_profile(bind_game) APIs. No migration, Edge Function, permission or backend source change, and no actual profile creation/link/promotion occurs during deployment. Run `npm run test:previous-temps` and existing guest/identity/number/dues/keeper/export/privacy suites. Browser visual and real signed-in browser checks remain unverified.
+
 ## Captain workflow
 
 1. Open Roster → Guest / event players. Create a reusable profile with full/preferred name, position and optional approved portal email. No permanent jersey is required. Review the directory first to avoid duplicate identities.
