@@ -1,12 +1,26 @@
-# v58.27 — Starter identity and rolling sub-wave choices (pending deployment)
+# v58.27 — Starter identity and rolling sub-wave choices (deployed)
 
 - Implements the approved plan in Captain Portal → Lineups → Planned Substitutions. Gold chips and a visible Started badge identify the original starters, including when they come off and later return. Bench players never receive a false starter label.
 - Players In comes only from the projected bench; Players Out only from the projected field before each wave. The first wave uses the starting lineup/bench, and later waves carry the valid changes across halves. Selections use stable IDs, including guest/TEMP identities and Freeform positions.
 - Complete equal-count eligible swaps alone affect the projected bench and first-half coverage. Stale, duplicate, cross-side or incomplete selections remain visible for review and removal after reordering or lineup edits. Subsequent waves explain earlier issues. Drafts remain saveable; publication, Final overwrite/update and gameplan image downloads require correction. Explicit player removal/Absent and Clear Pitch retain their prior clearing behavior.
 - **Affected files (12):** `admin.html`, `sub-wave-plan.js`, `package.json`, `tests/verify-sub-wave-plan.mjs`, `tests/verify-saved-variations.mjs`, four build-marker suites (captain notifications, lineup export, referee card, Strategy animation), `docs/SUB-WAVES.md`, `docs/PROJECT-HANDBOOK.md` and this note. Captain v58.27; Player Portal v58.25 and homepage v58.15 remain unchanged. Existing save shape, canonical field, keeper pairs/notes, image renderer, referee/Strategy/public/Crowd behavior and Game Day timing are preserved.
-- **Verification:** New behavioral suite passes 200 rolling 16-wave plans, both-half field/bench membership/count invariants, starter/TEMP/Freeform identity, legacy/JSON persistence, invalid/reordered/duplicate/incomplete waves, actual editor chip rendering/selection/revalidation, first-half coverage and publication/export guard contracts. All 20 local suites pass, including the existing saved-variation handlers and real save-helper draft/Final overwrite behavior. Source/deployment verification is in progress. Actual browser visuals and signed-in interactions remain unverified.
+- **Verification:** New behavioral suite passes 200 rolling 16-wave plans, both-half field/bench membership/count invariants, starter/TEMP/Freeform identity, legacy/JSON persistence, invalid/reordered/duplicate/incomplete waves, actual editor chip rendering/selection/revalidation, first-half coverage and publication/export guard contracts. All 20 local suites pass, including the existing saved-variation handlers and real save-helper draft/Final overwrite behavior. All 12 source hashes/exact commit file set and the production version are verified. Actual browser visuals and signed-in interactions remain unverified.
 - **SQL/backend:** No migration, schema/grant/RLS/RPC/Edge Function change is required or performed. No production lineup, match, attendance, ledger or other application data is edited during verification. This release continues using the existing lineup JSON persistence and existing approved publication APIs.
-- **Live status:** Pending source publication and Cloudflare verification. Connected tools have no commit-comment creation operation; the final release summary will also be recorded here.
+- **Live status:** Cloudflare build `328e3687-fa4d-4282-918d-bdf1f2b82baf` succeeded for source release [`45d391f68ad61499b05325e3152e44bf3caa7656`](https://github.com/skorsolutions/skor-fc-site/commit/45d391f68ad61499b05325e3152e44bf3caa7656); version `117bf24c-cbb6-4def-8fcc-e541a789e5b4`, deployment `5600e072-0bdf-466d-9251-3c8181f54809`, is verified at 100% production traffic. Build completed at 2026-11-01 01:21:40 UTC. All 12 source blob hashes and the exact release file set match checked source. Source release was published from `38b6d2d3d7b0a6c5344f1adcd384787201988d4a`. A documentation-only follow-up records this evidence. No deployment retry or database action was needed. Connected tools have no commit-comment creation operation.
+
+Release summary (same as chat handoff; commit-comment creation is unavailable):
+
+Deployed **v58.27** in **Captain Portal → Lineups**.
+
+- Original starters keep a gold **Started** label when subbed out or selected to return.
+- **Sub IN:** bench players only. **Sub OUT:** players on the field only.
+- Choices update through later waves and across halves. Invalid selections show a correction message; unfinished drafts can still be saved.
+
+All 20 test suites passed. Existing Game Day and export formats are preserved. No database changes. Production is verified at 100% traffic.
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/45d391f68ad61499b05325e3152e44bf3caa7656)
+
+Browser visual checks remain unverified. Release notes are saved; the connector cannot post commit comments.
 
 # v58.26 — Record both halves after the game (deployed)
 
