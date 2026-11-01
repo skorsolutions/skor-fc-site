@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.26-post-match-entry" />
-  <title>SKOR FC Admin | Captain Portal v58.26</title>
+  <meta name="skor-build" content="captain-portal-v58.27-sub-wave-eligibility" />
+  <title>SKOR FC Admin | Captain Portal v58.27</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1249,6 +1249,14 @@
       cursor:pointer;touch-action:manipulation;
       transition:background .12s ease,border-color .12s ease,color .12s ease,transform .08s ease;
     }
+    .sub-player-chip{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;min-height:44px;max-width:100%;line-height:1.25;overflow-wrap:anywhere}
+    .sub-wave-bench-chip{gap:5px;flex-wrap:wrap;max-width:100%;line-height:1.25;overflow-wrap:anywhere}
+    .sub-started-label{font-size:.6rem;font-weight:900;border:1px solid currentColor;border-radius:5px;padding:2px 4px;white-space:nowrap}
+    .sub-player-chip.sub-original-starter,.sub-wave-bench-chip.sub-original-starter{background:#fff3cd;border-color:#b48516;color:#644300}
+    .sub-player-chip.sub-invalid{border:2px dashed #b42318}
+    .sub-invalid-label{font-size:.6rem;font-weight:900}
+    .sub-wave-review{grid-column:1/-1;padding:9px;border:1px solid #d8b362;border-radius:9px;background:#fff8e6;color:#684600;font-size:.72rem;line-height:1.45;overflow-wrap:anywhere}
+    .sub-player-chip:focus-visible{outline:3px solid #234b74;outline-offset:2px}
     .sub-player-chip:active{transform:scale(.97)}
     .sub-player-chip.out.selected{
       background:#801A3D;border-color:#801A3D;color:#fff;
@@ -1256,6 +1264,7 @@
     .sub-player-chip.in.selected{
       background:#234b74;border-color:#234b74;color:#fff;
     }
+    .sub-player-chip.sub-original-starter.selected{background:#f2ca66;border:2px solid #805800;color:#422b00}
     .sub-multi-help{
       margin-top:6px;
       font-size:.66rem;
@@ -1880,7 +1889,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.26</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.27</div>
   </aside>
 
   <main>
@@ -2921,7 +2930,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
         <div class="panel">
           <h2>Planned Substitutions</h2>
-          <div class="sub">Plan as many substitution waves as you want for each half. Assign Defense, Midfield, Strikers, or Mixed; optionally save an exact match minute, or let Game Day place waves on the selected 10/15-minute cadence. Choices include only players currently on the field or in Substitutes.</div>
+          <div class="sub">Plan as many substitution waves as you want for each half. Assign Defense, Midfield, Strikers, or Mixed; optionally save an exact match minute, or let Game Day place waves on the selected 10/15-minute cadence. Players In comes from the bench; Players Out comes from the field before each wave. Earlier waves carry into the next half. Gold “Started” labels identify the original starters.</div>
           <div class="sub-plan" id="lineupSubPlan"></div>
           <div class="sub-plan-actions"><button class="btn btn-light" id="addFirstHalfSubBtn" type="button">+ Add first-half sub</button><button class="btn btn-light" id="addSecondHalfSubBtn" type="button">+ Add second-half sub</button></div>
         </div>
@@ -3256,6 +3265,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 </dialog>
 <link rel="stylesheet" href="keeper-plan.css?v=58.14">
 <script src="keeper-plan.js?v=58.10"></script>
+<script src="sub-wave-plan.js?v=58.27"></script>
 <script src="lineup-marker.js?v=58.13"></script>
 <script src="keeper-editor.js?v=58.9"></script>
 <script src="ribbon-order.js?v=58.3"></script>
@@ -4002,6 +4012,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     holder.innerHTML=buildGameplanSvg();
   }
   async function exportGameplanAs(format){
+    if(!checkSubPlan())return;
     const ext=format==="jpg"?"jpg":"png";
     try{
       const svgText=buildGameplanSvg();
@@ -4375,46 +4386,66 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const mod10=n%10;
     return n+(mod10===1?"st":mod10===2?"nd":mod10===3?"rd":"th");
   }
+  function projectedSubPlan(snapshot=state){
+    return window.SKORSubWavePlan.project(normalizeState(snapshot||{}),snapshot===state?roster.map(id):null);
+  }
+  function subFrame(phase,index,snapshot=state){
+    return projectedSubPlan(snapshot).frames[phase]?.[index];
+  }
+  function startedBadge(pid,starters){
+    return starters.includes(String(pid))?'<small class="sub-started-label">Started</small>':'';
+  }
   function subChipListHTML(selectedIds,phase,index,side){
     const selected=new Set(Array.isArray(selectedIds)?selectedIds:[]);
-    const choices=matchSquadPlayers();
-    const choiceButtons=choices.map(p=>{
-      const pid=id(p),active=selected.has(pid);
-      return '<button type="button" class="sub-player-chip '+side+(p.temp?' temp-player':'')+(active?' selected':'')+'" aria-pressed="'+(active?'true':'false')+'" data-sub-chip="1" data-sub-side="'+side+'" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" data-sub-player="'+esc(pid)+'">'+esc(playerListLabel(p))+'</button>';
+    const projection=projectedSubPlan(),frame=projection.frames[phase]?.[index];
+    const eligible=side==="out"?frame?.before.field:frame?.before.bench;
+    const opposite=new Set(frame?.[side==="out"?"in":"out"]||[]);
+    const choices=[...new Set([...(eligible||[]).filter(pid=>player(pid)&&!opposite.has(pid)),...selected])];
+    const choiceButtons=choices.map(pid=>{
+      const p=player(pid),active=selected.has(pid),starter=projection.starters.includes(pid);
+      const invalid=active&&(!(eligible||[]).includes(pid)||opposite.has(pid)||!p);
+      return '<button type="button" class="sub-player-chip '+side+(p?.temp?' temp-player':'')+(starter?' sub-original-starter':'')+(active?' selected':'')+(invalid?' sub-invalid':'')+'" aria-pressed="'+(active?'true':'false')+'" data-sub-chip="1" data-sub-side="'+side+'" data-sub-phase="'+esc(phase)+'" data-sub-index="'+index+'" data-sub-player="'+esc(pid)+'">'+esc(p?playerListLabel(p):'Unavailable player')+startedBadge(pid,projection.starters)+(invalid?'<small class="sub-invalid-label">Remove / reselect</small>':'')+'</button>';
     }).join('');
     return '<div class="sub-chip-side">'+
       '<div class="sub-chip-side-head"><span class="sub-chip-side-title">'+(side==="out"?"Players Out":"Players In")+'</span><span class="sub-chip-count">'+selected.size+'</span></div>'+
       '<div class="sub-chip-list">'+
-        (choiceButtons||'<span class="sub-wave-bench-empty">Add players to the field or Substitutes area first.</span>')+
+        (choiceButtons||'<span class="sub-wave-bench-empty">'+(side==="out"?'No players on the field before this wave.':'No players on the bench before this wave.')+'</span>')+
       '</div>'+
-      '<div class="sub-multi-help">'+(side==="out"?"Tap a match-squad player leaving in this change.":"Tap a match-squad player entering in this change.")+'</div>'+
+      '<div class="sub-multi-help">'+(side==="out"?"Choose only players on the field before this wave.":"Choose only players on the bench before this wave.")+'</div>'+
     '</div>';
   }
   function benchAfterWave(phase,index,snapshot=state){
-    const s=normalizeState(snapshot||{});
-    const bench=new Set((s.bench||[]).filter(Boolean).map(pid=>String(pid)));
-    const phases=phase==="secondHalf"?["firstHalf","secondHalf"]:["firstHalf"];
-    phases.forEach(currentPhase=>{
-      const rows=Array.isArray(s.subs?.[currentPhase])?s.subs[currentPhase]:[];
-      const stop=currentPhase===phase?Math.min(Number(index),rows.length-1):rows.length-1;
-      for(let i=0;i<=stop;i++){
-        const row=rows[i]||{};
-        (Array.isArray(row.out)?row.out:[]).filter(Boolean).forEach(pid=>bench.add(String(pid)));
-        (Array.isArray(row.in)?row.in:[]).filter(Boolean).forEach(pid=>bench.delete(String(pid)));
-      }
-    });
-    return [...bench].filter(pid=>player(pid));
+    return subFrame(phase,index,snapshot)?.after.bench||[];
   }
   function subWaveBenchHTML(phase,index){
-    const bench=benchAfterWave(phase,index);
+    const projection=projectedSubPlan(),frame=projection.frames[phase]?.[index];
+    const bench=frame?.after.bench||[];
     const chips=bench.map(pid=>{
-      const p=player(pid);
-      return p?'<span class="sub-wave-bench-chip'+(p.temp?' temp-player':'')+'">'+esc(playerListLabel(p))+'</span>':'';
+      const p=player(pid),starter=projection.starters.includes(pid);
+      return p?'<span class="sub-wave-bench-chip'+(p.temp?' temp-player':'')+(starter?' sub-original-starter':'')+'">'+esc(playerListLabel(p))+startedBadge(pid,projection.starters)+'</span>':'';
     }).join('');
     return '<div class="sub-wave-bench">'+
-      '<div class="sub-wave-bench-head"><span class="sub-wave-bench-title">Bench after this wave</span><span class="sub-wave-bench-count">'+bench.length+'</span></div>'+
+      '<div class="sub-wave-bench-head"><span class="sub-wave-bench-title">'+(frame?.issues.length?'Bench — wave needs review':'Bench after this wave')+'</span><span class="sub-wave-bench-count">'+bench.length+'</span></div>'+
       '<div class="sub-wave-bench-list">'+(chips||'<span class="sub-wave-bench-empty">No players on the bench after this wave.</span>')+'</div>'+
       '</div>';
+  }
+  function subWaveReviewHTML(phase,index){
+    const frame=subFrame(phase,index);
+    if(!frame)return '';
+    const messages=[];
+    if(frame.issues.includes('out_not_on_field'))messages.push('Remove or reselect Players Out who are not on the field.');
+    if(frame.issues.includes('in_not_on_bench'))messages.push('Remove or reselect Players In who are not on the bench.');
+    if(frame.issues.includes('both_sides')||frame.issues.includes('duplicate_player'))messages.push('Choose each player once, on one side only.');
+    if(frame.issues.includes('unequal_counts'))messages.push('Choose the same number of Players Out and Players In.');
+    if(frame.issues.length)messages.push('This wave is not applied to the preview until corrected.');
+    if(frame.upstreamInvalid)messages.push('Review earlier incomplete or invalid waves; these choices use the last valid lineup.');
+    return messages.length?'<div class="sub-wave-review" role="status">'+esc(messages.join(' '))+'</div>':'';
+  }
+  function checkSubPlan(snapshot=state){
+    const first=projectedSubPlan(snapshot).problems[0];
+    if(!first)return true;
+    markStatus('Review '+(first.phase==='firstHalf'?'first':'second')+'-half sub wave '+(first.index+1)+': select equal numbers from the field (Out) and bench (In), without duplicates. Save as a draft or correct the wave before publishing / exporting.',false);
+    return false;
   }
   function subRowHTML(record,phase,index=null,removable=false){
     const suffix=index===null?phase:phase+'-'+index;
@@ -4441,6 +4472,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       '<span class="sub-arrow">→</span>'+
       subChipListHTML(record.in,phase,index,'in')+
       (removable?'<button class="mini-btn sub-remove" type="button" data-sub-remove="'+index+'" data-sub-phase="'+esc(phase)+'" title="Remove this planned sub">×</button>':'<span></span>')+
+      subWaveReviewHTML(phase,index)+
       subWaveBenchHTML(phase,index)+
       '</div>';
   }
@@ -4459,7 +4491,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const s=normalizeState(snapshot||{});
     const bench=(s.bench||[]).filter(Boolean);
     const plannedIn=new Set();
-    (s.subs?.firstHalf||[]).forEach(row=>(row.in||[]).forEach(pid=>plannedIn.add(String(pid))));
+    projectedSubPlan(s).frames.firstHalf.filter(frame=>frame.applied).forEach(frame=>frame.in.forEach(pid=>plannedIn.add(String(pid))));
     const needs=bench.filter(pid=>!plannedIn.has(String(pid)));
     const covered=bench.filter(pid=>plannedIn.has(String(pid)));
     return {bench,plannedIn,needs,covered};
@@ -4471,13 +4503,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       return '<div class="first-half-coverage empty"><div class="first-half-coverage-head"><div class="first-half-coverage-title">First-Half Bench Coverage</div><span class="first-half-coverage-count">0</span></div><div class="first-half-coverage-help">No players are currently designated as substitutes on the bench.</div></div>';
     }
     if(!coverage.needs.length){
-      return '<div class="first-half-coverage complete"><div class="first-half-coverage-head"><div class="first-half-coverage-title">Everyone is planned to enter in the first half ✓</div><span class="first-half-coverage-count">0</span></div><div class="first-half-coverage-help">Every bench player appears at least once in a First Half “Players In” group.</div></div>';
+      return '<div class="first-half-coverage complete"><div class="first-half-coverage-head"><div class="first-half-coverage-title">Everyone is planned to enter in the first half ✓</div><span class="first-half-coverage-count">0</span></div><div class="first-half-coverage-help">Every bench player enters in a complete, valid first-half wave.</div></div>';
     }
     const chips=coverage.needs.map(pid=>{
       const p=player(pid);
       return '<span class="first-half-coverage-chip">'+esc(p?playerListLabel(p):String(pid))+'</span>';
     }).join('');
-    return '<div class="first-half-coverage"><div class="first-half-coverage-head"><div class="first-half-coverage-title">Still Needs First-Half Minutes</div><span class="first-half-coverage-count">'+coverage.needs.length+'</span></div><div class="first-half-coverage-chips">'+chips+'</div><div class="first-half-coverage-help">Rule for now: every player on the bench should appear at least once in a First Half “Players In” selection.</div></div>';
+    return '<div class="first-half-coverage"><div class="first-half-coverage-head"><div class="first-half-coverage-title">Still Needs First-Half Minutes</div><span class="first-half-coverage-count">'+coverage.needs.length+'</span></div><div class="first-half-coverage-chips">'+chips+'</div><div class="first-half-coverage-help">Every starting bench player should enter in a complete, valid first-half wave. Invalid or unfinished waves do not count.</div></div>';
   }
 
   function subPhaseHTML(title,note,phase,rows){
@@ -4495,7 +4527,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function renderSubPlan(){
     const box=document.getElementById('lineupSubPlan'); if(!box)return;
     state.subs=normalizeSubs(state.subs);
-    if(restrictPlannedSubsToMatchSquad(state))persistDraft();
+    // Keep stale selections visible for review rather than silently deleting them.
     box.innerHTML=
       subPhaseHTML('First Half Subs','1st, 2nd, 3rd, 4th... planned changes before halftime','firstHalf',state.subs.firstHalf)+
       subPhaseHTML('Second Half Subs','1st, 2nd, 3rd, 4th... planned changes after halftime','secondHalf',state.subs.secondHalf);
@@ -4546,6 +4578,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const pid=btn.dataset.subPlayer;
       if(!Array.isArray(state.subs[phase]) || !state.subs[phase][idx] || !["out","in"].includes(side))return;
       const current=new Set(Array.isArray(state.subs[phase][idx][side])?state.subs[phase][idx][side]:[]);
+      if(!window.SKORSubWavePlan.canToggle(subFrame(phase,idx),side,pid))return;
       if(current.has(pid))current.delete(pid);else current.add(pid);
       state.subs[phase][idx][side]=Array.from(current);
       persistDraft();
@@ -4711,6 +4744,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
     const existing=(existingRows||[]).find(row=>normalizedVariationName(row.name)===targetName);
     if(existing){
+      if(existing.is_production===true&&!checkSubPlan(payload.state))throw new Error("Correct the planned sub waves before overwriting a Final lineup, or save under a new draft name.");
       const {error:updateError}=await sb.from("lineup_variations")
         .update({...payload,updated_at:new Date().toISOString()})
         .eq("id",existing.id);
@@ -4853,7 +4887,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("mark the Production / Final lineup");return;}
       const rec=library.find(v=>String(v.id)===String(btn.dataset.finalVariation));
       if(!rec||String(rec.event_key)==='tinker')return;
-      if(!checkKeepers(rec.state))return;
+      if(!checkKeepers(rec.state)||!checkSubPlan(rec.state))return;
       if(rec.is_production===true){
         markStatus('"'+rec.name+'" is already the Production / Final lineup for this game.');
         return;
@@ -5243,7 +5277,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 
   if(updateProductionBtn)updateProductionBtn.addEventListener('click',async()=>{
     if(!window.SKORPortalCanWrite?.()){window.SKORViewerBlocked?.("update the Production / Final lineup");return;}
-    if(!checkKeepers())return;
+    if(!checkKeepers()||!checkSubPlan())return;
     const finalRec=productionVariationForEvent();
     if(!finalRec){
       markStatus('This game does not have a Production / Final lineup yet.',false);
@@ -5329,6 +5363,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   if(clearBtn) clearBtn.addEventListener('click',()=>{
     if(!confirm('Clear the starting XI / custom board and substitutes? Planned-sub player selections will also be cleared.')) return;
     state.slots={}; state.freeform={}; state.bench=[]; selectedPlayer=null;
+    restrictPlannedSubsToMatchSquad(state);
     persistDraft(); renderSquadChange();
     markStatus('Pitch/custom board and substitutes cleared. Wave names and Potential Positions were kept; planned-sub player selections were cleared.');
   });
@@ -5349,7 +5384,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.26 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.27 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,

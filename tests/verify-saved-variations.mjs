@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {createRequire} from 'node:module';
+const W=createRequire(import.meta.url)('../sub-wave-plan.js');
 
 const read=file=>fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const admin=read('admin.html'),css=read('keeper-plan.css');
@@ -47,7 +49,7 @@ const context={
   async refreshTempPlayers(){},async refreshTinkerVariations(){},
   loadVariationRecord:r=>calls.loaded.push(r),openCopyLineupDialog:r=>calls.copies.push(r),
   window:{SKORPortalCanWrite:()=>true,SKORViewerBlocked:message=>calls.blocked.push(message)},
-  confirm:()=>true,checkKeepers:()=>true,markStatus(){},
+  confirm:()=>true,checkKeepers:()=>true,checkSubPlan:s=>!W.project(s).problems.length,markStatus(){},
   sbClient:()=>({
     from:()=>({delete:()=>({eq:async(field,id)=>{assert.equal(field,'id');calls.deleted.push(id);return {error:null};}})}),
     rpc:async(name,args)=>{calls.finals.push({name,args});return {error:null};},
@@ -83,6 +85,11 @@ assert.deepEqual(calls.copies[0].snapshot.keeperPlan,snapshot.keeperPlan,'copy r
 
 await button(games,'final','game-new').click();
 assert.equal(calls.finals[0].name,'set_production_lineup');assert.equal(calls.finals[0].args.p_variation_id,'game-new');
+const invalid=library.find(r=>r.id==='game-new');
+invalid.state.subs={firstHalf:[{out:['keeper'],in:['keeper']}],secondHalf:[]};
+await button(games,'final','game-new').click();
+assert.equal(calls.finals.length,1,'invalid saved wave cannot be published');
+delete invalid.state.subs;
 context.window.SKORPortalCanWrite=()=>false;
 await button(tinkers,'delete','tinker-new').click();await button(games,'final','game-new').click();
 assert.equal(calls.deleted.length,0);assert.equal(calls.finals.length,1);assert.equal(calls.blocked.length,2);
