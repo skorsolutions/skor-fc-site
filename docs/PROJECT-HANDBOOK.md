@@ -31,6 +31,8 @@ Previous production release: [`1ab0a7c329367e87b9f1ee025d5e3235e3f3736c`](https:
 
 Data-only follow-up on 2026-10-13: two user-confirmed full names were applied to two historical TEMP rows; a misspelled event row for the first identity was also corrected. The user clarified the second identity and resumed work after a pause. The earlier mistaken additional name is excluded. Independent readback confirms four complete saved TEMP names and seven total TEMP records. No schema change or application deployment. IDs, match links, active status and jersey values were preserved.
 
+Data-only follow-up on 2026-11-01: two user-confirmed historical TEMP short-name labels were standardized to their existing full-name spellings. The directory now has five saved-name groups covering the same ten unlinked entries. Exact row IDs, game links, jersey/inventory assignments and active status are preserved; all other TEMP rows and all official events/saved lineups match their original fingerprints. No guest profile was created/linked/promoted, and no schema/application/Edge Function change was needed. Captain remains v58.29.
+
 This is the durable handoff document for new chats and future developers. Read it before changing the project. Update it after every build whenever behavior, rules, integrations, data, security, deployment, or cross-surface rendering changes. The chronological release record remains in `docs/deployment-notes.md`.
 
 ## v58.26 — post-match event entry

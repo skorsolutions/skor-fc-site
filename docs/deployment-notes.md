@@ -1,3 +1,9 @@
+# 2026-11-01 — Data-only correction of confirmed TEMP name variants
+
+- The user explicitly confirmed two short-name/full-name pairs refer to the same people and requested that each pair appear together. Only the two exact historical inactive TEMP rows' display names and update timestamps were changed to their existing full-name spellings; private identities/IDs are omitted from this public note.
+- Independent readback confirms the directory now groups the same ten unlinked entries under five saved names. Target IDs, match IDs, jersey numbers, physical inventory assignments, created metadata and active flags are unchanged. All other TEMP rows, every official event and all saved lineup JSON match their baseline fingerprints.
+- No deletion, profile creation/linking/promotion, paid-status change, schema migration, application/Edge Function code change or application release. Captain remains v58.29. Grouping is the existing saved-name presentation; historical records remain separately reviewable for profile linking.
+
 # v58.29 — Show previous TEMP appearances in the guest directory (deployed)
 
 - Fixes the one-profile-only view by adding a separate Previous TEMP players section under reusable profiles. All unlinked saved appearances appear, grouped by saved name for browsing, with each exact game and jersey. Grouping never establishes identity. Profile filters do not hide the section; counters distinguish reusable profiles from appearances needing links and opened groups survive refresh.
