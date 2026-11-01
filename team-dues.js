@@ -81,7 +81,7 @@
   function lineupMarkup(lineup,roster){
     const byKey=new Map(roster.map(p=>[String(p.key),p]));for(const p of lineup.temp_players||[])byKey.set('temp:'+p.id,{name:String(p.display_name||'TEMP').replace(/\s*[-·]\s*TEMP$/i,'').split(/\s+/)[0]+' · TEMP',number:p.jersey_number});
     const state=global.SKORKeeperPlan?.hydrate(lineup.state,roster.map(p=>({player_key:p.key,number:p.number,name:p.name,position:p.position})))||lineup.state;
-    const marker=(role,id)=>{const p=byKey.get(String(id)),keeper=global.SKORKeeperPlan?.details(state,String(id),p?.number),spare=keeper?.jerseyNumber!=null&&String(keeper.jerseyNumber)!==String(p?.number)?' / '+keeper.jerseyNumber:'';
+    const marker=(role,id)=>{const original=byKey.get(String(id)),p=original?{...original,number:global.SKORMatchJerseys?global.SKORMatchJerseys.resolve(state,String(id),original.number):original.number}:original,keeper=global.SKORKeeperPlan?.details(state,String(id),p?.number),spare=keeper?.jerseyNumber!=null&&String(keeper.jerseyNumber)!==String(p?.number)?' / '+keeper.jerseyNumber:'';
       return `<span><b>${esc(role)}</b> #${esc(p?.number??'—')}${esc(spare)} ${esc(p?.name||'Player')}${keeper?.label?' ('+esc(keeper.label)+')':''}</span>`;};
     const slots=state?.formation==='Freeform / Custom'?Object.keys(state?.freeform||{}).map(id=>['Field',id]):Object.entries(state?.slots||{});
     return slots.filter(([,id])=>id).map(([role,id])=>marker(role,id)).join('')+((state?.bench||[]).length?'<h4>Substitutes</h4>'+state.bench.map(id=>marker('Sub',id)).join(''):'')||'<span>See the captain’s final gameplan for this lineup.</span>';

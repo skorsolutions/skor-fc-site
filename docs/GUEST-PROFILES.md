@@ -9,7 +9,7 @@ Status: database deployed with explicit user approval on 2026-10-25. Exact SQL S
 3. In Lineups → Match Fill-ins / TEMP Players, choose the reusable guest and assign this game's jersey. Leave it TBD while planning; the existing referee card requires a valid match number before printing. Each game can use a different jersey. Existing keeper/spare numbers and referee TEMP notes are preserved.
 4. Link historical TEMP appearances only after reviewing the exact game and identity. Names/jerseys never merge records automatically. Existing lineup TEMP UUIDs remain unchanged; official events already keyed to those UUIDs follow the linked profile. Unidentified old events still require captain review in Game Day.
 5. Confirm Present/Absent/Excused in Game Day's default-closed Match attendance section. Tagged event guests appear in the captain RSVP/attendance dashboard even before a jersey/TEMP assignment. RSVP is separate. Completed published games, confirmed attendance and official player-key events drive records. Guests see only assigned games; promotion retains exact historical aliases.
-6. Promote a guest with Join regular season. Choose the season, first eligible date and available regular squad number, calculate/review dues and apply. The same profile, approved login, attendance, stats and receipts continue. Regular full-team portal access starts after promotion. New arrivals never inherit Fall 2026 opening paid status.
+6. Promote a guest with Join regular season. Choose the season and first eligible date; the permanent squad number may stay TBD in v58.28. Calculate/review dues and apply. Assign an available match jersey separately in Lineups. The same profile, approved login, attendance, stats and receipts continue. Regular full-team portal access starts after promotion. New arrivals never inherit Fall 2026 opening paid status.
 
 ## Participation calculator
 
@@ -29,7 +29,7 @@ Season totals show net guest charges, guest collections capped at each player's 
 
 ## Identity, permissions and preservation
 
-- Stable identity: `team_roster.id`, with `is_guest=true`, `active=false`, `portal_enabled=false`, nullable jersey. Regular rows retain the non-null jersey contract.
+- Stable identity: `team_roster.id`, with `is_guest=true`, `active=false`, `portal_enabled=false`, nullable jersey. The user-approved v58.28 migration removes the permanent-number requirement for regular players; unknown numbers remain null until explicitly assigned. See `OPTIONAL-SQUAD-NUMBERS.md`.
 - Private `guest_profiles` stores approved email, one claimed auth identity and promotion date. `resolve_player_portal()` requires a verified account and approved identity; guests do not resolve through `current_player_id()`.
 - Guest screen mounts its own scoped APIs and own dues only. It does not mount regular equipment, activity or whole-team chat controllers. Protected original APIs continue to deny guest accounts.
 - Private exact `guest_match_links` connects one profile to one existing TEMP row per match. Shared lineups do not change identity keys. Promoted players with an alias are not offered twice on the same game sheet.

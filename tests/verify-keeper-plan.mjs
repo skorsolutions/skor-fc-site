@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {createRequire} from 'node:module';
 import {stripTypeScriptTypes} from 'node:module';
-const require=createRequire(import.meta.url),K=require('../keeper-plan.js'),ref=require('../ref-game-card.js');
+const require=createRequire(import.meta.url),K=require('../keeper-plan.js'),J=require('../match-jerseys.js'),ref=require('../ref-game-card.js');
 const read=file=>fs.readFileSync(new URL('../'+file,import.meta.url),'utf8');
 const marker=require('../lineup-marker.js');
 assert.match(marker.numberHtml('12 / 30',false),/keeper-number-major">12<\/span>/);
@@ -140,10 +140,10 @@ function fn(source,name){
   return source.slice(start,end<0?undefined:start+3+end);
 }
 const keeperPanel={open:false};
-const validationContext={state:fixture(),window:{SKORKeeperPlan:K},document:{querySelector:()=>({closest:()=>keeperPanel,reportValidity:()=>assert.equal(keeperPanel.open,true,'open the disclosure before focusing invalid input')})}};
+const validationContext={selectableRoster:()=>roster,state:fixture(),window:{SKORKeeperPlan:K,SKORMatchJerseys:J},document:{querySelector:()=>({closest:()=>keeperPanel,reportValidity:()=>assert.equal(keeperPanel.open,true,'open the disclosure before focusing invalid input')})}};
 vm.createContext(validationContext);vm.runInContext(fn(admin,'checkKeepers'),validationContext);
 assert.equal(validationContext.checkKeepers(),false);
-const context={window:{SKORKeeperPlan:K,SKORLineupMarker:marker},formations:{'4-2-3-1':[]},FREEFORM:'Freeform / Custom',isFreeform:f=>f==='Freeform / Custom',clamp:(n,a,b)=>Math.min(b,Math.max(a,n)),depthPositionsForFormation:()=>[],normalizeSubs:x=>x||{firstHalf:[],secondHalf:[]},clone:structuredClone};
+const context={window:{SKORKeeperPlan:K,SKORMatchJerseys:J,SKORLineupMarker:marker},formations:{'4-2-3-1':[]},FREEFORM:'Freeform / Custom',isFreeform:f=>f==='Freeform / Custom',clamp:(n,a,b)=>Math.min(b,Math.max(a,n)),depthPositionsForFormation:()=>[],normalizeSubs:x=>x||{firstHalf:[],secondHalf:[]},clone:structuredClone};
 vm.createContext(context);
 for(const name of ['normalizeState','lineupTempIds','stripTempPlayersForCopy'])vm.runInContext(fn(admin,name),context);
 const normalized=context.normalizeState(s);
@@ -155,7 +155,7 @@ assert.deepEqual([...copy.keeperPlan.spareNumbers],[30],'spare choices may be re
 s=fixture();K.setRole(s,'alex','starting_temp');K.setRole(s,'joe','secondary_temp');
 for(const [file,startName,endName] of [['matches.html','productionPlayer','renderOfficialLineup'],['gameday.html','matchLineupPlayer','matchSubUnitLabel']]){
   const src=read(file),start=src.indexOf('function '+startName+'('),end=src.indexOf('function '+endName+'(',start);
-  const ctx={window:{SKORKeeperPlan:K,SKORLineupMarker:marker},productionLineup:{state:s},productionTempPlayers:[],publicRoster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name})),roster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name}))};
+  const ctx={window:{SKORKeeperPlan:K,SKORMatchJerseys:J,SKORLineupMarker:marker},productionLineup:{state:s},productionTempPlayers:[],publicRoster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name})),roster:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,display_name:p.name}))};
   vm.runInNewContext(src.slice(start,end),ctx);
   assert.equal(ctx[startName]('alex').number,'12 / 30');
   assert.equal(ctx[startName]('alex').name,'Alex');assert.match(ctx[startName]('alex').keeperLabel,/starting temp keeper/);
@@ -174,7 +174,7 @@ for(const [file,startName,endName] of [['matches.html','productionPlayer','rende
   assert.match(rendered,/>Anton<\/span>/);assert.match(rendered,/>Malik<\/span>/);
   assert.equal((rendered.match(/class="marker-temp">TEMP</g)||[]).length,2);assert.doesNotMatch(rendered,/Anton- TEMP|Malik - TEMP/);
 }
-const captainContext={window:{SKORKeeperPlan:K,SKORLineupMarker:marker},PRODUCTION_GAMEPLAN:{state:s},TEAM_ROSTER:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,preferred_name:p.name})),MATCH_TEMP_PLAYERS:[]};
+const captainContext={window:{SKORKeeperPlan:K,SKORMatchJerseys:J,SKORLineupMarker:marker},PRODUCTION_GAMEPLAN:{state:s},TEAM_ROSTER:roster.map(p=>({player_key:p.player_key,jersey_number:p.number,preferred_name:p.name})),MATCH_TEMP_PLAYERS:[]};
 vm.runInNewContext(admin.slice(admin.indexOf('function officialPlayerLabel('),admin.indexOf('function officialFormationSlots(')),captainContext);
 assert.equal(captainContext.officialPlayerLabel('alex'),'#12 Alex');
 const strategyMarker={window:{SKORLineupMarker:marker},clamp:(n,a,b)=>Math.min(b,Math.max(a,n)),esc:v=>String(v??'')};
@@ -245,7 +245,7 @@ box.querySelectorAll=selector=>[...box.innerHTML.matchAll(new RegExp('data-keepe
 // Keep event nodes from the current render for dispatching.
 const baseQuery=box.querySelectorAll;box.querySelectorAll=selector=>{const result=baseQuery(selector);box[selector]=result;return result;};
 let writes=0,allowed=true,blocked=0;
-const editorWindow={SKORKeeperPlan:K,SKORPortalCanWrite:()=>allowed,SKORViewerBlocked:()=>blocked++};
+const editorWindow={SKORKeeperPlan:K,SKORMatchJerseys:J,SKORPortalCanWrite:()=>allowed,SKORViewerBlocked:()=>blocked++};
 vm.runInNewContext(read('keeper-editor.js'),{window:editorWindow,document:{getElementById:element}});
 const editorState=fixture();
 const editorContext={state:editorState,players:roster,id:p=>p.player_key,primaryNumber:p=>String(p.number),name:p=>p.name,onError:message=>assert.fail(message),onChange:()=>{writes++;editorWindow.SKORKeeperEditor.render(editorContext);}};

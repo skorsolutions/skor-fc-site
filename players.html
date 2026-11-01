@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="players-v58.1-private-match-scores">
+<meta name="skor-build" content="players-v58.28-optional-squad-numbers">
 <title>SKOR FC | Squad</title>
 <meta name="description" content="Meet the SKOR FC squad — Over 30 soccer in Roswell, Georgia.">
 <meta name="skor-build" content="public-shared-data-v37">
@@ -139,6 +139,7 @@ background:linear-gradient(135deg,#5e0a1e,#a81839);font-size:42px;font-weight:95
 }
 
 .player-photo .public-player-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2}.player-photo .public-player-photo~.player-avatar{display:none}
+.player-number-bg.number-pending{font-size:64px;letter-spacing:0}.hero-number.number-pending{font-size:100px}
 </style>
 </head>
 <body>
@@ -658,13 +659,14 @@ function rosterEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","
 function rosterInitial(v){return String(v||"?").trim().charAt(0).toUpperCase()||"?";}
 function renderRosterCards(){
   const grid=document.getElementById("squadGrid"),count=document.getElementById("rosterCount");if(!grid)return;if(count)count.textContent=`${roster.length} PLAYER${roster.length===1?"":"S"} · 2026 ROSTER`;
-  grid.innerHTML=roster.map(p=>`<article class="player-card"><div class="player-photo" aria-label="${rosterEsc(p.name)}"><div class="player-number-bg">${rosterEsc(p.number)}</div>${p.photo_url?`<img class="public-player-photo" src="${rosterEsc(p.photo_url)}" alt="${rosterEsc(p.name)}">`:''}<div class="player-avatar">${rosterEsc(rosterInitial(p.name))}</div>${p.is_new?'<span class="new-badge">NEW PLAYER</span>':'<span class="photo-pending">PHOTO PENDING</span>'}</div><div class="player-details"><div class="shirt">#${rosterEsc(p.number)}</div><h2>${rosterEsc(p.name)}</h2><div class="position">${rosterEsc(p.position||"Player")}</div><p>${rosterEsc(p.bio||"Bio pending.")}</p><div class="player-stats" data-player-number="${rosterEsc(p.number)}" data-player-name="${rosterEsc(p.name)}"><div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div><div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div><div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div><div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div><div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div></div></div></article>`).join("");
+  grid.innerHTML=roster.map(p=>`<article class="player-card"><div class="player-photo" aria-label="${rosterEsc(p.name)}"><div class="player-number-bg${p.number==='TBD'?' number-pending':''}">${rosterEsc(p.number)}</div>${p.photo_url?`<img class="public-player-photo" src="${rosterEsc(p.photo_url)}" alt="${rosterEsc(p.name)}">`:''}<div class="player-avatar">${rosterEsc(rosterInitial(p.name))}</div>${p.is_new?'<span class="new-badge">NEW PLAYER</span>':'<span class="photo-pending">PHOTO PENDING</span>'}</div><div class="player-details"><div class="shirt">${p.number==="TBD"?"TBD":"#"+rosterEsc(p.number)}</div><h2>${rosterEsc(p.name)}</h2><div class="position">${rosterEsc(p.position||"Player")}</div><p>${rosterEsc(p.bio||"Bio pending.")}</p><div class="player-stats" data-player-key="${rosterEsc(p.player_key)}" data-player-number="${rosterEsc(p.number)}" data-player-name="${rosterEsc(p.name)}"><div class="player-stat"><strong data-stat="goals">0</strong><span>Goals</span></div><div class="player-stat"><strong data-stat="assists">0</strong><span>Assists</span></div><div class="player-stat"><strong data-stat="yellow">0</strong><span>YC</span></div><div class="player-stat"><strong data-stat="red">0</strong><span>RC</span></div><div class="player-stat"><strong data-stat="motm">0</strong><span>MOTM</span></div></div></div></article>`).join("");
 }
 async function loadPublicRoster(){
-  try{const {data,error}=await statsDb.from("public_roster").select("player_key,display_name,jersey_number,position,bio,is_new,photo_url,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(error)throw error;if(data?.length){roster=data.map(p=>({player_key:p.player_key,number:String(p.jersey_number),name:p.display_name,position:p.position||"Player",bio:p.bio||"Bio pending.",is_new:!!p.is_new,photo_url:p.photo_url||null}));renderRosterCards();}}catch(err){console.info("Using built-in roster fallback:",err?.message||err);renderRosterCards();}
+  try{const {data,error}=await statsDb.from("public_roster").select("player_key,display_name,jersey_number,position,bio,is_new,photo_url,sort_order,created_at").order("sort_order",{ascending:true}).order("created_at",{ascending:true});if(error)throw error;if(data?.length){roster=data.map(p=>({player_key:p.player_key,number:p.jersey_number==null?"TBD":String(p.jersey_number),name:p.display_name,position:p.position||"Player",bio:p.bio||"Bio pending.",is_new:!!p.is_new,photo_url:p.photo_url||null}));renderRosterCards();}}catch(err){console.info("Using built-in roster fallback:",err?.message||err);renderRosterCards();}
 }
 
 function norm(v){ return String(v || "").trim().toLowerCase(); }
+function publicStatKey(p){return p.player_key?"id:"+p.player_key:playerKey(p.number,p.name);}
 function playerKey(number,name){ return `${String(number||"").trim()}|${norm(name)}`; }
 function statIdentity(number,name,rosterNumber){
   const stable=String(rosterNumber||"").trim();
@@ -699,9 +701,9 @@ async function loadSeasonStats(){
     if(error) throw error;
     const summary=data||{}, totals=summary.totals||{};
     const stats=new Map();
-    roster.forEach(p=>stats.set(playerKey(p.number,p.name),newStat(p.number,p.name)));
+    roster.forEach(p=>stats.set(publicStatKey(p),{...newStat(p.number,p.name),player_key:p.player_key}));
     for(const player of summary.players||[]){
-      const key=statIdentity(player.number,player.name,player.number);
+      const key=player.player_key?publicStatKey(player):statIdentity(player.number,player.name,player.number);
       stats.set(key,{...newStat(player.number,player.name),...player});
     }
     document.getElementById("teamGoals").textContent=totals.goals??0;
@@ -712,7 +714,7 @@ async function loadSeasonStats(){
 
     document.querySelectorAll(".player-stats").forEach(el=>{
       const number=el.dataset.playerNumber,name=el.dataset.playerName;
-      const st=stats.get(playerKey(number,name)) || newStat(number,name);
+      const st=stats.get(el.dataset.playerKey?"id:"+el.dataset.playerKey:playerKey(number,name)) || newStat(number,name);
       for(const field of ["goals","assists","yellow","red","motm"]){
         const out=el.querySelector(`[data-stat="${field}"]`); if(out) out.textContent=st[field];
       }
@@ -726,7 +728,7 @@ async function loadSeasonStats(){
     document.getElementById("motmLeader").textContent=motm?displayPlayer(motm.number,motm.name):"—";
     document.getElementById("motmLeaderSub").textContent=motm?`${motm.motm} award${motm.motm===1?"":"s"}`:"No awards recorded yet";
 
-    const rosterKeys=new Set(roster.map(p=>playerKey(p.number,p.name)));
+    const rosterKeys=new Set(roster.map(p=>publicStatKey(p)));
     const extras=[...stats.entries()].filter(([k,s])=>!rosterKeys.has(k) && (s.goals||s.assists||s.yellow||s.red||s.motm)).map(([,s])=>s)
       .sort((a,b)=>(b.goals+b.assists+b.motm)-(a.goals+a.assists+a.motm));
     const extraWrap=document.getElementById("extraPlayerStats"),body=document.getElementById("extraPlayerStatsBody");
@@ -748,4 +750,5 @@ setInterval(initSquadPage,60*1000);
 
 </body>
 </html>
+
 

@@ -46,19 +46,20 @@
     return (HOME_FORMATIONS[name]||HOME_FORMATIONS["4-4-2"]).map(([role,x,y],index)=>({id:"opp_"+index,label:role,x,y:flip?100-y:y}));
   }
   function playersFromLineup(snapshot,roster){
+    roster=window.SKORMatchJerseys?.projectRoster(snapshot,roster)||roster;
     snapshot=window.SKORKeeperPlan?.hydrate(snapshot,roster)||snapshot;
     const byId=new Map((roster||[]).map(player=>[String(player.player_key||player.id),player]));
     const formation=snapshot?.formation||"4-2-3-1",players=[];
     if(formation==="Freeform / Custom"){
       Object.entries(snapshot?.freeform||{}).forEach(([pid,pos])=>{
         const player=byId.get(String(pid));if(!player)return;
-        players.push({id:String(pid),name:playerName(player),number:Number.isFinite(Number(player.number))?Number(player.number):"",x:clamp(Number(pos.x)||50,4,96),y:clamp(Number(pos.y)||50,5,95)});
+        players.push({id:String(pid),name:playerName(player),number:player.number!=null&&Number.isFinite(Number(player.number))?Number(player.number):"TBD",x:clamp(Number(pos.x)||50,4,96),y:clamp(Number(pos.y)||50,5,95)});
       });
       return players.map(p=>({...p,keeperNumber:window.SKORKeeperPlan?.details(snapshot,p.id,p.number).jerseyNumber??null,keeperLabel:window.SKORKeeperPlan?.details(snapshot,p.id,p.number).label||''}));
     }
     (HOME_FORMATIONS[formation]||HOME_FORMATIONS["4-2-3-1"]).forEach(([role,x,y])=>{
       const pid=String(snapshot?.slots?.[role]||""),player=byId.get(pid);
-      if(player)players.push({id:pid,name:playerName(player),number:Number.isFinite(Number(player.number))?Number(player.number):"",x,y});
+      if(player)players.push({id:pid,name:playerName(player),number:player.number!=null&&Number.isFinite(Number(player.number))?Number(player.number):"TBD",x,y});
     });
     return players.map(p=>({...p,keeperNumber:window.SKORKeeperPlan?.details(snapshot,p.id,p.number).jerseyNumber??null,keeperLabel:window.SKORKeeperPlan?.details(snapshot,p.id,p.number).label||''}));
   }

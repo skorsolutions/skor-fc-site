@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v58.25-guest-profiles" />
+<meta name="skor-build" content="player-portal-v58.28-optional-squad-numbers" />
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <link rel="stylesheet" href="equipment.css?v=58.5">
@@ -32,6 +32,7 @@
 @media(max-width:560px){.wrap{width:calc(100% - 18px)}.screen{padding-top:16px}.card{padding:15px}.hero{display:block;padding-top:18px}.avatar{width:122px;height:144px;margin-bottom:14px}.hero-copy h1{font-size:38px}.hero-number{font-size:150px;top:-16px}.stats{grid-template-columns:repeat(2,1fr)}.email-actions,.code-actions,.edit-grid{grid-template-columns:1fr}.top-name{display:none}.title{font-size:32px}}
 .match-record-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.record-breakdown{margin:12px 0}.record-awards{display:flex;gap:10px 16px;flex-wrap:wrap;color:#aeb4bc;font-size:12px}.record-awards strong{color:#fff;margin-left:4px}.record-rule{font-size:11px;line-height:1.45;color:#8f96a0}.record-sync{font-size:11px;line-height:1.45;color:#aeb4bc}.record-sync.error{color:#ffb0bf}.record-attendance{display:inline-block;margin-top:9px;border:1px solid #3a3f46;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:800}.record-attendance.present{color:#9de2bf;background:#183629}.record-attendance.absent{color:#f0a5b5;background:#3d1d25}.record-attendance.excused{color:#efd5a1}.record-attendance.unmarked{color:#aeb4bc}#refreshMatchRecordBtn,#showMoreMatchHistory{min-height:44px}#myMatchRecord .sectionhead{align-items:flex-start;flex-wrap:wrap}#myMatchRecord .sectionhead>div{min-width:0}
 .portal-sections{align-items:start}.portal-disclosure{min-width:0}.portal-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:54px;list-style:none;cursor:pointer;touch-action:manipulation;border-radius:8px}.portal-disclosure>summary::-webkit-details-marker{display:none}.portal-disclosure>summary>div{min-width:0}.portal-disclosure>summary h2{margin:6px 0 0;font-size:20px;overflow-wrap:anywhere}.portal-disclosure>summary:after{content:"";width:12px;height:12px;border-right:3px solid currentColor;border-bottom:3px solid currentColor;transform:rotate(45deg);flex:0 0 auto;margin:0 5px 7px}.portal-disclosure[open]>summary:after{transform:rotate(225deg);margin-bottom:0}.portal-disclosure>summary:focus-visible{outline:2px solid #d3637c;outline-offset:5px}.portal-disclosure-body{margin-top:16px}.portal-disclosure-body>.sectionhead{align-items:center;flex-wrap:wrap}#equipmentDisclosure .eq-head h2{display:none}
+.hero-number.number-pending{font-size:clamp(72px,18vw,130px);top:0;letter-spacing:0}
 </style>
 </head>
 <body>
@@ -201,9 +202,10 @@
 <script src="portal-activity.js?v=58.6"></script>
 <script src="player-match-record.js?v=58.17"></script>
 <script src="keeper-plan.js?v=58.10"></script>
+<script src="match-jerseys.js?v=58.28"></script>
 <script src="event-animation.js?v=58.24"></script>
-<script src="team-dues.js?v=58.25"></script>
-<script src="guest-profiles.js?v=58.25"></script>
+<script src="team-dues.js?v=58.28"></script>
+<script src="guest-profiles.js?v=58.28"></script>
 <script src="guest-portal.js?v=58.25"></script>
 <script>
 const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
@@ -358,7 +360,7 @@ async function loadPortal(){
   if(recent.length)await selectFeedbackMatch(recent[0].match_id,false);
 }
 function renderProfile(){
-  $('topName').textContent=profile.display_name||'Player';$('heroNumber').textContent=profile.jersey_number??'';$('playerDisplayName').textContent=profile.display_name||'Player';$('playerNumber').textContent=`#${profile.jersey_number??'--'}`;$('playerPosition').textContent=profile.position||'Player';$('playerBio').textContent=profile.bio||'Bio pending.';$('newPlayerBadge').classList.toggle('hidden',!profile.is_new);
+  $('topName').textContent=profile.display_name||'Player';$('heroNumber').textContent=profile.jersey_number??'TBD';$('heroNumber').classList.toggle('number-pending',profile.jersey_number==null);$('playerDisplayName').textContent=profile.display_name||'Player';$('playerNumber').textContent=profile.jersey_number==null?'TBD':`#${profile.jersey_number}`;$('playerPosition').textContent=profile.position||'Player';$('playerBio').textContent=profile.bio||'Bio pending.';$('newPlayerBadge').classList.toggle('hidden',!profile.is_new);
   const av=$('playerAvatar');av.innerHTML=profile.photo_url?`<img src="${esc(profile.photo_url)}" alt="${esc(profile.display_name||'Player')}">`:`<span>${esc(playerInitial())}</span>`;
   $('editPreferredName').value=profile.display_name||'';$('editBio').value=profile.bio==='Bio pending.'?'':(profile.bio||'');
 }
@@ -505,7 +507,7 @@ async function loadComments(){
     $('commentList').innerHTML=`<div class="sub">${esc(team.error.message)}</div>`;
   }else{
     const rows=team.data||[];
-    $('commentList').innerHTML=rows.length?rows.map(c=>`<div class="comment ${c.visibility}"><strong>#${c.jersey_number} ${esc(c.display_name)}</strong> · Team<div>${esc(c.comment)}</div><small>${new Date(c.created_at).toLocaleString()}</small>${c.is_mine?`<button class="comment-action edit" data-edit-comment="${c.id}" data-edit-visibility="${c.visibility}" data-edit-text="${encodeURIComponent(c.comment)}" type="button">Edit my comment</button><button class="comment-action delete" data-delete-comment="${c.id}" type="button">Delete my comment</button>`:''}</div>`).join(''):'<div class="sub">No team comments yet.</div>';
+    $('commentList').innerHTML=rows.length?rows.map(c=>`<div class="comment ${c.visibility}"><strong>${c.jersey_number==null?'TBD':'#'+c.jersey_number} ${esc(c.display_name)}</strong> · Team<div>${esc(c.comment)}</div><small>${new Date(c.created_at).toLocaleString()}</small>${c.is_mine?`<button class="comment-action edit" data-edit-comment="${c.id}" data-edit-visibility="${c.visibility}" data-edit-text="${encodeURIComponent(c.comment)}" type="button">Edit my comment</button><button class="comment-action delete" data-delete-comment="${c.id}" type="button">Delete my comment</button>`:''}</div>`).join(''):'<div class="sub">No team comments yet.</div>';
     $('commentList').querySelectorAll('[data-edit-comment]').forEach(b=>b.addEventListener('click',()=>editComment(b.dataset.editComment,b.dataset.editVisibility,decodeURIComponent(b.dataset.editText||''))));
     $('commentList').querySelectorAll('[data-delete-comment]').forEach(b=>b.addEventListener('click',()=>deleteComment(b.dataset.deleteComment)));
   }

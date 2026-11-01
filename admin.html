@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.27-sub-wave-eligibility" />
-  <title>SKOR FC Admin | Captain Portal v58.27</title>
+  <meta name="skor-build" content="captain-portal-v58.28-optional-squad-numbers" />
+  <title>SKOR FC Admin | Captain Portal v58.28</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1257,6 +1257,13 @@
     .sub-invalid-label{font-size:.6rem;font-weight:900}
     .sub-wave-review{grid-column:1/-1;padding:9px;border:1px solid #d8b362;border-radius:9px;background:#fff8e6;color:#684600;font-size:.72rem;line-height:1.45;overflow-wrap:anywhere}
     .sub-player-chip:focus-visible{outline:3px solid #234b74;outline-offset:2px}
+    #matchJerseyPanel{margin:0 0 14px;padding:16px;min-width:0}
+    #matchJerseyPanel summary{cursor:pointer;font-weight:900}
+    #matchJerseyPanel p{font-size:.8rem;color:var(--muted);line-height:1.5}
+    .match-jersey-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,1fr);align-items:center;gap:10px;margin-top:10px}
+    .match-jersey-row small{display:block;font-size:.7rem;color:var(--muted);margin-top:4px}
+    .match-jersey-row select{min-width:0;width:100%;min-height:44px}
+    @media(max-width:480px){.match-jersey-row{grid-template-columns:1fr}}
     .sub-player-chip:active{transform:scale(.97)}
     .sub-player-chip.out.selected{
       background:#801A3D;border-color:#801A3D;color:#fff;
@@ -1889,7 +1896,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.27</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.28</div>
   </aside>
 
   <main>
@@ -2647,8 +2654,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               </div>
               <div>
                 <label>Jersey #</label>
-                <input id="rosterNumber" type="number" min="1" max="99" required inputmode="numeric" placeholder="11" aria-describedby="rosterNumberStatus">
-                <div class="jersey-number-status" id="rosterNumberStatus">Choose any number from 1–99.</div>
+                <input id="rosterNumber" type="number" min="1" max="99" inputmode="numeric" placeholder="11" aria-describedby="rosterNumberStatus">
+                <div class="jersey-number-status" id="rosterNumberStatus">Optional permanent number, 1–99. Leave blank for TBD.</div>
               </div>
               <div>
                 <label>Position</label>
@@ -2904,6 +2911,11 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
               <div class="keeper-plan-status" id="keeperPlanStatus" role="status" aria-live="polite"></div>
             </details>
         </div>
+        <details class="mini-panel" id="matchJerseyPanel">
+          <summary>Match jersey numbers</summary>
+          <p>Regular players can have a permanent number of TBD. Choose an available number for this game; it is saved with the variation and does not change their permanent number or TEMP status.</p>
+          <div id="matchJerseyRows"></div>
+        </details>
 
         <details class="panel potential-positions" id="potentialPositionsPanel">
           <summary><span class="potential-chevron" aria-hidden="true">▸</span><span>Potential Positions</span></summary>
@@ -3265,6 +3277,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 </dialog>
 <link rel="stylesheet" href="keeper-plan.css?v=58.14">
 <script src="keeper-plan.js?v=58.10"></script>
+<script src="match-jerseys.js?v=58.28"></script>
+<script src="match-jerseys-editor.js?v=58.28"></script>
 <script src="sub-wave-plan.js?v=58.27"></script>
 <script src="lineup-marker.js?v=58.13"></script>
 <script src="keeper-editor.js?v=58.9"></script>
@@ -3371,7 +3385,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function blankSubRow(index=0){ return {label:"",unit:defaultSubUnit(index),minute:null,out:[],in:[]}; }
   function blankSubs(){ return {firstHalf:[blankSubRow(0)],secondHalf:[blankSubRow(0)]}; }
   function blankState(formation){
-    return {formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),showSecondHalfSubs:false,labelMode:"names",captainId:"",quote:"",notes:"",keeperPlan:window.SKORKeeperPlan.normalize(null)};
+    return {matchJerseys:{},formation:formation||"4-2-3-1",slots:{},freeform:{},bench:[],depth:{},subs:blankSubs(),showSecondHalfSubs:false,labelMode:"names",captainId:"",quote:"",notes:"",keeperPlan:window.SKORKeeperPlan.normalize(null)};
   }
   function normalizeSubs(value){
     const normalizeIds=v=>{
@@ -3436,6 +3450,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const hasStoredSecondHalf=normalizedSubs.secondHalf.some(row=>(row.out||[]).length||(row.in||[]).length);
     return {
       formation,
+      matchJerseys:window.SKORMatchJerseys.normalize(value?.matchJerseys),
       slots,
       freeform,
       bench:Array.isArray(value?.bench)?value.bench.filter(Boolean):[],
@@ -3453,7 +3468,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function id(p){ return p.player_key || p.id || (p.number+"-"+p.name); }
   function player(pid){ return roster.find(p=>id(p)===pid); }
   function selectableRoster(){ return roster.filter(p=>!p.archived); }
-  function primaryJerseyLabel(p){ return p?.temp ? (Number.isInteger(Number(p.number))&&Number(p.number)>0?String(Number(p.number)):"TEMP") : String(p?.number??""); }
+  function primaryJerseyLabel(p){ return p?.temp ? (Number.isInteger(Number(p.number))&&Number(p.number)>0?String(Number(p.number)):"TEMP") : window.SKORMatchJerseys.label(window.SKORMatchJerseys.resolve(state,id(p),p?.number)); }
   function keeperDetails(p){return window.SKORKeeperPlan.details(state,id(p),primaryJerseyLabel(p));}
   function jerseyLabel(p){return keeperDetails(p).number;}
   function keeperSuffix(p){const label=keeperDetails(p).label;return label?' ('+label+')':'';}
@@ -3461,7 +3476,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     window.SKORKeeperEditor.render({state,players:matchSquadPlayers(),id,primaryNumber:primaryJerseyLabel,name:p=>window.SKORLineupMarker.shortName(p.name,p.temp),
       onError:message=>markStatus(message,false),onChange:message=>{inheritKeeperChoices=false;persistDraft();renderAll();markStatus(message);}});
   }
+  function renderMatchJerseys(){
+    window.SKORMatchJerseysEditor.render({state,roster:selectableRoster(),id,canWrite:()=>window.SKORPortalCanWrite?.()===true,onError:message=>markStatus(message,false),onChange:message=>{persistDraft();renderAll();markStatus(message);}});
+  }
   function checkKeepers(snapshot=state){
+    const jerseyErrors=window.SKORMatchJerseys.validate(snapshot,selectableRoster().filter(p=>snapshot===state||!p.temp));
+    if(jerseyErrors.length){markStatus(jerseyErrors.join(' '),false);return false;}
+
     if(snapshot===state){const invalid=document.querySelector('#keeperPlanPanel input:invalid');if(invalid){invalid.closest("details").open=true;invalid.reportValidity();return false;}}
     const errors=window.SKORKeeperPlan.validate(snapshot);
     if(errors.length){markStatus(errors.join(' '),false);return false;}return true;
@@ -3592,7 +3613,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     if(quote)quote.value=state.quote||"";
     if(notes)notes.value=state.notes||"";
   }
-  function persistDraft(){ state=window.SKORKeeperPlan.hydrate(state,selectableRoster());try{ localStorage.setItem(draftKey(), JSON.stringify(state)); }catch(e){ console.warn("Could not save lineup draft",e);} renderGameplanPreview(); }
+  function persistDraft(){ state=window.SKORMatchJerseys.capture(window.SKORKeeperPlan.hydrate(state,selectableRoster()),selectableRoster());try{ localStorage.setItem(draftKey(), JSON.stringify(state)); }catch(e){ console.warn("Could not save lineup draft",e);} renderGameplanPreview(); }
   function loadDraft(){
     try{
       const raw=localStorage.getItem(draftKey());
@@ -4649,6 +4670,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     });
     if(isTemp(s.captainId))s.captainId="";
     s.keeperPlan.assignments={};
+    s.matchJerseys={};
     return {snapshot:s,removed};
   }
 
@@ -4973,7 +4995,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       .subscribe();
   }
 
-  function renderCore(){ window.SKORKeeperPlan.prune(state);state=window.SKORKeeperPlan.hydrate(state,selectableRoster());renderKeeperPlan();renderPitch(); renderPool(); renderBench(); renderDepth(); bindDrags(); }
+  function renderCore(){ window.SKORKeeperPlan.prune(state);state=window.SKORKeeperPlan.hydrate(state,selectableRoster());renderKeeperPlan();renderMatchJerseys();renderPitch(); renderPool(); renderBench(); renderDepth(); bindDrags(); }
   function renderSquadChange(){ renderCore(); renderSubPlan(); renderGameplanPreview(); }
   function renderAll(){ renderCore(); renderSubPlan(); renderVariations(); renderGameplanPreview(); }
   function renderEventOptions(){
@@ -4994,14 +5016,14 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       .filter(r=>r && r.active!==false)
       .map(r=>({
         player_key:String(r.player_key || r.id || (r.jersey_number+"-"+r.full_name)),
-        number:Number(r.jersey_number),
+        number:window.SKORMatchJerseys.number(r.jersey_number),
         name:String(r.preferred_name||r.display_name||String(r.full_name||"Player").trim().split(/\s+/)[0]),
         fullName:String(r.full_name||r.display_name||r.preferred_name||"Player"),
         position:String(r.position||''),
         temp:false,
         archived:false
       }))
-      .filter(p=>Number.isFinite(p.number) && p.name)
+      .filter(p=>p.name)
       .sort((a,b)=>a.number-b.number || a.name.localeCompare(b.name));
     if(!next.length)return;
     permanentRoster=next;
@@ -5031,6 +5053,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   }
   function removePlayerEverywhere(pid){
     if(state.keeperPlan?.assignments)delete state.keeperPlan.assignments[pid];
+    if(state.matchJerseys)delete state.matchJerseys[pid];
     removeFromField(pid);
     state.bench=(state.bench||[]).filter(x=>x!==pid);
     Object.keys(state.depth||{}).forEach(k=>{state.depth[k]=(state.depth[k]||[]).filter(x=>x!==pid);});
@@ -5293,7 +5316,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     updateProductionBtn.textContent='Publishing…';
     const {error}=await sb.rpc('update_production_lineup_state',{
       p_variation_id:finalRec.id,
-      p_state:normalizeState(clone(state))
+      p_state:normalizeState(clone(window.SKORMatchJerseys.capture(state,selectableRoster())))
     });
     updateProductionBtn.disabled=false;
     updateProductionBtn.textContent=old;
@@ -5334,7 +5357,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         event_key:eventKey(),
         event_label:eventLabel(),
         name,
-        state:clone(state),
+        state:clone(window.SKORMatchJerseys.capture(state,selectableRoster())),
         created_by:user.id,
         created_by_name:fullName,
         created_by_email:user.email||null
@@ -5384,7 +5407,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.27 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.28 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5398,7 +5421,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     findVariation:id=>allSharedVariations.find(v=>String(v.id)===String(id))||null,
     loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
     removePermanentPlayer:pid=>{removePlayerEverywhere(String(pid));if(selectedPlayer===String(pid))selectedPlayer=null;persistDraft();renderAll();},
-    getState:()=>clone(window.SKORKeeperPlan.hydrate(state,selectableRoster())),
+    getState:()=>clone(window.SKORMatchJerseys.capture(window.SKORKeeperPlan.hydrate(state,selectableRoster()),selectableRoster())),
     getRoster:()=>clone(selectableRoster()),
     listVariations:()=>clone(allSharedVariations),
     getEventLabel:()=>eventLabel(),
@@ -5418,13 +5441,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="jerseys.js?v=58.4"></script>
 <script src="equipment.js?v=58.19"></script>
 <script src="captain-notifications.js?v=58.20"></script>
-<script src="team-dues.js?v=58.25"></script>
-<script src="guest-profiles.js?v=58.25"></script>
+<script src="team-dues.js?v=58.28"></script>
+<script src="guest-profiles.js?v=58.28"></script>
 <script src="post-match-entry.js?v=58.26"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="strategy-reuse.js?v=58.23"></script>
-<script src="strategy.js?v=58.23"></script>
-<script src="ref-game-card.js?v=58.10"></script>
+<script src="strategy.js?v=58.28"></script>
+<script src="ref-game-card.js?v=58.28"></script>
 <script src="portal-activity.js?v=58.6"></script>
 <script>
 const SUPABASE_URL = "https://qwyhcezlgdkzzckysqxi.supabase.co";
@@ -5743,11 +5766,11 @@ const postMatchEntry=window.SKORPostMatch.mount({client:sb,
 });
 
 function gdEsc(v){return String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));}
-function playerValue(p){return `roster|${p.number}|${p.name}`;}
+function playerValue(p){return `roster|${p.number??""}|${p.name}|${p.player_key||""}`;}
 function tempPlayerValue(p){return `temp|${p.id}`;}
 function rosterOptions(includeNone=false){
   const first=includeNone?'<option value="">Unassisted / No assist</option>':'<option value="">Select player…</option>';
-  const roster='<optgroup label="Roster">'+ROSTER.filter(p=>!window.SKORGuestProfiles?.captain?.isMatchAlias(p.player_key,gameDaySelected?.id)).map(p=>`<option value="${gdEsc(playerValue(p))}">#${p.number} ${gdEsc(p.name)}</option>`).join("")+'</optgroup>';
+  const roster='<optgroup label="Roster">'+ROSTER.filter(p=>!window.SKORGuestProfiles?.captain?.isMatchAlias(p.player_key,gameDaySelected?.id)).map(p=>`<option value="${gdEsc(playerValue(p))}">${window.SKORMatchJerseys.label(window.SKORMatchJerseys.resolve(PRODUCTION_GAMEPLAN?.state,p.player_key,p.number))} ${gdEsc(p.name)}</option>`).join("")+'</optgroup>';
   const temps=MATCH_TEMP_PLAYERS.length?'<optgroup label="Match Fill-ins / TEMP">'+MATCH_TEMP_PLAYERS.map(p=>`<option value="${gdEsc(tempPlayerValue(p))}">${p.jersey_number?`#${p.jersey_number} ${gdEsc(p.display_name)} · TEMP`:`TEMP — ${gdEsc(p.display_name)}`}</option>`).join("")+'</optgroup>':'';
   const assigned=new Set(ROSTER.map(p=>Number(p.number)));
   const availableExtras=EXTRA_JERSEY_NUMBERS.filter(n=>!assigned.has(Number(n)));
@@ -5788,7 +5811,7 @@ function setJerseyNumberStatus(message,state=""){
   const input=document.getElementById("rosterNumber");
   const status=document.getElementById("rosterNumberStatus");
   if(!input||!status)return;
-  status.textContent=message||"Choose any number from 1–99.";
+  status.textContent=message||"Optional permanent number, 1–99. Leave blank for TBD.";
   status.className="jersey-number-status"+(state?" "+state:"");
   input.classList.toggle("jersey-available",state==="available");
   input.classList.toggle("jersey-taken",state==="taken");
@@ -5798,6 +5821,7 @@ function localJerseyOwner(number,excludeId=null){
 }
 async function checkJerseyNumberAvailability(number,{quiet=false,excludeId=null}={}){
   const input=document.getElementById("rosterNumber");
+  if(number===null||number===undefined||String(number).trim()===''){if(input)input.setCustomValidity('');if(!quiet)setJerseyNumberStatus('Permanent number TBD. Assign a match jersey in Lineups.');return {available:true,owner:null};}
   const n=Number(number);
   if(!Number.isInteger(n)||n<1||n>99){
     if(!quiet)setJerseyNumberStatus("Choose a jersey number from 1–99.","taken");
@@ -5993,7 +6017,7 @@ window.openDepartureDialog=function(id){
   const depError=document.getElementById("departureError");
   if(depError){depError.classList.remove("show");depError.textContent="";}
   const defaultRadio=document.querySelector('input[name="departureType"][value="eligible_to_return"]');if(defaultRadio)defaultRadio.checked=true;
-  if(label)label.textContent=`#${p.jersey_number} ${p.full_name}`;
+  if(label)label.textContent=`${p.jersey_number==null?"TBD":"#"+p.jersey_number} ${p.full_name}`;
   if(note)note.value="";
   const captainAccess=captainAccessForPlayer(p);
   if(warning){
@@ -6009,7 +6033,7 @@ window.restoreFormerPlayer=async function(id){
   if(!portalCanWrite()){viewerBlocked("restore former players");return;}
   const p=TEAM_ROSTER.find(x=>String(x.id)===String(id));if(!p||p.active!==false)return;
   if(p.departure_status==="do_not_reactivate"){setRosterStatus(`${p.full_name} is marked Do Not Reactivate. Change that separation status deliberately before returning the player.`,false);return;}
-  if(!confirm(`Restore ${p.full_name} to the current squad using #${p.jersey_number}?\n\nIf #${p.jersey_number} has been reassigned, edit this former player first and choose an available number.`))return;
+  if(!confirm(`Restore ${p.full_name} to the current squad using ${p.jersey_number==null?"permanent number TBD":"#"+p.jersey_number}?\n\nIf #${p.jersey_number} has been reassigned, edit this former player first and choose an available number.`))return;
   const {error}=await sb.rpc("captain_restore_roster_player",{p_roster_player_id:p.id,p_portal_enabled:true});
   if(error)return setRosterStatus(String(error.message||error),false);
   setRosterStatus(`${p.full_name} restored to the current squad. Their historical identity and stats remain attached to the same player record.`,true);
@@ -6027,7 +6051,7 @@ function renderRosterTable(){
   }
   body.innerHTML=TEAM_ROSTER.filter(p=>!p.is_guest).map(p=>`
     <tr class="${p.active===false?'roster-former-row':''}">
-      <td><strong>#${rosterEsc(p.jersey_number)}</strong></td>
+      <td><strong>${p.jersey_number==null?'TBD':'#'+rosterEsc(p.jersey_number)}</strong></td>
       <td class="roster-name-cell"><strong>${rosterEsc(p.full_name)}</strong><small><b>Public:</b> ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</small><small>${rosterEsc(p.bio||"Bio pending.")}</small>${renderRosterDues(p.id)}</td>
       <td>${rosterEsc(p.position||"Player")}</td>
       <td class="roster-new-cell">
@@ -6073,7 +6097,7 @@ function resetRosterForm({keepMessage=false}={}){
   if(portalBox)portalBox.checked=true;
   const numberInput=document.getElementById("rosterNumber");
   if(numberInput)numberInput.setCustomValidity("");
-  setJerseyNumberStatus("Choose any number from 1–99.");
+  setJerseyNumberStatus("Optional permanent number, 1–99. Leave blank for TBD.");
   if(!keepMessage)setRosterStatus("",true);
 }
 window.editRosterPlayer=function(id){
@@ -6095,7 +6119,7 @@ window.editRosterPlayer=function(id){
   document.getElementById("cancelRosterEditBtn").style.display="inline-flex";
   const numberInput=document.getElementById("rosterNumber");
   if(numberInput)numberInput.setCustomValidity("");
-  setJerseyNumberStatus(`#${p.jersey_number} is this player's current number.`,"available");
+  setJerseyNumberStatus(p.jersey_number==null?'Permanent number TBD.':`#${p.jersey_number} is this player's current number.`,"available");
   setRosterStatus("Editing player profile. Save Player will update every public roster view.",true);
   document.getElementById("rosterForm")?.scrollIntoView({behavior:"smooth",block:"start"});
 };
@@ -6341,7 +6365,7 @@ function attendanceFilteredPlayers(){
 function renderAttendancePlayerTable(){
   const body=document.getElementById("attendancePlayerBody");if(!body)return;const rows=attendanceFilteredPlayers();
   if(!rows.length){body.innerHTML='<tr><td colspan="8"><div class="attendance-empty">No players match this filter.</div></td></tr>';return;}
-  body.innerHTML=rows.map(x=>{const p=Number(x.present_count||0),a=Number(x.absent_count||0),e=Number(x.excused_count||0),counted=Number(x.eligible_count||0),rate=x.attendance_rate===null||x.attendance_rate===undefined?null:Number(x.attendance_rate),inj=x.playing_status==="injured";return `<tr><td><div class="attendance-player-name">#${gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}<small>${counted+e} total marked match${counted+e===1?"":"es"}</small></div></td><td><span class="attendance-playing-status ${inj?"injured":""}">${inj?"Injured":"Active"}</span></td><td><span class="attendance-percent ${attendanceRateClass(rate)}">${rate===null?"—":`${Math.round(rate)}%`}</span></td><td><strong>${p}</strong></td><td><strong>${a}</strong></td><td><strong>${e}</strong></td><td>${counted}</td><td>${gdEsc(attendanceDateTimeShort(x.last_attendance_at))}</td></tr>`;}).join("");
+  body.innerHTML=rows.map(x=>{const p=Number(x.present_count||0),a=Number(x.absent_count||0),e=Number(x.excused_count||0),counted=Number(x.eligible_count||0),rate=x.attendance_rate===null||x.attendance_rate===undefined?null:Number(x.attendance_rate),inj=x.playing_status==="injured";return `<tr><td><div class="attendance-player-name">${x.jersey_number==null?'TBD':'#'+gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}<small>${counted+e} total marked match${counted+e===1?"":"es"}</small></div></td><td><span class="attendance-playing-status ${inj?"injured":""}">${inj?"Injured":"Active"}</span></td><td><span class="attendance-percent ${attendanceRateClass(rate)}">${rate===null?"—":`${Math.round(rate)}%`}</span></td><td><strong>${p}</strong></td><td><strong>${a}</strong></td><td><strong>${e}</strong></td><td>${counted}</td><td>${gdEsc(attendanceDateTimeShort(x.last_attendance_at))}</td></tr>`;}).join("");
 }
 function renderAttendanceMatrix(){
   const host=document.getElementById("attendanceMatrixHost");if(!host)return;const q=(document.getElementById("attendanceSearch")?.value||"").trim().toLowerCase(),filter=document.getElementById("attendanceStatusFilter")?.value||"all";
@@ -6350,7 +6374,7 @@ function renderAttendanceMatrix(){
   if(!matches.length){host.innerHTML='<div class="attendance-empty">No past/final matches are available yet.</div>';return;}
   const sm=new Map(TEAM_ATTENDANCE_MATRIX.map(x=>[`${x.roster_player_id}|${x.match_id}`,x.attendance_status||null]));
   const head=matches.map(m=>`<th class="attendance-match-head" title="${gdEsc(m.opponent||"Opponent")}"><strong>${gdEsc(attendanceDateShort(m.kickoff))}</strong><span>${gdEsc(m.opponent||"Opponent")}</span></th>`).join("");
-  const rows=players.map(p=>`<tr><td class="player-col">#${gdEsc(p.jersey_number)} ${gdEsc(p.display_name)}</td>${matches.map(m=>`<td>${attendanceCellMarkup(sm.get(`${p.roster_player_id}|${m.match_id}`))}</td>`).join("")}</tr>`).join("");
+  const rows=players.map(p=>`<tr><td class="player-col">${p.jersey_number==null?'TBD':'#'+gdEsc(p.jersey_number)} ${gdEsc(p.display_name)}</td>${matches.map(m=>`<td>${attendanceCellMarkup(sm.get(`${p.roster_player_id}|${m.match_id}`))}</td>`).join("")}</tr>`).join("");
   host.innerHTML=`<table class="attendance-matrix"><thead><tr><th class="player-col">Player</th>${head}</tr></thead><tbody>${rows}</tbody></table>`;
 }
 function renderAttendancePage(){
@@ -6392,7 +6416,7 @@ function updateDashboardRoster(){
   if(panel)panel.classList.toggle("visible",injured.length>0);
   if(list){
     list.innerHTML=injured.length
-      ? injured.map(p=>`<span class="injury-player"><span class="injury-dot"></span><strong>#${rosterEsc(p.jersey_number)} ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</strong></span>`).join("")
+      ? injured.map(p=>`<span class="injury-player"><span class="injury-dot"></span><strong>${p.jersey_number==null?'TBD':'#'+rosterEsc(p.jersey_number)} ${rosterEsc(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])}</strong></span>`).join("")
       : "";
   }
 }
@@ -6485,7 +6509,7 @@ async function loadTeamRoster(showMessage=false){
   const active=TEAM_ROSTER.filter(p=>p.active!==false);
   ROSTER=active.map(p=>({
     player_key:p.player_key||p.id,
-    number:Number(p.jersey_number),
+    number:window.SKORMatchJerseys.number(p.jersey_number),
     name:String(p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0])
   }));
   renderRosterTable();
@@ -6511,7 +6535,7 @@ if(rosterNumberInput){
   const validateChosenNumber=()=>{
     clearTimeout(jerseyCheckTimer);
     const raw=rosterNumberInput.value.trim();
-    if(!raw){rosterNumberInput.setCustomValidity("");setJerseyNumberStatus("Choose any number from 1–99.");return;}
+    if(!raw){rosterNumberInput.setCustomValidity("");setJerseyNumberStatus("Optional permanent number, 1–99. Leave blank for TBD.");return;}
     const excludeId=document.getElementById("rosterEditId")?.value||null;
     jerseyCheckTimer=setTimeout(()=>checkJerseyNumberAvailability(raw,{excludeId}),180);
   };
@@ -6542,7 +6566,7 @@ document.getElementById("departureConfirmBtn")?.addEventListener("click",async()
   const inlineError=document.getElementById("departureError");
   if(inlineError){inlineError.classList.remove("show");inlineError.textContent="";}
   const playerLabel=document.getElementById("departurePlayerLabel");
-  if(playerLabel)playerLabel.textContent=`#${p.jersey_number} ${p.full_name} · Archiving…`;
+  if(playerLabel)playerLabel.textContent=`${p.jersey_number==null?"TBD":"#"+p.jersey_number} ${p.full_name} · Archiving…`;
 
   try{
     const {data,error}=await sb.rpc("captain_depart_roster_player",{
@@ -6587,11 +6611,11 @@ document.getElementById("departureConfirmBtn")?.addEventListener("click",async()
     const details=document.getElementById("departureSuccessDetails");
 
     if(title)title.textContent=`${p.full_name} archived`;
-    if(summary)summary.textContent=`#${releasedNumber} is released and Player Portal access is disabled.`;
+    if(summary)summary.textContent=releasedNumber==null?"Player Portal access is disabled. No permanent jersey number was assigned.":`#${releasedNumber} is released and Player Portal access is disabled.`;
     if(details){
       details.innerHTML=
         `<div><strong>Status:</strong> ${rosterEsc(label)}</div>`+
-        `<div><strong>Jersey:</strong> #${rosterEsc(releasedNumber)} is now available</div>`+
+        `<div><strong>Jersey:</strong> ${releasedNumber==null?"Permanent number TBD":"#"+rosterEsc(releasedNumber)+" is now available"}</div>`+
         `<div><strong>History:</strong> past matches, attendance and stats preserved</div>`+
         `<div><strong>Player Portal:</strong> disabled${type==="do_not_reactivate"?"; claimed login cleared":""}</div>`+
         (cleanup.length?`<div><strong>Cleanup:</strong> ${rosterEsc(cleanup.join(" · "))}</div>`:"");
@@ -6612,7 +6636,7 @@ document.getElementById("departureConfirmBtn")?.addEventListener("click",async()
       inlineError.textContent=`Archive failed: ${msg}`;
       inlineError.classList.add("show");
     }
-    if(playerLabel)playerLabel.textContent=`#${p.jersey_number} ${p.full_name}`;
+    if(playerLabel)playerLabel.textContent=`${p.jersey_number==null?"TBD":"#"+p.jersey_number} ${p.full_name}`;
   }finally{
     btn.disabled=false;
     btn.textContent=oldText;
@@ -6626,7 +6650,7 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
   const editId=document.getElementById("rosterEditId")?.value||"";
   const full_name=document.getElementById("rosterFullName").value.trim();
   const preferred_name=document.getElementById("rosterPreferredName").value.trim();
-  const jersey_number=Number(document.getElementById("rosterNumber").value);
+  const jersey_number=window.SKORMatchJerseys.number(document.getElementById("rosterNumber").value);
   const position=document.getElementById("rosterPosition").value.trim();
   const bio=document.getElementById("rosterBio").value.trim();
   const is_new=document.getElementById("rosterIsNew")?.checked!==false;
@@ -6634,7 +6658,7 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
   const email=document.getElementById("rosterEmail").value.trim().toLowerCase();
   const phone=document.getElementById("rosterPhone").value.trim();
   if(!full_name)return setRosterStatus("Enter the player's full name.",false);
-  if(!Number.isInteger(jersey_number)||jersey_number<1||jersey_number>99)return setRosterStatus("Jersey number must be between 1 and 99.",false);
+  if(document.getElementById("rosterNumber").value.trim()&&jersey_number===null)return setRosterStatus("Jersey number must be between 1 and 99.",false);
   if(!position)return setRosterStatus("Choose the player's position.",false);
   const availability=await checkJerseyNumberAvailability(jersey_number,{excludeId:editId||null});
   if(!availability.available){
@@ -6671,7 +6695,7 @@ if(rosterForm)rosterForm.addEventListener("submit",async e=>{
       const {error}=await sb.from("team_roster").insert({...payload,active:true,created_by:user.id});
       if(error)throw error;
       resetRosterForm({keepMessage:true});
-      setRosterStatus(`${full_name} (#${jersey_number}, ${position}) added${is_new?" with the NEW PLAYER tag":""}. Public name "${preferred_name||full_name.split(/\s+/)[0]}" is now used across the squad pages, Lineups and Game Day.`,true);
+      setRosterStatus(`${full_name} (${jersey_number==null?"TBD":"#"+jersey_number}, ${position}) added${is_new?" with the NEW PLAYER tag":""}. Public name "${preferred_name||full_name.split(/\s+/)[0]}" is now used across the squad pages, Lineups and Game Day.`,true);
     }
     await loadTeamRoster(false);
   }catch(err){
@@ -6734,7 +6758,7 @@ function parsePlayerChoice(value){
   const parts=value.split("|"),kind=parts[0];
   if(kind==="temp")return {kind:"temp",id:parts[1]||"",number:"",name:"",manual:false};
   const number=parts[1]||"",name=parts[2]||"";
-  return {kind,number,name,manual:!["roster","temp"].includes(kind)};
+  return {kind,number,name,key:parts[3]||"",manual:!["roster","temp"].includes(kind)};
 }
 function syncManualFields(selectEl,wrap,nameInput,numberInput,matchWrap=null,matchInput=null,keepValues=false){
   const choice=parsePlayerChoice(selectEl.value);
@@ -6756,8 +6780,9 @@ function selectedPlayerData(selectEl,nameInput,numberInput,matchNumberInput=null
   if(!choice)return null;
   if(choice.kind==="roster"){
     const worn=String(matchNumberInput?.value||"").trim();
-    const roster=ROSTER.find(p=>String(p.number)===String(choice.number)&&p.name===choice.name);
-    return{name:choice.name,number:worn||choice.number||null,rosterNumber:choice.number||null,playerKey:roster?.player_key||null,manual:false,tempId:null,matchNumberOverride:worn||null};
+    const roster=(choice.key?ROSTER.find(p=>String(p.player_key)===choice.key):null)||ROSTER.find(p=>String(p.number??'')===String(choice.number)&&p.name===choice.name);
+    const projected=window.SKORMatchJerseys.resolve(PRODUCTION_GAMEPLAN?.state,roster?.player_key,roster?.number);
+    return{name:choice.name,number:worn||projected||choice.number||null,rosterNumber:choice.number||null,playerKey:roster?.player_key||null,manual:false,tempId:null,matchNumberOverride:worn||null};
   }
   if(choice.kind==="temp"){
     const worn=String(matchNumberInput?.value||"").trim(),temp=MATCH_TEMP_PLAYERS.find(p=>String(p.id)===String(choice.id));
@@ -7114,7 +7139,7 @@ function renderMatchAttendance(){
     const current=x.attendance_status||'';
     const rsvp=rsvpAdminLabel(x.rsvp_status);
     const injury=x.playing_status==='injured'?' · Injured':'';
-    return `<div class="attendance-row"><div class="attendance-person"><strong>${x.jersey_number==null?'Guest / jersey TBD':'#'+gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong><small>RSVP: ${gdEsc(rsvp)}${gdEsc(injury)}</small></div><div class="attendance-actions"><button class="mini-btn ${current==='present'?'selected present':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="present">Present</button><button class="mini-btn ${current==='absent'?'selected absent':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="absent">Absent</button><button class="mini-btn ${current==='excused'?'selected excused':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="excused">Excused</button>${current?`<button class="mini-btn clear-attendance" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="unmarked">Clear</button>`:''}</div></div>`;
+    return `<div class="attendance-row"><div class="attendance-person"><strong>${x.jersey_number==null?'Jersey TBD':'#'+gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong><small>RSVP: ${gdEsc(rsvp)}${gdEsc(injury)}</small></div><div class="attendance-actions"><button class="mini-btn ${current==='present'?'selected present':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="present">Present</button><button class="mini-btn ${current==='absent'?'selected absent':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="absent">Absent</button><button class="mini-btn ${current==='excused'?'selected excused':''}" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="excused">Excused</button>${current?`<button class="mini-btn clear-attendance" type="button" data-attendance-player="${gdEsc(x.roster_player_id)}" data-attendance-status="unmarked">Clear</button>`:''}</div></div>`;
   }).join(''):'<div class="sub">No active permanent roster players found.</div>';
   list.querySelectorAll('[data-attendance-player]').forEach(btn=>btn.addEventListener('click',()=>setMatchAttendance(btn.dataset.attendancePlayer,btn.dataset.attendanceStatus)));
 }
@@ -7231,7 +7256,7 @@ async function loadPlayerEngagement(){
   const labels={great:'🔥 Great',good:'👍 Good',average:'😐 Average',rough:'👎 Rough'};
   const line=(scope,key)=>rx.filter(x=>x[scope]===key).length;
   reaction.innerHTML=['great','good','average','rough'].map(k=>`<div class="reaction-line"><span>${labels[k]}</span><span>Team ${line('team_reaction',k)} · Self ${line('self_reaction',k)}</span></div>`).join('');
-  availList.innerHTML=rows.length?rows.map(x=>`<div class="engagement-item rsvp-roster-item"><div><strong>${x.jersey_number==null?'Guest / jersey TBD':'#'+gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong>${x.rsvp_note?`<small>${gdEsc(x.rsvp_note)}</small>`:''}</div><div><span class="rsvp-badge ${x.rsvp_status||'none'}">${gdEsc(rsvpAdminLabel(x.rsvp_status))}</span>${x.playing_status==='injured'?'<span class="rsvp-badge injured">Injured</span>':''}</div></div>`).join(''):'<div class="sub">No active roster players found.</div>';
+  availList.innerHTML=rows.length?rows.map(x=>`<div class="engagement-item rsvp-roster-item"><div><strong>${x.jersey_number==null?'Jersey TBD':'#'+gdEsc(x.jersey_number)} ${gdEsc(x.display_name)}</strong>${x.rsvp_note?`<small>${gdEsc(x.rsvp_note)}</small>`:''}</div><div><span class="rsvp-badge ${x.rsvp_status||'none'}">${gdEsc(rsvpAdminLabel(x.rsvp_status))}</span>${x.playing_status==='injured'?'<span class="rsvp-badge injured">Injured</span>':''}</div></div>`).join(''):'<div class="sub">No active roster players found.</div>';
   renderMatchAttendance();
 }
 
@@ -7240,9 +7265,9 @@ function officialPlayerLabel(pid){
   const key=String(pid||'');
   const p=key.startsWith('temp:')?MATCH_TEMP_PLAYERS.find(p=>String(p.id)===key.slice(5)):TEAM_ROSTER.find(p=>String(p.player_key||p.id)===key);
   if(!p)return officialPlayerLabelBase(pid);
-  const d=window.SKORKeeperPlan.details(PRODUCTION_GAMEPLAN?.state||{},key,p.jersey_number??'TEMP');
+  const primary=key.startsWith('temp:')?(p.jersey_number??'TEMP'):window.SKORMatchJerseys.label(window.SKORMatchJerseys.resolve(PRODUCTION_GAMEPLAN?.state,key,p.jersey_number));
   const name=window.SKORLineupMarker.shortName(key.startsWith('temp:')?p.display_name:p.preferred_name||p.full_name,key.startsWith('temp:'));
-  return '#'+(p.jersey_number??'—')+' '+name+(key.startsWith('temp:')?' · TEMP':'');
+  return (primary==='TBD'?'TBD':'#'+primary)+' '+name+(key.startsWith('temp:')?' · TEMP':'');
 }
 function officialPlayerLabelBase(pid){
   const key=String(pid||"");
@@ -7254,7 +7279,7 @@ function officialPlayerLabelBase(pid){
   const p=TEAM_ROSTER.find(x=>String(x.player_key||x.id)===key);
   if(!p)return key||"Unknown";
   const name=p.preferred_name||String(p.full_name||"Player").trim().split(/\s+/)[0];
-  return `#${p.jersey_number} ${name}`;
+  return `${window.SKORMatchJerseys.label(p.jersey_number)} ${name}`;
 }
 function officialFormationSlots(formation){
   const map={
@@ -7331,6 +7356,7 @@ async function loadProductionGameplan(matchId){
   }
   PRODUCTION_GAMEPLAN=Array.isArray(data)?(data[0]||null):(data||null);
   renderProductionGameplan();
+  refreshGameDayRosterOptions();
 }
 window.loadProductionGameplan=loadProductionGameplan;
 document.getElementById("productionOpenLineupBtn")?.addEventListener("click",()=>{

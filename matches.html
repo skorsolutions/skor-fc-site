@@ -60,6 +60,7 @@
 </style>
 <link rel="stylesheet" href="keeper-plan.css?v=58.9">
 <script src="keeper-plan.js?v=58.10"></script>
+<script src="match-jerseys.js?v=58.28"></script>
 <script src="lineup-marker.js?v=58.9"></script>
 </head>
 <body>
@@ -158,9 +159,10 @@ function productionPlayer(pid){
 }
 function withKeeperLabel(pid,p){
   const resolved=window.SKORKeeperPlan.hydrate(productionLineup?.state||{},publicRoster);
-  const d=window.SKORKeeperPlan.details(resolved,pid,p.number);
+  const primary=p.temp?p.number:window.SKORMatchJerseys.label(window.SKORMatchJerseys.resolve(resolved,pid,p.number));
+  const d=window.SKORKeeperPlan.details(resolved,pid,primary);
   const name=window.SKORLineupMarker.shortName(p.name,p.temp);
-  return {...p,number:d.number,primaryNumber:String(p.number),name,displayName:name,keeperLabel:d.label,keeperStarter:d.role.startsWith('starting')};
+  return {...p,number:d.number,primaryNumber:String(primary),name,displayName:name,keeperLabel:d.label,keeperStarter:d.role.startsWith('starting')};
 }
 function renderOfficialLineup(){
   const card=document.getElementById("officialLineupCard");

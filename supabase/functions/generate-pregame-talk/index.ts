@@ -1,5 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.95.0";
 import './keeper-plan.js';
+import './match-jerseys.js';
+const matchJerseys=(globalThis as typeof globalThis & {SKORMatchJerseys:{resolve:(state:unknown,pid:string,fallback:unknown)=>number|null}}).SKORMatchJerseys;
 const keeperPlan = (globalThis as typeof globalThis & { SKORKeeperPlan: {
   details: (state: unknown, pid: string, number: unknown) => { number: string; label: string; jerseyNumber: number | null };
   squadIds: (state: unknown) => string[];
@@ -247,22 +249,24 @@ Deno.serve(async (req: Request) => {
     return playerBySavedKey.get(key) ?? { first_name: "Unresolved saved player", jersey_number: null, temporary: key.startsWith("temp:") };
   };
   const objectValue = (raw: unknown) => raw && typeof raw === "object" && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
-  const playerList = (raw: unknown) => (Array.isArray(raw) ? raw : []).map(lineupPlayer);
-  const substitutionRows = (raw: unknown, phase: "first_half" | "second_half") => (Array.isArray(raw) ? raw : []).flatMap((item, index) => {
-    const row = objectValue(item);
-    const playersOut = playerList(row.out), playersIn = playerList(row.in);
-    if (!playersOut.length && !playersIn.length) return [];
-    return [{
-      phase,
-      order: index + 1,
-      label: clean(row.label, 80),
-      players_out: playersOut,
-      players_in: playersIn,
-    }];
-  });
   const buildLineupContext = (rawState: unknown, meta: { status: string; name: string; updated_at: unknown }) => {
     const lineupState = keeperPlan.hydrate(objectValue(rawState), rosterResult.data ?? []);
     if (!Object.keys(lineupState).length) return null;
+    const basePlayer=lineupPlayer;
+    const matchPlayer=(raw:unknown)=>{const p=basePlayer(raw),pid=clean(raw,160);return p.temporary?p:{...p,jersey_number:matchJerseys.resolve(lineupState,pid,p.jersey_number)};};
+    const playerList = (raw: unknown) => (Array.isArray(raw) ? raw : []).map(matchPlayer);
+    const substitutionRows = (raw: unknown, phase: "first_half" | "second_half") => (Array.isArray(raw) ? raw : []).flatMap((item, index) => {
+      const row = objectValue(item);
+      const playersOut = playerList(row.out), playersIn = playerList(row.in);
+      if (!playersOut.length && !playersIn.length) return [];
+      return [{
+        phase,
+        order: index + 1,
+        label: clean(row.label, 80),
+        players_out: playersOut,
+        players_in: playersIn,
+      }];
+    });
     const formation = clean(lineupState.formation, 40) || "Unspecified";
     const slots = objectValue(lineupState.slots);
     const freeform = objectValue(lineupState.freeform);
@@ -273,14 +277,14 @@ Deno.serve(async (req: Request) => {
         const point = objectValue(rawPoint);
         return {
           position: "freeform_board",
-          player: lineupPlayer(key),
+          player: matchPlayer(key),
           board_x_percent: Number.isFinite(Number(point.x)) ? Number(point.x) : null,
           board_y_percent: Number.isFinite(Number(point.y)) ? Number(point.y) : null,
         };
       })
       : Object.entries(slots).filter(([, key]) => clean(key, 160)).map(([position, key]) => ({
         position: clean(position, 40),
-        player: lineupPlayer(key),
+        player: matchPlayer(key),
       }));
     return {
       status: meta.status,
@@ -288,7 +292,7 @@ Deno.serve(async (req: Request) => {
       updated_at: meta.updated_at,
       formation,
       keeper_assignments: keeperPlan.squadIds(lineupState).flatMap(pid => {
-        const player = lineupPlayer(pid);
+        const player = matchPlayer(pid);
         const keeper = keeperPlan.details(lineupState, pid, player.jersey_number);
         return keeper.label ? [{ player, role: keeper.label, keeper_jersey_number: keeper.jerseyNumber, displayed_numbers: keeper.number }] : [];
       }),
@@ -303,7 +307,7 @@ Deno.serve(async (req: Request) => {
         ...substitutionRows(subs.secondHalf, "second_half"),
       ],
       second_half_waves_visible_on_export: lineupState.showSecondHalfSubs === true,
-      field_captain: clean(lineupState.captainId, 160) ? lineupPlayer(lineupState.captainId) : null,
+      field_captain: clean(lineupState.captainId, 160) ? matchPlayer(lineupState.captainId) : null,
       captain_quote: clean(lineupState.quote, 200),
       gameplan_notes: clean(lineupState.notes, 1200),
     };

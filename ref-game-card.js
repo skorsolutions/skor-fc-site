@@ -52,6 +52,8 @@
   }
 
   function buildCardData({state={},roster=[],match=null,edits={}}={}){
+    const jerseys=root.SKORMatchJerseys||(typeof require==='function'?require('./match-jerseys.js'):null);
+    roster=jerseys?.projectRoster(state,roster)||roster;
     const keeper=root.SKORKeeperPlan||(typeof require==='function'?require('./keeper-plan.js'):null);
     state=keeper?.hydrate(state,roster)||state;
     const byId=new Map((roster||[]).map(player=>[playerId(player),player]));
