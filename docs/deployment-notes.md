@@ -1,4 +1,4 @@
-# v58.29 — Show previous TEMP appearances in the guest directory (pending deployment)
+# v58.29 — Show previous TEMP appearances in the guest directory (deployed)
 
 - Fixes the one-profile-only view by adding a separate Previous TEMP players section under reusable profiles. All unlinked saved appearances appear, grouped by saved name for browsing, with each exact game and jersey. Grouping never establishes identity. Profile filters do not hide the section; counters distinguish reusable profiles from appearances needing links and opened groups survive refresh.
 - Create profile prefills the existing name and lets a captain review the full name/email. The permanent number stays TBD. The next dialog explicitly reviews one saved appearance with the new profile selected and an unchecked confirmation. Link to existing profile reuses enabled guest/promoted profiles for additional games. A successful link opens the profile for Games & stats or Add to regular season; known same-game identity conflicts are excluded before submit and retain server enforcement.
@@ -6,7 +6,21 @@
 - **Affected files (12):** `admin.html`, `guest-profiles.js`, `guest-profiles.css`, `package.json`, `tests/verify-previous-temp-directory.mjs`, four build-marker suites (captain notifications, lineup export, referee card and Strategy animation), `docs/GUEST-PROFILES.md`, `docs/PROJECT-HANDBOOK.md` and this note. Captain v58.29; Player Portal stays v58.28 and homepage v58.15. Existing player/guest portal controller interfaces remain compatible.
 - **Verification:** All 22 local suites pass. The new suite executes grouping/escaping/empty states, actual mounted directory/dialog/create/link handlers, unchecked review rejection, existing profile-card links, multiple appearances on one profile with original numbers, exact lost-response retry, disclosure/filter preservation, permission/stale/busy/dialog/account races, private cleanup and mobile controls. The core auth/controller/RPC implementation is byte-identical. A read-only live snapshot rendered every current unlinked entry: 10 appearances across 7 saved-name groups, 10 Create and 10 Link actions, and zero missing game labels. No private historical names or player contacts are added to source/docs. Browser visuals and real signed-in browser actions remain unverified.
 - **SQL/backend:** No migration, database/Edge Function/grant/RLS/RPC source change or production application-data mutation. Existing protected guest APIs already return all legacy entries and enforce reviewed exact linking. Pregame stays version 16. No actual identities were created/linked/promoted for verification.
-- **Live status:** Ready for source/hash/file-set and Cloudflare production verification. Source baseline is main `cb666d4f140c54b243ef0fe33b4c59e311b2542d` (v58.28 docs follow-up). Connected tools cannot create commit comments; the matching final release summary will be saved here.
+- **Live status:** Cloudflare build `61541286-ec52-4a89-a7ed-ebe43a5ee3bb` succeeded for source release [`4fa3837e0c39226d3c1f039d7ab4d0839f4fb11d`](https://github.com/skorsolutions/skor-fc-site/commit/4fa3837e0c39226d3c1f039d7ab4d0839f4fb11d); version `f2cc5026-03e6-446e-89cc-12d4fa3d4498`, deployment `c9268326-0c50-4f32-b4de-282302ef267f`, is verified at 100% production traffic. Build completed at 2026-11-01 20:37:58 UTC. All 12 source hashes and the exact release file set match checked source; build logs confirm the same deployed version. Published from main `cb666d4f140c54b243ef0fe33b4c59e311b2542d`. No deployment retry, database action or automatic profile/link/promotion was needed. A documentation-only follow-up records this evidence. Connected tools cannot create commit comments.
+
+Release summary (same as chat handoff; commit comments are unavailable):
+
+Deployed **v58.29**.
+
+Refresh **Roster → Guest / TEMP directory**. **Previous TEMP players** now lists the older unlinked entries by saved name and game.
+
+Expand a name → **Create profile** or **Link to existing profile** → confirm the appearance. Then use **Add to regular season** from that profile.
+
+All 22 test suites passed. No database or Edge Function changes; production is verified at 100% traffic.
+
+[Release](https://github.com/skorsolutions/skor-fc-site/commit/4fa3837e0c39226d3c1f039d7ab4d0839f4fb11d)
+
+Browser visuals remain unverified. Release notes are saved; commit comments are unavailable.
 
 # v58.28 — Optional permanent numbers and saved match jerseys (deployed)
 
