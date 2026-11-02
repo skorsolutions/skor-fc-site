@@ -99,6 +99,8 @@ const removeContext=vm.createContext({
  removePlayerEverywhere(){},persistDraft(){},resetTempPlayerForm(){},refreshTempPlayers:async()=>localRefreshes++,markStatus(){},Date,
 });
 vm.runInContext(removeSource,removeContext);await removeClick();assert.equal(localRefreshes,1);assert.match(removedUI.directory.innerHTML,/2 saved game assignments awaiting linking/);assert.match(removedUI.directory.innerHTML,/1 saved game/);assert.match(removedUI.directory.innerHTML,/No match participation recorded/);removedUI.mounted.clear();
+// Reactivating a known same-number TEMP must refresh the Lineups roster too.
+const activeChange=await harness();activeChange.snapshot.links.push({player_id:'existing',match_id:'m1',temp_id:'known-temp',active:true,temp_active:false,number:18});await activeChange.mounted.refresh();const beforeActive=activeChange.changes.filter(c=>c.identityChanged).length;activeChange.snapshot.links[0].temp_active=true;await activeChange.mounted.refresh();assert.equal(activeChange.changes.filter(c=>c.identityChanged).length,beforeActive+1);activeChange.mounted.clear();
 const css=fs.readFileSync('guest-profiles.css','utf8');assert.match(css,/gp-history-actions button\{min-height:44px/);assert.match(css,/@media\(max-width:560px\)/);assert.match(css,/:focus-visible/);
 new vm.Script(source);
 console.log('Guest history: player-level atomic create/link, unique saved games, removed/used archives, no invented attendance, exact retries and stale/account/dialog/viewer guards passed.');

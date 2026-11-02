@@ -154,7 +154,7 @@
       if(payments)renderPayments();renderMatchTools();roots.forEach((root,i)=>root.querySelectorAll('details').forEach(d=>d.open=openByRoot[i].has(d.dataset.gpKey)));
       message(state.phase==='stale'?'Refresh failed. Showing the last snapshot. '+state.message:state.phase==='loading'?'Refreshing…':'Updated '+new Date(s.as_of).toLocaleTimeString(),state.phase==='stale');
       const engagement=JSON.stringify(participations(s).map(l=>[l.player_id,l.match_id,l.attendance,l.rsvp,l.rsvp_note]));if(engagement!==lastEngagement){lastEngagement=engagement;onChanged({engagementChanged:true});}
-      const mapping=JSON.stringify([s.profiles.map(p=>[p.player_id,p.is_guest]),s.links.map(l=>[l.player_id,l.match_id,l.temp_id,l.active,l.number])]);if(mapping!==lastMapping){lastMapping=mapping;onChanged({identityChanged:true});}
+      const mapping=JSON.stringify([s.profiles.map(p=>[p.player_id,p.is_guest]),s.links.map(l=>[l.player_id,l.match_id,l.temp_id,l.active,l.temp_active,l.inventory_id,l.number])]);if(mapping!==lastMapping){lastMapping=mapping;onChanged({identityChanged:true});}
     }
     const controller=createController({client,onState:render,visible:()=>!doc.hidden&&canWrite()});
     returningFlow=createReturningAssignment(controller,{canWrite});
