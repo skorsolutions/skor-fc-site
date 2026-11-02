@@ -1,4 +1,4 @@
-> v58.31 participation correction: see [Guest participation records](GUEST-PARTICIPATION.md). Creation/availability and old drafts do not prove a played match. The exact new SQL is approved, applied and verified; frontend deployment is in progress.
+> v58.31 participation correction: see [Guest participation records](GUEST-PARTICIPATION.md). Creation/availability and old drafts do not prove a played match. The exact new SQL is approved, applied and verified; v58.31 is deployed.
 
 > v58.30: see [Guest history root fix](GUEST-HISTORY.md) for the replacement player-level atomic history workflow and canonical Lineups assignment. The exact new migration is approved, applied and verified; v58.30 is deployed. Historical per-game create/link instructions below describe the earlier release.
 
