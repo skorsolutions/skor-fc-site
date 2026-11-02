@@ -1,6 +1,6 @@
-# v58.33 — Ask captains to confirm unmarked guest attendance (deploying)
+# v58.33 — Ask captains to confirm unmarked guest attendance (deployed)
 
-2026-11-02 UTC. Implementation complete; frontend production deployment is in progress.
+2026-11-02 UTC. Cloudflare build `e998d069-9d84-4b84-a26b-1e060e9aa537` succeeded for source release [`7f0296457c5c6d334b0d8ae441f94593dc21c9ce`](https://github.com/skorsolutions/skor-fc-site/commit/7f0296457c5c6d334b0d8ae441f94593dc21c9ce); version `b78b268c-baf3-4b54-942c-b69e91874f5a`, deployment `a49dffcb-16b3-4d82-9982-8f5548727ef7`, is verified at 100% production traffic. Build completed at 2026-11-02 14:04:18 UTC. All 13 source hashes and the exact release file set match checked source; build logs confirm the same deployed version.
 
 - Guest/TEMP cards show confirmed attendance separately from unmarked games and display total completed records. The collapsed card shows a pending-confirmation badge; the open card asks whether the player attended the listed dates instead of implying the confirmed count is the player's entire history.
 - Captains can explicitly confirm the listed games Present or review individual Present/Absent/Excused choices. Individual choices default to Unmarked. Opening, refreshing, viewing history or creating/linking a guest does not write attendance. No real historical attendance was confirmed for this release.
@@ -8,6 +8,10 @@
 - Scope: Captain Guest/TEMP directory and its stats dialog; the player-only record display retains its default behavior. Existing participation eligibility, returning-name pickers, RSVP, jerseys, scores, ledger and fee rules remain. No SQL migration, schema/permission or Edge Function change.
 - All 24 local suites and six real-role database rollback suites pass. The live record renders 3 completed records, 1 confirmed and 2 dated questions; its real attendance remains unchanged. All fourteen original application/ledger fingerprints match the pre-test baseline.
 - Affected: `admin.html`, `guest-profiles.js`, `guest-profiles.css`, package/test commands, attendance/history/build-marker tests and documentation. Browser visual checks and GitHub commit-comment tooling remain unavailable.
+
+Release summary (same as chat; commit-comment API unavailable):
+
+v58.33 is live. Guest/TEMP cards separate confirmed attendance from unmarked games and ask dated attendance questions. Captains explicitly confirm the listed games or review each one; unanswered dates stay Unmarked. Saved choices synchronize through existing Game Day and match records. All 24 local suites and six database rollback suites passed. No migration or Edge Function change; attendance changes require explicit confirmation. Release: https://github.com/skorsolutions/skor-fc-site/commit/7f0296457c5c6d334b0d8ae441f94593dc21c9ce. Browser visual checks and GitHub commit comments remain unavailable.
 
 # v58.32 — Choose previously used TEMP players without retyping (deployed)
 
