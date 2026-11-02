@@ -39,8 +39,8 @@ const requestCalls=[];
 const messages=[];
 const sandbox={
   tempAssignmentRetry:null,crypto:{randomUUID:()=> 'stable-request'},
-  window:{SKORGuestProfiles:{captain:{state:()=>({actor:'captain'}),write:async(resource,action,payload)=>{assert.equal(resource,'history');assert.equal(action,'assign');inserted=structuredClone(payload);requestCalls.push(structuredClone(payload));}}},SKORTempDirectory:directory,SKORPortalCanWrite:()=>true,SKORJerseys:{labelFor:()=>''}},
-  document:{getElementById:id=>elements[id]},
+  window:{SKORGuestProfiles:{captain:{state:()=>({actor:'captain'}),assignReturning:async(payload)=>{inserted=structuredClone(payload);requestCalls.push(structuredClone(payload));},write:async(resource,action,payload)=>{assert.equal(resource,'history');assert.equal(action,'assign');inserted=structuredClone(payload);requestCalls.push(structuredClone(payload));}}},SKORTempDirectory:directory,SKORPortalCanWrite:()=>true,SKORJerseys:{labelFor:()=>''}},
+  document:{getElementById:id=>elements[id],querySelector:()=>null},
   selectedRealMatchId:()=> 'new-game',
   savedTempNameSelect:{value:'Avery Example',addEventListener:(_event,handler)=>{selectHandler=handler;}},
   saveTempPlayerBtn:{disabled:false,textContent:'Add TEMP',addEventListener:(_event,handler)=>{saveHandler=handler;}},
@@ -64,11 +64,11 @@ elements.tempPlayerJersey.value='today-jersey';
 const save=admin.match(/if\(saveTempPlayerBtn\)saveTempPlayerBtn\.addEventListener\("click",async\(\)=>\{[\s\S]*?\n  \}\);/)[0];
 vm.runInContext(save,sandbox);
 await saveHandler();
-assert.equal(inserted.player_id,'existing-profile');
+assert.equal(inserted.selection,'existing-profile');
 assert.equal(inserted.match_id,'new-game','assignment is scoped to this game and canonical identity is resolved by the API');
 assert.equal(inserted.inventory_id,'today-jersey');
-assert.equal(inserted.create_profile,false);assert.equal(inserted.number,undefined,'the current inventory assignment determines the number');
-assert.equal(inserted.request_id,'stable-request');
+assert.equal(inserted.create_profile,undefined);assert.equal(inserted.number,'','the current inventory assignment determines the number');
+assert.equal(inserted.full_name,'Avery Example');assert.equal(inserted.reviewed,false);
 assert.doesNotMatch(save,/match_temp_players"\)\.insert/,'raw insert bypass is removed');
 
 inserted=null;elements.tempPlayerName.value='FirstOnly';

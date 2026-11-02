@@ -1,3 +1,14 @@
+# v58.32 — Choose previously used TEMP players without retyping (deploying)
+
+2026-11-02 UTC. Frontend implementation is complete; production deployment is in progress.
+
+- Both guest pickers now include reusable profiles and saved TEMP names. RSVP and game-history eligibility do not filter remembered identities. Selecting a saved person fills the name and requires identity confirmation once, rather than typing a new TEMP player from scratch.
+- Reuse existing guarded RPCs for reviewed profile/history setup, unused identity linking and match assignment. Existing same-game TEMP IDs are reused; old numbers stay with their own games. Unused identity links never manufacture participation, attendance, fees or RSVP. Full referee names are requested only once when a historical name is incomplete.
+- Add a typed match-number option beside physical inventory. Preserve in-progress selection during refresh; clear jersey drafts when switching games. Stable receipts support lost-response retries and partial-setup recovery; account and duplicate guards prevent further unsafe writes.
+- One authorized administrative data correction created a reusable guest profile, linked two eligible earlier assignments, and assigned the user-confirmed current-game jersey and Present attendance. The removed unused assignment stays untouched; all original TEMP identities/numbers, RSVP, events, lineups and ledger fingerprints are preserved. Private identity details are excluded from this public note.
+- All 23 local suites and six database rollback suites pass. The live returning selector contains two reusable profiles and four previous names, with the corrected person shown once.
+- Affected: `admin.html`, `guest-profiles.js`, package/test commands, returning/history/lineup/build-marker tests and documentation. No SQL migration, schema/permission or Edge Function change. Browser visual checks and commit-comment tools remain unavailable.
+
 # v58.31 — Require participation evidence for guest match history (deployed)
 
 2026-11-02 UTC. User approved deployment. The new database migration is applied and verified; frontend production deployment is verified.

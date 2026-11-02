@@ -216,9 +216,10 @@ assert.equal(converted.name,'Malik');assert.equal(converted.fullName,'Malik Full
 assert.equal(ref.buildCardData({state:{formation:'4-2-3-1',slots:{GK:converted.player_key}},roster:[converted],match}).players[0].name,'Malik Fullname','referee output must retain the complete saved identity');
 const editNodes=new Map(),editNode=id=>{if(!editNodes.has(id))editNodes.set(id,{value:'',style:{}});return editNodes.get(id);};let editHandler;
 const editSource=admin.slice(admin.indexOf('    list.querySelectorAll("[data-temp-edit]")'),admin.indexOf('    list.querySelectorAll("[data-temp-remove]")'));
-const editContext={list:{querySelectorAll:()=>[{dataset:{tempEdit:'ref-fixture'},addEventListener:(_event,handler)=>editHandler=handler}]},matchTempPlayers:[converted],document:{getElementById:editNode},renderTempJerseyOptions(){},savedName:{value:'',disabled:false}};
+const editContext={list:{querySelectorAll:()=>[{dataset:{tempEdit:'ref-fixture'},addEventListener:(_event,handler)=>editHandler=handler}]},matchTempPlayers:[converted],document:{getElementById:editNode},renderTempJerseyOptions(){},renderTempReturningReview(){},savedName:{value:'',disabled:false}};
 vm.runInNewContext(editSource,editContext);editHandler();
 assert.equal(editNode('tempPlayerName').value,'Malik Fullname','editing must restore the complete name instead of overwriting the last name with a short label');
+assert.equal(editNode('tempPlayerNumber').value,46,'the exact saved match number is restored for editing');
 assert.match(admin,/<details class="panel potential-positions" id="potentialPositionsPanel">/);
 assert.doesNotMatch(admin,/<details[^>]*id="potentialPositionsPanel"[^>]*\bopen\b/);
 for(const id of ['tempPlayerManager','keeperPlanPanel']){

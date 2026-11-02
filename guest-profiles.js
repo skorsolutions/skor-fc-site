@@ -65,16 +65,87 @@
     return snapshot.profiles.filter(p=>p.enabled!==false&&!snapshot.links.some(l=>l.player_id===p.player_id&&l.match_id===temp.match_id&&l.temp_id!==temp.id))
       .map(p=>`<option value="${esc(p.player_id)}"${p.player_id===selected?' selected':''}>${esc(p.full_name)}${p.is_guest?' · Guest':' · Regular roster'}</option>`).join('');
   }
+  function returningChoices(s){
+    if(!s)return [];
+    const existing=s.profiles.filter(p=>p.is_guest&&p.enabled!==false).map(p=>({value:p.player_id,name:p.full_name,kind:'profile'}));
+    const known=new Set(s.profiles.map(p=>savedNameKey(p.full_name)));
+    return [...existing,...legacyGroups(s.legacy).filter(g=>!known.has(g.key)).map(g=>({value:'saved:'+encodeURIComponent(g.key),name:g.name,kind:'saved'}))];
+  }
+  function returningPlan(s,value,mid){
+    if(!s||!s.ledger.matches.some(m=>m.id===mid))throw Error('Choose an existing game and refresh guests.');
+    let group=null,p=null;
+    if(value.startsWith('saved:'))group=legacyGroups(s.legacy).find(g=>g.key===decodeURIComponent(value.slice(6)));
+    else p=s.profiles.find(p=>p.player_id===value&&p.is_guest&&p.enabled!==false);
+    if(!group&&!p)throw Error('Choose a saved player or refresh the guest list.');
+    const name=p?.full_name||group.name;
+    const games=group?group.games.map(g=>{if(g.rows.length!==1)throw Error('Review duplicate saved game identities in Roster first.');const t=g.rows[0];return {temp_id:t.id,match_id:t.match_id,updated_at:t.updated_at};}):[];
+    if(games.length>50)throw Error('Link this player’s older history in Roster first (maximum 50 games per review).');
+    const assigned=p&&s.links.some(l=>l.player_id===p.player_id&&l.match_id===mid);
+    const rows=assigned?[]:s.legacy.filter(t=>t.match_id===mid&&savedNameKey(t.name)===savedNameKey(name));
+    const preferred=rows.filter(t=>t.active||t.history_eligible),candidates=preferred.length?preferred:rows;
+    if(candidates.length>1)throw Error('Review duplicate TEMP entries for this game in Roster first.');
+    const current=candidates[0]&&!games.some(g=>g.temp_id===candidates[0].id)?candidates[0]:null;
+    const aliases=group?Object.values(group.appearances.reduce((a,t)=>{(a[t.match_id]??=[]).push(t);return a;},{})).filter(rows=>rows.length===1&&!games.some(g=>g.match_id===rows[0].match_id)).map(rows=>rows[0]):current?[current]:[];
+    return {value,name,player_id:p?.player_id||null,games,current,aliases,needs_review:!!group||!!current};
+  }
+  function returningOptions(s,selected=''){
+    const choices=returningChoices(s),option=c=>`<option value="${esc(c.value)}"${c.value===selected?' selected':''}>${esc(c.name)}</option>`;
+    return '<option value="">Choose a saved player…</option>'+['profile','saved'].map(kind=>{const rows=choices.filter(c=>c.kind===kind);return rows.length?`<optgroup label="${kind==='profile'?'Reusable guest profiles':'Saved TEMP names'}">${rows.map(option).join('')}</optgroup>`:'';}).join('');
+  }
+  function returningReviewMarkup(plan,s,{fullNameInput=true}={}){
+    if(!plan?.needs_review)return '';
+    const label=mid=>{const m=s.ledger.matches.find(m=>m.id===mid);return m?(Number.isFinite(Date.parse(m.kickoff))?date(m.kickoff)+' · ':'')+(m.label||'Game'):'Saved game';};
+    return `<p><strong>Reuse ${esc(plan.name)}</strong> from the saved TEMP list. No name re-entry or RSVP is needed.</p>${plan.games.length?`<details><summary>Earlier match identities to connect (${plan.games.length})</summary>${plan.games.map(g=>`<p>${esc(label(g.match_id))}</p>`).join('')}</details>`:''}${plan.aliases?.length?`<details><summary>Other saved identities to reuse (${plan.aliases.length}; no attendance inferred)</summary>${plan.aliases.map(t=>`<p>${esc(label(t.match_id))} · Identity only; game history requires participation.</p>`).join('')}</details>`:''}${fullNameInput&&plan.name.trim().split(/\s+/).length<2?`<label>Full name for referee sheet (enter once)<input name="full_name" required maxlength="80" value="${esc(plan.name)}"></label>`:''}${plan.current?`<p>Reuse the existing TEMP entry for ${esc(label(plan.current.match_id))}; no duplicate game identity will be created.</p>`:''}<label class="dues-choice"><input type="checkbox" name="identity_reviewed" required> I confirm this is the same person as the saved entries above.</label><p>Attendance and this game’s jersey are separate. Unused entries do not become played matches.</p>`;
+  }
+  function createReturningAssignment(controller,{canWrite=()=>true}={}){
+    let identities=new Map(),requests=global.SKORTeamDues.createRequestIds(),running=false,generation=0;
+    const clear=()=>{generation++;identities.clear();requests.clear();running=false;};
+    function plan(value,mid){const s=controller.state().snapshot,cached=identities.get(value);try{const p=returningPlan(s,value,mid);return cached?.complete?{...p,player_id:cached.player_id}:p;}catch(e){if(!value.startsWith('saved:')||!cached)throw e;const p=returningPlan(s,cached.player_id,mid);return {...p,value,name:cached.name,needs_review:!cached.complete||p.needs_review};}}
+    async function assign(input){
+      const state=controller.state(),owner=state.actor,epoch=generation;if(!owner||!canWrite()||state.phase!=='ready'||running)throw Error('Refresh guests before saving, or wait for the current save.');
+      const selected=String(input.selection||''),mid=String(input.match_id||'');let p=plan(selected,mid),identity=identities.get(selected);
+      if(p.needs_review&&!input.reviewed)throw Error('Confirm that this is the same saved player.');
+      const value=String(input.number??'').trim(),number=value===''?null:Number(value);if(number!==null&&(!Number.isInteger(number)||number<1||number>99))throw Error('Choose a match jersey number from 1 to 99, or leave it TBD.');
+      const guard=()=>{if(epoch!==generation||controller.state().actor!==owner)throw Error('Account changed.');if(!canWrite())throw Error('Captain access required.');};
+      const save=async(resource,action,key,payload)=>{guard();const request=requests.payload(key,payload);request.request_id=request.id;delete request.id;const result=await controller.write(resource,action,request);guard();if(controller.state().phase!=='ready')throw Error('The last step saved. Refresh guests, then retry to finish the game assignment.');requests.confirm(key);return result;};
+      running=true;
+      try{
+        if(!p.player_id){
+          if(!identity){const fullName=String(input.full_name||p.name).trim();if(fullName.split(/\s+/).length<2||fullName.length>80)throw Error('Enter the saved player’s full name once for the referee sheet.');identity={player_id:uuid(),name:fullName,complete:false,resource:p.games.length?'history':'profile',action:p.games.length?'import':'create',payload:{full_name:fullName,...(p.games.length?{create_profile:true,reviewed:true,games:p.games}:{})}};identity.payload.player_id=identity.player_id;identities.set(selected,identity);}
+          if(!identity.complete){await save(identity.resource,identity.action,'identity:'+selected,identity.payload);identity.complete=true;}
+          p={...p,player_id:identity.player_id};
+        }else if(identity&&!identity.complete){await save(identity.resource,identity.action,'identity:'+selected,identity.payload);identity.complete=true;}
+        for(const alias of p.aliases||[]){
+          const snapshot=controller.state().snapshot;
+          if(snapshot.links.some(l=>l.player_id===p.player_id&&l.match_id===alias.match_id&&l.temp_id===alias.id))continue;
+          const fresh=snapshot.legacy.find(t=>t.id===alias.id);
+          if(!fresh||fresh.updated_at!==alias.updated_at||savedNameKey(fresh.name)!==savedNameKey(alias.name))throw Error('A saved TEMP entry changed. Refresh and review it before assigning.');
+          await save('profile','bind_game','bind:'+p.player_id+':'+alias.match_id,{player_id:p.player_id,match_id:alias.match_id,temp_id:alias.id,reviewed:true});
+        }
+        const payload={player_id:p.player_id,match_id:mid,group_id:input.group_id||null};
+        if(input.inventory_id){payload.inventory_id=input.inventory_id;}
+        else if(Object.hasOwn(input,'inventory_id')&&number===null){payload.inventory_id=null;}
+        else {
+          if(Object.hasOwn(input,'inventory_id')&&controller.state().snapshot.links.find(l=>l.player_id===p.player_id&&l.match_id===mid)?.inventory_id)
+            await save('history','assign','clear-kit:'+p.player_id+':'+mid,{player_id:p.player_id,match_id:mid,inventory_id:null});
+          payload.number=number===null?'':String(number);
+        }
+        await save('history','assign','assign:'+p.player_id+':'+mid,payload);
+        return {ok:true,player_id:p.player_id};
+      }finally{if(epoch===generation)running=false;}
+    }
+    return {assign,plan,clear};
+  }
   function mountCaptain({client,canWrite=()=>true,onChanged=()=>{},getLineupMatch=()=>null,getGameDayMatch=()=>null,doc=global.document,win=global}){
     const directory=doc.getElementById('guestDirectory'),payments=doc.getElementById('participationPayments'),lineup=doc.getElementById('guestLineupTools'),attendance=doc.getElementById('guestMatchAttendance');if(!directory)return null;
-    const roots=[directory,payments,lineup,attendance].filter(Boolean),dialog=doc.getElementById('guestCaptainDialog');let s=null,group=null,filter='guest',review=null,lastMapping='',lastEngagement='',lastOwner=null,dialogGeneration=0;
+    const roots=[directory,payments,lineup,attendance].filter(Boolean),dialog=doc.getElementById('guestCaptainDialog');let s=null,group=null,filter='guest',review=null,lastMapping='',lastEngagement='',lastOwner=null,dialogGeneration=0,returningFlow=null;
     const requestIds=global.SKORTeamDues.createRequestIds(),el=id=>dialog.querySelector('#'+id),profile=id=>s?.profiles.find(p=>p.player_id===id),name=id=>profile(id)?.full_name||s?.ledger.roster.find(p=>p.id===id)?.name||'Player';
     const groupData=()=>s?.ledger.groups.find(g=>g.id===group);
     function message(text,error=false){for(const root of roots){const out=root.querySelector('[data-gp-status]');if(out){out.textContent=text;out.classList.toggle('dues-error',error);}}}
     function open(html){dialogGeneration++;review=null;dialog.querySelector('[data-gp-dialog-body]').innerHTML=html;dialog.querySelector('[data-gp-error]').textContent='';if(!dialog.open)dialog.showModal();}
     function close(){dialogGeneration++;review=null;dialog.close();}
     function render(state){
-      if(state.actor!==lastOwner){lastOwner=state.actor;s=null;group=null;filter='guest';lastMapping='';lastEngagement='';requestIds.clear();close();dialog.querySelector('[data-gp-dialog-body]').innerHTML='';dialog.querySelector('[data-gp-error]').textContent='';}
+      if(state.actor!==lastOwner){lastOwner=state.actor;s=null;group=null;filter='guest';lastMapping='';lastEngagement='';requestIds.clear();returningFlow?.clear();close();dialog.querySelector('[data-gp-dialog-body]').innerHTML='';dialog.querySelector('[data-gp-error]').textContent='';}
       if(!state.actor||!state.snapshot){s=null;for(const root of roots)root.innerHTML=state.actor?`<p role="status">${esc(state.message||'Loading guest profiles…')}</p>`:'';if(state.phase==='error')close();return;}
       s=state.snapshot;if(!groupData()||groupData().kind!=='season')group=s.ledger.groups.find(g=>g.is_current)?.id||s.ledger.groups.find(g=>g.kind==='season')?.id||null;
       const openByRoot=roots.map(root=>new Set([...root.querySelectorAll('details[open]')].map(d=>d.dataset.gpKey)));
@@ -86,6 +157,7 @@
       const mapping=JSON.stringify([s.profiles.map(p=>[p.player_id,p.is_guest]),s.links.map(l=>[l.player_id,l.match_id,l.temp_id,l.active,l.number])]);if(mapping!==lastMapping){lastMapping=mapping;onChanged({identityChanged:true});}
     }
     const controller=createController({client,onState:render,visible:()=>!doc.hidden&&canWrite()});
+    returningFlow=createReturningAssignment(controller,{canWrite});
     function renderPayments(){const g=groupData(),cfg=s.fee_settings.find(f=>f.group_id===group),totals=guestTotals(s,group),pending=feeCandidates(s,group);
       payments.innerHTML=`<div class="dues-row"><div><h2>Participation & guest fees</h2><p>Reviewed individual charges. Existing players’ dues are preserved.</p></div><button type="button" data-gp="create">Create guest / event profile</button></div><label>Season<select data-gp-season>${s.ledger.groups.filter(g=>g.kind==='season').map(g=>`<option value="${g.id}" ${g.id===group?'selected':''}>${esc(g.name)}</option>`).join('')}</select></label><p data-gp-status role="status"></p>${!g?'<p>Create a season in Payments first.</p>':`<div class="dues-row"><button type="button" data-gp="calculate">Late-joiner / individual fee calculator</button><button type="button" data-gp="settings">Guest fees: ${cfg?.enabled?'Enabled':'Off'}</button><button type="button" data-gp="funding">Use guest collections in Run Numbers</button></div><div class="dues-stats"><span>Guest fees charged<b>${money(totals.charged)}</b></span><span>Collected toward guest fees<b>${money(totals.collected)}</b></span><span>Guest fees outstanding<b>${money(totals.outstanding)}</b></span><span>Waived appearances<b>${totals.waived}</b></span></div><p>Collections are allocated up to each player’s net guest fees and are already included in ledger receipts.</p>
       <details class="dues-box" data-gp-key="pending"><summary>Confirmed guest appearances awaiting review (${pending.length})</summary><p>Fees require Present attendance in a completed linked season game, on or after the fee start date. No charges are automatic.</p>${pending.map(l=>`<div class="dues-row"><span>${esc(name(l.player_id))} · ${esc(matchLabel(l.match_id))}</span><button type="button" data-gp="charge" data-player="${l.player_id}" data-match="${l.match_id}">Review fee / waiver</button></div>`).join('')||'<p>No eligible uncharged appearances.</p>'}</details>
@@ -119,7 +191,7 @@
       }
       if(action==='create'||action==='edit'){open(`<h3>${action==='create'?'Create reusable guest profile':'Edit guest profile'}</h3><form id="gpProfile" data-player="${pid||''}" data-event="${b.dataset.event||''}" data-event-revision="${s.ledger.groups.find(g=>g.id===b.dataset.event)?.revision??''}"><label>Full name<input name="full_name" required maxlength="80" value="${esc(p?.full_name||'')}"></label><label>Preferred / field name<input name="preferred_name" maxlength="60" value="${esc(p?.preferred_name||'')}"></label><label>Approved portal email (optional)<input name="email" type="email" maxlength="254" value="${esc(p?.approved_email||'')}"></label><label>Position<input name="position" maxlength="80" value="${esc(p?.position||'Player')}"></label>${p?`<label class="dues-choice"><input type="checkbox" name="enabled" ${p.enabled?'checked':''}> Guest portal enabled</label>`:''}<p>No jersey number is assigned to this profile. Add one separately for each game. Check the directory for an existing profile before creating another.</p><button>Save guest profile</button></form>`);return;}
       if(action==='history'){open(`<h3>${esc(p.full_name)} · Games & stats</h3>${recordMarkup(p.record)}${p.record.matches.map(m=>`<article class="dues-receipt"><strong>${esc(date(m.kickoff))} · ${esc(m.home_team+' vs '+m.away_team)}</strong><p>${esc(m.attendance_status)} · ${m.my_goals} goals · ${m.my_assists} assists · ${m.my_motm?'Man of the Match · ':''}${m.my_yellow_cards} yellow / ${m.my_red_cards} red</p></article>`).join('')||'<p>No completed official games recorded yet.</p>'}`);return;}
-      if(action==='game'){open(`<h3>Add guest / assign match jersey</h3><form id="gpGame"><label>Guest<select name="player_id" required>${selectProfiles(pid)}</select></label><label>Game<select name="match_id" required><option value="">Choose game…</option>${s.ledger.matches.map(m=>`<option value="${m.id}" ${m.id===mid?'selected':''}>${esc(matchLabel(m.id))}</option>`).join('')}</select></label><label>Jersey number for this game (optional)<input name="number" type="number" min="1" max="99" placeholder="TBD"></label><label>Event scope (optional)<select name="group_id"><option value="">Independent game fill-in</option>${s.ledger.groups.filter(g=>g.kind==='event').map(g=>`<option value="${g.id}">${esc(g.tag)}</option>`).join('')}</select></label><p>Use the same profile for every appearance. The referee card requires a jersey before printing.</p><button>Save game assignment</button></form>`);const form=dialog.querySelector('#gpGame'),link=s.links.find(l=>l.player_id===form.elements.player_id.value&&l.match_id===form.elements.match_id.value);if(link){form.elements.number.value=link.number??'';form.elements.group_id.value=link.source_group_id||'';}return;}
+      if(action==='game'){open(`<h3>Add guest / assign match jersey</h3><form id="gpGame"><label>Guest<select name="player_id" required>${returningOptions(s,pid)}</select></label><label>Game<select name="match_id" required><option value="">Choose game…</option>${s.ledger.matches.map(m=>`<option value="${m.id}" ${m.id===mid?'selected':''}>${esc(matchLabel(m.id))}</option>`).join('')}</select></label><label>Jersey number for this game (optional)<input name="number" type="number" min="1" max="99" placeholder="TBD"></label><label>Event scope (optional)<select name="group_id"><option value="">Independent game fill-in</option>${s.ledger.groups.filter(g=>g.kind==='event').map(g=>`<option value="${g.id}">${esc(g.tag)}</option>`).join('')}</select></label><div id="gpReturningReview"></div><p>Returning players keep one profile. RSVP is not required. Choose the number worn in this game; older jerseys are never copied.</p><button>Save game assignment</button></form>`);const form=dialog.querySelector('#gpGame'),link=s.links.find(l=>l.player_id===form.elements.player_id.value&&l.match_id===form.elements.match_id.value);if(link){form.elements.number.value=link.number??'';form.elements.group_id.value=link.source_group_id||'';}return;}
       if(action==='legacy'){open(`<h3>Choose saved player history</h3><p>Review the person and games before linking.</p>${legacyGroups(s.legacy).filter(g=>g.games.length).map(g=>`<div class="dues-row"><span>${esc(g.name)} · ${g.games.length} saved games</span><button type="button" data-gp="legacy-link" data-group="${esc(g.key)}" data-player="${esc(pid)}">Review history</button></div>`).join('')||'<p>No unlinked history.</p>'}`);return;}
       if(action==='event'){open(`<h3>Add guest to tournament</h3><form id="gpEvent"><label>Guest<select name="player_id" required>${selectProfiles(pid)}</select></label><label>Event<select name="group_id" required>${s.ledger.groups.filter(g=>g.kind==='event').map(g=>`<option value="${g.id}">${esc(g.tag)}</option>`).join('')}</select></label><p>The profile counts toward event planning and can claim its portal later.</p><button>Add participant</button></form>`);return;}
       if(action==='calculate'||action==='promote'){open(calculator(pid,action==='promote'));return;}
@@ -133,7 +205,7 @@
     async function handleSubmit(e){const f=e.target;if(!f.id.startsWith('gp'))return;e.preventDefault();if(!dialog.open||!f.isConnected)return;const button=f.querySelector('button');if(button.disabled)return;const owner=controller.state().actor,generation=dialogGeneration;button.disabled=true;
       try{const data=new FormData(f),get=k=>String(data.get(k)||''),payload={};let resource='profile',action,key=f.id;
         if(f.id==='gpProfile'){if(f.dataset.event)Object.assign(payload,{group_id:f.dataset.event,revision:Number(f.dataset.eventRevision)});action=f.dataset.player?'edit':'create';Object.assign(payload,{player_id:f.dataset.player||(f.dataset.newPlayerId||(f.dataset.newPlayerId=uuid())),full_name:get('full_name').trim(),preferred_name:get('preferred_name').trim(),email:get('email').trim(),position:get('position'),enabled:!f.dataset.player||data.has('enabled')});}
-        else if(f.id==='gpGame'){resource='history';action='assign';Object.assign(payload,{player_id:get('player_id'),match_id:get('match_id'),number:get('number'),group_id:get('group_id')||null});}
+        else if(f.id==='gpGame'){await returningFlow.assign({selection:get('player_id'),match_id:get('match_id'),number:get('number'),group_id:get('group_id')||null,reviewed:data.has('identity_reviewed'),full_name:get('full_name')});if(controller.state().actor===owner&&generation===dialogGeneration&&dialog.open&&f.isConnected){close();message('Saved player added with this game’s jersey. RSVP is unchanged.');}return;}
         else if(f.id==='gpHistory'){
           if(!data.has('reviewed'))throw Error('Confirm the selected games belong to this person.');
           if(controller.state().phase!=='ready')throw Error('Refresh the directory before linking history.');
@@ -169,9 +241,9 @@
       }catch(error){if(controller.state().actor===owner&&generation===dialogGeneration&&dialog.open&&f.isConnected)dialog.querySelector('[data-gp-error]').textContent=error.message||'Save failed.';}finally{if(button.isConnected)button.disabled=false;}}
     roots.forEach(root=>{root.addEventListener('click',handleClick);root.addEventListener('change',e=>{if(e.target.matches('[data-gp-filter]')){filter=e.target.value;render(controller.state());}if(e.target.matches('[data-gp-season]')){group=e.target.value;render(controller.state());}});});dialog.addEventListener('click',handleClick);dialog.addEventListener('submit',handleSubmit);dialog.addEventListener('input',e=>{if(e.target.closest('#gpCalculator')){review=null;if(el('gpCalculation'))el('gpCalculation').innerHTML='<p>Inputs changed. Calculate again.</p>';}});
     win.addEventListener('skor:create-event-guest',e=>{const button=doc.createElement('button');button.dataset.gp='create';button.dataset.event=e.detail.groupId;void handleClick({target:button});});
-    dialog.addEventListener('change',e=>{const f=e.target.closest('#gpGame');if(!f||!['player_id','match_id'].includes(e.target.name))return;const link=s?.links.find(l=>l.player_id===f.elements.player_id.value&&l.match_id===f.elements.match_id.value);f.elements.number.value=link?.number??'';f.elements.group_id.value=link?.source_group_id||'';});
+    dialog.addEventListener('change',e=>{const f=e.target.closest('#gpGame');if(!f||!['player_id','match_id'].includes(e.target.name))return;const link=s?.links.find(l=>l.player_id===f.elements.player_id.value&&l.match_id===f.elements.match_id.value);f.elements.number.value=link?.number??'';f.elements.group_id.value=link?.source_group_id||'';const target=el('gpReturningReview');try{target.innerHTML=returningReviewMarkup(returningFlow.plan(f.elements.player_id.value,f.elements.match_id.value),s);}catch(error){target.textContent=error.message;}});
     doc.addEventListener('visibilitychange',()=>controller.resume());win.addEventListener('focus',()=>controller.resume());win.addEventListener('pagehide',()=>controller.pause());
-    const clear=()=>{close();s=null;controller.clear();const regular=doc.getElementById('regularRosterWorkspace');if(regular)regular.hidden=false;directory.hidden=true;doc.querySelectorAll('[data-roster-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.rosterTab==='regular')));};return {...controller,clear,start:id=>canWrite()?controller.start(id):(clear(),Promise.resolve(false)),isMatchAlias:(key,mid)=>!!s?.links.some(l=>l.match_id===mid&&s.profiles.find(p=>p.player_id===l.player_id)?.player_key===key&&l.active&&l.temp_active!==false),attendanceRows:mid=>(s?participations(s).filter(l=>l.match_id===mid).map(l=>({roster_player_id:l.player_id,player_key:l.temp_id?'temp:'+l.temp_id:profile(l.player_id)?.player_key,jersey_number:l.number,display_name:profile(l.player_id)?.preferred_name||name(l.player_id).split(/\s+/)[0],attendance_status:l.attendance,rsvp_status:l.rsvp,rsvp_note:l.rsvp_note})):[]),boundAttendance:(mid)=>s?participations(s).filter(l=>l.match_id===mid).map(l=>l.player_id):[],renderMatchTools,hasSnapshot:()=>!!s};
+    const clear=()=>{close();s=null;controller.clear();const regular=doc.getElementById('regularRosterWorkspace');if(regular)regular.hidden=false;directory.hidden=true;doc.querySelectorAll('[data-roster-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.rosterTab==='regular')));};return {...controller,assignReturning:input=>canWrite()?returningFlow.assign(input):Promise.reject(Error('Captain access required.')),returningPlan:(value,mid)=>returningFlow.plan(value,mid),clear,start:id=>canWrite()?controller.start(id):(clear(),Promise.resolve(false)),isMatchAlias:(key,mid)=>!!s?.links.some(l=>l.match_id===mid&&s.profiles.find(p=>p.player_id===l.player_id)?.player_key===key&&l.active&&l.temp_active!==false),attendanceRows:mid=>(s?participations(s).filter(l=>l.match_id===mid).map(l=>({roster_player_id:l.player_id,player_key:l.temp_id?'temp:'+l.temp_id:profile(l.player_id)?.player_key,jersey_number:l.number,display_name:profile(l.player_id)?.preferred_name||name(l.player_id).split(/\s+/)[0],attendance_status:l.attendance,rsvp_status:l.rsvp,rsvp_note:l.rsvp_note})):[]),boundAttendance:(mid)=>s?participations(s).filter(l=>l.match_id===mid).map(l=>l.player_id):[],renderMatchTools,hasSnapshot:()=>!!s};
   }
-  global.SKORGuestProfiles={legacyGroups,legacyDirectoryMarkup,legacyProfileChoices,participations,prorate,date,feeCandidates,guestTotals,recordMarkup,createController,mountCaptain};
+  global.SKORGuestProfiles={returningChoices,returningOptions,returningPlan,returningReviewMarkup,createReturningAssignment,legacyGroups,legacyDirectoryMarkup,legacyProfileChoices,participations,prorate,date,feeCandidates,guestTotals,recordMarkup,createController,mountCaptain};
 })(typeof window==='object'?window:globalThis);
