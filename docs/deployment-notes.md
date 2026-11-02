@@ -1,13 +1,18 @@
-# v58.32 — Choose previously used TEMP players without retyping (deploying)
+# v58.32 — Choose previously used TEMP players without retyping (deployed)
 
-2026-11-02 UTC. Frontend implementation is complete; production deployment is in progress.
+2026-11-02 UTC. Cloudflare build `2aa26a5a-021e-45a7-a4d1-b225829aead6` succeeded for source release [`4b3619d840a8881b218a52df32c2fa563d67bfe2`](https://github.com/skorsolutions/skor-fc-site/commit/4b3619d840a8881b218a52df32c2fa563d67bfe2); version `c9c12ec5-1989-4507-bc26-7e4f55299800`, deployment `37f18e3e-90d5-440e-a2db-d6e29fd140b8`, is verified at 100% production traffic. Build completed at 2026-11-02 02:07:43 UTC. All 14 source hashes and the complete release file set from the previous production base match checked sources; build logs confirm the deployed version.
 
 - Both guest pickers now include reusable profiles and saved TEMP names. RSVP and game-history eligibility do not filter remembered identities. Selecting a saved person fills the name and requires identity confirmation once, rather than typing a new TEMP player from scratch.
+- Re-adding a removed guest with the same number reactivates the same match TEMP and immediately refreshes the Lineups roster; both receipt recovery and the active/inventory projection are verified.
 - Reuse existing guarded RPCs for reviewed profile/history setup, unused identity linking and match assignment. Existing same-game TEMP IDs are reused; old numbers stay with their own games. Unused identity links never manufacture participation, attendance, fees or RSVP. Full referee names are requested only once when a historical name is incomplete.
 - Add a typed match-number option beside physical inventory. Preserve in-progress selection during refresh; clear jersey drafts when switching games. Stable receipts support lost-response retries and partial-setup recovery; account and duplicate guards prevent further unsafe writes.
 - One authorized administrative data correction created a reusable guest profile, linked two eligible earlier assignments, and assigned the user-confirmed current-game jersey and Present attendance. The removed unused assignment stays untouched; all original TEMP identities/numbers, RSVP, events, lineups and ledger fingerprints are preserved. Private identity details are excluded from this public note.
 - All 23 local suites and six database rollback suites pass. The live returning selector contains two reusable profiles and four previous names, with the corrected person shown once.
 - Affected: `admin.html`, `guest-profiles.js`, package/test commands, returning/history/lineup/build-marker tests and documentation. No SQL migration, schema/permission or Edge Function change. Browser visual checks and commit-comment tools remain unavailable.
+
+Release summary (same as chat; commit-comment API unavailable):
+
+v58.32 is live. Both guest pickers now reuse saved TEMP names without retyping; jerseys stay with their game and RSVP is not required. Roster, Lineups, attendance/history and exports keep stable identities. The authorized guest setup is complete. All 23 local suites and six database rollback suites passed; no migration or Edge Function change. Release: https://github.com/skorsolutions/skor-fc-site/commit/4b3619d840a8881b218a52df32c2fa563d67bfe2. Browser visual checks and GitHub commit comments remain unavailable.
 
 # v58.31 — Require participation evidence for guest match history (deployed)
 
