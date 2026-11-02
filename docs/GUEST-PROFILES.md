@@ -1,4 +1,4 @@
-> v58.30: see [Guest history root fix](GUEST-HISTORY.md) for the replacement player-level atomic history workflow and canonical Lineups assignment. The exact new migration is approved, applied and verified; frontend deployment is in progress. Historical per-game create/link instructions below describe the earlier release.
+> v58.30: see [Guest history root fix](GUEST-HISTORY.md) for the replacement player-level atomic history workflow and canonical Lineups assignment. The exact new migration is approved, applied and verified; v58.30 is deployed. Historical per-game create/link instructions below describe the earlier release.
 
 # Guest and event profiles — v58.25
 
