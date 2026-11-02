@@ -5,20 +5,27 @@ import {webcrypto} from 'node:crypto';
 const source=fs.readFileSync('guest-profiles.js','utf8'),dues=fs.readFileSync('team-dues.js','utf8'),plain=x=>JSON.parse(JSON.stringify(x));
 const ctx=vm.createContext({crypto:webcrypto,Intl,Date,Map,Set,BigInt,Promise,encodeURIComponent,setTimeout:()=>1,clearTimeout(){}});vm.runInContext(dues,ctx);vm.runInContext(source,ctx);
 const api=ctx.SKORGuestProfiles;
-const appearances=[{id:'t1',match_id:'m1',name:'Alex Example',number:18,active:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t2',match_id:'m2',name:' ALEX  EXAMPLE ',number:22,active:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t3',match_id:'m1',name:'Different Person',number:null,active:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t4',match_id:'m3',name:'<img src=x onerror=alert(1)>',number:44,active:true,updated_at:'2026-10-01T10:00:00Z'}];
+const appearances=[{id:'t1',match_id:'m1',name:'Alex Example',number:18,active:true,history_eligible:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t2',match_id:'m2',name:' ALEX  EXAMPLE ',number:22,active:true,history_eligible:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t3',match_id:'m1',name:'Different Person',number:null,active:true,history_eligible:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t4',match_id:'m3',name:'<img src=x onerror=alert(1)>',number:44,active:true,history_eligible:true,updated_at:'2026-10-01T10:00:00Z'}];
 const initial=JSON.stringify(appearances),groups=api.legacyGroups(appearances);
 assert.equal(groups.length,3);assert.equal(groups.find(g=>g.key==='alex example').games.length,2);assert.equal(JSON.stringify(appearances),initial);
-const removed={...appearances[0],id:'old',active:false,has_usage:false},used={...removed,id:'referenced',match_id:'m4',has_usage:true};
+const removed={...appearances[0],id:'old',active:false,has_usage:false,history_eligible:false},used={...removed,id:'referenced',match_id:'m4',has_usage:true,history_eligible:true};
 const classified=api.legacyGroups([...appearances,removed,used,appearances[0]]).find(g=>g.key==='alex example');
 assert.equal(classified.games.length,3,'inactive referenced assignments remain in saved history');assert.equal(classified.archived.length,1,'unused removed rows do not add saved games');
 const conflict=api.legacyGroups([appearances[0],{...appearances[0],id:'another'}])[0];assert.equal(conflict.games.length,1);assert.equal(conflict.games[0].rows.length,2);
 const html=api.legacyDirectoryMarkup({legacy:[...appearances,removed]},id=>'Game '+id);
-assert.equal((html.match(/data-gp="legacy-create"/g)||[]).length,3,'one create action per person');assert.equal((html.match(/data-gp="legacy-link"/g)||[]).length,3);assert.match(html,/2 saved games/);assert.match(html,/Removed \/ unused TEMP records \(1\)/);assert.match(html,/Attendance unknown/);assert.match(html,/Match jersey #18/);assert.doesNotMatch(html,/<img/);assert.match(html,/&lt;img/);
+assert.equal((html.match(/data-gp="legacy-create"/g)||[]).length,3,'one create action per person');assert.equal((html.match(/data-gp="legacy-link"/g)||[]).length,3);assert.match(html,/2 saved games/);assert.match(html,/Not selected \/ unused TEMP entries \(1\)/);assert.match(html,/No match participation recorded/);assert.match(html,/Match jersey #18/);assert.doesNotMatch(html,/<img/);assert.match(html,/&lt;img/);
 assert.match(api.legacyDirectoryMarkup({legacy:[]},()=>''),/All current saved TEMP assignments are linked/);
 assert.doesNotMatch(api.legacyDirectoryMarkup({legacy:[removed]},()=>''),/1 saved game/);
 const linkedArchive=api.legacyDirectoryMarkup({legacy:[removed],links:[{name:removed.name,match_id:removed.match_id}]},()=> 'Saved game');assert.doesNotMatch(linkedArchive,/data-gp="legacy-create"/,'leftover archived duplicate cannot create another profile');
 assert.equal((api.legacyDirectoryMarkup({legacy:appearances},()=>'',true).match(/ disabled/g)||[]).length,6);
 
+// A created or draft-only TEMP must never become a saved game, even if active or referenced.
+const draftOnly={...appearances[0],id:'draft-only',name:'Draft Only Person',history_eligible:false,has_usage:true,active:true};
+const inactiveDraft={...draftOnly,id:'removed-draft',active:false};
+for(const row of [draftOnly,inactiveDraft]){
+ const groups=api.legacyGroups([row]);assert.equal(groups[0].games.length,0);assert.equal(groups[0].archived.length,1);
+ const markup=api.legacyDirectoryMarkup({legacy:[row]},()=> 'Fixture game');assert.doesNotMatch(markup,/data-gp="legacy-(create|link)"/);assert.doesNotMatch(markup,/1 saved game/);assert.match(markup,/No match participation recorded/);assert.match(markup,/data-gp-key="legacy-archive"/);assert.doesNotMatch(markup,/<details[^>]* open/);
+}
 // A small DOM harness executes the actual controller, native dialogs and submit handlers.
 const attrs=text=>Object.fromEntries([...text.matchAll(/([\w-]+)="([^"]*)"/g)].map(m=>[m[1],m[2].replaceAll('&amp;','&').replaceAll('&quot;','"').replaceAll('&#39;',"'")]));
 class Element{
@@ -48,7 +55,7 @@ async function harness(){
   const doc={hidden:false,getElementById:id=>nodes[id]||null,querySelectorAll:()=>[],addEventListener(){}};
   const win={addEventListener(){}};let actor='captain',allowed=true,readFailure=false,writeFailure=false,gate=null;
   const records={summary:{present_count:0,goals:0,assists:0,motm:0,absent_count:0,excused_count:0,unmarked_count:0,yellow_cards:0,red_cards:0}};
-  const snapshot={history_version:1,as_of:new Date().toISOString(),profiles:[{player_id:'existing',player_key:'existing',full_name:'Known Profile',is_guest:true,enabled:true,record:structuredClone(records)}],links:[],event_participants:[],legacy:structuredClone(appearances.slice(0,3)),fee_settings:[],entries:[],ledger:{groups:[],matches:[{id:'m1',kickoff:'2026-10-01T18:00:00Z',label:'SKOR vs A'},{id:'m2',kickoff:'2026-10-08T18:00:00Z',label:'SKOR vs B'}],roster:[],scenarios:[],group_matches:[],members:[]}};
+  const snapshot={history_version:1,participation_version:1,as_of:new Date().toISOString(),profiles:[{player_id:'existing',player_key:'existing',full_name:'Known Profile',is_guest:true,enabled:true,record:structuredClone(records)}],links:[],event_participants:[],legacy:structuredClone(appearances.slice(0,3)),fee_settings:[],entries:[],ledger:{groups:[],matches:[{id:'m1',kickoff:'2026-10-01T18:00:00Z',label:'SKOR vs A'},{id:'m2',kickoff:'2026-10-08T18:00:00Z',label:'SKOR vs B'}],roster:[],scenarios:[],group_matches:[],members:[]}};
   const writes=[],receipts=new Map(),changes=[];
   const client={auth:{getSession:async()=>({data:{session:{user:{id:actor}}}})},rpc:async(name,args)=>{
     if(name==='get_guest_console'){if(readFailure)return {error:{message:'Refresh unavailable'}};return {data:structuredClone(snapshot)};}
@@ -80,6 +87,18 @@ const close=await harness();await close.click('legacy-create',{group:'alex examp
 const account=await harness();await account.click('legacy-create',{group:'alex example'});account.body.forms[0].fields.set('reviewed','on');let finish;account.setGate(new Promise(r=>finish=r));const saving=account.submit(account.body.forms[0]);await Promise.resolve();account.mounted.clear();account.setActor('another');finish();await saving;assert.equal(account.dialog.open,false);assert.equal(account.directory.innerHTML,'');assert.equal(account.body.innerHTML,'');assert.equal(account.error.textContent,'');
 const guarded=await harness();guarded.setReadFailure(true);await guarded.mounted.refresh();await guarded.click('legacy-link',{group:'alex example'});assert.equal(guarded.dialog.open,false);assert.equal(guarded.writes.length,0);guarded.setReadFailure(false);await guarded.mounted.refresh();guarded.setAllowed(false);await guarded.click('legacy-create',{group:'alex example'});assert.equal(guarded.dialog.open,false);assert.equal(guarded.writes.length,0);guarded.mounted.clear();
 const selection=await harness();await selection.click('legacy-link',{group:'alex example'});const sf=selection.body.forms[0];sf.fields.set('player_id','existing');sf.fields.set('reviewed','on');sf.fields.delete('games');await selection.submit(sf);assert.equal(selection.writes.length,0);assert.match(selection.error.textContent,/Select one assignment/);selection.mounted.clear();
+// Execute the actual Lineups removal handler: it must refresh the mounted directory now,
+// even though old saved drafts still refer to the removed TEMP identity.
+const removedUI=await harness();let removeClick,localRefreshes=0;
+const admin=fs.readFileSync('admin.html','utf8'),removeSource=admin.match(/    list\.querySelectorAll\("\[data-temp-remove\]"\)\.forEach\(btn=>btn\.addEventListener\("click",async\(\)=>\{[\s\S]*?\n    \}\)\);/)[0];
+const removeContext=vm.createContext({
+ list:{querySelectorAll:()=>[{dataset:{tempRemove:'t1'},addEventListener:(_,fn)=>removeClick=fn}]},
+ window:{SKORPortalCanWrite:()=>true,SKORGuestProfiles:{captain:removedUI.mounted}},
+ matchTempPlayers:[{temp_id:'t1',name:'Fixture'}],confirm:()=>true,
+ sbClient:()=>({from:()=>({update:()=>({eq:async()=>{const t=removedUI.snapshot.legacy.find(t=>t.id==='t1');t.active=false;t.has_usage=true;t.history_eligible=false;return {error:null};}})})}),
+ removePlayerEverywhere(){},persistDraft(){},resetTempPlayerForm(){},refreshTempPlayers:async()=>localRefreshes++,markStatus(){},Date,
+});
+vm.runInContext(removeSource,removeContext);await removeClick();assert.equal(localRefreshes,1);assert.match(removedUI.directory.innerHTML,/2 saved game assignments awaiting linking/);assert.match(removedUI.directory.innerHTML,/1 saved game/);assert.match(removedUI.directory.innerHTML,/No match participation recorded/);removedUI.mounted.clear();
 const css=fs.readFileSync('guest-profiles.css','utf8');assert.match(css,/gp-history-actions button\{min-height:44px/);assert.match(css,/@media\(max-width:560px\)/);assert.match(css,/:focus-visible/);
 new vm.Script(source);
 console.log('Guest history: player-level atomic create/link, unique saved games, removed/used archives, no invented attendance, exact retries and stale/account/dialog/viewer guards passed.');

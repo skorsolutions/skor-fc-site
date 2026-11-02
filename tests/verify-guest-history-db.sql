@@ -19,7 +19,9 @@ begin
     (old_tid,mid,'Fixture History Person',77,false,cap),(tid,mid,'Fixture History Person',77,true,cap),
     (tid2,mid2,'Fixture History Person',66,false,cap);
   insert into public.lineup_variations(id,event_key,event_label,name,state,created_by,is_production) values
-    (lid,mid2::text,'Fixture game','Fixture history','{}'::jsonb||jsonb_build_object('slots',jsonb_build_object('GK','temp:'||tid2::text)),cap,false);
+    (lid,mid2::text,'Fixture game','Fixture history','{}'::jsonb||jsonb_build_object('slots',jsonb_build_object('GK','temp:'||tid2::text)),cap,true);
+  insert into public.lineup_variations(id,event_key,event_label,name,state,created_by,is_production) values
+    (gen_random_uuid(),mid::text,'Fixture game','Fixture Final',jsonb_build_object('bench',jsonb_build_array('temp:'||tid::text)),cap,true);
   if skor_private.temp_entry_has_usage(old_tid) or not skor_private.temp_entry_has_usage(tid2) then raise exception 'Unused vs referenced archive detection failed.';end if;
   select md5(string_agg(to_jsonb(t)::text,'' order by t.id)) into before_rows from public.match_temp_players t where t.id in(tid,old_tid,tid2);
   body:=jsonb_build_object('request_id',gen_random_uuid(),'player_id',pid,'create_profile',true,'full_name','Fixture History Person','reviewed',true,

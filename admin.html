@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.30-guest-history-root-fix" />
-  <title>SKOR FC Admin | Captain Portal v58.30</title>
+  <meta name="skor-build" content="captain-portal-v58.31-guest-participation-records" />
+  <title>SKOR FC Admin | Captain Portal v58.31</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1896,7 +1896,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.30</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.31</div>
   </aside>
 
   <main>
@@ -4771,6 +4771,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         .update({...payload,updated_at:new Date().toISOString()})
         .eq("id",existing.id);
       if(updateError)throw updateError;
+      if(existing.is_production===true)await window.SKORGuestProfiles?.captain?.refresh();
       return {overwritten:true,id:existing.id,isProduction:existing.is_production===true};
     }
 
@@ -4925,6 +4926,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       btn.disabled=false;btn.textContent=oldText;
       if(error){markStatus('Could not set Production / Final: '+error.message,false);return;}
       await refreshVariations(false);
+      await window.SKORGuestProfiles?.captain?.refresh();
       if(typeof window.loadProductionGameplan==='function'&&window.gameDaySelected?.id&&String(window.gameDaySelected.id)===String(rec.event_key)){
         await window.loadProductionGameplan(rec.event_key);
       }
@@ -4951,6 +4953,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const {error}=await sb.from('lineup_variations').delete().eq('id',rec.id);
       if(error){markStatus('Could not delete shared variation: '+error.message,false);return;}
       await refreshVariations(false);
+      if(rec.is_production===true)await window.SKORGuestProfiles?.captain?.refresh();
       markStatus('Deleted shared variation "'+rec.name+'".');
     }));
     });
@@ -5126,7 +5129,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const sb=sbClient();if(!sb)return;
       const {error}=await sb.from("match_temp_players").update({active:false,updated_at:new Date().toISOString()}).eq("id",p.temp_id);
       if(error){markStatus("Could not remove TEMP player: "+error.message,false);return;}
-      removePlayerEverywhere("temp:"+p.temp_id);persistDraft();resetTempPlayerForm();await refreshTempPlayers(false);markStatus(p.name+" removed from selectable match fill-ins.");
+      removePlayerEverywhere("temp:"+p.temp_id);persistDraft();resetTempPlayerForm();await refreshTempPlayers(false);await window.SKORGuestProfiles?.captain?.refresh();markStatus(p.name+" removed from selectable match fill-ins.");
     }));
   }
   async function refreshTempPlayers(showMessage=false){
@@ -5349,6 +5352,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     updateProductionBtn.textContent=old;
     if(error){markStatus('Could not update Production / Final: '+error.message,false);return;}
     await refreshVariations(false);
+    await window.SKORGuestProfiles?.captain?.refresh();
     if(window.gameDaySelected?.id&&String(window.gameDaySelected.id)===String(eventKey())){
       await window.loadProductionGameplan?.(eventKey());
     }
@@ -5434,7 +5438,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.30 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.31 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5469,7 +5473,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="equipment.js?v=58.19"></script>
 <script src="captain-notifications.js?v=58.20"></script>
 <script src="team-dues.js?v=58.28"></script>
-<script src="guest-profiles.js?v=58.30"></script>
+<script src="guest-profiles.js?v=58.31"></script>
 <script src="post-match-entry.js?v=58.26"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="strategy-reuse.js?v=58.23"></script>

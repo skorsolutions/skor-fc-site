@@ -1,3 +1,14 @@
+# v58.31 — Require participation evidence for guest match history (database verified; frontend deploying)
+
+2026-11-02 UTC. User approved deployment. The new database migration is applied and verified; frontend deployment is in progress.
+
+- Diagnosis: a removed guest was absent from the actual CTM Final lineup, with no official personal events/MOTM, but persisted on three old draft benches. The previous technical-reference test incorrectly retained a saved-game card. Private identities are omitted here.
+- Use exact Final/Production field/bench selection or confirmed Present/official player/assist event/MOTM evidence for guest history. Profile creation, active availability, drafts and other metadata alone do not qualify. Reusable profiles, original TEMP IDs, saved plans, jerseys, stats, attendance and payments are retained.
+- The directory moves unused entries into a closed, uncounted section without game-link actions. Shared completed-match queries and guest portal history use the same eligibility. Upcoming assigned match access and regular roster records remain compatible. Removing a TEMP or changing/deleting a Final lineup refreshes the directory immediately.
+- Affected: `admin.html`, `guest-profiles.js`, controller/history/build-marker tests, prepared SQL and a dedicated post-approval database fixture. No Edge Function change. Additive console participation_version 1 requires explicit history_eligible flags; existing history_version 1 remains compatible.
+- All 22 local suites pass, including actual immediate-removal refresh and active/inactive draft-only exclusions. All six database rollback suites now pass.
+- Applied exact approved SQL: `docs/sql/GUEST-PARTICIPATION-RECORDS.sql` (SHA-256 `e9a91a21621f655cc2a1ccf34d10795f6247c283e93e15f23c3325ef14f8bbe8`). It adds private guarded evidence helpers and replaces the existing console/completed-record/guest-portal/import functions. Exact approved migration `20261102005325 fix_guest_participation_records` is applied (SHA-256 `e9a91a21621f655cc2a1ccf34d10795f6247c283e93e15f23c3325ef14f8bbe8`), with seven matching live function bodies and verified role ACLs. Six real-role rollback suites pass, including guest participation, atomic history import, guest portal/promotion/dues, optional numbers, post-match and match-record regressions. All 14 original application/ledger fingerprints match; no new advisor notices. Live captain readback excludes the reported draft-only guest and classifies ten unlinked entries as four eligible saved games across three names plus six unused entries. No real records were deleted or rewritten. Frontend production verification is in progress; browser visuals and commit-comment creation remain unavailable.
+
 # v58.30 — Guest history root fix (deployed)
 
 2026-11-02 UTC. User approved deployment. Exact migration `20261102001635 fix_guest_history_and_canonical_assignments` is applied; frontend production deployment is verified.

@@ -1,3 +1,5 @@
+> v58.31 replaces the broad reference-based history rule below with exact Final squad selection or confirmed participation. See [Guest participation records](GUEST-PARTICIPATION.md). The new migration is approved, applied and verified; frontend deployment is in progress.
+
 # Guest history root fix — v58.30
 
 Approved 2026-11-02 UTC. Database migration is applied and verified; Captain Portal v58.30 is deployed. Player Portal remains v58.28.
