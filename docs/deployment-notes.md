@@ -1,3 +1,14 @@
+# v58.33 — Ask captains to confirm unmarked guest attendance (deploying)
+
+2026-11-02 UTC. Implementation complete; frontend production deployment is in progress.
+
+- Guest/TEMP cards show confirmed attendance separately from unmarked games and display total completed records. The collapsed card shows a pending-confirmation badge; the open card asks whether the player attended the listed dates instead of implying the confirmed count is the player's entire history.
+- Captains can explicitly confirm the listed games Present or review individual Present/Absent/Excused choices. Individual choices default to Unmarked. Opening, refreshing, viewing history or creating/linking a guest does not write attendance. No real historical attendance was confirmed for this release.
+- Use existing guarded attendance APIs with fresh-record checks, observed-conflict rejection, bounded explicit game lists, stable retries for unacknowledged writes and fresh receipts for new intentional confirmations. Successful partial saves remain visible; remaining dates stay unmarked. Account, permission, stale-response and closed-dialog guards stop further writes.
+- Scope: Captain Guest/TEMP directory and its stats dialog; the player-only record display retains its default behavior. Existing participation eligibility, returning-name pickers, RSVP, jerseys, scores, ledger and fee rules remain. No SQL migration, schema/permission or Edge Function change.
+- All 24 local suites and six real-role database rollback suites pass. The live record renders 3 completed records, 1 confirmed and 2 dated questions; its real attendance remains unchanged. All fourteen original application/ledger fingerprints match the pre-test baseline.
+- Affected: `admin.html`, `guest-profiles.js`, `guest-profiles.css`, package/test commands, attendance/history/build-marker tests and documentation. Browser visual checks and GitHub commit-comment tooling remain unavailable.
+
 # v58.32 — Choose previously used TEMP players without retyping (deployed)
 
 2026-11-02 UTC. Cloudflare build `2aa26a5a-021e-45a7-a4d1-b225829aead6` succeeded for source release [`4b3619d840a8881b218a52df32c2fa563d67bfe2`](https://github.com/skorsolutions/skor-fc-site/commit/4b3619d840a8881b218a52df32c2fa563d67bfe2); version `c9c12ec5-1989-4507-bc26-7e4f55299800`, deployment `37f18e3e-90d5-440e-a2db-d6e29fd140b8`, is verified at 100% production traffic. Build completed at 2026-11-02 02:07:43 UTC. All 14 source hashes and the complete release file set from the previous production base match checked sources; build logs confirm the deployed version.
