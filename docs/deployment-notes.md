@@ -1,3 +1,14 @@
+# v58.30 — Guest history root fix (database verified; frontend deploying)
+
+2026-11-02 UTC. User approved deployment. Exact migration `20261102001635 fix_guest_history_and_canonical_assignments` is applied; frontend deployment is in progress.
+
+- Previous TEMP players now have one create-profile/link-history action pair per person. One reviewed atomic save links selected saved games, preserving each exact TEMP identity and jersey. Games are read-only history rows; linking does not mark attendance.
+- Unique saved-game counts exclude removed unused rows. The latter remain in a default-closed archive; referenced inactive records stay visible. Active/referenced conflicts require review rather than automatic merging. Read-only live classification confirms 10 raw records become 8 saved game assignments across five names, with two removed unused records retained separately.
+- Lineups uses reusable profiles; deliberate re-add reuses a canonical game assignment. Server guards reject stale history, conflicting assignments, duplicate selected games, unsafe same-name creation and the old direct TEMP INSERT bypass. Exact retry receipts and captain/account/dialog guards are retained.
+- Affected: `admin.html`, `guest-profiles.js`, `guest-profiles.css`, history/controller/lineup tests, build-marker tests and workflow documentation. Player Portal, exports, keeper/match jersey contracts, Strategy, AI and ledger schemas remain compatible.
+- All 22 local suites pass, including actual mounted atomic history handlers, archive counts, retry/account guards, Lineups assignment, referee/keeper/export and connected feature regressions.
+- Applied the exact approved SQL in `docs/sql/GUEST-HISTORY-ROOT-FIX.sql` (SHA-256 `9dbc5cd1433a3e984d5dbcfa38ab6c46e3fb7c8536debffc068cfcd4225d80c1`), with a byte-identical versioned migration. Five stored bodies/ACLs match; five real-role rollback suites pass, including physical inventory assignment/preservation/clearing and anonymous/noncaptain boundaries. All 14 original application/ledger fingerprints match. No new advisor notices, real profile/link/promotion/attendance/ledger changes or Edge Function deployment. Browser visuals and commit-comment creation remain unavailable. Frontend production verification is in progress.
+
 # 2026-11-01 — Data-only correction of confirmed TEMP name variants
 
 - The user explicitly confirmed two short-name/full-name pairs refer to the same people and requested that each pair appear together. Only the two exact historical inactive TEMP rows' display names and update timestamps were changed to their existing full-name spellings; private identities/IDs are omitted from this public note.

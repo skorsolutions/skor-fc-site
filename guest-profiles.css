@@ -20,3 +20,5 @@
 #guestCaptainDialog [data-gp-dialog-body]{min-width:0}
 #guestDirectory button:focus-visible,#guestDirectory summary:focus-visible{outline:3px solid #8d3454;outline-offset:3px}
 @media(max-width:560px){.gp-legacy-appearance .dues-row{flex-direction:column;align-items:stretch}.gp-legacy-appearance .dues-row button{flex:auto!important;width:100%}.gp-legacy-group>summary{flex-wrap:wrap}.gp-legacy-source{padding:10px}}
+
+.gp-history-actions{margin:12px 0}.gp-history-actions button{min-height:44px;white-space:normal;max-width:100%}.gp-history-choice{align-items:flex-start;min-height:44px;padding:10px 0;overflow-wrap:anywhere}.gp-history-choice input{flex:none;margin-top:4px}#guestCaptainDialog .gp-history-choice span{min-width:0}#guestCaptainDialog details{margin:12px 0}

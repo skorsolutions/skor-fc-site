@@ -19,7 +19,7 @@ for(let total=1;total<=200;total++)for(const included of [0,Math.floor(total/2),
 }
 for(const bad of [{baseline_cents:-1},{fixed_cents:10002},{total_games:0},{total_games:201},{included_games:11},{included_games:1.5}])assert.throws(()=>api.prorate({baseline_cents:10001,fixed_cents:0,total_games:10,included_games:5,...bad}));
 assert.equal(api.date('2026-10-25T01:00:00Z'),'2026-10-24');
-const snapshot={as_of:new Date().toISOString(),profiles:[{player_id:'p',joined_on:null}],links:[{player_id:'p',match_id:'m',attendance:'present'}],event_participants:[],legacy:[],fee_settings:[{group_id:'g',enabled:true,effective_on:'2026-01-01'}],entries:[],ledger:{group_matches:[{group_id:'g',match_id:'m'}],matches:[{id:'m',kickoff:'2026-02-01T18:00:00Z',published:true,status:'final'}],members:[{group_id:'g',player_id:'p',paid_cents:700}]}};
+const snapshot={history_version:1,as_of:new Date().toISOString(),profiles:[{player_id:'p',joined_on:null}],links:[{player_id:'p',match_id:'m',attendance:'present'}],event_participants:[],legacy:[],fee_settings:[{group_id:'g',enabled:true,effective_on:'2026-01-01'}],entries:[],ledger:{group_matches:[{group_id:'g',match_id:'m'}],matches:[{id:'m',kickoff:'2026-02-01T18:00:00Z',published:true,status:'final'}],members:[{group_id:'g',player_id:'p',paid_cents:700}]}};
 assert.equal(api.feeCandidates(snapshot,'g').length,1);
 assert.equal(api.feeCandidates({...snapshot,links:[],event_participants:snapshot.links},'g').length,1,'Tagged event appearances do not require a match jersey or TEMP link');
 assert.equal(api.participations({...snapshot,links:[],event_participants:snapshot.links})[0].player_id,'p');

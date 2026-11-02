@@ -1,3 +1,5 @@
+> v58.30: see [Guest history root fix](GUEST-HISTORY.md) for the replacement player-level atomic history workflow and canonical Lineups assignment. The exact new migration is approved, applied and verified; frontend deployment is in progress. Historical per-game create/link instructions below describe the earlier release.
+
 # Guest and event profiles — v58.25
 
 Status: database deployed with explicit user approval on 2026-10-25. Exact SQL SHA-256 `297d620a73f7883087ebfd9f76310434717e7df7463b05231cec9ee537109ee7` is applied as `20261025000902 add_guest_profiles_and_participation_dues`. Captain/Player Portal v58.25 is deployed. Cloudflare build `72f15b5c-05dc-42a1-9db3-9186249197c9` succeeded for source commit [`28db5868872aa55a0ab8628bbcfe9e6d41f9da37`](https://github.com/skorsolutions/skor-fc-site/commit/28db5868872aa55a0ab8628bbcfe9e6d41f9da37); version `a39b4760-36a9-4ad5-8d0c-a2d3bc1b688f`, deployment `4c2d4660-9c5f-4acf-ac40-ac0811c4491c`, is verified at 100% production traffic. All 21 source blob hashes and the exact release file set match the checked source. Build completed at 2026-10-25 00:13:13 UTC.

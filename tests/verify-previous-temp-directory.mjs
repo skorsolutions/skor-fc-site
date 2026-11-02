@@ -5,16 +5,19 @@ import {webcrypto} from 'node:crypto';
 const source=fs.readFileSync('guest-profiles.js','utf8'),dues=fs.readFileSync('team-dues.js','utf8'),plain=x=>JSON.parse(JSON.stringify(x));
 const ctx=vm.createContext({crypto:webcrypto,Intl,Date,Map,Set,BigInt,Promise,encodeURIComponent,setTimeout:()=>1,clearTimeout(){}});vm.runInContext(dues,ctx);vm.runInContext(source,ctx);
 const api=ctx.SKORGuestProfiles;
-const appearances=[{id:'t1',match_id:'m1',name:'Alex Example',number:18},{id:'t2',match_id:'m2',name:' ALEX  EXAMPLE ',number:22},{id:'t3',match_id:'m1',name:'Different Person',number:null},{id:'t4',match_id:'m3',name:'<img src=x onerror=alert(1)>',number:44}];
+const appearances=[{id:'t1',match_id:'m1',name:'Alex Example',number:18,active:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t2',match_id:'m2',name:' ALEX  EXAMPLE ',number:22,active:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t3',match_id:'m1',name:'Different Person',number:null,active:true,updated_at:'2026-10-01T10:00:00Z'},{id:'t4',match_id:'m3',name:'<img src=x onerror=alert(1)>',number:44,active:true,updated_at:'2026-10-01T10:00:00Z'}];
 const initial=JSON.stringify(appearances),groups=api.legacyGroups(appearances);
-assert.equal(groups.length,3);assert.equal(groups.find(g=>g.key==='alex example').appearances.length,2);assert.equal(JSON.stringify(appearances),initial);
-assert.equal(api.legacyGroups([...appearances,appearances[0],{name:'No identity'},{id:'invalid'}]).reduce((n,g)=>n+g.appearances.length,0),4);
-const html=api.legacyDirectoryMarkup({legacy:appearances},id=>'Game '+id);
-assert.equal((html.match(/data-gp="legacy-create"/g)||[]).length,4);assert.equal((html.match(/data-gp="legacy-link"/g)||[]).length,4);assert.match(html,/Jersey TBD/);assert.match(html,/Match jersey #18/);assert.match(html,/Game m1/);assert.doesNotMatch(html,/<img/);assert.match(html,/&lt;img/);
-assert.match(api.legacyDirectoryMarkup({legacy:[]},()=>''),/All saved TEMP appearances are linked/);
-assert.equal((api.legacyDirectoryMarkup({legacy:appearances},()=>'',true).match(/ disabled/g)||[]).length,8);
-const choices=api.legacyProfileChoices({profiles:[{player_id:'ok',enabled:true,full_name:'Alex',is_guest:true},{player_id:'off',enabled:false,full_name:'Disabled'},{player_id:'taken',enabled:true,full_name:'Other',is_guest:false},{player_id:'regular',enabled:true,full_name:'Promoted',is_guest:false}],links:[{player_id:'taken',match_id:'m1',temp_id:'other'}]},appearances[0],'regular');
-assert.match(choices,/value="regular" selected/);assert.match(choices,/Regular roster/);assert.doesNotMatch(choices,/value="off"|value="taken"/);
+assert.equal(groups.length,3);assert.equal(groups.find(g=>g.key==='alex example').games.length,2);assert.equal(JSON.stringify(appearances),initial);
+const removed={...appearances[0],id:'old',active:false,has_usage:false},used={...removed,id:'referenced',match_id:'m4',has_usage:true};
+const classified=api.legacyGroups([...appearances,removed,used,appearances[0]]).find(g=>g.key==='alex example');
+assert.equal(classified.games.length,3,'inactive referenced assignments remain in saved history');assert.equal(classified.archived.length,1,'unused removed rows do not add saved games');
+const conflict=api.legacyGroups([appearances[0],{...appearances[0],id:'another'}])[0];assert.equal(conflict.games.length,1);assert.equal(conflict.games[0].rows.length,2);
+const html=api.legacyDirectoryMarkup({legacy:[...appearances,removed]},id=>'Game '+id);
+assert.equal((html.match(/data-gp="legacy-create"/g)||[]).length,3,'one create action per person');assert.equal((html.match(/data-gp="legacy-link"/g)||[]).length,3);assert.match(html,/2 saved games/);assert.match(html,/Removed \/ unused TEMP records \(1\)/);assert.match(html,/Attendance unknown/);assert.match(html,/Match jersey #18/);assert.doesNotMatch(html,/<img/);assert.match(html,/&lt;img/);
+assert.match(api.legacyDirectoryMarkup({legacy:[]},()=>''),/All current saved TEMP assignments are linked/);
+assert.doesNotMatch(api.legacyDirectoryMarkup({legacy:[removed]},()=>''),/1 saved game/);
+const linkedArchive=api.legacyDirectoryMarkup({legacy:[removed],links:[{name:removed.name,match_id:removed.match_id}]},()=> 'Saved game');assert.doesNotMatch(linkedArchive,/data-gp="legacy-create"/,'leftover archived duplicate cannot create another profile');
+assert.equal((api.legacyDirectoryMarkup({legacy:appearances},()=>'',true).match(/ disabled/g)||[]).length,6);
 
 // A small DOM harness executes the actual controller, native dialogs and submit handlers.
 const attrs=text=>Object.fromEntries([...text.matchAll(/([\w-]+)="([^"]*)"/g)].map(m=>[m[1],m[2].replaceAll('&amp;','&').replaceAll('&quot;','"').replaceAll('&#39;',"'")]));
@@ -30,14 +33,14 @@ class Body extends Element{
   set innerHTML(value){for(const f of this.forms||[])f.isConnected=false;this.markup=value;this.forms=[];
     for(const m of value.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/g)){
       const a=attrs(m[1]),fields=new Map(),dataset={};for(const[k,v]of Object.entries(a))if(k.startsWith('data-'))dataset[k.slice(5).replace(/-([a-z])/g,(_,c)=>c.toUpperCase())]=v;
-      for(const i of m[2].matchAll(/<input\b([^>]*)>/g)){const x=attrs(i[1]);if(x.name&&(x.type!=='checkbox'||i[1].includes('checked')))fields.set(x.name,x.value||'');}
+      for(const i of m[2].matchAll(/<input\b([^>]*)>/g)){const x=attrs(i[1]);if(x.name&&(x.type!=='checkbox'||i[1].includes('checked'))){const v=x.value||'';fields.set(x.name,fields.has(x.name)?[...[fields.get(x.name)].flat(),v]:v);}}
       for(const select of m[2].matchAll(/<select\b([^>]*)>([\s\S]*?)<\/select>/g)){const name=attrs(select[1]).name,opts=[...select[2].matchAll(/<option\b([^>]*)>/g)],chosen=opts.find(x=>x[1].includes('selected'))||opts[0];fields.set(name,chosen?attrs(chosen[1]).value||'':'');}
       const button={disabled:false,isConnected:true};this.forms.push({id:a.id,dataset,fields,isConnected:true,querySelector:()=>button,button});
     }
   }
   get innerHTML(){return this.markup||'';}
 }
-class FormDataMock{constructor(f){this.fields=new Map(f.fields);}get(k){return this.fields.get(k)??null;}has(k){return this.fields.has(k);}[Symbol.iterator](){return this.fields[Symbol.iterator]();}}
+class FormDataMock{constructor(f){this.fields=new Map(f.fields);}get(k){return this.fields.get(k)??null;}getAll(k){const v=this.fields.get(k);return v===undefined?[]:[v].flat();}has(k){return this.fields.has(k);}[Symbol.iterator](){return this.fields[Symbol.iterator]();}}
 async function harness(){
   const directory=new Element(),body=new Body(),error=new Element(),dialog=new Element(),regular=new Element();dialog.open=false;
   dialog.showModal=()=>{dialog.open=true;};dialog.close=()=>{dialog.open=false;};dialog.querySelector=sel=>sel==='[data-gp-dialog-body]'?body:sel==='[data-gp-error]'?error:body.forms.find(f=>'#'+f.id===sel);
@@ -45,20 +48,16 @@ async function harness(){
   const doc={hidden:false,getElementById:id=>nodes[id]||null,querySelectorAll:()=>[],addEventListener(){}};
   const win={addEventListener(){}};let actor='captain',allowed=true,readFailure=false,writeFailure=false,gate=null;
   const records={summary:{present_count:0,goals:0,assists:0,motm:0,absent_count:0,excused_count:0,unmarked_count:0,yellow_cards:0,red_cards:0}};
-  const snapshot={as_of:new Date().toISOString(),profiles:[{player_id:'existing',player_key:'existing',full_name:'Known Profile',is_guest:true,enabled:true,record:structuredClone(records)}],links:[],event_participants:[],legacy:structuredClone(appearances.slice(0,3)),fee_settings:[],entries:[],ledger:{groups:[],matches:[{id:'m1',kickoff:'2026-10-01T18:00:00Z',label:'SKOR vs A'},{id:'m2',kickoff:'2026-10-08T18:00:00Z',label:'SKOR vs B'}],roster:[],scenarios:[],group_matches:[],members:[]}};
+  const snapshot={history_version:1,as_of:new Date().toISOString(),profiles:[{player_id:'existing',player_key:'existing',full_name:'Known Profile',is_guest:true,enabled:true,record:structuredClone(records)}],links:[],event_participants:[],legacy:structuredClone(appearances.slice(0,3)),fee_settings:[],entries:[],ledger:{groups:[],matches:[{id:'m1',kickoff:'2026-10-01T18:00:00Z',label:'SKOR vs A'},{id:'m2',kickoff:'2026-10-08T18:00:00Z',label:'SKOR vs B'}],roster:[],scenarios:[],group_matches:[],members:[]}};
   const writes=[],receipts=new Map(),changes=[];
   const client={auth:{getSession:async()=>({data:{session:{user:{id:actor}}}})},rpc:async(name,args)=>{
     if(name==='get_guest_console'){if(readFailure)return {error:{message:'Refresh unavailable'}};return {data:structuredClone(snapshot)};}
-    assert.equal(name,'manage_guest_profile');const {p_action:action,p}=args;writes.push({action,p:structuredClone(p)});
+    assert.equal(name,'manage_guest_history');const {p_action:action,p}=args;writes.push({action,p:structuredClone(p)});
     if(gate)await gate;
     if(!receipts.has(p.request_id)){
-      if(action==='create')snapshot.profiles.push({player_id:p.player_id,player_key:p.player_id,full_name:p.full_name,is_guest:true,enabled:true,record:structuredClone(records)});
-      else if(action==='bind_game'){
-        assert.equal(p.reviewed,true);assert.ok(!Object.hasOwn(p,'number'),'historical number and inventory are not edited');
-        const temp=snapshot.legacy.find(t=>t.id===p.temp_id);if(!temp)return {error:{message:'Already linked'}};
-        snapshot.links.push({player_id:p.player_id,match_id:p.match_id,temp_id:p.temp_id,number:temp.number,active:true});snapshot.legacy=snapshot.legacy.filter(t=>t.id!==p.temp_id);
-        snapshot.profiles.find(x=>x.player_id===p.player_id).record.summary.goals++;
-      }
+      assert.equal(action,'import');assert.equal(p.reviewed,true);assert.ok(p.games.length);assert.ok(!Object.hasOwn(p,'number'));
+      if(p.create_profile)snapshot.profiles.push({player_id:p.player_id,player_key:p.player_id,full_name:p.full_name,is_guest:true,enabled:true,record:structuredClone(records)});
+      for(const game of p.games){const temp=snapshot.legacy.find(t=>t.id===game.temp_id);if(!temp)return {error:{message:'Already linked'}};assert.equal(game.updated_at,temp.updated_at);snapshot.links.push({player_id:p.player_id,match_id:game.match_id,temp_id:game.temp_id,number:temp.number,active:true});snapshot.legacy=snapshot.legacy.filter(t=>t.id!==game.temp_id);}
       receipts.set(p.request_id,{action,p:structuredClone(p)});
     }else assert.deepEqual(receipts.get(p.request_id),{action,p:plain(p)},'retry payload stays exact');
     if(writeFailure){writeFailure=false;return {error:{message:'Response lost'}};}return {data:{ok:true,player_id:p.player_id}};
@@ -69,30 +68,18 @@ async function harness(){
   const submit=async(f=body.forms[0])=>{await dialog.events.submit[0]({target:f,preventDefault(){}});};
   return {mounted,directory,dialog,body,error,snapshot,writes,receipts,changes,click,submit,setAllowed:v=>allowed=v,setActor:v=>actor=v,setReadFailure:v=>readFailure=v,setWriteFailure:v=>writeFailure=v,setGate:v=>gate=v};
 }
-const h=await harness();assert.match(h.directory.innerHTML,/Previous TEMP players/);assert.match(h.directory.innerHTML,/3 saved TEMP appearances awaiting linking/);assert.match(h.directory.innerHTML,/Alex Example/);assert.match(h.directory.innerHTML,/Known Profile/);assert.equal(h.writes.length,0,'opening the directory never creates profiles/links');
-// Name group disclosure survives polling and all existing profile filters.
+const h=await harness();assert.match(h.directory.innerHTML,/Previous TEMP players/);assert.match(h.directory.innerHTML,/3 saved game assignments awaiting linking/);assert.equal(h.writes.length,0);
 let group=h.directory.details.find(d=>d.dataset.gpKey.startsWith('legacy-alex'));group.open=true;await h.mounted.refresh();assert.equal(h.directory.details.find(d=>d.dataset.gpKey===group.dataset.gpKey).open,true);
-await h.directory.events.change[0]({target:{value:'promoted',matches:s=>s==='[data-gp-filter]'}});assert.match(h.directory.innerHTML,/Previous TEMP players/);assert.match(h.directory.innerHTML,/No profiles in this view/);
-await h.click('legacy-create',{temp:'t1'});assert.match(h.body.innerHTML,/value="Alex Example"/);assert.match(h.body.innerHTML,/2026-10-01/);assert.match(h.body.innerHTML,/Match jersey #18/);
-const create=h.body.forms[0];await h.submit(create);assert.equal(h.writes[0].action,'create');assert.equal(h.snapshot.profiles.length,2);assert.equal(h.snapshot.legacy.length,3,'creating the profile does not silently link history');
-assert.equal(h.body.forms[0].id,'gpLegacy');const createdId=h.writes[0].p.player_id,link=h.body.forms[0];assert.equal(link.fields.get('player_id'),createdId);assert.equal(link.fields.has('reviewed'),false);
-await h.submit(link);assert.equal(h.writes.length,1);assert.match(h.error.textContent,/Confirm/);
-link.fields.set('reviewed','on');await h.submit(link);assert.equal(h.writes.at(-1).action,'bind_game');assert.equal(h.snapshot.legacy.length,2);assert.equal(h.snapshot.links[0].temp_id,'t1');assert.equal(h.snapshot.links[0].number,18);assert.equal(h.dialog.open,false);assert.equal(h.directory.details.find(d=>d.dataset.gpKey==='profile-'+createdId).open,true);
-await h.click('legacy-link',{temp:'t2'});const second=h.body.forms[0];second.fields.set('player_id',createdId);second.fields.set('reviewed','on');await h.submit(second);assert.equal(h.snapshot.profiles.length,2,'another appearance reuses the profile');assert.equal(h.snapshot.links.length,2);assert.equal(h.snapshot.links[1].number,22);assert.equal(h.snapshot.profiles.find(p=>p.player_id===createdId).record.summary.goals,2);assert.equal(h.snapshot.profiles.find(p=>p.player_id==='existing').record.summary.goals,0);
-assert.match(h.directory.innerHTML,/data-gp="promote"/);assert.ok(h.changes.some(c=>c.identityChanged));
-// Existing profile-card linking has the same explicit review validation.
-await h.click('legacy',{player:'existing'});assert.match(h.body.innerHTML,/name="reviewed" required/);const oldLink=h.body.forms[0];await h.submit(oldLink);assert.match(h.error.textContent,/Confirm/);
-h.mounted.clear();assert.equal(h.directory.innerHTML,'');
-
-// A lost create response retries the same identity/request, then opens review without duplicates.
-const retry=await harness();await retry.click('legacy-create',{temp:'t1'});retry.setWriteFailure(true);const originalForm=retry.body.forms[0];await retry.submit(originalForm);assert.equal(retry.snapshot.profiles.length,2);assert.match(retry.error.textContent,/Response lost/);
-await retry.mounted.refresh();await retry.submit(originalForm);assert.equal(retry.snapshot.profiles.length,2);assert.equal(retry.writes[0].p.request_id,retry.writes[1].p.request_id);assert.equal(retry.body.forms[0].id,'gpLegacy');retry.mounted.clear();
-
-// Closing/switching the dialog or changing account during save never opens another actor's review.
-const close=await harness();await close.click('legacy-create',{temp:'t1'});let release;close.setGate(new Promise(r=>release=r));const pending=close.submit(close.body.forms[0]);await Promise.resolve();await close.click('close');release();await pending;assert.equal(close.dialog.open,false);close.mounted.clear();
-const account=await harness();await account.click('legacy-create',{temp:'t1'});let finish;account.setGate(new Promise(r=>finish=r));const saving=account.submit(account.body.forms[0]);await Promise.resolve();account.mounted.clear();account.setActor('another');finish();await saving;assert.equal(account.dialog.open,false);assert.equal(account.directory.innerHTML,'');assert.equal(account.body.innerHTML,'');assert.equal(account.error.textContent,'');
-// Stale snapshots and viewer access cannot initiate a link/create workflow.
-const guarded=await harness();guarded.setReadFailure(true);await guarded.mounted.refresh();await guarded.click('legacy-link',{temp:'t1'});assert.equal(guarded.dialog.open,false);assert.equal(guarded.writes.length,0);guarded.setReadFailure(false);await guarded.mounted.refresh();guarded.setAllowed(false);await guarded.click('legacy-create',{temp:'t1'});assert.equal(guarded.dialog.open,false);assert.equal(guarded.writes.length,0);guarded.mounted.clear();
-const css=fs.readFileSync('guest-profiles.css','utf8');assert.match(css,/\.gp-legacy-appearance button\{min-height:44px/);assert.match(css,/@media\(max-width:560px\)\{\.gp-legacy-appearance/);assert.match(css,/:focus-visible/);
+await h.directory.events.change[0]({target:{value:'promoted',matches:s=>s==='[data-gp-filter]'}});assert.match(h.directory.innerHTML,/Previous TEMP players/);
+await h.click('legacy-create',{group:'alex example'});assert.match(h.body.innerHTML,/value="Alex Example"/);assert.match(h.body.innerHTML,/2026-10-01/);assert.match(h.body.innerHTML,/2026-10-08/);assert.match(h.body.innerHTML,/Match jersey #18/);
+const form=h.body.forms[0];await h.submit(form);assert.equal(h.writes.length,0);assert.match(h.error.textContent,/Confirm/);
+form.fields.set('reviewed','on');await h.submit(form);assert.equal(h.writes.length,1,'one atomic request creates and links all selected games');assert.equal(h.writes[0].action,'import');assert.equal(h.writes[0].p.games.length,2);assert.equal(h.snapshot.profiles.length,2);assert.equal(h.snapshot.legacy.length,1);assert.equal(h.snapshot.links.length,2);assert.deepEqual(h.snapshot.links.map(l=>l.number),[18,22]);assert.equal(h.snapshot.profiles.at(-1).record.summary.present_count,0,'linking never invents attendance');assert.equal(h.dialog.open,false);assert.ok(h.changes.some(c=>c.identityChanged));h.mounted.clear();
+const link=await harness();await link.click('legacy-link',{group:'alex example'});const lf=link.body.forms[0];lf.fields.set('player_id','existing');lf.fields.set('reviewed','on');await link.submit(lf);assert.equal(link.snapshot.profiles.length,1);assert.equal(link.snapshot.links.length,2);link.mounted.clear();
+const retry=await harness();await retry.click('legacy-create',{group:'alex example'});retry.setWriteFailure(true);const original=retry.body.forms[0];original.fields.set('reviewed','on');await retry.submit(original);assert.equal(retry.snapshot.profiles.length,2);assert.match(retry.error.textContent,/Response lost/);await retry.mounted.refresh();await retry.submit(original);assert.equal(retry.snapshot.profiles.length,2);assert.deepEqual(retry.writes[0].p,retry.writes[1].p,'lost-response retry preserves exact identity, manifest and request id');retry.mounted.clear();
+const close=await harness();await close.click('legacy-create',{group:'alex example'});close.body.forms[0].fields.set('reviewed','on');let release;close.setGate(new Promise(r=>release=r));const pending=close.submit(close.body.forms[0]);await Promise.resolve();await close.click('close');release();await pending;assert.equal(close.dialog.open,false);close.mounted.clear();
+const account=await harness();await account.click('legacy-create',{group:'alex example'});account.body.forms[0].fields.set('reviewed','on');let finish;account.setGate(new Promise(r=>finish=r));const saving=account.submit(account.body.forms[0]);await Promise.resolve();account.mounted.clear();account.setActor('another');finish();await saving;assert.equal(account.dialog.open,false);assert.equal(account.directory.innerHTML,'');assert.equal(account.body.innerHTML,'');assert.equal(account.error.textContent,'');
+const guarded=await harness();guarded.setReadFailure(true);await guarded.mounted.refresh();await guarded.click('legacy-link',{group:'alex example'});assert.equal(guarded.dialog.open,false);assert.equal(guarded.writes.length,0);guarded.setReadFailure(false);await guarded.mounted.refresh();guarded.setAllowed(false);await guarded.click('legacy-create',{group:'alex example'});assert.equal(guarded.dialog.open,false);assert.equal(guarded.writes.length,0);guarded.mounted.clear();
+const selection=await harness();await selection.click('legacy-link',{group:'alex example'});const sf=selection.body.forms[0];sf.fields.set('player_id','existing');sf.fields.set('reviewed','on');sf.fields.delete('games');await selection.submit(sf);assert.equal(selection.writes.length,0);assert.match(selection.error.textContent,/Select one assignment/);selection.mounted.clear();
+const css=fs.readFileSync('guest-profiles.css','utf8');assert.match(css,/gp-history-actions button\{min-height:44px/);assert.match(css,/@media\(max-width:560px\)/);assert.match(css,/:focus-visible/);
 new vm.Script(source);
-console.log('Previous TEMP directory: visible names/appearances, explicit create/link, same-profile history, preserved numbers, retries, stale/account/dialog/viewer guards and mobile controls passed.');
+console.log('Guest history: player-level atomic create/link, unique saved games, removed/used archives, no invented attendance, exact retries and stale/account/dialog/viewer guards passed.');

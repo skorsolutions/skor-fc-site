@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.29-previous-temp-directory" />
-  <title>SKOR FC Admin | Captain Portal v58.29</title>
+  <meta name="skor-build" content="captain-portal-v58.30-guest-history-root-fix" />
+  <title>SKOR FC Admin | Captain Portal v58.30</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
   <link rel="stylesheet" href="team-dues.css?v=58.25" />
-  <link rel="stylesheet" href="guest-profiles.css?v=58.29" />
+  <link rel="stylesheet" href="guest-profiles.css?v=58.30" />
   <link rel="stylesheet" href="post-match-entry.css?v=58.26" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
   <link rel="stylesheet" href="strategy.css?v=58.23" />
@@ -1896,7 +1896,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.29</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.30</div>
   </aside>
 
   <main>
@@ -2882,11 +2882,11 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <details class="mini-panel temp-player-manager" id="tempPlayerManager">
               <summary><span class="setup-chevron" aria-hidden="true">▸</span>Match Fill-ins / TEMP Players</summary>
               <div class="team-dues" id="guestLineupTools"></div>
-              <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. TEMP players can be used in the XI, bench, depth chart and planned subs, but never receive Player Portal access.</div>
+              <div class="temp-help">For one-game fill-ins. Choose from physical jerseys marked On Hand in Jersey Inventory, or leave the jersey unassigned until game day. Guest profiles can be reused in the XI, bench, depth chart and planned subs. Approve an email in Roster to enable their guest portal.</div>
               <div class="temp-saved-names">
-                <label for="tempPlayerSavedName">Previous TEMP players</label>
-                <select id="tempPlayerSavedName" disabled><option value="">Loading saved full names…</option></select>
-                <div class="temp-help" id="tempPlayerSavedNameHelp" role="status">Choose a saved full name or enter a new one below. Pick the jersey separately for this game.</div>
+                <label for="tempPlayerProfile">Reusable guest profile</label>
+                <select id="tempPlayerProfile" disabled><option value="">Choose a saved guest or create a new profile…</option></select>
+                <div class="temp-help">Returning players use the same profile. Review older unlinked TEMP history in Roster first. Match jersey numbers are separate.</div>
               </div>
               <div class="temp-player-form">
                 <div><label for="tempPlayerName">Full name for referee sheet</label><input id="tempPlayerName" maxlength="80" placeholder="First and last name" autocomplete="off"></div>
@@ -5075,13 +5075,23 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     select.innerHTML='<option value="">No jersey assigned yet</option>'+choices.map(choice=>'<option value="'+esc(choice.id)+'">'+esc(choice.label)+'</option>').join('');
     if(currentInventoryId&&[...select.options].some(option=>option.value===String(currentInventoryId)))select.value=String(currentInventoryId);
   }
+  function renderTempProfileOptions(){
+    const select=document.getElementById("tempPlayerProfile");if(!select)return;
+    const value=select.value,guest=window.SKORGuestProfiles?.captain,state=guest?.state(),snapshot=state?.snapshot;
+    select.innerHTML='<option value="">Choose a saved guest…</option><option value="new">Create a new guest profile</option>'+(snapshot?.profiles||[]).filter(p=>p.is_guest&&p.enabled!==false).map(p=>'<option value="'+esc(p.player_id)+'">'+esc(p.full_name)+'</option>').join('');
+    if([...select.options].some(o=>o.value===value))select.value=value;
+    select.disabled=!selectedRealMatchId()||!window.SKORPortalCanWrite?.()||state?.phase!=="ready"||state?.busy||!!document.getElementById("tempPlayerEditId")?.value;
+    const name=document.getElementById("tempPlayerName");if(name)name.readOnly=!!select.value&&select.value!=="new";
+  }
   function resetTempPlayerForm(){
     const idEl=document.getElementById("tempPlayerEditId"),nameEl=document.getElementById("tempPlayerName"),jerseyEl=document.getElementById("tempPlayerJersey"),save=document.getElementById("saveTempPlayerBtn"),cancel=document.getElementById("cancelTempPlayerEditBtn");
-    if(idEl)idEl.value="";if(nameEl)nameEl.value="";renderTempJerseyOptions("","");if(jerseyEl)jerseyEl.value="";
+    const profileSelect=document.getElementById("tempPlayerProfile");if(profileSelect)profileSelect.value="";
+    if(idEl)idEl.value="";if(nameEl){nameEl.value="";nameEl.readOnly=false;}renderTempJerseyOptions("","");if(jerseyEl)jerseyEl.value="";
     const savedName=document.getElementById("tempPlayerSavedName");if(savedName){savedName.value="";savedName.disabled=!selectedRealMatchId()||!window.SKORPortalCanWrite?.()||savedName.options.length<2;}
     if(save)save.textContent="Add TEMP";if(cancel)cancel.style.display="none";
   }
   function renderTempPlayerManager(){
+    renderTempProfileOptions();
     const list=document.getElementById("tempPlayerList"),context=document.getElementById("tempPlayerContext"),name=document.getElementById("tempPlayerName"),jersey=document.getElementById("tempPlayerJersey"),save=document.getElementById("saveTempPlayerBtn");
     if(!list||!context)return;
     const matchId=selectedRealMatchId(),canWrite=!!window.SKORPortalCanWrite?.();
@@ -5106,6 +5116,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       const p=matchTempPlayers.find(x=>x.temp_id===btn.dataset.tempEdit);if(!p)return;
       document.getElementById("tempPlayerEditId").value=p.temp_id;document.getElementById("tempPlayerName").value=p.fullName||p.name;renderTempJerseyOptions(p.temp_id,p.jersey_inventory_id);document.getElementById("tempPlayerJersey").value=p.jersey_inventory_id||"";
       if(savedName){savedName.value="";savedName.disabled=true;}
+      const profileSelect=document.getElementById("tempPlayerProfile");if(profileSelect)profileSelect.disabled=true;document.getElementById("tempPlayerName").readOnly=false;
       document.getElementById("saveTempPlayerBtn").textContent="Update TEMP";document.getElementById("cancelTempPlayerEditBtn").style.display="inline-block";
     }));
     list.querySelectorAll("[data-temp-remove]").forEach(btn=>btn.addEventListener("click",async()=>{
@@ -5249,6 +5260,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     markStatus(exportIncludeDepthChart.checked?'Potential Positions will be included in this export.':'Potential Positions will be omitted from this export.');
   });
 
+  let tempAssignmentRetry=null;
+  const tempProfileSelect=document.getElementById("tempPlayerProfile");
+  if(tempProfileSelect)tempProfileSelect.addEventListener("change",()=>{
+    const p=window.SKORGuestProfiles?.captain?.state()?.snapshot?.profiles.find(p=>p.player_id===tempProfileSelect.value);
+    const name=document.getElementById("tempPlayerName");name.value=p?.full_name||"";name.readOnly=!!p;
+    renderTempJerseyOptions("","");document.getElementById("tempPlayerJersey").value="";
+  });
   const saveTempPlayerBtn=document.getElementById("saveTempPlayerBtn");
   const savedTempNameSelect=document.getElementById("tempPlayerSavedName");
   if(savedTempNameSelect)savedTempNameSelect.addEventListener("change",()=>{
@@ -5265,17 +5283,26 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     const sb=sbClient();if(!sb){markStatus("Supabase is not connected.",false);return;}
     const name=window.SKORTempDirectory.cleanName(document.getElementById("tempPlayerName").value),jerseyInventoryId=(document.getElementById("tempPlayerJersey").value||"").trim(),editId=(document.getElementById("tempPlayerEditId").value||"").trim();
     if(!window.SKORTempDirectory?.isFullName(name)){markStatus("Enter the fill-in player's first and last name for the referee form.",false);return;}
+    const guest=window.SKORGuestProfiles?.captain,owner=guest?.state().actor;
+    if(!owner){markStatus("Refresh guest profiles before saving.",false);return;}
     saveTempPlayerBtn.disabled=true;saveTempPlayerBtn.textContent="Saving…";
     try{
       let result;
       const payload={display_name:name,jersey_inventory_id:jerseyInventoryId||null,jersey_number:null,active:true,updated_at:new Date().toISOString()};
       if(editId)result=await sb.from("match_temp_players").update(payload).eq("id",editId).eq("match_id",matchId);
-      else{const {data:{user}}=await sb.auth.getUser();result=await sb.from("match_temp_players").insert({...payload,match_id:matchId,created_by:user?.id||null});}
+      else{
+        const selected=document.getElementById("tempPlayerProfile")?.value;
+        if(!selected)throw Error("Choose a reusable guest profile, or explicitly create a new one.");
+        const create=selected==="new",fingerprint=JSON.stringify([owner,matchId,selected,name,jerseyInventoryId]);
+        if(!tempAssignmentRetry||tempAssignmentRetry.fingerprint!==fingerprint)tempAssignmentRetry={fingerprint,payload:{request_id:crypto.randomUUID(),player_id:create?crypto.randomUUID():selected,match_id:matchId,inventory_id:jerseyInventoryId||null,create_profile:create,...(create?{full_name:name}:{})}};
+        await guest.write("history","assign",tempAssignmentRetry.payload);result={error:null};
+      }
+      if(guest.state().actor!==owner||selectedRealMatchId()!==matchId)return;
       if(result.error)throw result.error;
-      refreshTempNameDirectory();
+      tempAssignmentRetry=null;refreshTempNameDirectory();
       const assignedLabel=jerseyInventoryId?window.SKORJerseys?.labelFor?.(jerseyInventoryId):"";
       resetTempPlayerForm();await refreshTempPlayers(false);markStatus(name+" saved as a match TEMP player"+(assignedLabel?" with "+assignedLabel:" with jersey TBD")+".");
-    }catch(err){const msg=String(err?.message||err);markStatus(msg.toLowerCase().includes("duplicate")?"That active TEMP name or jersey number is already in use for this match.":"Could not save TEMP player: "+msg,false);}
+    }catch(err){if(guest.state().actor!==owner)return;const msg=String(err?.message||err);markStatus(msg.toLowerCase().includes("duplicate")?"That active TEMP name or jersey number is already in use for this match.":"Could not save TEMP player: "+msg,false);}
     finally{saveTempPlayerBtn.disabled=false;if(document.getElementById("tempPlayerEditId").value==="")saveTempPlayerBtn.textContent="Add TEMP";}
   });
 
@@ -5407,7 +5434,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.29 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.30 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5442,7 +5469,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="equipment.js?v=58.19"></script>
 <script src="captain-notifications.js?v=58.20"></script>
 <script src="team-dues.js?v=58.28"></script>
-<script src="guest-profiles.js?v=58.29"></script>
+<script src="guest-profiles.js?v=58.30"></script>
 <script src="post-match-entry.js?v=58.26"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="strategy-reuse.js?v=58.23"></script>

@@ -33,11 +33,13 @@ assert.deepEqual(await directory.loadNames(client),['Avery Example','Blake Sampl
 assert.deepEqual(calls,[[0,499],[500,999]],'history beyond a single API page must remain searchable');
 await assert.rejects(directory.loadNames({from(){return {select(){return {order(){return {range:async()=>({error:new Error('not authorized')})}}}}}}}),/not authorized/);
 
-const elements={tempPlayerName:{value:''},tempPlayerJersey:{value:'old-jersey'},tempPlayerEditId:{value:''}};
-let selectHandler,saveHandler,inserted=null;
+const elements={tempPlayerName:{value:''},tempPlayerJersey:{value:'old-jersey'},tempPlayerEditId:{value:''},tempPlayerProfile:{value:'existing-profile'}};
+let selectHandler,saveHandler,inserted=null,tempAssignmentRetry=null;
+const requestCalls=[];
 const messages=[];
 const sandbox={
-  window:{SKORTempDirectory:directory,SKORPortalCanWrite:()=>true,SKORJerseys:{labelFor:()=>''}},
+  tempAssignmentRetry:null,crypto:{randomUUID:()=> 'stable-request'},
+  window:{SKORGuestProfiles:{captain:{state:()=>({actor:'captain'}),write:async(resource,action,payload)=>{assert.equal(resource,'history');assert.equal(action,'assign');inserted=structuredClone(payload);requestCalls.push(structuredClone(payload));}}},SKORTempDirectory:directory,SKORPortalCanWrite:()=>true,SKORJerseys:{labelFor:()=>''}},
   document:{getElementById:id=>elements[id]},
   selectedRealMatchId:()=> 'new-game',
   savedTempNameSelect:{value:'Avery Example',addEventListener:(_event,handler)=>{selectHandler=handler;}},
@@ -62,11 +64,12 @@ elements.tempPlayerJersey.value='today-jersey';
 const save=admin.match(/if\(saveTempPlayerBtn\)saveTempPlayerBtn\.addEventListener\("click",async\(\)=>\{[\s\S]*?\n  \}\);/)[0];
 vm.runInContext(save,sandbox);
 await saveHandler();
-assert.equal(inserted.display_name,'Avery Example');
-assert.equal(inserted.match_id,'new-game','reusing a name must create a new match identity');
-assert.equal(inserted.jersey_inventory_id,'today-jersey');
-assert.equal(inserted.jersey_number,null,'the current inventory assignment determines the number');
-assert.equal(inserted.created_by,'captain-id');
+assert.equal(inserted.player_id,'existing-profile');
+assert.equal(inserted.match_id,'new-game','assignment is scoped to this game and canonical identity is resolved by the API');
+assert.equal(inserted.inventory_id,'today-jersey');
+assert.equal(inserted.create_profile,false);assert.equal(inserted.number,undefined,'the current inventory assignment determines the number');
+assert.equal(inserted.request_id,'stable-request');
+assert.doesNotMatch(save,/match_temp_players"\)\.insert/,'raw insert bypass is removed');
 
 inserted=null;elements.tempPlayerName.value='FirstOnly';
 await saveHandler();
@@ -92,3 +95,4 @@ assert.equal(new Set(ids).size,ids.length,'all HTML IDs must remain unique');
 assert.match(admin,/\.temp-saved-names select\{width:100%;min-width:0;max-width:100%;min-height:44px\}/);
 assert.match(admin,/temp-player-directory\.js\?v=58\.3/);
 console.log('Saved TEMP names: pagination, identity reuse, match-specific jerseys, full-name validation, permissions, referee output and JavaScript checks passed.');
+
