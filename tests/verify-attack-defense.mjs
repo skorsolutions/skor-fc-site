@@ -131,7 +131,7 @@ await h.saveSceneBundle();assert.equal(writes.at(-1).table,'strategy_scene_bundl
 const bundle=h.bundleScene(tables.strategy_scene_bundles[0]);assert.ok(A.isGenerated(bundle));assert.equal(bundle.subScenes[1].home[1].x,19);
 // Changing opponent formation generates opposite opponent phases without overwriting edited SKOR views.
 node('strategyOpponentFormation').value='3-5-2';h.changeOpponentFormation();
-scene=h.get().scenes[0];assert.equal(scene.subScenes[0].home[1].x,37);assert.equal(scene.subScenes[1].home[1].x,19);
+scene=h.get().scenes[0];assert.equal(h.get().opponentFormation,'3-5-2');assert.equal(scene.subScenes[0].home[1].x,37);assert.equal(scene.subScenes[1].home[1].x,19);
 assert.notEqual(scene.subScenes[0].opponents[1].y,scene.subScenes[1].opponents[1].y);
 
 // The previous strategy can be restored without a backend write.

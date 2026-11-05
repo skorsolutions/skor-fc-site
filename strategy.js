@@ -756,7 +756,7 @@
   }
   function changeOpponentFormation(){
     if(mustFinish())return false;
-    if(!draft)return;stopPreview();draft.opponentFormation=$("strategyOpponentFormation").value;
+    if(!draft)return;const chosenFormation=$("strategyOpponentFormation").value;stopPreview();draft.opponentFormation=chosenFormation;
     if(draft.opponentFormation!=="Custom / Freeform")draft.scenes.forEach(scene=>{
       const opponents=formationPositions(draft.opponentFormation,true);
       if(window.SKORAttackDefense?.isGenerated(scene)&&scene.subScenes.length===3&&scene.subScenes[0].quickShape){
