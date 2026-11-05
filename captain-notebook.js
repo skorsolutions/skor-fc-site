@@ -729,7 +729,7 @@
   }
 
   const PREGAME_CATEGORY_LABELS={progress:"Progress to Reinforce",priority:"Match Priority",tactical:"Tactical Detail",mentality:"Mentality",set_piece:"Set Piece"};
-  const PREGAME_SOURCE_LABELS={last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",captain_whatsapp:"Captain WhatsApp",lineup_plan:"Saved Lineup Plan",strategy_plan:"Published Strategy",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
+  const PREGAME_SOURCE_LABELS={opponent_scouting:"Opponent Scouting",last_game:"Observed Last Game",attendance:"Game Availability",captain_priority:"Captain Priority",captain_whatsapp:"Captain WhatsApp",lineup_plan:"Saved Lineup Plan",strategy_plan:"Published Strategy",player_input:"Player Input",ai_strategy:"AI Soccer Suggestion"};
 
   function selectedPlayerInputs(){
     const rows=window.SKORGetAiPlayerComments?.();
@@ -854,7 +854,7 @@
       const strategyIncluded=data.context?.strategy_included===true;
       const strategyDetail=strategyIncluded?`, published strategy “${text(data.context?.strategy_title)||"Match Strategy"}” with ${Number(data.context?.strategy_scene_count||0)} tactical scene${Number(data.context?.strategy_scene_count||0)===1?"":"s"}`:"";
       const strategyWarning=strategyIncluded?"":" No strategy published for AI was found for this game.";
-      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${lineupDetail}${strategyDetail}${whatsappCount?`, ${whatsappCount} captain WhatsApp message${whatsappCount===1?"":"s"}`:""}${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, private WhatsApp messages, drafts, unpublished strategies, and unselected player comments were not sent to AI.${lineupWarning}${strategyWarning} Review and edit before sharing.`,true);
+      setStatus("notebookPregameStatus",`Generated from ${Number(data.context?.debrief_count||0)} completed debrief${Number(data.context?.debrief_count||0)===1?"":"s"}, selected-game attendance${data.context?.opponent_scouting_included?", opponent scouting":""}${lineupDetail}${strategyDetail}${whatsappCount?`, ${whatsappCount} captain WhatsApp message${whatsappCount===1?"":"s"}`:""}${playerCount?`, and ${playerCount} captain-selected player comment${playerCount===1?"":"s"}`:""}. Private notes, private WhatsApp messages, drafts, unpublished strategies, and unselected player comments were not sent to AI.${lineupWarning}${strategyWarning} Review and edit before sharing.`,true);
     }catch(error){
       setStatus("notebookPregameStatus","Could not generate talk: "+(error.message||error),false);
     }finally{state.pregameGenerating=false;button.disabled=false;button.textContent=original;}
@@ -1204,3 +1204,4 @@
     if(app?.style.display==="grid"&&window.SKORPortalCanWrite?.())init();
   },0);
 })();
+

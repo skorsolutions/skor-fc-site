@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.36-strategy-source-fix" />
-  <title>SKOR FC Admin | Captain Portal v58.36</title>
+  <meta name="skor-build" content="captain-portal-v58.37-opponents-and-strategy-lock" />
+  <title>SKOR FC Admin | Captain Portal v58.37</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="post-match-entry.css?v=58.26" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
   <link rel="stylesheet" href="strategy.css?v=58.35" />
+  <link rel="stylesheet" href="opponents.css?v=58.37" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
   <style>
@@ -1513,7 +1514,8 @@
     body.viewer-mode .viewer-banner{display:flex}
     body.viewer-mode #dashboard .actions .action:not(:first-child){display:none!important}
     body.viewer-mode #announcementForm,body.viewer-mode #practiceForm,body.viewer-mode #matchScheduleForm,body.viewer-mode #rosterForm,body.viewer-mode #fieldForm,body.viewer-mode #payments form{display:none!important}
-    body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete,body.viewer-mode #tinkerVariationList .variation-delete{display:none!important}
+    body.viewer-mode #announcementList .announcement-item .btn,body.viewer-mode #practiceList .schedule-actions,body.viewer-mode #matchScheduleList .schedule-actions,body.viewer-mode #gameDayEventLog .event-actions,body.viewer-mode #lineupVariationList .variation-delete,body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
+body.viewer-mode #tinkerVariationList .variation-delete{display:none!important}
     body.viewer-mode #gameday #statusControls,body.viewer-mode #gameday #gameClockActions,body.viewer-mode #gameday .game-clock-settings,body.viewer-mode #gameday .event-buttons,body.viewer-mode #gameday #eventEditor,body.viewer-mode #gameday #saveMotmBtn,body.viewer-mode #gameday #clearMotmBtn{display:none!important}
     body.viewer-mode #gameday #motmPlayer,body.viewer-mode #gameday #motmReason,body.viewer-mode #gameday #motmManualName,body.viewer-mode #gameday #motmManualNumber,body.viewer-mode #gameday #motmMatchNumber{pointer-events:none;opacity:.72}
     body.viewer-mode #lineups #saveLineupVariation,body.viewer-mode #lineups #copyCurrentLineupBtn,body.viewer-mode #lineups #updateProductionFromCurrentBtn,body.viewer-mode #lineups .variation-copy,body.viewer-mode #lineups .variation-final,body.viewer-mode #lineups #clearLineupBtn,body.viewer-mode #lineups #addFirstHalfSubBtn,body.viewer-mode #lineups #addSecondHalfSubBtn,body.viewer-mode #lineups .depth-add,body.viewer-mode #lineups .sub-remove,body.viewer-mode #lineups .sub-move,body.viewer-mode #lineups .temp-player-form,body.viewer-mode #lineups .temp-player-actions{display:none!important}
@@ -1860,7 +1862,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 @media(max-width:950px){.player-activity-summary{grid-template-columns:repeat(2,1fr)}.player-login-events{grid-template-columns:repeat(5,140px)}}
 @media(max-width:650px){.player-activity-summary{grid-template-columns:1fr 1fr}.player-activity-head{grid-template-columns:1fr}.player-activity-last{text-align:left}.dashboard-feedback-item{grid-template-columns:1fr}.dashboard-feedback-open{justify-self:start}}
   .second-half-export-toggle{white-space:nowrap}.second-half-export-toggle.active{background:#234b74;color:#fff;border-color:#234b74}.sub-phase.second-half-hidden{opacity:.72}
-</style>
+body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
+  </style>
 </head>
 <body>
 
@@ -1894,12 +1897,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="equipment">◈ <span>Equipment <span data-captain-unread="equipment" hidden></span></span></button>
       <button data-view="lineups">▦ <span>Lineups</span></button>
       <button data-view="strategy">◇ <span>Strategy</span></button>
+      <button data-view="opponents">◉ <span>Opponents</span></button>
       <button data-view="fields">⌖ <span>Fields</span></button>
       <button data-view="join">＋ <span>Join Requests</span></button>
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.36</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.37</div>
   </aside>
 
   <main>
@@ -2007,6 +2011,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     </section>
 
     <section class="view" id="gameday">
+      <div class="panel scouting-panel"><h3>Opponent setup before kickoff</h3><p>Review this opponent’s formation history, dangerous players and tactical notes before the game.</p><button type="button" id="gameDayOpponentProfile">Open opponent scouting for selected game</button><p id="gameDayOpponentStatus" role="status"></p></div>
       <div class="gameday-shell">
         <div class="panel gameday-controls-panel">
           <h2>Game Day Stats</h2>
@@ -2928,6 +2933,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <div class="depth-grid" id="lineupDepthGrid"></div>
         </details>
 
+        <div class="panel" id="lineupAiPlan"></div>
         <div class="panel lineup-variations-panel" style="margin-top:14px">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
                 <div>
@@ -3019,6 +3025,9 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       </div>
     </dialog>
 
+    <section class="view" id="opponents">
+      <div class="panel"><h2>Opponents</h2><p>Captain-only team scouting, dangerous players, and dated expected / observed formations. Profiles are shared across games; saved strategies keep their own scouting snapshots.</p><div id="opponentsWorkspace"></div></div>
+    </section>
     <section class="view" id="strategy">
       <div class="strategy-shell">
         <div class="strategy-hero">
@@ -3060,6 +3069,14 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           <button class="btn btn-primary" id="strategyQuickGif" type="button">Create Attack ↔ Defense GIF</button>
           <button class="btn btn-light" id="strategyRestorePrevious" type="button" hidden>Back to previous strategy</button>
         </div>
+
+        <div class="scouting-panel">
+          <h3>Opponent scouting for this strategy</h3>
+          <div id="strategyScoutingSummary" class="scouting-summary" aria-live="polite">Load scouting for the strategy’s scheduled game.</div>
+          <p>Applying a different formation resets opponent positions across this draft. Your SKOR player positions stay as edited.</p><label><input type="checkbox" id="strategyScoutingLabels"> Add dangerous-player labels to matching opponent roles (unmatched roles stay in the summary)</label>
+          <div class="scouting-actions"><button class="btn btn-light" type="button" id="strategyRefreshScouting">Load latest scouting</button><button class="btn btn-light" type="button" id="strategyApplyScouting">Apply scouting snapshot</button><button class="btn btn-light" type="button" id="strategyOpenOpponent">Open opponent profile</button></div>
+        </div>
+        <div class="panel" id="strategyAiPlan"></div>
 
         <div class="strategy-scenes-row">
           <div class="strategy-scenes" id="strategyScenes" role="tablist" aria-label="Strategy Scene Bundles"></div>
@@ -3108,6 +3125,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
           </div>
 
           <div class="strategy-board-column">
+            <div class="strategy-edit-controls"><strong id="strategyEditState">Locked · scroll safely</strong><button type="button" id="strategyEditStep">Edit step</button><button type="button" id="strategyFinishEdit" hidden>Finish editing</button><button type="button" id="strategyCancelEdit" hidden>Cancel changes</button></div>
             <div class="strategy-board-head">
               <div>
                 <span id="strategySceneType">IN POSSESSION</span>
@@ -5497,7 +5515,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.36 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.37 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5511,6 +5529,12 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     findVariation:id=>allSharedVariations.find(v=>String(v.id)===String(id))||null,
     loadVariation:rec=>{if(rec)loadVariationRecord(rec);},
     removePermanentPlayer:pid=>{removePlayerEverywhere(String(pid));if(selectedPlayer===String(pid))selectedPlayer=null;persistDraft();renderAll();},
+    applyRecommendation:(value,mid)=>{
+      if(!window.SKORPortalCanWrite?.()||String(eventKey())!==String(mid))throw Error('Select this game in Lineups before applying.');
+      const next=normalizeState(clone(value));const choices=new Set(selectableRoster().map(id));
+      if([...Object.values(next.slots),...next.bench].some(pid=>!choices.has(String(pid))))throw Error('Some proposed players are not loaded in this game. Reopen Lineups and review the roster.');
+      state=window.SKORKeeperPlan.hydrate(next,selectableRoster());selectedPlayer=null;persistDraft();renderAll();markStatus('AI proposal applied as a local draft. Review keepers and positions before saving or publishing.');
+    },
     getState:()=>clone(window.SKORMatchJerseys.capture(window.SKORKeeperPlan.hydrate(state,selectableRoster()),selectableRoster())),
     getRoster:()=>clone(selectableRoster()),
     listVariations:()=>clone(allSharedVariations),
@@ -5535,10 +5559,14 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="guest-profiles.js?v=58.33"></script>
 <script src="post-match-entry.js?v=58.26"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
+<script src="opponent-scouting.js?v=58.37"></script>
+<script src="opponents.js?v=58.37"></script>
+<script src="match-plan-core.js?v=58.37"></script>
+<script src="match-plan-editor.js?v=58.37"></script>
 <script src="strategy-reuse.js?v=58.23"></script>
 <script src="strategy-attack-defense.js?v=58.35"></script>
 <script src="strategy-lineup-source.js?v=58.36"></script>
-<script src="strategy.js?v=58.36"></script>
+<script src="strategy.js?v=58.37"></script>
 <script src="ref-game-card.js?v=58.28"></script>
 <script src="portal-activity.js?v=58.6"></script>
 <script>
@@ -5589,6 +5617,11 @@ let PORTAL_ACCESS={role:"viewer",display_name:""};
 let portalSessionVersion=0,captainActivityUser=null;
 window.SKORPortalCanWrite=()=>["captain","super_admin"].includes(PORTAL_ACCESS.role);
 window.SKORPortalIsSuperAdmin=()=>PORTAL_ACCESS.role==="super_admin";
+const opponentWorkspace=window.SKOROpponents.mount({rootId:"opponentsWorkspace",client:sb,canWrite:()=>portalCanWrite(),navigate:openView});
+window.SKOROpponents=opponentWorkspace;
+window.SKOROpenOpponentGame=mid=>{if(portalCanWrite()){openView("gameday");void loadGameDayMatches(mid);}};
+window.SKORAIPlan=window.SKORMatchPlanEditor.mount({client:sb,canWrite:()=>portalCanWrite(),navigate:openView});
+document.getElementById("gameDayOpponentProfile").addEventListener("click",()=>{const mid=window.gameDaySelected?.id||gameDaySelected?.id;if(!mid){document.getElementById("gameDayOpponentStatus").textContent="Select a game first.";return;}opponentWorkspace.openForMatch(mid).catch(e=>document.getElementById("gameDayOpponentStatus").textContent=e.message);});
 function portalCanWrite(){return ["captain","super_admin"].includes(PORTAL_ACCESS.role);}
 function portalIsSuperAdmin(){return PORTAL_ACCESS.role==="super_admin";}
 function viewerBlocked(action="make changes"){if(portalCanWrite())return false;alert("View-only access: you cannot "+action+".");return true;}
@@ -5617,11 +5650,14 @@ function clearAuthError(){
   authError.style.display = "none";
 }
 function showLogin(){
+  window.SKORStrategy?.lockBoard();
   window.SKORStrategy?.cancelClone();
   substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
   teamDues?.clear();
   guestDirectory?.clear();
+  opponentWorkspace?.clear();
+  window.SKORAIPlan?.clear();
   postMatchEntry?.clear();
   portalSessionVersion++;captainActivityUser=null;
   captainActivity.clear();
@@ -5658,6 +5694,7 @@ function showDashboard(user,access){
   window.SKORJerseys?.init();
   window.SKOREquipment?.mount({rootId:"captainEquipment",client:sb,mode:"captain"});
   window.SKORNotebook?.init();
+  if(portalCanWrite()){void opponentWorkspace?.start(user.id);window.SKORAIPlan?.start(user.id);}else{opponentWorkspace?.clear();window.SKORAIPlan?.clear();}
   window.SKORStrategy?.init();
   window.dispatchEvent(new CustomEvent("skor:portal-ready"));
 }
@@ -5710,6 +5747,7 @@ googleLogin.addEventListener("click", async ()=>{
 });
 
 logoutBtn.addEventListener("click", async ()=>{
+  window.SKORStrategy?.lockBoard();
   window.SKORStrategy?.cancelClone();
   substitutionAlarm?.stop('Alarm off · Signed out.');
   captainInbox?.clear();
@@ -5745,12 +5783,15 @@ const meta = {
   equipment:["Equipment","Track team gear, approve borrowing and help recover lost items."],
   lineups:["Lineups","Build match lineups and practice formations."],
   strategy:["Strategy","Turn saved lineups into private visual tactics and shareable coaching scenes."],
+  opponents:["Opponents","Captain scouting profiles, dangerous players and formation history."],
   fields:["Fields","Store field locations, maps and parking notes."],
   join:["Join Requests","Review prospective players."],
   payments:["Payments","Plan team costs, assign dues and record external payments."],
   sponsors:["Sponsors","Manage sponsor information and website links."]
 };
 function openView(id){
+  if(id!=="strategy")window.SKORStrategy?.lockBoard();
+  if(id==="opponents"&&!portalCanWrite()){viewerBlocked("open opponent scouting");return;}
   if(id!=="gameday")substitutionAlarm?.stop('Alarm stopped when leaving Game Day.');
   if(id==="notebook"&&!portalCanWrite()){viewerBlocked("open the Captain Notebook");return;}
   if(id==="strategy"&&!portalCanWrite()){viewerBlocked("open the private Strategy workspace");return;}
@@ -5771,6 +5812,7 @@ function openView(id){
   if(["payments","roster","lineups","gameday"].includes(id)){void guestDirectory?.refresh();guestDirectory?.renderMatchTools();}
   if(id==="notebook")window.SKORNotebook?.activate();
   if(id==="strategy")window.SKORStrategy?.activate();
+  if(id==="opponents")void opponentWorkspace?.activate();
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function openCrowdScoring(){
@@ -7834,7 +7876,7 @@ loadAnnouncements();
 </script>
 
 <script src="whatsapp-import.js"></script>
-<script src="captain-notebook.js"></script>
+<script src="captain-notebook.js?v=58.37"></script>
 
 <!-- Legacy v18 lineup bootstrap removed in v20 -->
 

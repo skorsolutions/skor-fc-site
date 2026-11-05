@@ -1,0 +1,58 @@
+name: Opponents and Strategy
+on:
+  push:
+    branches: [main, feature/opponents-scouting-strategy-lock]
+  pull_request:
+jobs:
+  opponent-database:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: fixture-only
+        ports: [5432:5432]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Verify reviewed migration copy
+        run: cmp docs/sql/OPPONENTS-SCOUTING.sql supabase/migrations/20261105075301_opponents_scouting.sql
+      - name: Replay additive schema and run role checks
+        env:
+          PGPASSWORD: fixture-only
+        run: |
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/fixtures/opponents-bootstrap.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f docs/sql/OPPONENTS-SCOUTING.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/verify-opponents-db.sql
+  browser-and-regressions:
+    timeout-minutes: 12
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run all unit and controller suites
+        run: node -e 'const p=require("./package.json"); const c=require("node:child_process"); for(const s of Object.values(p.scripts)){c.execSync(s,{stdio:"inherit"});}'
+      - name: Install isolated browser runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/scouting-browser" --save-exact playwright@1.56.1
+          if command -v google-chrome >/dev/null; then
+            echo "SKOR_CHROMIUM_EXECUTABLE=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          else
+            "$RUNNER_TEMP/scouting-browser/node_modules/.bin/playwright" install --with-deps --only-shell chromium
+          fi
+      - name: Verify complete captain browser flow with fictional APIs
+        run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/scouting-browser/node_modules/playwright" node tests/browser-opponents.mjs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: opponents-browser-failure
+          path: test-results/
