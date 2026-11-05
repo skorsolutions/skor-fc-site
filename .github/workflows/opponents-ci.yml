@@ -32,6 +32,7 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f docs/sql/OPPONENTS-SCOUTING.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/verify-opponents-db.sql
   browser-and-regressions:
+    timeout-minutes: 12
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +44,7 @@ jobs:
       - name: Install isolated browser runner
         run: |
           npm install --prefix "$RUNNER_TEMP/scouting-browser" --save-exact playwright@1.56.1
-          "$RUNNER_TEMP/scouting-browser/node_modules/.bin/playwright" install --with-deps chromium
+          "$RUNNER_TEMP/scouting-browser/node_modules/.bin/playwright" install --with-deps --only-shell chromium
       - name: Verify complete captain browser flow with fictional APIs
         run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/scouting-browser/node_modules/playwright" node tests/browser-opponents.mjs
       - uses: actions/upload-artifact@v4

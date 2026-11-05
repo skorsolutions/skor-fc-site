@@ -4,10 +4,14 @@ set local role authenticated;
 do $$
 declare console jsonb; oid uuid; profile jsonb; obs jsonb; snap jsonb;
 begin
+  profile:=public.save_opponent_scouting('profile','70000000-0000-4000-8000-000000000001',0,'{"name":"Fixture new opponent","details":{"notes":"New club"}}');
+  if profile->>'revision'<>'1' or profile->>'name'<>'Fixture new opponent' then raise exception 'Manual opponent creation failed';end if;
+  profile:=public.save_opponent_scouting('profile','70000000-0000-4000-8000-000000000001',1,'{"name":"Fixture renamed opponent","details":{"notes":"New club"}}');
+  if public.get_opponents_console('70000000-0000-4000-8000-000000000001')->'profile'->>'name'<>'Fixture renamed opponent' then raise exception 'Manual opponent rename failed';end if;
   snap:=public.get_match_plan_candidates('10000000-0000-4000-8000-000000000002');
   if jsonb_array_length(snap)<>2 or not exists(select 1 from jsonb_array_elements(snap) x where x->>'player_key'='candidate1') or not exists(select 1 from jsonb_array_elements(snap) x where x->>'player_key'='temp:80000000-0000-4000-8000-000000000001' and x->>'position'='Keeper') then raise exception 'Eligibility failed: injury/out/absent/excused/inactive/alias/game scoping';end if;
-  console:=public.get_opponents_console();oid:=(console->'profile'->>'id')::uuid;
-  if jsonb_array_length(console->'opponents')<>1 or jsonb_array_length(console->'matches')<>2 then raise exception 'Exact fixture identity links failed';end if;
+  console:=public.get_opponents_console((select (x->>'id')::uuid from jsonb_array_elements(public.get_opponents_console()->'opponents') x where x->>'name'='Fixture Wolves'));oid:=(console->'profile'->>'id')::uuid;
+  if jsonb_array_length(console->'opponents')<>2 or jsonb_array_length(console->'matches')<>2 then raise exception 'Exact fixture identity links failed';end if;
   profile:=public.save_opponent_scouting('profile',oid,1,jsonb_build_object('name','Fixture Wolves','ai_enabled',true,'details',jsonb_build_object('style','High press','dangerous_players',jsonb_build_array(jsonb_build_object('id','scout-a','number','10','position','CAM','threat','Plays through the middle','containment','Screen the passing lane')))));
   if profile->'details'->>'style'<>'High press' then raise exception 'Profile roundtrip failed';end if;
   -- Lost-response retry returns the same revision.
