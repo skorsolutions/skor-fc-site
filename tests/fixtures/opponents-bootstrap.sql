@@ -19,3 +19,10 @@ create table public.player_match_availability(player_id uuid,match_id uuid,statu
 create table public.player_match_attendance(player_id uuid,match_id uuid,status text);
 create table public.match_temp_players(id uuid primary key,match_id uuid,display_name text,jersey_number integer,active boolean);
 create table skor_private.guest_match_links(temp_id uuid,match_id uuid,player_id uuid,active boolean);
+
+insert into public.team_roster select ('90000000-0000-4000-8000-'||lpad(i::text,12,'0'))::uuid,'candidate'||i,'Fixture '||i,'Fixture '||i,i,case when i=7 then 'Keeper' else 'Midfield' end,i<>6,false from generate_series(1,7) i;
+insert into public.player_playing_status values('90000000-0000-4000-8000-000000000002','injured');
+insert into public.player_match_availability values('90000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000002','out');
+insert into public.player_match_attendance values('90000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000002','absent'),('90000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-000000000002','excused');
+insert into public.match_temp_players values('80000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','Fixture Linked',17,true),('80000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','Other game',18,true);
+insert into skor_private.guest_match_links values('80000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002','90000000-0000-4000-8000-000000000007',true);

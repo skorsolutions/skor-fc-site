@@ -184,13 +184,14 @@ begin
       and coalesce(a.status,'')<>'out' and coalesce(att.status,'') not in('absent','excused')
       and not exists(select 1 from skor_private.guest_match_links l join public.match_temp_players t on t.id=l.temp_id and t.active where l.player_id=r.id and l.match_id=p_match_id and l.active)
     union all
-    select 'temp:'||t.id::text,split_part(trim(t.display_name),' ',1),t.jersey_number,null::text,true,coalesce(a.status,'no_response')
+    select 'temp:'||t.id::text,split_part(trim(t.display_name),' ',1),t.jersey_number,lr.position,true,coalesce(a.status,'no_response')
     from public.match_temp_players t
     left join skor_private.guest_match_links l on l.temp_id=t.id and l.match_id=t.match_id and l.active
+    left join public.team_roster lr on lr.id=l.player_id
     left join public.player_playing_status ps on ps.player_id=l.player_id
     left join public.player_match_availability a on a.player_id=l.player_id and a.match_id=p_match_id
     left join public.player_match_attendance att on att.player_id=l.player_id and att.match_id=p_match_id
-    where t.match_id=p_match_id and t.active and coalesce(ps.playing_status,'active')='active' and coalesce(a.status,'')<>'out' and coalesce(att.status,'') not in('absent','excused')
+    where t.match_id=p_match_id and t.active and (l.player_id is null or lr.active) and coalesce(ps.playing_status,'active')='active' and coalesce(a.status,'')<>'out' and coalesce(att.status,'') not in('absent','excused')
   ) p);
 end $$;
 alter table public.match_strategies add column scouting_snapshot jsonb check(scouting_snapshot is null or (jsonb_typeof(scouting_snapshot)='object' and octet_length(scouting_snapshot::text)<=100000));

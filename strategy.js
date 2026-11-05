@@ -579,8 +579,8 @@
     if(mustFinish()||!window.SKORPortalCanWrite?.())throw Error('Finish editing the step first.');
     const owner=String(lineApi()?.getCaptainKey?.()||''),editor=draft,plan=window.SKORMatchPlan.validate(result.plan,result.candidates);
     const source={id:'ai-proposal',label:'Reviewed AI match-plan proposal',eventKey:result.match_id,matchId:result.match_id,eventLabel:lineApi()?.getEventLabel?.()||'Selected game',variationId:null,
-      state:window.SKORMatchPlan.state(plan),roster:result.candidates.map(p=>({player_key:p.player_key,name:p.name,number:p.number,position:p.position,temp:p.temporary}))};
-    source.state.matchJerseys=Object.fromEntries(result.candidates.filter(p=>!p.temporary).map(p=>[p.player_key,p.number]));
+      state:window.SKORMatchPlan.state(plan,String(lineApi()?.getEventKey?.())===String(result.match_id)?lineApi().getState():{}),roster:result.candidates.map(p=>({player_key:p.player_key,name:p.name,number:p.number,position:p.position,temp:p.temporary}))};
+    source.state.matchJerseys={...Object.fromEntries(result.candidates.filter(p=>!p.temporary).map(p=>[p.player_key,p.number])),...source.state.matchJerseys};
     const resolved=await window.SKORStrategySource.resolve(source,sb());
     if(owner!==String(lineApi()?.getCaptainKey?.()||'')||editor!==draft||!window.SKORPortalCanWrite?.()||editing)throw Error('Captain or Strategy context changed. Finish editing and review the proposal again.');
     const snap=result.scouting_snapshot?window.SKORScouting.capture(result.scouting_snapshot):null,suggestion=snap?window.SKORScouting.recommend(snap):null;
