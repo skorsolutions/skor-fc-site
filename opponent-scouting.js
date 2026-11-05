@@ -17,11 +17,11 @@
   }
   function capture(raw){
     if(!raw?.profile)return null;
-    const snap=copy(raw);snap.version=1;snap.suggestion=recommend(snap);
+    const snap=copy(raw),size=()=>new TextEncoder().encode(JSON.stringify(snap)).length;snap.version=1;snap.suggestion=recommend(snap);
     snap.observations=(snap.observations||[]).slice(0,30);
     // Retain dates/formation provenance even when long historical notes exceed the snapshot budget.
-    for(let i=snap.observations.length-1;i>=0&&JSON.stringify(snap).length>80000;i--)snap.observations[i].details={};
-    if(JSON.stringify(snap).length>95000)throw Error('Scouting is too large for a strategy snapshot. Shorten the general notes first.');
+    for(let i=snap.observations.length-1;i>=0&&size()>80000;i--)snap.observations[i].details={};
+    if(size()>90000)throw Error('Scouting is too large for a strategy snapshot. Shorten the general notes first.');
     return snap;
   }
   function threats(snapshot){

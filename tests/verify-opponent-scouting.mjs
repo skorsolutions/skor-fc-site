@@ -19,3 +19,6 @@ const state=P.state(plan,{captainId:'striker',matchJerseys:{striker:19},keeperPl
 for(const change of [p=>p.assignments[1].player_key='injured-unavailable',p=>p.assignments[1].player_key='keeper',p=>p.assignments[1].role='GK',p=>p.assignments[0].role='ST',p=>p.bench=['striker'],p=>p.formation='unknown']){const p=structuredClone(raw);change(p);assert.throws(()=>P.validate(p,candidates));}
 assert.match(P.instructions,/Never invent speed/);assert.match(P.instructions,/untrusted evidence/);
 console.log('Opponent scouting verified: expected/observed provenance, per-game history, future/invalid exclusion, immutable snapshots, explicit role labels and safe AI lineup validation.');
+
+const unicode={match_id:'future',kickoff:new Date(Date.now()+86400000).toISOString(),profile:{name:'Fixture',details:{notes:'球'.repeat(2000)}},observations:Array.from({length:30},(_,i)=>({id:'unicode'+i,match_id:'old'+i,kind:'observed',formation:'4-4-2',kickoff:new Date(Date.now()-(i+1)*86400000).toISOString(),details:{notes:'球'.repeat(2000)}}))};
+assert.ok(new TextEncoder().encode(JSON.stringify(S.capture(unicode))).length<90000,'UTF-8 snapshot budget preserves database limit');
