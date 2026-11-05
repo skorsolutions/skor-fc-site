@@ -73,7 +73,7 @@
     }
     return {async start(id){if(owner!==id){generation++;owner=id;dirty=false;snapshot=null;selected=null;profileId=null;observation=null;host.innerHTML='';}await refresh(null,true);},activate:()=>refresh(),
       clear(){generation++;owner='';snapshot=null;selected=null;quickClear();},getForMatch,
-      async openForMatch(mid){if(dirty&&!root.confirm('Discard unsaved scouting edits and open this game’s opponent?'))return;const snap=await getForMatch(mid);if(!snap.profile)throw Error('No opponent is linked to this fixture yet.');navigate('opponents');dirty=false;await refresh(snap.profile.id,true);},
+      async openForMatch(mid){if(dirty&&!root.confirm('Discard unsaved scouting edits and open this game’s opponent?'))return;const snap=await getForMatch(mid);if(!snap.profile)throw Error('No opponent is linked to this fixture yet.');navigate('opponents');dirty=false;await refresh(snap.profile.id,true);const game=host.querySelector('[data-observation-form] [name="match_id"]');if(game&&[...game.options].some(o=>o.value===String(mid)))game.value=String(mid);},
       state:()=>({owner,busy,dirty,snapshot:copy(snapshot)})};
     function quickClear(){busy=false;dirty=false;observation=null;profileId=null;host.innerHTML='';}
   }
