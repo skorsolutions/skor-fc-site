@@ -1,6 +1,6 @@
-# v58.34 — Strategy-style free movement in Freeform Lineup (prepared)
+# v58.34 — Strategy-style free movement in Freeform Lineup (deployed)
 
-2026-11-05 UTC. Implementation prepared; source publication and production verification pending.
+2026-11-05 UTC. Source release [`3e1f073c6043e640993efcb71ff7b30cbf3c5d4c`](https://github.com/skorsolutions/skor-fc-site/commit/3e1f073c6043e640993efcb71ff7b30cbf3c5d4c) is deployed. Cloudflare build `470a7996-7955-4f45-8639-748e11a78b8d` succeeded at 06:34:32 UTC; its logs confirm version `3561ce7d-9f64-4aa0-a142-a655c32b947d`. Deployment `92d5b16a-1ad3-4854-952a-b129b5de7d39` serves that version at 100% traffic, and the GitHub Workers Builds check is successful. The exact eleven-file source set and all uploaded hashes match tested local files; all previous assets are preserved.
 
 - On-field Freeform / Custom players follow the mouse, pen or finger continuously, using Strategy's Pointer Events/pointer-capture approach. Grabbing the edge of a shirt preserves the grip offset; release commits one position through the existing placement/draft path.
 - Tap-to-place, keyboard activation, roster/bench native dragging, standard formation slots and freeform drag-to-bench remain available. A completed drag consumes its release click. Interrupted gestures, rerenders, changed boards/games/accounts/roles and lost capture cancel without a save. Marker-only touch handling lets the rest of the page scroll.
@@ -8,6 +8,10 @@
 - Affected files: `admin.html`, new `lineup-free-move.js`, `package.json`, new `tests/verify-lineup-free-move.mjs`, build-marker updates in the lineup-export/referee/Strategy-animation/captain-notifications suites, `docs/LINEUP-EXPORT.md`, `docs/PROJECT-HANDBOOK.md` and this note.
 - Verification: new behavioral suite passes pointer lifecycles, grip offsets, bounds, tap/click handling, cancellation/multi-pointer/stale-context guards, bench movement, real draft normalization, in-memory shared insert/overwrite/reload, actual SVG export and Strategy import. All 25 local suites pass (including the unchanged, hash-verified sanitized referee template); all inline scripts parse, auth/data-access code and the SVG renderer/formation map are byte-identical, and git diff whitespace checks pass. Chromium launch is blocked by executor socket permissions; visual phone/desktop and real signed-in Supabase saves remain unverified.
 - SQL/database: none required or performed. No Supabase migration, API/RLS/permission, production application-data or Edge Function change. No private test identities or credentials are added to source/docs. Player Portal, pregame version and homepage remain unchanged.
+
+Release summary (same as chat; commit-comment posting unavailable):
+
+Skor FC v58.34 is live. Freeform Lineup players now move continuously like Strategy with mouse, touch or pen. Tap-to-place, bench movement, saved positions, exports and Strategy import remain connected. All 25 test suites pass; no database changes were needed. Browser visual and signed-in save checks remain unverified. Release: https://github.com/skorsolutions/skor-fc-site/commit/3e1f073c6043e640993efcb71ff7b30cbf3c5d4c. Commit-comment posting is unavailable; this summary is recorded in the release notes.
 
 # v58.33 — Ask captains to confirm unmarked guest attendance (deployed)
 
