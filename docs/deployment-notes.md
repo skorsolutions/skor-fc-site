@@ -1,6 +1,6 @@
-# v58.35 — Editable Attack / Defense baseline and one-click GIF (prepared)
+# v58.35 — Editable Attack / Defense baseline and one-click GIF (deployed)
 
-2026-11-05 UTC. Implementation prepared; source publication and production verification pending.
+2026-11-05 UTC. Source release [`86eae532ff4b4740180eef3b07d24e121fba164c`](https://github.com/skorsolutions/skor-fc-site/commit/86eae532ff4b4740180eef3b07d24e121fba164c) is deployed. Cloudflare build `0979bdee-532a-4cc8-866c-2fd8bb20cd38` succeeded at 07:02:13 UTC and its logs confirm version `6ef62233-7647-4743-963a-a32f5514bd85`. Deployment `23438838-31c7-4863-b198-edf761a81f10` serves that version at 100% production traffic. The exact thirteen-file source set and all uploaded hashes match tested local files; all existing assets are preserved.
 
 - Strategy has a Create Attack ↔ Defense GIF action using the selected current/saved lineup and opponent formation. The Balanced template moves both teams through Defending → Attacking → Return to defending; keepers stay fixed initially and stable identities/jerseys are retained. Source lineups and saved originals are unchanged.
 - This is an editable baseline. Drag either team and the ball, add coaching marks, rename/save and download again. The quick action then says Download edited Attack ↔ Defense GIF and reuses those views. Defending/return edits mirror in the original three-step layout; added/reordered steps remain manual. An explicit lineup-source change requests a new baseline. Opponent formation changes preserve SKOR edits. A local previous-draft backup can be restored.
@@ -9,6 +9,12 @@
 - Affected: `admin.html`, `strategy.js`, `strategy.css`, new `strategy-attack-defense.js`, `package.json`, new `tests/verify-attack-defense.mjs`, four existing build-marker suites (captain notifications, lineup export, referee card, Strategy animation), `docs/PROJECT-HANDBOOK.md`, `docs/STRATEGY-ANIMATION.md` and this note. Captain v58.35; Player Portal, pregame function and homepage versions are unchanged.
 - All 26 local suites pass; module/inline syntax and whitespace checks pass, and existing inline auth/data/save controllers are byte-identical apart from the ready build label. Targeted checks pass actual one-click/editing/save handlers, both-team transformations, all formations/Freeform, keepers, source immutability, defense mirroring, edited-template reuse, opponent hiding, previous-draft restore, shared/bundle reloads, real GIF encoding with synthetic pixels and async session guards. Browser rasterization/device download and real authenticated save remain unverified because of executor browser/socket restrictions.
 - SQL/database: none required or performed. No migration, backend/permission/RLS/API, Edge Function or production data changes.
+
+Release summary (same as chat; commit-comment posting unavailable):
+
+**Skor FC v58.35 is live.** Strategy now creates editable Attack ↔ Defense baseline views, with both teams moving. Drag either team and the ball, add coaching marks, then save or download the GIF. Later downloads retain your edits.
+
+All 26 test suites pass; no database changes were needed. [Release](https://github.com/skorsolutions/skor-fc-site/commit/86eae532ff4b4740180eef3b07d24e121fba164c). Browser visual and signed-in save checks remain unverified. Commit-comment posting is unavailable; release notes are updated.
 
 # v58.34 — Strategy-style free movement in Freeform Lineup (deployed)
 
