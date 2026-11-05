@@ -42,7 +42,7 @@ let inline=0,html=read('admin.html').replace(/<script\b([^>]*)>([\s\S]*?)<\/scri
  const src=attrs.match(/src="([^"]+)"/);if(src)return keep.has(src[1].split('?')[0])?all:'';return ++inline===1?all:'';
 }).replace('</body>','<script>('+bootstrap.toString()+')();</script></body>');
 const server=http.createServer((req,res)=>{const url=new URL(req.url,'http://fixture');try{const p=decodeURIComponent(url.pathname);if(p==='/fixture'){res.setHeader('content-type','text/html');res.end(html);return}const file=path.resolve(root,'.'+p);if(!file.startsWith(root+path.sep))throw Error();res.setHeader('content-type',p.endsWith('.js')?'text/javascript':p.endsWith('.css')?'text/css':'application/octet-stream');res.end(fs.readFileSync(file));}catch{res.writeHead(404);res.end()}});
-await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true}),page=await browser.newPage({viewport:{width:1440,height:1000},hasTouch:true,acceptDownloads:true}),errors=[];
+await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,executablePath:process.env.SKOR_CHROMIUM_EXECUTABLE||undefined}),page=await browser.newPage({viewport:{width:1440,height:1000},hasTouch:true,acceptDownloads:true}),errors=[];
 page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
 const draft=()=>page.evaluate(()=>SKORStrategy.getDraft()),go=id=>page.evaluate(id=>fixture.navigate(id),id),status=selector=>page.locator(selector);
 try{
