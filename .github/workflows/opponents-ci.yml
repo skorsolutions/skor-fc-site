@@ -22,10 +22,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Generate migration filename with the pinned Supabase CLI
-        run: |
-          npx --yes supabase@2.81.3 migration new --help
-          npx --yes supabase@2.81.3 migration new opponents_scouting
+      - name: Verify reviewed migration copy
+        run: cmp docs/sql/OPPONENTS-SCOUTING.sql supabase/migrations/20261105075301_opponents_scouting.sql
       - name: Replay additive schema and run role checks
         env:
           PGPASSWORD: fixture-only

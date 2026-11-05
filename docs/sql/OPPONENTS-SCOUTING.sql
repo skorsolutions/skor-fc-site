@@ -61,7 +61,7 @@ begin
     cleaned:='{}';
     foreach k in array array['id','name','number','position','threat','containment'] loop
       value:=trim(coalesce(person->>k,''));
-      if length(value)>case when k in('threat','containment') then 600 when k='name' then 80 else 64 end then raise exception 'Dangerous-player field is too long.';end if;
+      if length(value)>(case when k in('threat','containment') then 600 when k='name' then 80 else 64 end) then raise exception 'Dangerous-player field is too long.';end if;
       if k='number' and value<>'' and value !~ '^([0-9]|[1-9][0-9])$' then raise exception 'Opponent shirt number must be 0–99 or blank.';end if;
       cleaned:=cleaned||jsonb_build_object(k,value);
     end loop;
@@ -168,9 +168,36 @@ begin
         where o.opponent_id=p.id and (m.id=target.id or (m.kickoff<target.kickoff and m.kickoff<=now() and m.status<>'cancelled')) order by m.kickoff desc,o.updated_at desc limit 100) o));
 end $$;
 
+create function public.get_match_plan_candidates(p_match_id uuid) returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+begin
+  if auth.uid() is null or not coalesce(public.is_skor_captain(),false) then raise exception 'Captain access required.' using errcode='42501';end if;
+  if not exists(select 1 from public.matches where id=p_match_id) then raise exception 'Match not found.';end if;
+  return (select coalesce(jsonb_agg(to_jsonb(p) order by p.temporary,p.name),'[]') from (
+    select r.player_key,coalesce(nullif(trim(r.preferred_name),''),split_part(trim(r.full_name),' ',1)) as name,
+      r.jersey_number as number,r.position,false as temporary,coalesce(a.status,'no_response') as rsvp_status
+    from public.team_roster r
+    left join public.player_playing_status ps on ps.player_id=r.id
+    left join public.player_match_availability a on a.player_id=r.id and a.match_id=p_match_id
+    left join public.player_match_attendance att on att.player_id=r.id and att.match_id=p_match_id
+    where r.active and not r.is_guest and coalesce(ps.playing_status,'active')='active'
+      and coalesce(a.status,'')<>'out' and coalesce(att.status,'') not in('absent','excused')
+      and not exists(select 1 from skor_private.guest_match_links l join public.match_temp_players t on t.id=l.temp_id and t.active where l.player_id=r.id and l.match_id=p_match_id and l.active)
+    union all
+    select 'temp:'||t.id::text,split_part(trim(t.display_name),' ',1),t.jersey_number,null::text,true,coalesce(a.status,'no_response')
+    from public.match_temp_players t
+    left join skor_private.guest_match_links l on l.temp_id=t.id and l.match_id=t.match_id and l.active
+    left join public.player_playing_status ps on ps.player_id=l.player_id
+    left join public.player_match_availability a on a.player_id=l.player_id and a.match_id=p_match_id
+    left join public.player_match_attendance att on att.player_id=l.player_id and att.match_id=p_match_id
+    where t.match_id=p_match_id and t.active and coalesce(ps.playing_status,'active')='active' and coalesce(a.status,'')<>'out' and coalesce(att.status,'') not in('absent','excused')
+  ) p);
+end $$;
 alter table public.match_strategies add column scouting_snapshot jsonb check(scouting_snapshot is null or (jsonb_typeof(scouting_snapshot)='object' and octet_length(scouting_snapshot::text)<=100000));
 alter table public.strategy_scene_bundles add column scouting_snapshot jsonb check(scouting_snapshot is null or (jsonb_typeof(scouting_snapshot)='object' and octet_length(scouting_snapshot::text)<=100000));
 revoke all on function skor_private.opponent_name_key(text),skor_private.opponent_details(jsonb),skor_private.sync_opponent_game(uuid),skor_private.opponent_fixture_changed() from public,anon,authenticated;
 revoke all on function public.get_opponents_console(uuid),public.save_opponent_scouting(text,uuid,integer,jsonb),public.get_opponent_scouting_for_match(uuid,boolean) from public,anon,authenticated;
 grant execute on function public.get_opponents_console(uuid),public.save_opponent_scouting(text,uuid,integer,jsonb),public.get_opponent_scouting_for_match(uuid,boolean) to authenticated;
+revoke all on function public.get_match_plan_candidates(uuid) from public,anon,authenticated;
+grant execute on function public.get_match_plan_candidates(uuid) to authenticated;
 notify pgrst,'reload schema';
