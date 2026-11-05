@@ -16,7 +16,7 @@ const bootstrap=()=>{
   const tables={match_strategies:[],strategy_scene_bundles:[],team_roster:roster};
   function from(table){let filters=[],payload,op='read';const q={select(){return q},eq(k,v){filters.push([k,v]);return q},in(k,v){filters.push([k,v]);return q},order(){return q},limit(){return q},range(){return q},insert(p){op='insert';payload=p;return q},update(p){op='update';payload=p;return q},async single(){const r=run();return {...r,data:Array.isArray(r.data)?r.data[0]:r.data}},async maybeSingle(){const r=run();return {...r,data:r.data[0]||null}},then(ok,bad){return Promise.resolve(run()).then(ok,bad)}};
     function run(){const rows=tables[table]||[];if(op!=='read'){const record={...clone(payload),id:crypto.randomUUID(),updated_at:new Date().toISOString()};rows.push(record);writes.push({table,payload:clone(payload)});return {data:record,error:null}}return {data:clone(rows.filter(r=>filters.every(([k,v])=>Array.isArray(v)?v.includes(r[k]):r[k]===v))),error:null}}return q}
-  const snapshot=()=>({match:clone(match),profile:clone(profile),observations:clone(observations),ai_enabled:profile.ai_enabled});
+  const snapshot=()=>({version:1,match_id:mid,kickoff:match.kickoff,opponent_id:oid,profile:clone(profile),observations:clone(observations),ai_enabled:profile.ai_enabled});
   const client={from,removeChannel(){},channel(){return {on(){return this},subscribe(){return this}}},auth:{getUser:async()=>({data:{user:{id:'60000000-0000-4000-8000-000000000001'}}})},rpc:async(name,p={})=>{
     if(name==='get_opponents_console')return {data:{opponents:[clone(profile)],profile:clone(profile),matches:[match],observations:clone(observations)}};
     if(name==='get_opponent_scouting_for_match')return {data:snapshot()};

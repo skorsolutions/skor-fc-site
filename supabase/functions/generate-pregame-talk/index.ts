@@ -106,7 +106,8 @@ Deno.serve(async (req: Request) => {
   // Approved AI scope: the selected match, its attendance/availability, completed
   // captain-shared debriefs, its Production/Final lineup plan, captain-visible
   // WhatsApp history for this match, the persistent player reference library,
-  // and current generator inputs only.
+  // explicitly opted-in opponent scouting, eligible candidates for match plans,
+  // published Strategy snapshots, and current generator inputs only.
   const [matchResult, debriefResult, attendanceResult, rosterResult, aliasResult, playerRefResult, lineupResult, tempPlayerResult, whatsappResult, strategyResult, opponentResult, candidatesResult] = await Promise.all([
     client.from("matches").select("id,kickoff,home_team,away_team,location,status").eq("id", matchId).single(),
     client.from("captain_match_debriefs")
