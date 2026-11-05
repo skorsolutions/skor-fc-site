@@ -1,6 +1,6 @@
-# v58.36 — Load the saved lineup’s own players for Attack / Defense GIF (prepared)
+# v58.36 — Load the saved lineup’s own players for Attack / Defense GIF (deployed)
 
-2026-11-05 UTC. Fix prepared; publication and production verification pending.
+2026-11-05 UTC. Source release [`dea2a29660cbb75ccfd0ed433ce8a41037936b4b`](https://github.com/skorsolutions/skor-fc-site/commit/dea2a29660cbb75ccfd0ed433ce8a41037936b4b) is deployed. Cloudflare build `9dde350a-9c09-4087-953f-dcc6b51c5968` succeeded at 07:18:04 UTC. Version `ba868b98-d059-4a95-bda3-1435e87c574c`, deployment `88ce0a36-45ea-4b7b-8754-0d9c26456219`, serves 100% traffic. The exact thirteen-file release and all source hashes match tested files; original assets are preserved.
 
 - The screenshot’s missing/duplicated-player error was caused by checking a valid saved Freeform lineup against the current editor’s roster cache. Match fill-ins were missing from that cache. The saved lineup had distinct valid identities and one existing rostered Keeper, without a separate keeper assignment. No source lineup repair is needed.
 - Resolve referenced regular players by exact player_key and selected TEMP players by exact UUID plus saved match_id. Explicitly saved inactive players can resolve without reactivation; other-game cached fill-ins never substitute. Existing names, numbers, positions and saved plans are retained.
@@ -9,6 +9,12 @@
 - Affected: `admin.html`, `strategy.js`, new `strategy-lineup-source.js`, `package.json`, new `tests/verify-strategy-lineup-source.mjs`, expanded `tests/verify-attack-defense.mjs`, four build-marker suites and Strategy/handbook/deployment documentation. Captain v58.36; other portal, public and pregame versions are unchanged.
 - Targeted tests pass. The actual privately fetched saved source resolves all selected regular/fill-in identities and its existing keeper, completes the real one-click handler and GIF encoder through a synthetic raster adapter, and leaves the original saved state unchanged. Private identities, fixture values and source IDs are omitted from public code/docs. All 27 local suites, module/inline syntax and whitespace checks pass. Browser rendering/device download and authenticated browser saves remain unverified.
 - Database: read-only source verification only. No application-data write, SQL migration, schema/RLS/grant, RPC, backend or Edge Function change. Runtime source loading uses the existing captain client and existing policies.
+
+Release summary (same as chat; commit-comment posting unavailable):
+
+**Fixed and deployed: v58.36.** The button now loads the selected game’s fill-ins and recognizes its existing keeper. Your lineup and editable views are preserved. Reload Skor FC once, then try again.
+
+Verified all 10 saved players and GIF encoding; all 27 test suites pass. No player or lineup records changed. [Release](https://github.com/skorsolutions/skor-fc-site/commit/dea2a29660cbb75ccfd0ed433ce8a41037936b4b). Browser/device download remains unverified; release notes are updated because commit-comment posting is unavailable.
 
 # v58.35 — Editable Attack / Defense baseline and one-click GIF (deployed)
 
