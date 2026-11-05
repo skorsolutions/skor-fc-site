@@ -1,3 +1,14 @@
+# v58.37 — Opponents, AI match plans and Strategy edit lock (release verification)
+
+2026-11-05 UTC. User requested the complete feature and explicitly authorized deployment.
+
+- New captain-only Opponents navigation contains shared team profiles, general tactics, dangerous players, dated expected/observed formations and linked past/upcoming games. Game Day opens the exact opponent; Strategy explicitly applies a dated immutable scouting snapshot and optional matching role labels.
+- Opponent notes feed the authenticated AI lineup/tactics mode and existing pregame talk, with opt-out, eligible-player filtering, structured identity validation, review and explicit local application. Existing Final/shared saves and AI publication remain deliberate actions.
+- Strategy starts locked for scrolling. Edit step unlocks both teams/ball/marks; Finish editing saves locally and locks; Cancel restores changes. Add/duplicate/switch/save/export require finishing. Both-team editable baseline and GIF remain.
+- Database: additive reviewed `20261105075301_opponents_scouting.sql` / `docs/sql/OPPONENTS-SCOUTING.sql`, four private RLS tables, captain-only guarded RPCs, exact fixture-link trigger and nullable private scouting snapshots on existing strategy/bundle records. Production apply and Edge deployment pending final checks. No authentication, billing or roster-record change is part of the release.
+- Verification: unit/controller/AI context suites, disposable Postgres 17 replay and role checks, and Chromium fictional-API browser workflow including real native GIF rasterization/download. Evidence and production deployment status will be recorded after checks complete. Full workflow: `docs/OPPONENTS.md`.
+- Affected: Captain admin/navigation, Strategy controller, new opponent/AI modules and stylesheet; generate-pregame-talk and packaged pure modules; migration and database/browser/unit tests; handbook and release documentation. Player Portal v58.28 and homepage v58.15 remain.
+
 # v58.36 — Load the saved lineup’s own players for Attack / Defense GIF (deployed)
 
 2026-11-05 UTC. Source release [`dea2a29660cbb75ccfd0ed433ce8a41037936b4b`](https://github.com/skorsolutions/skor-fc-site/commit/dea2a29660cbb75ccfd0ed433ce8a41037936b4b) is deployed. Cloudflare build `9dde350a-9c09-4087-953f-dcc6b51c5968` succeeded at 07:18:04 UTC. Version `ba868b98-d059-4a95-bda3-1435e87c574c`, deployment `88ce0a36-45ea-4b7b-8754-0d9c26456219`, serves 100% traffic. The exact thirteen-file release and all source hashes match tested files; original assets are preserved.

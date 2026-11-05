@@ -74,7 +74,7 @@ const rasterStart=adapted.indexOf('  async function framePixels('),rasterEnd=ada
 adapted=adapted.slice(0,rasterStart)+'  async function framePixels(scene,frame,width,height,context){return window.__raster(scene,frame,width,height,context);}\n'+adapted.slice(rasterEnd);
 const downloadStart=adapted.indexOf('  function downloadBlob('),downloadEnd=adapted.indexOf('  function svgImage(',downloadStart);
 adapted=adapted.slice(0,downloadStart)+'  function downloadBlob(blob,filename){window.__downloads.push({blob,filename});}\n'+adapted.slice(downloadEnd);
-adapted=adapted.replace('  window.SKORStrategy={',`  window.__attackHarness={get:()=>draft,exportGif,exportSvgMarkup,saveSharedStrategy,saveSceneBundle,loadSharedStrategy,bundleScene,normalizeDraft,sceneForStorage,restorePreviousStrategy,changeOpponentFormation,persist,pointerDown,pointerMove,pointerUp,setTool,selectStep:i=>{activeScene().activeSubSceneId=activeScene().subScenes[i].id;}};\n  window.SKORStrategy={`);
+adapted=adapted.replace('  window.SKORStrategy={',`  window.__attackHarness={get:()=>draft,exportGif,exportSvgMarkup,saveSharedStrategy,saveSceneBundle,loadSharedStrategy,bundleScene,normalizeDraft,sceneForStorage,restorePreviousStrategy,changeOpponentFormation,persist,beginEditing,finishEditing,cancelEditing,isEditing:()=>!!editing,pointerDown,pointerMove,pointerUp,setTool,selectStep:i=>{activeScene().activeSubSceneId=activeScene().subScenes[i].id;}};\n  window.SKORStrategy={`);
 vm.runInNewContext(adapted,context);const h=window.__attackHarness;
 window.SKORStrategy.init();await Promise.resolve();await Promise.resolve();
 const previous=plain(h.get()),sourceBefore=JSON.stringify(state);
@@ -94,14 +94,18 @@ assert.ok(new TextDecoder().decode(bytes).includes('NETSCAPE2.0'),'GIF has an in
 assert.equal(bytes[6]+256*bytes[7],640);assert.equal(bytes[8]+256*bytes[9],544);
 
 // Manual changes are reused on the next click; the final defense frame stays in sync.
+const lockedBefore=JSON.stringify(h.get());let prevented=false;
+h.pointerDown({target:{closest:()=>({dataset:{kind:'home',id:'p1'}})},clientX:900,clientY:200,pointerId:1,preventDefault(){prevented=true;}});
+h.pointerMove({clientX:800,clientY:200,preventDefault(){prevented=true;}});h.pointerUp();
+assert.equal(JSON.stringify(h.get()),lockedBefore);assert.equal(prevented,false,'locked board lets page scrolling proceed');
 const drag=(kind,id,x,y)=>{
  const piece={dataset:{kind,id}},event={target:{closest:()=>piece},clientX:x*10,clientY:y*6.8,pointerId:1,preventDefault(){}};
- h.pointerDown(event);h.pointerMove(event);h.pointerUp();
+ assert.equal(h.beginEditing(),true);h.pointerDown(event);h.pointerMove(event);h.pointerUp();assert.equal(h.finishEditing(),true);
 };
 h.selectStep(0);drag('home','p1',37,scene.subScenes[0].home[1].y);
 h.selectStep(1);drag('home','p1',19,scene.subScenes[1].home[1].y);
 h.selectStep(0);drag('opponent','opp_1',42,72);drag('ball','ball',57,68);
-h.setTool('text');h.pointerDown({target:{closest:()=>null},clientX:500,clientY:300,preventDefault(){}});h.setTool('move');h.persist();
+h.beginEditing();h.setTool('text');h.pointerDown({target:{closest:()=>null},clientX:500,clientY:300,preventDefault(){}});h.setTool('move');h.finishEditing();h.persist();
 assert.equal(scene.subScenes[0].drawings[0].text,'Hold shape');assert.equal(scene.subScenes[2].drawings[0].text,'Hold shape');
 assert.equal(scene.subScenes[2].opponents[1].x,42);assert.equal(scene.subScenes[2].ball.y,68);
 rasters.length=0;assert.equal(await node('strategyQuickGif').handlers.click(),true);

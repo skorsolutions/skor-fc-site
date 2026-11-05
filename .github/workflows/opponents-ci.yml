@@ -31,3 +31,23 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/fixtures/opponents-bootstrap.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f docs/sql/OPPONENTS-SCOUTING.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/verify-opponents-db.sql
+  browser-and-regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run all unit and controller suites
+        run: node -e 'const p=require("./package.json"); const c=require("node:child_process"); for(const s of Object.values(p.scripts)){c.execSync(s,{stdio:"inherit"});}'
+      - name: Install isolated browser runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/scouting-browser" --save-exact playwright@1.56.1
+          "$RUNNER_TEMP/scouting-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify complete captain browser flow with fictional APIs
+        run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/scouting-browser/node_modules/playwright" node tests/browser-opponents.mjs
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: opponents-browser-failure
+          path: test-results/

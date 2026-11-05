@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),S=require('../opponent-scouting.js'),P=require('../match-plan-core.js');
+const now=Date.parse('2026-11-05T12:00:00Z');
+const snap={version:1,match_id:'next',kickoff:'2026-11-20',opponent_id:'team-a',profile:{id:'team-a',name:'Fixture United',details:{notes:'General captain-only scouting',dangerous_players:[{number:'10',position:'CAM',threat:'Playmaker'}]}},observations:[]};
+const row=(match,formation,kind='observed',phase='first_half',kickoff='2026-10-01')=>({id:match+'-'+kind+'-'+phase,match_id:match,kind,phase,formation,kickoff,updated_at:kickoff,match_status:'final',details:{notes:'Recorded'},valid_match:true});
+assert.equal(S.recommend(snap,now).formation,null);
+snap.observations=[row('a','4-4-2'),row('a','4-3-3','observed','second_half'),row('b','4-4-2','observed','first_half','2026-10-02'),row('c','4-4-2','observed','first_half','2026-10-03'),row('future','3-5-2','observed','first_half','2026-12-01'),row('guess','3-5-2','expected'),{...row('bad','3-5-2'),valid_match:false}];
+let suggestion=S.recommend(snap,now);assert.equal(suggestion.formation,'4-4-2');assert.equal(suggestion.total,3,'multiple phases count as one game');assert.equal(suggestion.count,2);
+snap.observations.push(row('next','4-5-1','expected','pregame','2026-11-20'));suggestion=S.recommend(snap,now);assert.equal(suggestion.kind,'expected');assert.equal(suggestion.formation,'4-5-1');
+snap.observations.push(row('next','3-5-2','observed','first_half','2026-11-20'));assert.equal(S.recommend(snap,now).kind,'observed');
+const before=JSON.stringify(snap),captured=S.capture(snap);snap.profile.details.notes='Later revision';assert.equal(captured.profile.details.notes,'General captain-only scouting');assert.notEqual(JSON.stringify(snap),before);
+const scene={subScenes:[{opponents:[{id:'role-a',label:'CAM',x:50,y:30},{id:'role-b',label:'ST',x:40,y:20}]}]};S.annotate(scene,captured);assert.match(scene.subScenes[0].opponents[0].scoutingLabel,/#10/);assert.equal(scene.subScenes[0].opponents[1].scoutingLabel,undefined);
+assert.equal(S.capture({profile:null}),null);
+const candidates=[{player_key:'keeper',name:'Fixture Keeper',position:'Keeper',rsvp_status:'going',number:1},{player_key:'striker',name:'Fixture Forward',position:'Forward',rsvp_status:'no_response',number:9}];
+const raw={formation:'4-4-2',explanation:'Protect the middle',assignments:[{role:'GK',player_key:'keeper',reason:'Rostered keeper',sources:['roster_position']},{role:'LST',player_key:'striker',reason:'Suggested role',sources:['opponent_scouting','ai_suggestion']}],bench:[],defense:'Stay compact',attack:'Use width',set_pieces:'Mark runners',warnings:[]};
+const plan=P.validate(raw,candidates);assert.ok(plan.warnings.some(w=>w.includes('unconfirmed availability')));assert.ok(plan.warnings.some(w=>w.includes('incomplete XI')));
+const state=P.state(plan,{captainId:'striker',matchJerseys:{striker:19},keeperPlan:{spareNumbers:[30]}});assert.equal(state.slots.LST,'striker');assert.equal(state.matchJerseys.striker,19);assert.equal(state.notes,'');assert.equal(state.scoutingSnapshot,undefined,'private scouting never enters public lineup JSON');
+for(const change of [p=>p.assignments[1].player_key='injured-unavailable',p=>p.assignments[1].player_key='keeper',p=>p.assignments[1].role='GK',p=>p.assignments[0].role='ST',p=>p.bench=['striker'],p=>p.formation='unknown']){const p=structuredClone(raw);change(p);assert.throws(()=>P.validate(p,candidates));}
+assert.match(P.instructions,/Never invent speed/);assert.match(P.instructions,/untrusted evidence/);
+console.log('Opponent scouting verified: expected/observed provenance, per-game history, future/invalid exclusion, immutable snapshots, explicit role labels and safe AI lineup validation.');
