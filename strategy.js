@@ -27,7 +27,7 @@
 
   let initialized=false,activeTool="move",interaction=null,draft=null,saveTimer=null,sharedRecord=null;
   let strategyLibrary=[],bundleLibrary=[],sharedLoading=false,bundleLoading=false,preview=null,cloneContext=null;
-  let exporting=false,quickBackup=null,draftCaptain=null,quickUseSelectedSource=false;
+  let exporting=false,quickLoading=false,quickBackup=null,draftCaptain=null,quickUseSelectedSource=false,statusVersion=0;
 
   const $=id=>document.getElementById(id);
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
@@ -135,6 +135,7 @@
   }
 
   function setSharedStatus(message,tone=""){
+    statusVersion++;
     const node=$("strategySharedState");if(!node)return;
     node.textContent=message;node.className="strategy-shared-state"+(tone?" "+tone:"");
   }
@@ -202,8 +203,10 @@
     return true;
   }
   async function refreshSharedStatus(){
+    const version=statusVersion,editor=draft,owner=String(lineApi()?.getCaptainKey?.()||'');
     await refreshBundleLibrary({quiet:true});
     if(!await refreshLibrary({quiet:true}))return;
+    if(version!==statusVersion||editor!==draft||owner!==String(lineApi()?.getCaptainKey?.()||''))return;
     const record=syncSharedRecord();renderStrategyLibrary();updateSharedControls();
     if(!record){setSharedStatus(draft?.source?.matchId?"This named strategy has not been saved yet. Save it for every captain, or publish it for AI.":"This Tinker strategy has not been saved yet. Save it so every captain can load it; Tinker strategies cannot be published for AI.");return;}
     setSharedStatus(recordIsPublished(record)?"Saved and published for AI · Updated "+formatStamp(record.updated_at):"Saved for all captains · Not available to AI · Updated "+formatStamp(record.updated_at),recordIsPublished(record)?"published":"");
@@ -484,12 +487,12 @@
       quickBackup=null;
       try{const saved=JSON.parse(localStorage.getItem(quickBackupKey())||'null');if(saved?.owner===owner&&saved.value?.scenes?.length)quickBackup=saved;}catch{}
     }
-    if(button){button.disabled=exporting||sharedLoading||bundleLoading||window.SKORPortalCanWrite?.()!==true;
-      button.textContent=!quickUseSelectedSource&&draft?.scenes?.some(s=>window.SKORAttackDefense?.isGenerated(s))?'Download edited Attack ↔ Defense GIF':'Create Attack ↔ Defense GIF';}
-    if(back){back.hidden=!quickBackup;back.disabled=exporting||sharedLoading||bundleLoading;}
+    if(button){button.disabled=quickLoading||exporting||sharedLoading||bundleLoading||window.SKORPortalCanWrite?.()!==true;
+      button.textContent=quickLoading?'Loading lineup…':!quickUseSelectedSource&&draft?.scenes?.some(s=>window.SKORAttackDefense?.isGenerated(s))?'Download edited Attack ↔ Defense GIF':'Create Attack ↔ Defense GIF';}
+    if(back){back.hidden=!quickBackup;back.disabled=quickLoading||exporting||sharedLoading||bundleLoading;}
   }
   function restorePreviousStrategy(){
-    if(exporting||sharedLoading||bundleLoading||!window.SKORPortalCanWrite?.())return;
+    if(quickLoading||exporting||sharedLoading||bundleLoading||!window.SKORPortalCanWrite?.())return;
     updateQuickControls();if(!quickBackup)return;
     const restored=normalizeDraft(clone(quickBackup.value));if(!restored)return;
     stopPreview(false);draft=restored;quickBackup=null;quickUseSelectedSource=false;
@@ -498,15 +501,22 @@
     setSharedStatus('Previous strategy restored. Saved library records were not changed.');
   }
   function startingKeeper(source,home){
-    return source.state?.slots?.GK||Object.entries(source.state?.keeperPlan?.assignments||{}).find(([,p])=>['starting','starting_temp'].includes(p.role))?.[0]||home.find(p=>String(p.keeperLabel||'').startsWith('starting'))?.id;
+    return window.SKORStrategySource.keeperId(source,home);
   }
   async function createAttackDefenseGif(){
-    if(exporting||sharedLoading||bundleLoading||!window.SKORPortalCanWrite?.())return false;
+    if(quickLoading||exporting||sharedLoading||bundleLoading||!window.SKORPortalCanWrite?.())return false;
+    const owner=String(lineApi()?.getCaptainKey?.()||''),editor=draft,choice=$('strategyLineupSource')?.value||'current';
+    quickLoading=true;updateQuickControls();
     try{
       const editable=!quickUseSelectedSource&&(window.SKORAttackDefense.isGenerated(activeScene())?activeScene():draft?.scenes.find(scene=>window.SKORAttackDefense.isGenerated(scene)));
       if(editable){stopPreview(false);draft.activeSceneId=editable.id;editable.activeSubSceneId=editable.subScenes[0].id;
-        window.SKORAttackDefense.syncDefense(editable);renderAll();persist();return await exportGif(editable);}
-      const source=sourceByValue($('strategyLineupSource')?.value||'current',true),home=playersFromLineup(source.state,source.roster);
+        window.SKORAttackDefense.syncDefense(editable);renderAll();persist();quickLoading=false;return await exportGif(editable);}
+      const requested=clone(sourceByValue(choice,true));
+      setSharedStatus('Loading the selected lineup and this game’s fill-ins…');
+      const source=await window.SKORStrategySource.resolve(requested,sb());
+      if(!window.SKORPortalCanWrite?.()||String(lineApi()?.getCaptainKey?.()||'')!==owner||draft!==editor||choice!==($('strategyLineupSource')?.value||'current'))return false;
+      if(JSON.stringify(sourceByValue(choice,true).state)!==JSON.stringify(requested.state))throw Error('The selected lineup changed while its players loaded. Try again with the current lineup.');
+      const home=playersFromLineup(source.state,source.roster);
       const selected=source.state?.formation==='Freeform / Custom'?Object.keys(source.state.freeform||{}):Object.values(source.state?.slots||{}).filter(Boolean);
       if(selected.length!==home.length||new Set(selected.map(String)).size!==selected.length)throw Error('Some selected lineup players are missing or duplicated. Review the lineup first.');
       const opponentFormation=$('strategyOpponentFormation')?.value||'4-4-2';
@@ -526,8 +536,9 @@
         if(draft&&draftCaptain===owner){quickBackup={owner,value:clone(draft)};try{localStorage.setItem(quickBackupKey(),JSON.stringify(quickBackup));}catch{}}
         stopPreview(false);draft=next;sharedRecord=null;quickUseSelectedSource=false;renderAll();persist();renderStrategyLibrary();updateSharedControls();
       }
-      return await exportGif(scene);
-    }catch(error){setSharedStatus('Could not create Attack / Defense GIF: '+(error.message||error),'error');return false;}
+      quickLoading=false;return await exportGif(scene);
+    }catch(error){if(String(lineApi()?.getCaptainKey?.()||'')===owner&&window.SKORPortalCanWrite?.())setSharedStatus('Could not create Attack / Defense GIF: '+(error.message||error),'error');return false;}
+    finally{quickLoading=false;updateQuickControls();}
   }
   function importLineup(){
     const source=selectedSource(),home=playersFromLineup(source.state,source.roster);

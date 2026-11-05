@@ -1,3 +1,9 @@
+## v58.36 — Saved lineup fill-ins and existing keepers
+
+The quick action now resolves player identities from the selected lineup’s exact game before generating. It fetches only referenced TEMP UUIDs scoped to that match and any referenced regular player absent from the current roster cache. Saved inactive identities remain usable without reactivating them. Current-editor fill-ins from another game never replace saved identities. A unique existing on-field Keeper is kept fixed when no explicit keeper assignment exists; ambiguity requires a deliberate choice. No saved lineup/keeper assignment or production data is rewritten.
+
+The loading button and stale-source/session guards cover these reads. Existing editable views and saved geometry remain. The regression suite includes a saved Freeform selected while another game is open, exact jersey/identity preservation, unavailable/foreign-game/duplicate cases, unique/ambiguous keepers, and account/source changes while loading. A private read-only production sample also completes the actual one-click controller and GIF encoder through the synthetic raster adapter; no private sample data enters the repository.
+
 ## v58.35 — Editable Attack / Defense baseline
 
 Create Attack ↔ Defense GIF starts from the selected lineup and opponent formation. The Balanced baseline is a suggested tactical template: compact SKOR / attacking opponents, then wider/advanced SKOR / recovering opponents. Keepers initially stay fixed. The three ordinary steps are Defending, Attacking and Return to defending. The return mirrors defense while that three-step structure stays intact, producing a smooth loop with the existing encoder and player-event renderer. No new schema or player-sharing permission is introduced.

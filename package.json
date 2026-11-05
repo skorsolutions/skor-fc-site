@@ -2,6 +2,7 @@
   "name": "skor-fc-site",
   "private": true,
   "scripts": {
+    "test:strategy-source": "node tests/verify-strategy-lineup-source.mjs",
     "test:attack-defense": "node tests/verify-attack-defense.mjs",
     "test:lineup-free-move": "node tests/verify-lineup-free-move.mjs",
     "test:guest-attendance": "node tests/verify-guest-attendance-review.mjs",

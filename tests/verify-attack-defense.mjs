@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {createRequire} from 'node:module';
 import * as gifenc from '../vendor/gifenc/index.js';
 const require=createRequire(import.meta.url),A=require('../strategy-attack-defense.js'),R=require('../strategy-reuse.js');
+const S=require('../strategy-lineup-source.js');
 const K=require('../keeper-plan.js'),J=require('../match-jerseys.js'),M=require('../lineup-marker.js');
 const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8'),code=read('strategy.js'),html=read('admin.html');
 const plain=v=>JSON.parse(JSON.stringify(v));
@@ -50,14 +51,15 @@ let owner='fixture-captain',canWrite=true;
 const state={formation:'4-3-3',slots:Object.fromEntries(roles.map((r,i)=>[r,'p'+i])),bench:['bench'],keeperPlan:{spareNumbers:[30],assignments:{p0:{role:'starting_temp',jerseyNumber:30}}},matchJerseys:{p0:1}};
 const roster=roles.map((role,i)=>({player_key:'p'+i,name:'Fixture '+i,number:i+1,position:i===0?'Keeper':'Midfield'}));
 const tables={match_strategies:[],strategy_scene_bundles:[]},writes=[],rpc=[],storage=new Map(),downloads=[],rasters=[];
+let readGate=null;
 function from(table){let filters=[],operation='read',payload;
  const run=()=>{const rows=tables[table]||[];
   if(operation==='insert'){const record={...plain(payload),id:'50000000-0000-4000-8000-'+String(writes.length+1).padStart(12,'0'),updated_at:new Date().toISOString()};rows.push(record);writes.push({table,payload:plain(payload)});return {data:record};}
-  return {data:rows.filter(r=>filters.every(([k,v])=>String(r[k])===String(v)))};};
- const q={select(){return q;},eq(k,v){filters.push([k,v]);return q;},order(){return q;},limit(){return q;},insert(p){operation='insert';payload=p;return q;},async single(){const r=run();return {...r,data:Array.isArray(r.data)?r.data[0]:r.data};},async maybeSingle(){const r=run();return {...r,data:r.data?.[0]||null};},then(ok,bad){return Promise.resolve(run()).then(ok,bad);}};return q;
+  return {data:rows.filter(r=>filters.every(([k,v])=>Array.isArray(v)?v.map(String).includes(String(r[k])):String(r[k])===String(v)))};};
+ const q={select(){return q;},eq(k,v){filters.push([k,v]);return q;},in(k,v){filters.push([k,v]);return q;},order(){return q;},limit(){return q;},insert(p){operation='insert';payload=p;return q;},async single(){const r=run();return {...r,data:Array.isArray(r.data)?r.data[0]:r.data};},async maybeSingle(){const r=run();return {...r,data:r.data?.[0]||null};},then(ok,bad){if(table==='match_temp_players'&&readGate){const gate=readGate;readGate=null;return gate.then(run).then(ok,bad);}return Promise.resolve(run()).then(ok,bad);}};return q;
 }
 let blockRaster=null,failRaster=false;
-const window={SKORAttackDefense:A,SKORStrategyReuse:R,SKORKeeperPlan:K,SKORMatchJerseys:J,SKORLineupMarker:M,SKORPortalCanWrite:()=>canWrite,
+const window={SKORStrategySource:S,SKORAttackDefense:A,SKORStrategyReuse:R,SKORKeeperPlan:K,SKORMatchJerseys:J,SKORLineupMarker:M,SKORPortalCanWrite:()=>canWrite,
   SKORLineup:{getCaptainKey:()=>owner,getRoster:()=>plain(roster),getState:()=>plain(state),getEventKey:()=>game,getEventLabel:()=> 'Fixture game',listVariations:()=>[]},
   SKORSupabase:{from,auth:{getUser:async()=>({data:{user:{id:'60000000-0000-4000-8000-000000000001'}}})},rpc:async()=>{rpc.push(1);return {data:{}};}},dispatchEvent(){},__gifenc:gifenc,__downloads:downloads,
   async __raster(scene,frame,width,height,options){
@@ -146,4 +148,43 @@ assert.match(node('strategySharedState').textContent,/Could not build the GIF/);
 assert.match(html,/id="strategyQuickGif"/);assert.match(html,/Show opponents in preview \/ GIF/);
 assert.ok(html.indexOf('src="strategy-attack-defense.js')<html.indexOf('src="strategy.js'));
 for(const inline of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi))new vm.Script(inline[1]);
+// A saved Freeform lineup can load fill-ins while another game is open.
+const savedId='70000000-0000-4000-8000-000000000001',tempId='80000000-0000-4000-8000-000000000001';
+const savedState={formation:'Freeform / Custom',freeform:{p0:{x:50,y:92},p1:{x:20,y:55},['temp:'+tempId]:{x:70,y:50}},keeperPlan:{assignments:{}}};
+window.SKORLineup.listVariations=()=>[{id:savedId,event_key:game,name:'Synthetic saved Freeform',state:plain(savedState)}];
+tables.match_temp_players=[{id:tempId,match_id:game,display_name:'Synthetic Guest',jersey_number:23,active:true}];
+node('strategyLineupSource').value='saved:'+savedId;node('strategyLineupSource').handlers.change();
+assert.equal(await node('strategyQuickGif').handlers.click(),true);
+assert.equal(h.get().scenes[0].subScenes[0].home.length,3);assert.equal(h.get().scenes[0].subScenes[0].home[2].number,23);
+for(const reason of ['actor','permission','selection','source']){
+ owner='fixture-captain';canWrite=true;window.SKORStrategy.activate();node('strategyLineupSource').value='saved:'+savedId;node('strategyLineupSource').handlers.change();
+ let release;readGate=new Promise(resolve=>release=resolve);const before=downloads.length;
+ const pending=node('strategyQuickGif').handlers.click();await Promise.resolve();await Promise.resolve();
+ if(reason==='actor')owner='other-captain';if(reason==='permission')canWrite=false;
+ if(reason==='selection')node('strategyLineupSource').value='current';
+ if(reason==='source')savedState.freeform.p1.x=21;
+ release();assert.equal(await pending,false,'source-loading guard: '+reason);assert.equal(downloads.length,before);
+ savedState.freeform.p1.x=20;
+}
+owner='fixture-captain';canWrite=true;window.SKORStrategy.activate();
+if(process.env.SKOR_SOURCE_FIXTURE_PATH){
+ const sample=JSON.parse(fs.readFileSync(process.env.SKOR_SOURCE_FIXTURE_PATH,'utf8'));
+ const source=sample.source,original=JSON.stringify(source.state);
+ const fixtureRoster=sample.regularRows.filter(p=>p.active!==false);
+ window.SKORLineup.getRoster=()=>plain(fixtureRoster);
+ window.SKORLineup.listVariations=()=>[{id:source.variationId,event_key:source.eventKey,event_label:'Saved game',name:'Saved lineup',state:plain(source.state)}];
+ tables.match_temp_players=plain(sample.tempRows);
+ tables.team_roster=sample.regularRows.map(p=>({...p,jersey_number:p.number,full_name:p.fullName,preferred_name:p.name}));
+ node('strategyLineupSource').value=source.id;node('strategyLineupSource').handlers.change();
+ const count=downloads.length;
+ assert.equal(await node('strategyQuickGif').handlers.click(),true,'actual saved lineup resolves its exact match-specific fill-ins');
+ assert.equal(downloads.length,count+1);
+ const actual=h.get().scenes[0],ids=S.fieldIds(source.state);
+ assert.equal(JSON.stringify(actual.subScenes[0].home.map(p=>p.id).sort()),JSON.stringify(ids.slice().sort()),'all exact selected identities survive');
+ assert.equal(actual.subScenes[0].home.length,ids.length);
+ const keeper=S.keeperId({...source,roster:fixtureRoster},actual.subScenes[0].home);
+ assert.ok(keeper);assert.equal(actual.subScenes[0].home.find(p=>p.id===keeper).y,actual.subScenes[1].home.find(p=>p.id===keeper).y);
+ assert.equal(JSON.stringify(source.state),original);
+ console.log('Private read-only source fixture: all '+ids.length+' selected players resolved; one GIF encoded; keeper fixed; original lineup unchanged.');
+}
 console.log('Attack/defense verified: all formations, Freeform, both-team movement, fixed keepers, editable/reused views, smooth return, real GIF encoding, shared strategy/bundle reload, opponent visibility, previous draft recovery and async session guards.');

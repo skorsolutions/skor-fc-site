@@ -1,3 +1,15 @@
+# v58.36 — Load the saved lineup’s own players for Attack / Defense GIF (prepared)
+
+2026-11-05 UTC. Fix prepared; publication and production verification pending.
+
+- The screenshot’s missing/duplicated-player error was caused by checking a valid saved Freeform lineup against the current editor’s roster cache. Match fill-ins were missing from that cache. The saved lineup had distinct valid identities and one existing rostered Keeper, without a separate keeper assignment. No source lineup repair is needed.
+- Resolve referenced regular players by exact player_key and selected TEMP players by exact UUID plus saved match_id. Explicitly saved inactive players can resolve without reactivation; other-game cached fill-ins never substitute. Existing names, numbers, positions and saved plans are retained.
+- Honor explicit starting keepers and standard GK slots. If none is assigned, a unique existing on-field rostered Keeper can stay fixed in the baseline; ambiguous roles still require a choice. No identity/keeper/jersey data is invented or written.
+- Loading has visible feedback, repeat-click protection and actor/permission/editor/selection/source-state cancellation. Older background library status no longer overwrites newer progress/errors. All editable template/save/export behavior remains.
+- Affected: `admin.html`, `strategy.js`, new `strategy-lineup-source.js`, `package.json`, new `tests/verify-strategy-lineup-source.mjs`, expanded `tests/verify-attack-defense.mjs`, four build-marker suites and Strategy/handbook/deployment documentation. Captain v58.36; other portal, public and pregame versions are unchanged.
+- Targeted tests pass. The actual privately fetched saved source resolves all selected regular/fill-in identities and its existing keeper, completes the real one-click handler and GIF encoder through a synthetic raster adapter, and leaves the original saved state unchanged. Private identities, fixture values and source IDs are omitted from public code/docs. All 27 local suites, module/inline syntax and whitespace checks pass. Browser rendering/device download and authenticated browser saves remain unverified.
+- Database: read-only source verification only. No application-data write, SQL migration, schema/RLS/grant, RPC, backend or Edge Function change. Runtime source loading uses the existing captain client and existing policies.
+
 # v58.35 — Editable Attack / Defense baseline and one-click GIF (deployed)
 
 2026-11-05 UTC. Source release [`86eae532ff4b4740180eef3b07d24e121fba164c`](https://github.com/skorsolutions/skor-fc-site/commit/86eae532ff4b4740180eef3b07d24e121fba164c) is deployed. Cloudflare build `0979bdee-532a-4cc8-866c-2fd8bb20cd38` succeeded at 07:02:13 UTC and its logs confirm version `6ef62233-7647-4743-963a-a32f5514bd85`. Deployment `23438838-31c7-4863-b198-edf761a81f10` serves that version at 100% production traffic. The exact thirteen-file source set and all uploaded hashes match tested local files; all existing assets are preserved.
