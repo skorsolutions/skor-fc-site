@@ -27,7 +27,7 @@ for (const id of [
 
 assert.match(admin, /Scene Bundle Library/);
 assert.match(admin, /Export bundle GIF/);
-assert.match(admin, /captain-portal-v58\.34-lineup-free-move/);
+assert.match(admin, /captain-portal-v58\.35-attack-defense-gif/);
 assert.match(css, /strategy-subscene-panel/);
 assert.match(css, /strategy-subscene-tab\.active/);
 assert.match(strategy, /import\("\.\/vendor\/gifenc\/index\.js"\)/);

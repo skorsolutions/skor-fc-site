@@ -1,5 +1,11 @@
 .strategy-shell{display:grid;gap:16px;width:100%;max-width:1540px;min-width:0;margin:0 auto}
 .strategy-source-actions{display:flex;gap:8px;flex-wrap:wrap;max-width:310px}
+.strategy-quick-gif{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 18px}
+.strategy-quick-gif>div{flex:1 1 280px;min-width:0}.strategy-quick-gif h3{margin:0 0 5px;font-size:1rem}
+.strategy-quick-gif p{margin:0;max-width:650px;font-size:.8rem;line-height:1.45;color:#706a71}
+.strategy-quick-gif .btn{min-height:44px;white-space:normal}.strategy-quick-gif .strategy-check{white-space:normal}
+.strategy-quick-gif [hidden]{display:none!important}.strategy-quick-gif button:focus-visible{outline:3px solid #741f35;outline-offset:3px}
+@media(max-width:760px){.strategy-quick-gif{align-items:stretch}.strategy-quick-gif>div,.strategy-quick-gif>.btn,.strategy-quick-gif>.strategy-check{width:100%;max-width:100%;min-width:0}}
 .strategy-clone-dialog{width:min(780px,calc(100vw - 24px));max-height:90dvh;padding:0;border:1px solid #d8cbd0;border-radius:16px;background:#fff;color:#24232a;overflow-y:auto;box-shadow:0 20px 80px #0004}
 .strategy-clone-dialog::backdrop{background:#0007}.strategy-clone-dialog header,.strategy-clone-dialog footer{padding:18px}.strategy-clone-dialog header{border-bottom:1px solid #e7e0e3}.strategy-clone-dialog h2{margin:0;font-size:21px}.strategy-clone-dialog header p{margin:8px 0 0;color:#70616a;font-size:13px;overflow-wrap:anywhere}
 .strategy-clone-fields{padding:16px 18px;display:grid;gap:8px}.strategy-clone-fields label{font-size:13px;font-weight:850}.strategy-clone-fields select,.strategy-clone-fields input{width:100%;min-width:0;min-height:44px;border:1px solid #d7cbd1;border-radius:9px;background:#fff;padding:10px;font:inherit}.strategy-clone-formations{margin:6px 0;font-size:14px;font-weight:800;overflow-wrap:anywhere}.strategy-clone-error{margin:0;color:#9b2441;font-size:14px;line-height:1.5}.strategy-clone-error:empty{display:none}
@@ -49,3 +55,4 @@
   .strategy-notes-panel textarea,.strategy-save-state,.strategy-shared-state{grid-column:auto}.strategy-notes-panel textarea{min-height:116px}
   .strategy-library-panel{padding:12px!important;overflow:hidden}.strategy-library-head{align-items:stretch;flex-direction:column;gap:8px}.strategy-library-head .mini-btn{width:100%;min-height:40px}.strategy-library{width:100%;max-width:100%;gap:8px}.strategy-library-group{width:86vw;max-width:290px;min-width:245px}.strategy-library-card{flex-basis:215px}.strategy-library-actions .mini-btn{min-height:38px}
 }
+

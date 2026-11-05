@@ -27,6 +27,7 @@
 
   let initialized=false,activeTool="move",interaction=null,draft=null,saveTimer=null,sharedRecord=null;
   let strategyLibrary=[],bundleLibrary=[],sharedLoading=false,bundleLoading=false,preview=null,cloneContext=null;
+  let exporting=false,quickBackup=null,draftCaptain=null,quickUseSelectedSource=false;
 
   const $=id=>document.getElementById(id);
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
@@ -76,7 +77,7 @@
   }
   function normalizeSubScene(raw,scene,index,opponentFormation){
     const source=raw&&typeof raw==="object"?raw:{};
-    return {id:String(source.id||uid("step")),name:String(source.name||source.caption||("Step "+(index+1))).slice(0,70),home:Array.isArray(source.home)?source.home:clone(scene.home||[]),opponents:Array.isArray(source.opponents)?source.opponents:clone(scene.opponents||formationPositions(opponentFormation,true)),ball:source.ball&&Number.isFinite(Number(source.ball.x))?source.ball:clone(scene.ball||{x:50,y:45}),drawings:Array.isArray(source.drawings)?source.drawings:clone(scene.drawings||[])};
+    return {id:String(source.id||uid("step")),name:String(source.name||source.caption||("Step "+(index+1))).slice(0,70),...(source.quickShape&&source.quickShape===window.SKORAttackDefense?.PRESET?{quickShape:source.quickShape}:{}),home:Array.isArray(source.home)?source.home:clone(scene.home||[]),opponents:Array.isArray(source.opponents)?source.opponents:clone(scene.opponents||formationPositions(opponentFormation,true)),ball:source.ball&&Number.isFinite(Number(source.ball.x))?source.ball:clone(scene.ball||{x:50,y:45}),drawings:Array.isArray(source.drawings)?source.drawings:clone(scene.drawings||[])};
   }
   function normalizeScene(raw,index,opponentFormation){
     const scene=raw&&typeof raw==="object"?raw:{},rawSteps=Array.isArray(scene.subScenes)&&scene.subScenes.length?scene.subScenes:[scene];
@@ -92,7 +93,7 @@
     value.source.eventLabel=String(value.source.eventLabel||"Tinker / No Game").slice(0,180);
     value.source.variationId=isUuid(value.source.variationId)?String(value.source.variationId):null;
     value.opponentFormation=value.opponentFormation==="Custom / Freeform"||HOME_FORMATIONS[value.opponentFormation]?value.opponentFormation:"4-4-2";
-    value.showLanes=value.showLanes!==false;value.version=2;
+    value.showLanes=value.showLanes!==false;value.showOpponents=value.showOpponents!==false;value.version=2;
     value.scenes=value.scenes.slice(0,20).map((scene,index)=>normalizeScene(scene,index,value.opponentFormation));
     if(!value.scenes.some(scene=>scene.id===value.activeSceneId))value.activeSceneId=value.scenes[0].id;
     return value;
@@ -105,11 +106,11 @@
     return null;
   }
   function persist(){
-    if(!draft)return;draft.savedAt=new Date().toISOString();
+    if(!draft)return;draft.scenes.forEach(scene=>window.SKORAttackDefense?.syncDefense(scene));draft.savedAt=new Date().toISOString();
     try{localStorage.setItem(storageKey(),JSON.stringify(draft));}catch(error){console.warn("Could not save local strategy draft",error);}
     const state=$("strategySaveState");if(state)state.textContent="Recovery copy updated · "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
   }
-  function queuePersist(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,180);}
+  function queuePersist(){window.SKORAttackDefense?.syncDefense(activeScene(),activeSubScene());clearTimeout(saveTimer);saveTimer=setTimeout(persist,180);}
   function activeScene(){return draft?.scenes?.find(scene=>scene.id===draft.activeSceneId)||draft?.scenes?.[0]||null;}
   function activeSubScene(scene=activeScene()){return scene?.subScenes?.find(step=>step.id===scene.activeSubSceneId)||scene?.subScenes?.[0]||null;}
   function currentSource(){
@@ -150,7 +151,8 @@
     if(sharedLoading){if(save)save.textContent="Saving…";if(publish)publish.textContent="Publishing…";}
     else{if(save)save.textContent="Save Strategy";if(publish)publish.textContent=recordIsPublished(sharedRecord)?"Update Published AI Strategy":"Publish for AI";}
     if(saveBundle)saveBundle.textContent=bundleLoading?"Saving bundle…":"Save Scene Bundle";
-    for(const id of ['strategyCloneAll','strategyCloneBundle','strategyImportLineup'])if($(id))$(id).disabled=sharedLoading||bundleLoading;
+    for(const id of ['strategyCloneAll','strategyCloneBundle','strategyImportLineup'])if($(id))$(id).disabled=sharedLoading||bundleLoading||exporting;
+    updateQuickControls();
   }
   function renderStrategyLibrary(){
     const host=$("strategyLibrary"),count=$("strategyLibraryCount");if(!host)return;
@@ -217,6 +219,7 @@
   function loadSharedStrategy(record=sharedRecord){
     if(!record)return;stopPreview();sharedRecord=record;
     draft=strategyFromRecord(record);
+    quickUseSelectedSource=false;
     renderAll();persist();renderStrategyLibrary();updateSharedControls();
     setSharedStatus(recordIsPublished(record)?"Published strategy loaded. Changes remain local until you save or republish.":"Saved captain strategy loaded. Changes remain local until you select Save Strategy.",recordIsPublished(record)?"published":"");
     $("strategy")?.scrollIntoView({behavior:"smooth",block:"start"});
@@ -230,6 +233,7 @@
   }
   function sceneForStorage(scene){
     const copy=clone(scene),first=copy.subScenes?.[0]||{};
+    window.SKORAttackDefense?.syncDefense(copy);
     copy.home=clone(first.home||[]);copy.opponents=clone(first.opponents||[]);copy.ball=clone(first.ball||{x:50,y:45});copy.drawings=clone(first.drawings||[]);
     return copy;
   }
@@ -377,7 +381,7 @@
   }
   function bundlePayload(scene,userId){
     const matchId=isUuid(draft?.source?.matchId)?String(draft.source.matchId):null;
-    return {match_id:matchId,event_key:matchId||"tinker",event_label:String(draft?.source?.eventLabel||(matchId?"Scheduled game":"Tinker / No Game")).trim().slice(0,180)||"Tinker / No Game",category:CATEGORY_LABELS[scene.category]?scene.category:"other",name:String(scene.name||"Scene Bundle").trim().slice(0,70)||"Scene Bundle",scene_type:TYPE_LABELS[scene.type]?scene.type:"offense",coaching_points:String(scene.points||"").slice(0,600),opponent_formation:String(draft?.opponentFormation||"4-4-2").slice(0,40),show_lanes:draft?.showLanes!==false,source_lineup_variation_id:draft?.source?.variationId||null,lineup_name:String(draft?.source?.label||"Game lineup").slice(0,140),lineup_snapshot:clone(draft?.source?.state||{}),subscenes:clone(scene.subScenes||[]),updated_by:userId};
+    return {match_id:matchId,event_key:matchId||"tinker",event_label:String(draft?.source?.eventLabel||(matchId?"Scheduled game":"Tinker / No Game")).trim().slice(0,180)||"Tinker / No Game",category:CATEGORY_LABELS[scene.category]?scene.category:"other",name:String(scene.name||"Scene Bundle").trim().slice(0,70)||"Scene Bundle",scene_type:TYPE_LABELS[scene.type]?scene.type:"offense",coaching_points:String(scene.points||"").slice(0,600),opponent_formation:String(draft?.opponentFormation||"4-4-2").slice(0,40),show_lanes:draft?.showLanes!==false,source_lineup_variation_id:draft?.source?.variationId||null,lineup_name:String(draft?.source?.label||"Game lineup").slice(0,140),lineup_snapshot:clone(draft?.source?.state||{}),subscenes:sceneForStorage(scene).subScenes,updated_by:userId};
   }
   function renderBundleLibrary(){
     const host=$("strategyBundleLibrary"),count=$("strategyBundleLibraryCount");if(!host)return;
@@ -473,6 +477,58 @@
     await refreshBundleLibrary({quiet:true});setSharedStatus('Deleted shared Scene Bundle "'+record.name+'". Existing strategy snapshots were preserved.');
   }
 
+  function quickBackupKey(){return 'skorStrategyQuickBackup:'+String(lineApi()?.getCaptainKey?.()||'captain');}
+  function updateQuickControls(){
+    const owner=String(lineApi()?.getCaptainKey?.()||''),button=$('strategyQuickGif'),back=$('strategyRestorePrevious');
+    if(!quickBackup||quickBackup.owner!==owner){
+      quickBackup=null;
+      try{const saved=JSON.parse(localStorage.getItem(quickBackupKey())||'null');if(saved?.owner===owner&&saved.value?.scenes?.length)quickBackup=saved;}catch{}
+    }
+    if(button){button.disabled=exporting||sharedLoading||bundleLoading||window.SKORPortalCanWrite?.()!==true;
+      button.textContent=!quickUseSelectedSource&&draft?.scenes?.some(s=>window.SKORAttackDefense?.isGenerated(s))?'Download edited Attack ↔ Defense GIF':'Create Attack ↔ Defense GIF';}
+    if(back){back.hidden=!quickBackup;back.disabled=exporting||sharedLoading||bundleLoading;}
+  }
+  function restorePreviousStrategy(){
+    if(exporting||sharedLoading||bundleLoading||!window.SKORPortalCanWrite?.())return;
+    updateQuickControls();if(!quickBackup)return;
+    const restored=normalizeDraft(clone(quickBackup.value));if(!restored)return;
+    stopPreview(false);draft=restored;quickBackup=null;quickUseSelectedSource=false;
+    try{localStorage.removeItem(quickBackupKey());}catch{}
+    syncSharedRecord();renderAll();persist();renderStrategyLibrary();updateSharedControls();
+    setSharedStatus('Previous strategy restored. Saved library records were not changed.');
+  }
+  function startingKeeper(source,home){
+    return source.state?.slots?.GK||Object.entries(source.state?.keeperPlan?.assignments||{}).find(([,p])=>['starting','starting_temp'].includes(p.role))?.[0]||home.find(p=>String(p.keeperLabel||'').startsWith('starting'))?.id;
+  }
+  async function createAttackDefenseGif(){
+    if(exporting||sharedLoading||bundleLoading||!window.SKORPortalCanWrite?.())return false;
+    try{
+      const editable=!quickUseSelectedSource&&(window.SKORAttackDefense.isGenerated(activeScene())?activeScene():draft?.scenes.find(scene=>window.SKORAttackDefense.isGenerated(scene)));
+      if(editable){stopPreview(false);draft.activeSceneId=editable.id;editable.activeSubSceneId=editable.subScenes[0].id;
+        window.SKORAttackDefense.syncDefense(editable);renderAll();persist();return await exportGif(editable);}
+      const source=sourceByValue($('strategyLineupSource')?.value||'current',true),home=playersFromLineup(source.state,source.roster);
+      const selected=source.state?.formation==='Freeform / Custom'?Object.keys(source.state.freeform||{}):Object.values(source.state?.slots||{}).filter(Boolean);
+      if(selected.length!==home.length||new Set(selected.map(String)).size!==selected.length)throw Error('Some selected lineup players are missing or duplicated. Review the lineup first.');
+      const opponentFormation=$('strategyOpponentFormation')?.value||'4-4-2';
+      const identity=actors=>JSON.stringify(actors.map(p=>[p.id,p.name,p.number,p.keeperNumber,p.keeperLabel]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))));
+      const sameSource=draft&&sourceEventKey(source)===sourceEventKey(draft.source)&&JSON.stringify(source.state)===JSON.stringify(draft.source.state);
+      let scene=sameSource&&draft.opponentFormation===opponentFormation?draft.scenes.find(s=>window.SKORAttackDefense.isGenerated(s)&&s.subScenes.every(step=>identity(step.home)===identity(home))):null;
+      if(scene){
+        stopPreview(false);draft.activeSceneId=scene.id;scene.activeSubSceneId=scene.subScenes[0].id;quickUseSelectedSource=false;
+        window.SKORAttackDefense.syncDefense(scene);renderAll();persist();
+      }else{
+        const opponents=opponentFormation==='Custom / Freeform'?clone(activeSubScene()?.opponents||[]):formationPositions(opponentFormation,true);
+        scene=window.SKORAttackDefense.build({home,opponents,keeperId:startingKeeper(source,home),opponentKeeperId:opponents.find(p=>p.label==='GK')?.id,makeId:uid});
+        const next=freshDraft(source),owner=String(lineApi()?.getCaptainKey?.()||'');
+        next.title=window.SKORStrategyReuse.uniqueName('Attack and Defense',strategyLibrary.filter(r=>String(r.event_key)===sourceEventKey(source)).map(r=>r.title));
+        next.scenes=[scene];next.activeSceneId=scene.id;next.opponentFormation=opponentFormation;
+        next.showLanes=draft?.showLanes!==false;next.showOpponents=$('strategyShowOpponents')?.checked!==false;next.copyAsNew=true;
+        if(draft&&draftCaptain===owner){quickBackup={owner,value:clone(draft)};try{localStorage.setItem(quickBackupKey(),JSON.stringify(quickBackup));}catch{}}
+        stopPreview(false);draft=next;sharedRecord=null;quickUseSelectedSource=false;renderAll();persist();renderStrategyLibrary();updateSharedControls();
+      }
+      return await exportGif(scene);
+    }catch(error){setSharedStatus('Could not create Attack / Defense GIF: '+(error.message||error),'error');return false;}
+  }
   function importLineup(){
     const source=selectedSource(),home=playersFromLineup(source.state,source.roster);
     if(!home.length&&!confirm("This lineup does not have any players on the field yet. Start a blank strategy anyway?"))return;
@@ -506,6 +562,7 @@
     $("strategyTitle").value=draft.title;$("strategySceneTitle").value=scene.name;$("strategySceneTypeSelect").value=scene.type;$("strategySceneCategory").value=scene.category;$("strategySubSceneTitle").value=step.name;$("strategyCoachingPoints").value=scene.points;$("strategyOpponentFormation").value=draft.opponentFormation;$("strategyShowLanes").checked=draft.showLanes;$("strategySceneType").textContent=TYPE_LABELS[scene.type];
     const sceneIndex=draft.scenes.indexOf(scene)+1,stepIndex=scene.subScenes.indexOf(step)+1;
     $("strategySceneName").textContent=sceneIndex+"."+stepIndex+" · "+scene.name+" · "+step.name;
+    if($('strategyShowOpponents'))$('strategyShowOpponents').checked=draft.showOpponents!==false;
   }
   function setTool(tool){
     activeTool=tool;document.querySelectorAll("[data-strategy-tool]").forEach(button=>button.classList.toggle("active",button.dataset.strategyTool===tool));
@@ -513,7 +570,7 @@
     const messages={move:"Drag SKOR players, opponent placeholders, and the ball into position for this animation step.",arrow:"Drag from a starting point to show a run, pass, or press in this step.",line:"Drag to add a movement or shape line.",box:"Drag around an area to highlight a coaching zone.",text:"Tap the pitch to add a short coaching label."};
     if($("strategyBoardTip")&&!preview)$("strategyBoardTip").textContent=messages[tool]||messages.move;
   }
-  function renderAll(){if(!draft)return;renderScenes();renderSubScenes();renderInputs();renderPitch();setTool(activeTool);updatePreviewButton();}
+  function renderAll(){if(!draft)return;renderScenes();renderSubScenes();renderInputs();renderPitch();setTool(activeTool);updatePreviewButton();updateQuickControls();}
 
   function lineMarkup(item,previewDrawing=false){
     const x1=item.x1*10,y1=item.y1*6.8,x2=item.x2*10,y2=item.y2*6.8;
@@ -547,7 +604,7 @@
     let out=baseSvg(options.showLanes??draft?.showLanes!==false,exportMode);
     out+='<g class="strategy-drawings">'+(frame.drawings||[]).map(item=>item.type==="text"?'<g><rect x="'+(item.x*10-6)+'" y="'+(item.y*6.8-23)+'" width="'+Math.max(72,String(item.text||"").length*14)+'" height="34" rx="8" fill="rgba(18,19,23,.82)"/><text x="'+(item.x*10+8)+'" y="'+(item.y*6.8)+'" fill="#fff" font-size="20" font-weight="850">'+esc(item.text)+'</text></g>':lineMarkup(item)).join("")+'</g>';
     if(interaction?.drawing&&!exportMode)out+=lineMarkup(interaction.drawing,true);
-    out+='<g class="strategy-away-team">'+(frame.opponents||[]).map(awayMarkup).join("")+'</g><g class="strategy-home-team">'+(frame.home||[]).map(homeMarkup).join("")+'</g>'+ballMarkup(frame.ball||{x:50,y:50});
+    out+='<g class="strategy-away-team">'+((options.showOpponents??draft?.showOpponents!==false)?(frame.opponents||[]):[]).map(awayMarkup).join("")+'</g><g class="strategy-home-team">'+(frame.home||[]).map(homeMarkup).join("")+'</g>'+ballMarkup(frame.ball||{x:50,y:50});
     return out;
   }
   function renderPitch(frame=activeSubScene()){const pitch=$("strategyPitch");if(!frame||!pitch)return;pitch.innerHTML=pitchMarkup(frame);pitch.dataset.tool=activeTool;}
@@ -558,10 +615,10 @@
   }
   function exportSvgMarkup(scene,frame=activeSubScene(scene),context={}){
     const title=esc(context.title||draft?.title||"Match Strategy"),sceneName=esc(scene?.name||"Scene Bundle"),source=esc(context.source||draft?.source?.eventLabel||draft?.source?.label||"");
-    const sceneIndex=Math.max(0,draft?.scenes?.indexOf(scene)??0)+1,stepIndex=Math.max(0,scene?.subScenes?.indexOf(frame)??0)+1,stepName=esc(frame?.name||"Animation step"),pointLines=wrapWords(scene?.points||"",88,2);
+    const sceneIndex=context.sceneIndex??Math.max(0,draft?.scenes?.indexOf(scene)??0)+1,stepIndex=Math.max(0,scene?.subScenes?.indexOf(frame)??0)+1,stepName=esc(frame?.name||"Animation step"),pointLines=wrapWords(scene?.points||"",88,2);
     return '<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1190" viewBox="0 0 1000 850"><rect width="1000" height="850" fill="#15161a"/><rect x="0" y="0" width="1000" height="80" fill="#17181d"/>'+
       '<text x="30" y="29" fill="#e9b8c6" font-size="13" font-weight="900" letter-spacing="1.5">'+esc(TYPE_LABELS[scene?.type]||"STRATEGY")+' · '+sceneIndex+'.'+stepIndex+'</text><text x="30" y="59" fill="#fff" font-size="24" font-weight="950">'+title+' · '+sceneName+'</text>'+
-      '<text x="970" y="32" text-anchor="end" fill="#fff" font-size="16" font-weight="850">'+stepName+'</text><text x="970" y="56" text-anchor="end" fill="#d9d3d5" font-size="13" font-weight="750">'+source+'</text><g transform="translate(0 80)">'+pitchMarkup(frame,{exportMode:true,showLanes:context.showLanes??draft?.showLanes!==false})+'</g>'+
+      '<text x="970" y="32" text-anchor="end" fill="#fff" font-size="16" font-weight="850">'+stepName+'</text><text x="970" y="56" text-anchor="end" fill="#d9d3d5" font-size="13" font-weight="750">'+source+'</text><g transform="translate(0 80)">'+pitchMarkup(frame,{exportMode:true,showLanes:context.showLanes??draft?.showLanes!==false,showOpponents:context.showOpponents??draft?.showOpponents!==false})+'</g>'+
       '<rect x="0" y="760" width="1000" height="90" fill="#17181d"/><text x="30" y="786" fill="#e9b8c6" font-size="12" font-weight="900" letter-spacing="1.3">COACHING POINTS</text>'+
       pointLines.map((line,index)=>'<text x="30" y="'+(811+index*23)+'" fill="#fff" font-size="17" font-weight="700">'+esc(line)+'</text>').join("")+
       '<text x="970" y="820" text-anchor="end" fill="#e9b8c6" font-size="17" font-weight="950">SKOR FC</text></svg>';
@@ -591,11 +648,18 @@
   function pointerUp(){
     const frame=activeSubScene();if(!interaction||!frame)return;
     if(interaction.kind==="draw"){const item=interaction.drawing;if(Math.hypot(item.x2-item.x1,item.y2-item.y1)>2)frame.drawings.push(item);}
+    window.SKORAttackDefense?.syncDefense(activeScene(),frame);
     interaction=null;renderPitch();queuePersist();
   }
   function changeOpponentFormation(){
     if(!draft)return;stopPreview();draft.opponentFormation=$("strategyOpponentFormation").value;
-    if(draft.opponentFormation!=="Custom / Freeform")draft.scenes.forEach(scene=>scene.subScenes.forEach(step=>{step.opponents=formationPositions(draft.opponentFormation,true);}));
+    if(draft.opponentFormation!=="Custom / Freeform")draft.scenes.forEach(scene=>{
+      const opponents=formationPositions(draft.opponentFormation,true);
+      if(window.SKORAttackDefense?.isGenerated(scene)&&scene.subScenes.length===3&&scene.subScenes[0].quickShape){
+        const views=window.SKORAttackDefense.views(opponents,opponents.find(p=>p.label==='GK').id,true);
+        scene.subScenes.forEach((step,i)=>{step.opponents=clone(i===1?views.defending:views.attacking);});
+      }else scene.subScenes.forEach(step=>{step.opponents=clone(opponents);});
+    });
     renderPitch();queuePersist();
   }
   function addScene(){
@@ -648,6 +712,7 @@
   }
   function startPreview(){
     const scene=activeScene();if(!scene)return;if(preview){stopPreview();return;}
+    window.SKORAttackDefense?.syncDefense(scene);
     const frames=scene.subScenes;if(!frames.length)return;
     const speed=SPEEDS[$("strategyAnimationSpeed")?.value]||SPEEDS.normal,started=performance.now(),sceneIndex=draft.scenes.indexOf(scene)+1;preview={raf:0};updatePreviewButton();
     const tick=now=>{
@@ -672,21 +737,32 @@
     const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(image,0,0,width,height);return ctx.getImageData(0,0,width,height).data;
   }
   async function exportGif(scene=activeScene(),context={}){
-    if(!scene||!scene.subScenes?.length)return;
-    const button=$("strategyExportGif"),original=button?.textContent;if(button){button.disabled=true;button.textContent="Building GIF…";}
-    setSharedStatus('Building "'+scene.name+'" locally on this device…');
+    if(exporting||!scene?.subScenes?.length||!window.SKORPortalCanWrite?.())return false;
+    const owner=String(lineApi()?.getCaptainKey?.()||''),sourceDraft=draft;
+    const current=()=>window.SKORPortalCanWrite?.()===true&&String(lineApi()?.getCaptainKey?.()||'')===owner&&draft===sourceDraft;
+    const snapshot=sceneForStorage(scene),options={title:context.title||draft?.title||'Match Strategy',source:context.source||draft?.source?.eventLabel||draft?.source?.label||'',showLanes:context.showLanes??draft?.showLanes!==false,showOpponents:context.showOpponents??draft?.showOpponents!==false,sceneIndex:Math.max(0,draft?.scenes?.indexOf(scene)??0)+1};
+    const button=$("strategyExportGif"),original=button?.textContent;
+    exporting=true;if(button){button.disabled=true;button.textContent="Building GIF…";}updateSharedControls();
+    setSharedStatus('Building "'+snapshot.name+'" locally on this device…');
     try{
       const {GIFEncoder,quantize,applyPalette}=await import("./vendor/gifenc/index.js");
-      const gif=GIFEncoder(),width=640,height=544,frames=scene.subScenes,speed=SPEEDS[$("strategyAnimationSpeed")?.value]||SPEEDS.normal;
-      const write=async(frame,delay)=>{const rgba=await framePixels(scene,frame,width,height,{...context,showLanes:context.showLanes??draft?.showLanes!==false}),palette=quantize(rgba,128,{format:"rgb444"}),indexed=applyPalette(rgba,palette,"rgb444");gif.writeFrame(indexed,width,height,{palette,delay,repeat:0});};
+      const gif=GIFEncoder(),width=640,height=544,frames=snapshot.subScenes,speed=SPEEDS[$("strategyAnimationSpeed")?.value]||SPEEDS.normal;
+      const write=async(frame,delay)=>{
+        if(!current())throw Error('Export stopped because the captain session or strategy changed.');
+        const rgba=await framePixels(snapshot,frame,width,height,options);
+        if(!current())throw Error('Export stopped because the captain session or strategy changed.');
+        const palette=quantize(rgba,128,{format:"rgb444"}),indexed=applyPalette(rgba,palette,"rgb444");
+        gif.writeFrame(indexed,width,height,{palette,delay,repeat:0});
+      };
       for(let i=0;i<frames.length;i++){
         if(button)button.textContent="GIF "+(i+1)+"/"+frames.length+"…";await write(frames[i],speed.hold);
         if(i<frames.length-1){const transitionFrames=5;for(let step=1;step<=transitionFrames;step++)await write(interpolateFrame(frames[i],frames[i+1],step/transitionFrames),speed.transition/transitionFrames);}
       }
-      gif.finish();downloadBlob(new Blob([gif.bytes()],{type:"image/gif"}),slug(context.title||draft?.title)+"-"+slug(scene.name)+".gif");
-      setSharedStatus('Exported "'+scene.name+'" as a looping GIF. Only this Scene Bundle was included.',"published");
-    }catch(error){console.error(error);setSharedStatus("Could not build the GIF: "+(error.message||error),"error");}
-    finally{if(button){button.disabled=false;button.textContent=original||"Export bundle GIF";}}
+      if(!current())throw Error('Export stopped because the captain session or strategy changed.');
+      gif.finish();downloadBlob(new Blob([gif.bytes()],{type:"image/gif"}),slug(options.title)+"-"+slug(snapshot.name)+".gif");
+      setSharedStatus('Exported "'+snapshot.name+'" as a looping GIF. Views remain editable; use Save Strategy to share them with captains.',"published");return true;
+    }catch(error){if(current()){console.error(error);setSharedStatus("Could not build the GIF: "+(error.message||error),"error");}return false;}
+    finally{exporting=false;if(button){button.disabled=false;button.textContent=original||"Export bundle GIF";}updateSharedControls();}
   }
   async function exportPng(){
     const scene=activeScene(),frame=activeSubScene(scene);if(!scene||!frame)return;
@@ -696,7 +772,18 @@
     }catch(error){alert("Could not create the strategy image. Please try again.");}
   }
 
+  function ensureDraftOwner(){
+    const owner=String(lineApi()?.getCaptainKey?.()||'');
+    if(draftCaptain===owner)return;
+    clearTimeout(saveTimer);stopPreview(false);draftCaptain=owner;quickBackup=null;quickUseSelectedSource=false;
+    draft=loadLocal()||freshDraft(currentSource());sharedRecord=null;strategyLibrary=[];bundleLibrary=[];
+    renderStrategyLibrary();renderBundleLibrary();setSharedStatus('Strategy workspace ready. Save a named strategy to share it with captains.');
+  }
   function bind(){
+    $('strategyLineupSource').addEventListener('change',()=>{quickUseSelectedSource=true;updateQuickControls();});
+    $('strategyQuickGif').addEventListener('click',createAttackDefenseGif);
+    $('strategyRestorePrevious').addEventListener('click',restorePreviousStrategy);
+    $('strategyShowOpponents').addEventListener('change',event=>{stopPreview(false);draft.showOpponents=event.target.checked;renderPitch();queuePersist();});
     $('strategyCloneAll').addEventListener('click',()=>openClone('strategy'));
     $('strategyCloneBundle').addEventListener('click',()=>openClone('bundle'));
     $('strategyCloneLineup').addEventListener('change',()=>refreshClonePreview(true));
@@ -728,11 +815,12 @@
     $("strategyExportGif").addEventListener("click",()=>exportGif());$("strategyExportPng").addEventListener("click",exportPng);
   }
   function init(){
-    if(initialized){refreshSources();return;}if(!$("strategyPitch"))return;
-    initialized=true;refreshSources();draft=loadLocal()||freshDraft(currentSource());bind();renderAll();renderStrategyLibrary();renderBundleLibrary();persist();refreshSharedStatus();
+    if(initialized){ensureDraftOwner();refreshSources();return;}if(!$("strategyPitch"))return;
+    initialized=true;refreshSources();ensureDraftOwner();bind();renderAll();renderStrategyLibrary();renderBundleLibrary();persist();refreshSharedStatus();
   }
   function activate(){init();refreshSources();renderAll();refreshSharedStatus();}
 
   window.SKORStrategy={init,activate,refreshSources,refreshSharedStatus,loadForMatch,cancelClone,getDraft:()=>clone(draft),renderExportSvg:()=>exportSvgMarkup(activeScene(),activeSubScene()),__test:{normalizeDraft,interpolateFrame,sceneForStorage,playersFromLineup,saveOrOverwriteStrategy,sharedPayload,bundlePayload}};
 })();
+
 

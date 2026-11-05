@@ -1,3 +1,13 @@
+## v58.35 — Editable Attack / Defense baseline
+
+Create Attack ↔ Defense GIF starts from the selected lineup and opponent formation. The Balanced baseline is a suggested tactical template: compact SKOR / attacking opponents, then wider/advanced SKOR / recovering opponents. Keepers initially stay fixed. The three ordinary steps are Defending, Attacking and Return to defending. The return mirrors defense while that three-step structure stays intact, producing a smooth loop with the existing encoder and player-event renderer. No new schema or player-sharing permission is introduced.
+
+Both teams, the ball and coaching marks remain editable. Save Strategy or Save Scene Bundle preserves those steps and their optional first-frame quickShape marker. Reopening and downloading an edited template uses its own saved snapshot rather than replacing it with the current board. Changing the Lineup source selector deliberately requests a different baseline. Extra/reordered steps retain normal manual animation control. New templates preserve the previous account-scoped draft behind Back to previous strategy; library writes and AI publication remain explicit.
+
+Show opponents in preview / GIF is a captain display/export option, stored only in local recovery. It hides opponent markup for captain SVG/PNG/GIF without erasing their coordinates; explicitly shared player animations and AI retain the normal full scenario. GIF title, views and visibility are snapshotted before asynchronous rendering; concurrent builds are blocked and session/role/editor changes cancel downloads.
+
+Run `npm run test:attack-defense` plus existing Strategy, lineup export, keeper, sharing/dues and privacy regressions. The new suite uses actual controller handlers and GIF encoder bytes with a synthetic pixel adapter; browser rasterization, device download and authenticated Supabase saves are not claimed as verified.
+
 # Strategy Scene Bundles and Animation
 
 Last updated: 2026-10-24 UTC
@@ -113,3 +123,4 @@ Only an explicitly AI-published scheduled-game Strategy is read by `generate-pre
 Clone the whole strategy or an individual bundle to a same-formation lineup, with a player-by-position preview. Add to current maps a saved bundle into the current strategy's lineup. Different formations and incomplete/unmappable squads block the operation. Every step, ball path, opponent and coaching mark is copied; target player/keeper identities replace source identities. Copies are independent drafts with insert-only first saves, fresh scene/step IDs and no source-library linkage. Explicit Edit original loads the original bundle's own lineup after confirmation.
 
 Review unchanged coaching notes/text labels for named players and strengths. Copies never auto-publish for AI, and AI-generated GIFs remain future work. Existing global preview-speed choices and GIF rendering are retained; this release does not introduce a new per-step timing schema. Full rules, limits and test evidence: [STRATEGY-REUSE.md](STRATEGY-REUSE.md).
+

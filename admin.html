@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.34-lineup-free-move" />
-  <title>SKOR FC Admin | Captain Portal v58.34</title>
+  <meta name="skor-build" content="captain-portal-v58.35-attack-defense-gif" />
+  <title>SKOR FC Admin | Captain Portal v58.35</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="guest-profiles.css?v=58.33" />
   <link rel="stylesheet" href="post-match-entry.css?v=58.26" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
-  <link rel="stylesheet" href="strategy.css?v=58.23" />
+  <link rel="stylesheet" href="strategy.css?v=58.35" />
   <link rel="stylesheet" href="ref-game-card.css?v=58.7" />
   <link rel="stylesheet" href="ribbon-order.css?v=58.3" />
   <style>
@@ -1899,7 +1899,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.34</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.35</div>
   </aside>
 
   <main>
@@ -3052,6 +3052,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
             <select id="strategyOpponentFormation"><option>4-4-2</option><option>4-3-3</option><option>4-2-3-1</option><option>4-5-1</option><option>3-5-2</option><option>3-2-3-2</option><option>3-4-3</option><option>5-3-2</option><option value="Custom / Freeform">Custom / Freeform</option></select>
           </div>
           <label class="strategy-check"><input id="strategyShowLanes" type="checkbox" checked> Show five vertical lanes</label>
+        </div>
+
+        <div class="panel strategy-quick-gif">
+          <div><h3>Attack ↔ Defense baseline</h3><p>One click creates a Balanced baseline from the selected lineup and downloads its GIF. Edit Defending and Attacking: drag either team and the ball, add coaching marks, then Save Strategy. The next GIF uses your edits. Return to defending stays in sync.</p></div>
+          <label class="strategy-check"><input id="strategyShowOpponents" type="checkbox" checked> Show opponents in preview / GIF</label>
+          <button class="btn btn-primary" id="strategyQuickGif" type="button">Create Attack ↔ Defense GIF</button>
+          <button class="btn btn-light" id="strategyRestorePrevious" type="button" hidden>Back to previous strategy</button>
         </div>
 
         <div class="strategy-scenes-row">
@@ -5490,7 +5497,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.34 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.35 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5529,7 +5536,8 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="post-match-entry.js?v=58.26"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="strategy-reuse.js?v=58.23"></script>
-<script src="strategy.js?v=58.28"></script>
+<script src="strategy-attack-defense.js?v=58.35"></script>
+<script src="strategy.js?v=58.35"></script>
 <script src="ref-game-card.js?v=58.28"></script>
 <script src="portal-activity.js?v=58.6"></script>
 <script>
