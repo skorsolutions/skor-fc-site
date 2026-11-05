@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.33-guest-attendance-review" />
-  <title>SKOR FC Admin | Captain Portal v58.33</title>
+  <meta name="skor-build" content="captain-portal-v58.34-lineup-free-move" />
+  <title>SKOR FC Admin | Captain Portal v58.34</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
@@ -1002,6 +1002,9 @@
       position:absolute;transform:translate(-50%,-50%);
       border:0;background:transparent;padding:0;margin:0;cursor:grab;z-index:6;
     }
+    .freeform-player{touch-action:none;user-select:none;-webkit-user-select:none}
+    .freeform-player.freeform-moving{cursor:grabbing;z-index:12}
+    .freeform-player:focus-visible{outline:3px solid #fff;outline-offset:3px;border-radius:8px}
     .freeform-player .player-peg{width:auto}
     .freeform-player .peg-name{max-width:68px}
     .freeform-player.mode-numbers .peg-name,
@@ -1896,7 +1899,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.33</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.34</div>
   </aside>
 
   <main>
@@ -3283,6 +3286,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
 <script src="match-jerseys-editor.js?v=58.28"></script>
 <script src="sub-wave-plan.js?v=58.27"></script>
 <script src="lineup-marker.js?v=58.13"></script>
+<script src="lineup-free-move.js?v=58.34"></script>
 <script src="keeper-editor.js?v=58.9"></script>
 <script src="ribbon-order.js?v=58.3"></script>
 <script src="temp-player-directory.js?v=58.3"></script>
@@ -3377,6 +3381,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   let lineupCopyContext=null;
   let realtimeChannel = null;
   let pitchSizeObserver=null,pitchObservedWidth=0;
+  let freeformMove=null;
   let inheritKeeperChoices=false;
   let state = blankState("4-2-3-1");
 
@@ -4122,6 +4127,14 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   function renderPitch(){
     const pitch=document.getElementById("lineupPitch");
     if(!pitch)return;
+    freeformMove?.cancel();
+    if(!freeformMove)freeformMove=window.SKORLineupFreeMove.mount({
+      pitch,bench:document.getElementById('lineupBench'),
+      getContext:()=>({board:state,event:selectedEventValue(),captain:captainKey,
+        freeform:isFreeform(state.formation),
+        canMove:window.SKORPortalCanWrite?.()===true&&document.getElementById('lineups')?.classList.contains('active')}),
+      getPosition:pid=>state.freeform?.[pid],onPlace:placeFreeform,onBench:movePlayerToBench
+    });
     pitch.style.minHeight='';
     pitch.querySelectorAll('.dynamic-pitch-item').forEach(el=>el.remove());
     pitch.classList.toggle('freeform-mode', isFreeform(state.formation));
@@ -4156,6 +4169,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
         btn.style.top=pt.y+'%';
         btn.dataset.v28Player=pid;
         btn.innerHTML=peg(p,false,true);
+        btn.querySelectorAll('[draggable]').forEach(el=>el.draggable=false);
         btn.addEventListener('click', e=>{
           e.stopPropagation();
           selectedPlayer=pid;
@@ -4331,6 +4345,13 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
     }));
   }
 
+  function movePlayerToBench(pid){
+    if(!pid)return;
+    removeFromField(pid);
+    if(!state.bench.includes(pid))state.bench.push(pid);
+    selectedPlayer=null;persistDraft();renderSquadChange();
+    markStatus((player(pid)?.name||'Player')+' moved to bench. Unsaved changes are only on this device.');
+  }
   function bindDrags(){
     document.querySelectorAll('[data-v28-player]').forEach(el=>{
       el.addEventListener('dragstart',()=>{ draggedPlayer=el.dataset.v28Player; });
@@ -5469,7 +5490,7 @@ body.viewer-mode .player-engagement-panel,body.viewer-mode .match-attendance-pan
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.33 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.34 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -7811,6 +7832,7 @@ loadAnnouncements();
 
 </body>
 </html>
+
 
 
 

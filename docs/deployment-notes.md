@@ -1,3 +1,14 @@
+# v58.34 — Strategy-style free movement in Freeform Lineup (prepared)
+
+2026-11-05 UTC. Implementation prepared; source publication and production verification pending.
+
+- On-field Freeform / Custom players follow the mouse, pen or finger continuously, using Strategy's Pointer Events/pointer-capture approach. Grabbing the edge of a shirt preserves the grip offset; release commits one position through the existing placement/draft path.
+- Tap-to-place, keyboard activation, roster/bench native dragging, standard formation slots and freeform drag-to-bench remain available. A completed drag consumes its release click. Interrupted gestures, rerenders, changed boards/games/accounts/roles and lost capture cancel without a save. Marker-only touch handling lets the rest of the page scroll.
+- Existing player keys, names, jersey/keeper/captain metadata, substitutions and shared variation JSON are preserved. Named shared saves, same-name overwrite and Production / Final updates remain explicit. Image preview/PNG/JPG, Strategy import and published renderers use the same freeform percentages; the SVG renderer is unchanged.
+- Affected files: `admin.html`, new `lineup-free-move.js`, `package.json`, new `tests/verify-lineup-free-move.mjs`, build-marker updates in the lineup-export/referee/Strategy-animation/captain-notifications suites, `docs/LINEUP-EXPORT.md`, `docs/PROJECT-HANDBOOK.md` and this note.
+- Verification: new behavioral suite passes pointer lifecycles, grip offsets, bounds, tap/click handling, cancellation/multi-pointer/stale-context guards, bench movement, real draft normalization, in-memory shared insert/overwrite/reload, actual SVG export and Strategy import. All 25 local suites pass (including the unchanged, hash-verified sanitized referee template); all inline scripts parse, auth/data-access code and the SVG renderer/formation map are byte-identical, and git diff whitespace checks pass. Chromium launch is blocked by executor socket permissions; visual phone/desktop and real signed-in Supabase saves remain unverified.
+- SQL/database: none required or performed. No Supabase migration, API/RLS/permission, production application-data or Edge Function change. No private test identities or credentials are added to source/docs. Player Portal, pregame version and homepage remain unchanged.
+
 # v58.33 — Ask captains to confirm unmarked guest attendance (deployed)
 
 2026-11-02 UTC. Cloudflare build `e998d069-9d84-4b84-a26b-1e060e9aa537` succeeded for source release [`7f0296457c5c6d334b0d8ae441f94593dc21c9ce`](https://github.com/skorsolutions/skor-fc-site/commit/7f0296457c5c6d334b0d8ae441f94593dc21c9ce); version `b78b268c-baf3-4b54-942c-b69e91874f5a`, deployment `a49dffcb-16b3-4d82-9982-8f5548727ef7`, is verified at 100% production traffic. Build completed at 2026-11-02 14:04:18 UTC. All 13 source hashes and the exact release file set match checked source; build logs confirm the same deployed version.
@@ -1100,6 +1111,7 @@ The connector cannot create a GitHub commit comment. This matching summary is re
 - Occupied field slots retain their tactical label (for example, `LB`, `CAM`, or `ST`) so the position remains visible beside the player.
 - Freeform placement is unchanged because the custom board does not use named formation slots.
 - Affected file: `admin.html`.
+
 
 
 

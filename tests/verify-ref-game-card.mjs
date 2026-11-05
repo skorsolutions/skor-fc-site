@@ -128,7 +128,7 @@ const keeperStyle=xfs.children[Number(refCard.__test.findCell(fakeDoc,'B11').get
 assert.equal(keeperStyle.getElementsByTagNameNS('','alignment')[0].getAttribute('wrapText'),'1');
 assert.equal(fonts.children[Number(keeperStyle.getAttribute('fontId'))].children[0].getAttribute('val'),'8','keeper rows fit both name and duty inside the one-page card');
 
-assert.match(admin,/captain-portal-v58\.33-guest-attendance-review/);
+assert.match(admin,/captain-portal-v58\.34-lineup-free-move/);
 assert.match(admin,/CAPTAIN PORTAL V57\.0/);
 assert.match(admin,/id="openRefGameCardBtn"/);
 assert.match(admin,/id="downloadRefGameCardExcel"/);
@@ -145,7 +145,7 @@ assert.match(css,/grid-template-rows:48px 158px minmax\(0,1fr\)/);
 assert.match(css,/\.ref-card-field-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-report-value\{height:25px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;/);
 assert.match(css,/\.ref-card-roster\{[^}]*font-size:12\.5px\}/);
-assert.match(handbook,/Current Captain Portal build: \*\*v58\.33\*\*/);
+assert.match(handbook,/Current Captain Portal build: \*\*v58\.34\*\*/);
 
 assert.ok(fs.existsSync(templatePath),"the sanitized Excel template must be present");
 const template=fs.readFileSync(templatePath);
@@ -172,4 +172,5 @@ assert.match(templateSheet,/r="A36"[^>]*>[\s\S]*?<x:v>26<\/x:v>/,"the final hand
 assert.doesNotMatch(templateSheet,/r="B31"/,"fixture must retain the originally omitted blank cell that caused the production error");
 
 console.log("Referee game-card verification passed.");
+
 

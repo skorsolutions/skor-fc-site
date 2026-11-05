@@ -2,6 +2,8 @@
 
 Status: **v55.2 production renderer contract**
 
+**v58.34 Freeform movement:** Continuous pointer movement commits to the existing saved freeform percentages on release. The gameplan SVG, PNG/JPG, Strategy import and published renderers consume the same state. Canonical bounds, geometry and the SVG renderer are unchanged. Drag previews do not alter the saved state until release. Shared Save/Final publication remains explicit.
+
 **v58.12 compact builder:** The field/picker workspace is compact and side by side. Builder coordinates and measured marker scaling are display-only. The gameplan SVG renderer is byte-for-byte unchanged from v58.11, including large keeper number, readable secondary number and keeper notes. Referee PDF/Excel are unchanged.
 
 **v58.11 export adjustment:** Only the small numeral in a keeper pair grows from 12 to 18 SVG pixels. The large numeral stays 32 and slash stays 12. A comparison against the previous renderer produced identical SVG after normalizing that one font size. All pitch geometry, roles, notes, names, bench, dimensions and referee behavior are unchanged. Builder-only spacing uses a separate display helper and measured layout; it never changes canonical/export coordinates.
@@ -91,4 +93,5 @@ The export image itself has a stable 1,080-pixel width for reliable sharing. The
 - Check Numbers Only and a TEMP player when those behaviors change.
 - Check a populated bench and enough substitution/Potential Position content to force export-height growth when layout code changes.
 - Confirm preview and PNG/JPG paths both call `buildGameplanSvg()`.
+
 
