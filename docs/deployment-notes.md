@@ -1,13 +1,24 @@
-# v58.37 — Opponents, AI match plans and Strategy edit lock (release verification)
+# v58.37 — Opponents, AI match plans and Strategy edit lock (deployed)
 
-2026-11-05 UTC. User requested the complete feature and explicitly authorized deployment.
+2026-11-05 UTC. User requested the complete feature and explicitly authorized deployment. Source release [`48590d14b85968cf2dd8ba5285f4aede147224a7`](https://github.com/skorsolutions/skor-fc-site/commit/48590d14b85968cf2dd8ba5285f4aede147224a7) is live. Cloudflare build `c8cfe266-16d4-4a24-be6d-b3478492e5f1` passed at 13:51:09 UTC; logs identify version `f6af8f2f-077b-437c-8e37-e3b36054bd4f`. Deployment `44f757c5-5630-401f-aa9d-c22582617d90` serves it at 100%. All 29 exact file hashes match tested sources; no source removals and all 20 original asset blobs are preserved.
 
 - New captain-only Opponents navigation contains shared team profiles, general tactics, dangerous players, dated expected/observed formations and linked past/upcoming games. Game Day opens the exact opponent; Strategy explicitly applies a dated immutable scouting snapshot and optional matching role labels.
 - Opponent notes feed the authenticated AI lineup/tactics mode and existing pregame talk, with opt-out, eligible-player filtering, structured identity validation, review and explicit local application. Existing Final/shared saves and AI publication remain deliberate actions.
 - Strategy starts locked for scrolling. Edit step unlocks both teams/ball/marks; Finish editing saves locally and locks; Cancel restores changes. Add/duplicate/switch/save/export require finishing. Both-team editable baseline and GIF remain.
 - Database: additive reviewed `20261105075301_opponents_scouting.sql` / `docs/sql/OPPONENTS-SCOUTING.sql`, four private RLS tables, captain-only guarded RPCs, exact fixture-link trigger and nullable private scouting snapshots on existing strategy/bundle records. Applied on SKOR FC, SHA-256 `90caa2f62dcb846e3d787fd8e993b74c6d58a0522bf319ef3781b9d2d7b0334c`. All eight live bodies and role ACLs match; real-role rollback checks pass, all 29 existing data fingerprints match and security advisors are unchanged. Nine opponent identities/eleven game links are derived; zero scouting observations invented. AI Edge Function v18 is ACTIVE with JWT verification and exact five-file readback. No authentication, billing or roster-record change is part of the release.
-- Verification: unit/controller/AI context suites, disposable Postgres 17 replay and role checks, and Chromium fictional-API browser workflow including real native GIF rasterization/download. All 29 suites and the Chromium flow pass; direct mobile touch-scroll and frontend production deployment receive a final verification below. Full workflow: `docs/OPPONENTS.md`.
+- Verification: unit/controller/AI context suites, disposable Postgres 17 replay and role checks, and Chromium fictional-API browser workflow including real native GIF rasterization/download. All 29 suites, Postgres 17 and the real Chromium flow pass on feature CI `42039006827` and production main CI `42039209520`, including native touch scrolling over the locked board, edit/finish/cancel, step guards, shared scouting snapshot persistence, local AI lineup/Strategy application and actual native SVG/canvas GIF download. Manual opponent creation/rename, candidate exclusion, UTF-8 snapshot bounds and mocked Edge auth/context/output tests pass. Production opponent, guest-participation and post-match role checks all roll back; 29 original data fingerprints still match. Browser APIs and provider responses use fictional fixtures; live Google login and paid AI output were not exercised. Full workflow: `docs/OPPONENTS.md`.
 - Affected: Captain admin/navigation, Strategy controller, new opponent/AI modules and stylesheet; generate-pregame-talk and packaged pure modules; migration and database/browser/unit tests; handbook and release documentation. Player Portal v58.28 and homepage v58.15 remain.
+
+Release summary (same as chat; commit-comment posting unavailable):
+
+**Skor FC v58.37 is live.**
+
+- **Opponents:** profiles, formation history and dangerous-player notes feed Strategy and AI lineup recommendations.
+- **Strategy lock:** tap **Edit step**, then **Finish editing** before adding steps. **Cancel** restores positions.
+
+29 suites plus browser, touch-scrolling and GIF checks passed. Database and AI updates are deployed. [Release](https://github.com/skorsolutions/skor-fc-site/commit/48590d14b85968cf2dd8ba5285f4aede147224a7). Browser tests used fixture data; live AI generation wasn’t exercised.
+
+Release notes contain this summary; commit comments are unavailable.
 
 # v58.36 — Load the saved lineup’s own players for Attack / Defense GIF (deployed)
 
