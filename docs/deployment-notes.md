@@ -1,4 +1,4 @@
-# Homepage v58.38 — Recover newly published games after the built-in schedule ends
+# Homepage v58.38 — Recover newly published games after the built-in schedule ends (deployed)
 
 2026-11-14 UTC. User requested repair and public visibility of the newly scheduled November 15 game. Public homepage only; Captain Portal remains v58.37 and Player Portal remains v58.28.
 
@@ -8,7 +8,21 @@
 - Affected files: `index.html`, `tests/browser-home-schedule.mjs`, `.github/workflows/home-schedule.yml`, handbook and this note.
 - Verification before publication: original renderer reproduces the null-element TypeError; corrected renderer recovers the delayed fixture; inline scripts parse. New Chromium CI covers expired fallback → delayed publication, authoritative empty → republished, repeated refreshes, transient errors/retry, logos/links, Eastern times for a visitor in another timezone, and phone/desktop geometry. Browser CI and Cloudflare deployment are pending at source publication.
 - SQL/database: read-only diagnostics and anonymous visibility checks only. No migration, data write, RLS/grant, API, Edge Function or Captain Portal change. No private fixtures are committed.
-- Commit-comment creation is unavailable through the connected GitHub tools; final verification and matching release summary will be recorded here and in chat.
+- Production verification: source commit `56860b32495f6c2711d781ce0481294bbd00eef7` passed Cloudflare build `b121a4c4-0f95-4ea1-a651-247c946f1fdc` at 22:05:07 UTC; deployment `e59746fa-bdff-42eb-8752-3845cca86b3c` serves version `f1ba6cdb-425f-4000-8b13-c99bbe1bfd9f` at 100%. All five published files were independently read back against reviewed content. Follow-up test commit `ac09a0d8a6ca181b983f568dcab2796d20b3e300` corrects assertions to semantic text (CSS uppercases the visible headings) and adds a real signed-out production browser read; application code is identical.
+- CI `43646326891` passes delayed/empty/retry and phone/desktop browser scenarios plus an actual signed-out live check. Its output at 22:07:01 UTC confirms homepage next-game slug `2026-11-15-concord-fc-playoff` and the correct Match Center link. Existing 29 suites, disposable database role checks and captain browser flow pass in CI `43646326854`. The published lineup was independently verified with the anonymous public RPC; no personal records or lineup data were rewritten.
+- Commit-comment creation remains unavailable through the connected GitHub tools. Matching release summary is recorded here and in chat:
+
+Fixed and live: **homepage v58.38**. An expired built-in schedule broke the homepage before newly added games could display.
+
+Confirmed without signing in:
+
+- **November 15 vs Concord FC** appears on the homepage.
+- The match link works, and your published lineup is publicly readable.
+- **11:00 a.m. kickoff · 10:45 a.m. arrival · East Roswell Park SC #2.**
+
+Phone/desktop browser and all 29 existing regression suites passed. No database changes.
+
+[Fix details](https://github.com/skorsolutions/skor-fc-site/commit/56860b32495f6c2711d781ce0481294bbd00eef7).
 
 # v58.37 — Opponents, AI match plans and Strategy edit lock (deployed)
 
