@@ -23,4 +23,4 @@ jobs:
             "$RUNNER_TEMP/home-browser/node_modules/.bin/playwright" install --with-deps --only-shell chromium
           fi
       - name: Verify delayed publications on phone and desktop
-        run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/home-browser/node_modules/playwright" node tests/browser-home-schedule.mjs
+        run: SKOR_HOME_LIVE="https://skorfc.net/" SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/home-browser/node_modules/playwright" node tests/browser-home-schedule.mjs
