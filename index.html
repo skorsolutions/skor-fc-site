@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="public-home-v58.15-kit-labels">
+<meta name="skor-build" content="public-home-v58.38-schedule-recovery">
 <title>SKOR FC | Over 30 Soccer in Roswell, Georgia</title>
 <meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, player season stats, practices, and club updates.">
 <style>
@@ -827,16 +827,19 @@ async function loadPublicMatchClocks(){
   }catch(err){console.info("Public match clock unavailable:",err?.message||err);}
 }
 
+// Keep the original card so an empty fallback or empty published schedule can recover.
+const NEXT_MATCH_CARD_MARKUP=document.getElementById("nextMatchCard").innerHTML;
 function renderNextMatch(game){
   const card=document.getElementById("nextMatchCard");
-  const title=document.getElementById("nextMatchTitle");
-  const meta=document.getElementById("nextMatchMeta");
-  const logos=document.getElementById("nextMatchLogos");
-  const link=document.getElementById("matchCenterLink");
   if(!game){
     card.innerHTML=`<div class="match-complete"><div class="match-label">2026 Season</div><h2>No upcoming matches scheduled</h2><a class="btn btn-secondary" style="margin-top:14px" href="matches.html#past">Past Matches</a></div>`;
     return;
   }
+  if(!document.getElementById("nextMatchTitle"))card.innerHTML=NEXT_MATCH_CARD_MARKUP;
+  const title=document.getElementById("nextMatchTitle");
+  const meta=document.getElementById("nextMatchMeta");
+  const logos=document.getElementById("nextMatchLogos");
+  const link=document.getElementById("matchCenterLink");
   const date=gameDate(game);
   const label=statusLabel(game.status);
   document.querySelector("#nextMatchCard .match-label").innerHTML=`${label}${isLiveStatus(game.status)?'<span class="live-pill">LIVE</span>':game.status==='final'?'<span class="live-pill final">FINAL</span>':''}`;
@@ -882,8 +885,8 @@ function updateSchedule(){
 async function loadMatchCenterData(){
   try{
     const {data,error}=await publicDb.from("matches").select("id,slug,kickoff,arrival_at,status,home_team,away_team,location,home_logo,away_logo,published").eq("published",true).order("kickoff",{ascending:true});
-    if(error || !data?.length){ if(error) console.info("Match Center using schedule fallback:",error.message); updateSchedule(); return; }
-    MATCHES=data.map(normalizeMatch);
+    if(error){ console.info("Match Center using schedule fallback:",error.message); updateSchedule(); return; }
+    MATCHES=(data||[]).map(normalizeMatch);
 
     updateSchedule();
   }catch(err){ console.info("Match Center using schedule fallback:",err); updateSchedule(); }

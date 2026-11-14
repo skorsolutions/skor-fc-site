@@ -1,0 +1,26 @@
+name: Homepage schedule recovery
+on:
+  push:
+    branches: [main]
+    paths: [index.html, tests/browser-home-schedule.mjs, .github/workflows/home-schedule.yml]
+  pull_request:
+    paths: [index.html, tests/browser-home-schedule.mjs, .github/workflows/home-schedule.yml]
+jobs:
+  homepage-browser:
+    timeout-minutes: 6
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install isolated browser runner
+        run: |
+          npm install --prefix "$RUNNER_TEMP/home-browser" --save-exact playwright@1.56.1
+          if command -v google-chrome >/dev/null; then
+            echo "SKOR_CHROMIUM_EXECUTABLE=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          else
+            "$RUNNER_TEMP/home-browser/node_modules/.bin/playwright" install --with-deps --only-shell chromium
+          fi
+      - name: Verify delayed publications on phone and desktop
+        run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/home-browser/node_modules/playwright" node tests/browser-home-schedule.mjs

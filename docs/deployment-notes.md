@@ -1,3 +1,15 @@
+# Homepage v58.38 — Recover newly published games after the built-in schedule ends
+
+2026-11-14 UTC. User requested repair and public visibility of the newly scheduled November 15 game. Public homepage only; Captain Portal remains v58.37 and Player Portal remains v58.28.
+
+- Root cause: the immediate expired built-in fallback replaced the Next Match card with empty-state markup. When the asynchronous published match query returned, the renderer accessed elements it had removed and aborted before updating Upcoming Games.
+- Preserve the initial card template and restore it before rendering a later match. Ordinary refreshes retain existing card/clock nodes. Successful empty published responses clear removed matches; request failures preserve the last successful schedule or built-in fallback.
+- Existing published-match query and public Production / Final lineup RPC remain authoritative. Verified anonymously that the November 15 scheduled game is published and its official lineup is readable. No publication flags or lineup records were changed.
+- Affected files: `index.html`, `tests/browser-home-schedule.mjs`, `.github/workflows/home-schedule.yml`, handbook and this note.
+- Verification before publication: original renderer reproduces the null-element TypeError; corrected renderer recovers the delayed fixture; inline scripts parse. New Chromium CI covers expired fallback → delayed publication, authoritative empty → republished, repeated refreshes, transient errors/retry, logos/links, Eastern times for a visitor in another timezone, and phone/desktop geometry. Browser CI and Cloudflare deployment are pending at source publication.
+- SQL/database: read-only diagnostics and anonymous visibility checks only. No migration, data write, RLS/grant, API, Edge Function or Captain Portal change. No private fixtures are committed.
+- Commit-comment creation is unavailable through the connected GitHub tools; final verification and matching release summary will be recorded here and in chat.
+
 # v58.37 — Opponents, AI match plans and Strategy edit lock (deployed)
 
 2026-11-05 UTC. User requested the complete feature and explicitly authorized deployment. Source release [`48590d14b85968cf2dd8ba5285f4aede147224a7`](https://github.com/skorsolutions/skor-fc-site/commit/48590d14b85968cf2dd8ba5285f4aede147224a7) is live. Cloudflare build `c8cfe266-16d4-4a24-be6d-b3478492e5f1` passed at 13:51:09 UTC; logs identify version `f6af8f2f-077b-437c-8e37-e3b36054bd4f`. Deployment `44f757c5-5630-401f-aa9d-c22582617d90` serves it at 100%. All 29 exact file hashes match tested sources; no source removals and all 20 original asset blobs are preserved.
