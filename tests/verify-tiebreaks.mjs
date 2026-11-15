@@ -24,6 +24,7 @@ assert.equal(c.SKORPostMatch.totals(draft).skor,2);assert.equal(c.SKORPostMatch.
 assert.equal(c.SKORPostMatch.submission(draft).p_upserts.length,3);
 const admin=fs.readFileSync('admin.html','utf8');
 for(const a of ['end_regulation','start_extra_first_half','extra_halftime','start_extra_second_half','start_shootout'])assert.ok(admin.includes('data-clock-action="'+a+'"'));
+assert.ok(admin.includes('<option value="extra_time">Overtime</option>'));assert.ok(admin.includes('<option value="shootout">Penalty shootout</option>'));
 const sql=fs.readFileSync('docs/sql/MATCH-TIEBREAKS.sql','utf8');
 assert.ok(sql.includes('enable row level security'));assert.ok(sql.includes("errcode='40001'"));assert.ok(sql.includes('No more kicks can follow a decided shootout'));
 assert.ok(!sql.includes('update public.player_match_attendance'));
