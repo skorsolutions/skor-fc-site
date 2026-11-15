@@ -1,4 +1,4 @@
-# v58.39 — Continued post-game recording, clearer kickoff, overtime and shootout (database applied; frontend rollout pending)
+# v58.39 — Continued post-game recording, clearer kickoff, overtime and shootout (deployed)
 
 2026-11-15 UTC. User approved deployment of the complete tested release and exact database update.
 
@@ -6,10 +6,21 @@
 - The full-width Start game — 1st half action, plain wording, running feedback and exception-safe controls clarify kickoff.
 - Live and retrospective overtime have two editable 5-minute halves and a golden-goal choice. The separate captain shootout log has configurable initial kicks, first team, optional kicker, scored/missed results, early clinch and paired sudden death. Kicks never inflate match/player goals.
 - Captain, Crowd, public Home/Match Center and shared clock labels understand overtime/shootout phases. Existing public score privacy and the player-stat event source remain. Attendance, lineup/export data, payments, Player Portal source and Edge Functions are unchanged.
-- User approved database deployment on 2026-11-15. Exact reviewed SQL (2e1a78f52c503f8b8188bafd2e77348267f2844fc53822eafa06201991503d58) is applied as migration `20261115195600 add_match_overtime_and_shootouts`; the server-generated migration filename is `20261115195600_add_match_overtime_and_shootouts.sql`. All eight stored bodies match the reviewed text, private-table RLS/direct ACLs and API role boundaries pass, and security/performance advisors remain unchanged (6/4). Real captain and ordinary-player checks verified live/post-game overtime, golden-goal progression, editable normal halves, separate shootout persistence/finalization, exact receipts and conflicts, anonymous/private-match denials. All test writes rolled back: all 65 original table fingerprints match, and both new private tables are empty. Frontend deployment is the remaining release step.
-- Verification: all 30 suites, native phone/desktop goal/save/continue, kickoff errors, editable settings and shootout persistence, and disposable PostgreSQL 17 role/replay checks passed on tested source `e71fd8663f32c619f2207316e3bca85863357fa3`, CI `43754284819`. Original GitHub source was read back by exact blob hashes. Production frontend build verification follows publication. Browser scenarios use fictional APIs; production DB checks use real roles in a rolled-back transaction.
+- User approved database deployment on 2026-11-15. Exact reviewed SQL (2e1a78f52c503f8b8188bafd2e77348267f2844fc53822eafa06201991503d58) is applied as migration `20261115195600 add_match_overtime_and_shootouts`; the server-generated migration filename is `20261115195600_add_match_overtime_and_shootouts.sql`. All eight stored bodies match the reviewed text, private-table RLS/direct ACLs and API role boundaries pass, and security/performance advisors remain unchanged (6/4). Real captain and ordinary-player checks verified live/post-game overtime, golden-goal progression, editable normal halves, separate shootout persistence/finalization, exact receipts and conflicts, anonymous/private-match denials. All test writes rolled back: all 65 original table fingerprints match, and both new private tables are empty. Frontend deployment is complete.
+- Verification: all 30 suites, native phone/desktop goal/save/continue, kickoff errors, editable settings and shootout persistence, and disposable PostgreSQL 17 role/replay checks passed on tested source `e71fd8663f32c619f2207316e3bca85863357fa3`, CI `43754284819`. Original GitHub source was read back by exact blob hashes. Production frontend verification passed. Browser scenarios use fictional APIs; production DB checks use real roles in a rolled-back transaction.
 - Affected files: Captain admin, post-match and new tiebreak controllers/styles, shared public clock, Home/Match Center/Crowd labels, approved SQL plus matching server-generated migration copy, unit/browser/database fixtures, build-marker tests, package command and documentation. Workflow: `docs/MATCH-TIEBREAKS.md`.
-- Connected GitHub tools still have no commit-comment creation operation. The matching final summary will be recorded here and in chat after production verification.
+- Production source [`66ae79eb066169dabd74233835bc09d5e351ff2c`](https://github.com/skorsolutions/skor-fc-site/commit/66ae79eb066169dabd74233835bc09d5e351ff2c) is live. Cloudflare build `2c14cc67-7c1a-44de-8bd0-583d4838a4ce` succeeded at 2026-11-15T20:39:33.283Z; deployment `f59c5c8f-918f-45e4-85d5-c8834adf0295` serves version `e7ee3dd8-8eb0-4b05-9028-9ba6d0d7b5ec` at 100%. The initial complete release `d95c162fb130aa5e5e0d1a0a0e2d386a1c8dc74d` also passed all three main workflows, including the real signed-out production homepage check (`43755702947`). The final Schedule compatibility follow-up passes main CI `43759287158` and `43759287163`: all 30 unit/controller suites, native phone/desktop controls and complete shootout UI, and disposable PostgreSQL replay/roles. All 29 release files are scoped, zero files removed and all 20 original asset blobs preserved; application/test blobs were independently verified against local source.
+- Connected GitHub tools still have no commit-comment creation operation. Matching release summary is recorded here and in chat:
+
+**v58.39 is live. Refresh the Captain Portal once.**
+
+- After saving, tap **Add more goals or cards** to continue.
+- Use **Start game — 1st half** for kickoff.
+- Overtime supports two editable **5-minute halves**, golden goal, and a separate penalty shootout with sudden death.
+
+For today’s finished game, use **Record after game → This match had overtime**. Enter penalties in **Overtime & penalty shootout**.
+
+Database, browser and permission checks passed; existing records were preserved. [Release](https://github.com/skorsolutions/skor-fc-site/commit/66ae79eb066169dabd74233835bc09d5e351ff2c).
 
 # Homepage v58.38 — Recover newly published games after the built-in schedule ends (deployed)
 
