@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {webcrypto} from 'node:crypto';
+const ctx=vm.createContext({crypto:webcrypto});vm.runInContext(fs.readFileSync('match-tiebreaks.js','utf8'),ctx);
+const clone=x=>JSON.parse(JSON.stringify(x)),nodes=new Map();
+function node(id){if(!nodes.has(id))nodes.set(id,{id,innerHTML:'',parentNode:null,listeners:new Map(),querySelector:()=>null,addEventListener(kind,fn){assert(!this.listeners.has(kind),'one delegated listener per root');this.listeners.set(kind,fn);},appendChild(n){n.parentNode=this;}});return nodes.get(id);}
+let actor='captain',allow=true,canSave=true,goalBusy=false,writeFailure=false,writeDelay=null;
+let stored={match_id:'m',revision:0,extra_minutes:5,golden_goal:true,initial_kicks:5,first_team:'skor',shots:[],completed:false,participants:[]};
+const writes=[],client={auth:{getSession:async()=>({data:{session:{user:{id:actor}}}})},rpc:async(name,p)=>{
+  if(name==='get_match_tiebreak')return {data:clone(stored)};
+  writes.push(clone(p));if(writeDelay)return await writeDelay;if(writeFailure)return {error:{message:'Fixture offline'}};
+  assert.equal(p.p_revision,stored.revision);stored={...stored,...clone(p.p_payload),revision:stored.revision+1};return {data:{ok:true,revision:stored.revision}};
+}};
+const api=ctx.SKORTiebreaks.mount({client,getContext:()=>({userId:actor,canUse:allow,matchId:'m'}),doc:{getElementById:node}});
+api.configurePostMatch({canSave:()=>canSave,isBusy:()=>goalBusy});await api.load();
+const click=(kind)=>node('matchTiebreaks').listeners.get('click')({target:{closest:()=>({disabled:false,dataset:{tb:kind}})}});
+click('scored');assert.equal(api.state().shots.length,1);assert.equal(api.isDirty(),true);
+node('matchTiebreakSettings').listeners.get('change')({target:{dataset:{tbSetting:'extra_minutes'},value:'7',type:'number'}});
+await api.save('settings');assert.equal(writes.at(-1).p_payload.shots.length,0,'saving outside overtime settings cannot commit a hidden penalty draft');
+assert.equal(stored.extra_minutes,7);assert.equal(api.state().shots.length,1,'unsaved kick remains in the post-game draft');assert.equal(api.isDirty(),true);
+canSave=false;const count=writes.length;assert.equal(await api.save(),false);assert.equal(writes.length,count,'unsaved match events block shootout writes');assert(node('matchTiebreaks').innerHTML.includes('Save the match goals and cards below first'));
+canSave=true;goalBusy=true;assert.equal(await api.save(),false);assert.equal(writes.length,count);goalBusy=false;
+writeFailure=true;await api.save();const retryId=writes.at(-1).p_request_id;assert.equal(api.state().shots.length,1);assert.equal(api.isBusy(),false);
+writeFailure=false;assert.equal(await api.save(),true);assert.equal(writes.at(-1).p_request_id,retryId,'unchanged uncertain save retries retain the same receipt');assert.equal(stored.shots.length,1);assert.equal(api.isDirty(),false);
+const savedId=stored.shots[0].id,host=node('modal-shootout-host');api.attach(host);assert.equal(node('matchTiebreaks').parentNode,host);api.detach();assert.equal(node('matchTiebreaks').parentNode,node('postMatchTiebreakParking'));
+api.attach(host);assert.equal(api.state().shots[0].id,savedId,'moving the editor preserves the canonical kick and draft');
+let release;writeDelay=new Promise(r=>release=r);click('missed');const pending=api.save();await Promise.resolve();await Promise.resolve();actor='another-captain';api.contextChanged();release({data:{ok:true,revision:99}});await pending;assert.equal(api.state(),null,'late replies cannot restore the previous captain draft');assert.equal(node('matchTiebreaks').innerHTML,'');
+const admin=fs.readFileSync('admin.html','utf8'),post=fs.readFileSync('post-match-entry.js','utf8');assert(admin.includes('id="postMatchTiebreakParking" hidden'));assert(admin.includes('id="matchTiebreakSettings"'));assert(admin.includes('shootoutEditor:tiebreaks'));assert(post.includes('This match went to penalties'));assert(post.includes('Save match goals and cards'));
+console.log('Post-game penalties: one shared editor, guarded save order, hidden-draft isolation, unchanged retry receipts, stable kick IDs across moves and account cancellation pass.');

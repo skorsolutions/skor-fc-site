@@ -1,4 +1,4 @@
-# Match periods and shootouts — v58.39 (deployed)
+# Match periods and shootouts — v58.40 (UI prepared; v58.39 database deployed)
 
 ## Captain workflow
 
@@ -8,7 +8,7 @@ Record after game continues to save a reviewed diff against official event IDs. 
 
 For an already finished game, turn on **This match had overtime** in Record after game. Overtime 1st Half and Overtime 2nd Half have the same goal/assist/card entry controls, and save atomically with regulation events. Overtime goals count toward match goals and player stats. Historical event times are never fabricated.
 
-Overtime & penalty shootout is a separate disclosure beside the captain clock. Save the competition settings before starting overtime: two **5-minute** halves by default, editable to 1–30 minutes each; golden goal can be enabled or disabled. Initial shootout kicks default to 5 per team, editable to 1–20. First team to kick is explicit. These settings and kicks are shared per match. Unopened sections do not create results.
+Overtime settings remain beside the captain clock: two **5-minute** halves by default, editable to 1–30 minutes; golden goal can be enabled or disabled. Penalty entry is inside **Record after game**, directly below overtime, behind **This match went to penalties**. Initial kicks and first team are set there. Existing saved kicks open automatically; one shared editor/draft survives goal-counter rerenders and reopening. Save match goals and cards first, then **Save penalty shootout**. A shootout save refreshes the event revision so later goal/card corrections use the latest baseline. Outside overtime-settings saves include only the last acknowledged kicks, never an unseen penalty draft. Existing APIs and storage are reused; the relocation requires no database migration.
 
 Live progression: End regulation → Start overtime 1st half → Overtime halftime → Start overtime 2nd half → Start penalty shootout if tied. Pause/resume work during overtime. Golden goal keeps the referee authoritative: after the first overtime goal, confirm **Full Time** at the whistle. A second period cannot start after an unequal golden-goal score; normal overtime still allows the second half when a team is ahead. Entering completed history never requires starting a clock. Reopening a finished match for live play requires confirmation.
 

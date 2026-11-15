@@ -36,3 +36,7 @@ Exact prepared SQL SHA-256: `df33466f470006b0772309b5078ad5fd3b0c1493d3aba690741
 ## v58.39 approved fixes
 
 After confirmed saving, Add more goals or cards reloads the latest authoritative events/revision before further edits. The saved form itself cannot be resubmitted. A new intentional save has a fresh receipt. Overtime has independently labeled extra_first / extra_second periods; shootout kicks stay in the separate captain panel and never inflate player goals. See [MATCH-TIEBREAKS.md](MATCH-TIEBREAKS.md). Approved migration `20261115195600 add_match_overtime_and_shootouts` is applied. Exact bodies/ACLs, real-role rollback checks and original data fingerprints pass; frontend deployment is complete.
+
+## v58.40 penalty entry in this form (prepared)
+
+This match went to penalties appears below the overtime periods. It hosts the existing shootout editor and saved kicks inside Record after game; the live-clock area retains overtime settings only. Match goals/cards and penalties use explicit separate save buttons; pending event edits block shootout submission until saved. Save ordering, one-editor identity/draft preservation, retry receipts, context cancellation and refreshing the event revision after shootout saves preserve persistence. No SQL/API/permission or production data change is needed.

@@ -1,7 +1,7 @@
 name: Match periods and post-game recording
 on:
   push:
-    branches: [main, feature/match-periods]
+    branches: [main, feature/match-periods, feature/post-match-penalties]
   pull_request:
 jobs:
   database:

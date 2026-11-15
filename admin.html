@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.39-match-periods" />
-  <title>SKOR FC Admin | Captain Portal v58.39</title>
+  <meta name="skor-build" content="captain-portal-v58.40-post-match-penalties" />
+  <title>SKOR FC Admin | Captain Portal v58.40</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
   <link rel="stylesheet" href="team-dues.css?v=58.25" />
   <link rel="stylesheet" href="guest-profiles.css?v=58.33" />
-  <link rel="stylesheet" href="post-match-entry.css?v=58.39" />
-  <link rel="stylesheet" href="match-tiebreaks.css?v=58.39" />
+  <link rel="stylesheet" href="post-match-entry.css?v=58.40" />
+  <link rel="stylesheet" href="match-tiebreaks.css?v=58.40" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
   <link rel="stylesheet" href="strategy.css?v=58.35" />
   <link rel="stylesheet" href="opponents.css?v=58.37" />
@@ -1906,7 +1906,7 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.39</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.40</div>
   </aside>
 
   <main>
@@ -2074,7 +2074,7 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
               <button class="sub-alarm-stop" id="subAlarmStop" type="button" hidden>Stop alarm</button>
             </section>
           </div>
-          <div class="match-tiebreaks" id="matchTiebreaks"></div>
+          <div class="match-tiebreaks" id="matchTiebreakSettings"></div>
         </div>
 
         <div class="scoreboard-admin gameday-score-panel">
@@ -3265,6 +3265,7 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
     </section>
   
     <dialog class="pm-dialog" id="postMatchDialog" aria-labelledby="postMatchTitle"><div class="pm-header"><h2 id="postMatchTitle">Record after game</h2><button type="button" data-pm="close" aria-label="Close post-match entry">×</button></div><div id="postMatchBody"></div></dialog>
+    <div id="postMatchTiebreakParking" hidden><div class="match-tiebreaks" id="matchTiebreaks"></div></div>
     <dialog class="dues-dialog team-dues" id="guestCaptainDialog"><div data-gp-dialog-body></div><p class="dues-error" data-gp-error role="alert"></p><button type="button" data-gp="close">Close</button></dialog>
     <dialog class="lineup-copy-dialog" id="copyLineupDialog">
       <div class="lineup-copy-shell">
@@ -5525,7 +5526,7 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.39 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.40 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5567,8 +5568,8 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
 <script src="captain-notifications.js?v=58.20"></script>
 <script src="team-dues.js?v=58.28"></script>
 <script src="guest-profiles.js?v=58.33"></script>
-<script src="post-match-entry.js?v=58.39"></script>
-<script src="match-tiebreaks.js?v=58.39"></script>
+<script src="post-match-entry.js?v=58.40"></script>
+<script src="match-tiebreaks.js?v=58.40"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="opponent-scouting.js?v=58.37"></script>
 <script src="opponents.js?v=58.37"></script>
@@ -5906,7 +5907,7 @@ const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.ge
 const gameClockDisplay=document.getElementById("gameClockDisplay"),gameClockPhase=document.getElementById("gameClockPhase"),gameClockSecondary=document.getElementById("gameClockSecondary"),gameClockAlert=document.getElementById("gameClockAlert"),gameClockHalfLength=document.getElementById("gameClockHalfLength"),gameClockSubInterval=document.getElementById("gameClockSubInterval"),gameClockActions=document.getElementById("gameClockActions"),gameClockSubAlert=document.getElementById("gameClockSubAlert"),eventClockPreview=document.getElementById("eventClockPreview");
 const substitutionAlarm=window.SKORSubstitutionAlarm.mount({rootId:'substitutionAlarm',getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id,matchStatus:gameDaySelected?.status})});
 const tiebreaks=window.SKORTiebreaks.mount({client:sb,getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id||null}),onSaved:async mid=>{const actor=captainActivityUser,token=portalSessionVersion;const r=await sb.from("matches").select("status,current_half").eq("id",mid).single();if(gameDaySelected?.id!==mid||captainActivityUser!==actor||portalSessionVersion!==token)return;if(r.error)throw r.error;Object.assign(gameDaySelected,r.data);renderGameDay();await loadCrowdAdmin();void guestDirectory?.refresh();}});
-const postMatchEntry=window.SKORPostMatch.mount({client:sb,
+const postMatchEntry=window.SKORPostMatch.mount({client:sb,shootoutEditor:tiebreaks,
   getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id||null}),
   onSaved:async matchId=>{await loadGameDayMatches(matchId);await loadDashboardAttendance();void guestDirectory?.refresh();}
 });

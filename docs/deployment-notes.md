@@ -1,3 +1,14 @@
+# v58.40 — Record penalties inside Record after game (prepared)
+
+2026-11-15 UTC. User requested penalty recording in the post-game form shown in their screenshot.
+
+- Added This match went to penalties below overtime. The existing shootout editor, settings, optional kickers, scored/missed results and saved kick history appear there; overtime length/golden-goal settings remain beside the clock.
+- One editor instance and shared draft move into the modal; match counter rerenders and modal reopening preserve kick IDs/drafts. Match goals/cards and shootout saves are explicitly labeled. Unsaved match events must be saved first; a shootout save refreshes the event baseline to avoid a stale next correction.
+- Outside overtime-settings saves use acknowledged kicks, so they cannot silently publish a hidden penalty draft. Existing version checks, receipt retries, role/account cancellation and goal/stat separation remain.
+- No SQL migration, schema/API/permissions, Edge Function or production data correction. The approved v58.39 backend is reused unchanged.
+- Scope: admin mount/markup/build, post-match and tiebreak controllers, post-match styles, unit/browser/build-marker tests, package/workflow and documentation. Public pages, Player Portal, clock semantics and lineup exports are unchanged.
+- Verification in progress: existing 30 suites plus new save-order/draft/receipt/account test; native phone/desktop modal placement, draft preservation, ordered saves, subsequent card edit and reopen checks. Production publication follows successful CI.
+
 # v58.39 — Continued post-game recording, clearer kickoff, overtime and shootout (deployed)
 
 2026-11-15 UTC. User approved deployment of the complete tested release and exact database update.
