@@ -19,6 +19,7 @@ click('scored');assert.equal(api.state().shots.length,1);assert.equal(api.isDirt
 node('matchTiebreakSettings').listeners.get('change')({target:{dataset:{tbSetting:'extra_minutes'},value:'7',type:'number'}});
 await api.save('settings');assert.equal(writes.at(-1).p_payload.shots.length,0,'saving outside overtime settings cannot commit a hidden penalty draft');
 assert.equal(stored.extra_minutes,7);assert.equal(api.state().shots.length,1,'unsaved kick remains in the post-game draft');assert.equal(api.isDirty(),true);
+node('matchTiebreakSettings').listeners.get('click')({target:{closest:()=>({disabled:false,dataset:{tb:'reload-settings'}})}});assert.equal(api.state().shots.length,1,'outside settings reload cannot discard a hidden penalty draft');
 canSave=false;const count=writes.length;assert.equal(await api.save(),false);assert.equal(writes.length,count,'unsaved match events block shootout writes');assert(node('matchTiebreaks').innerHTML.includes('Save the match goals and cards below first'));
 canSave=true;goalBusy=true;assert.equal(await api.save(),false);assert.equal(writes.length,count);goalBusy=false;
 writeFailure=true;await api.save();const retryId=writes.at(-1).p_request_id;assert.equal(api.state().shots.length,1);assert.equal(api.isBusy(),false);
