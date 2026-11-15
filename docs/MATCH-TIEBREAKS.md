@@ -4,7 +4,7 @@
 
 The clock has a full-width **Start game — 1st half** button, running/paused phase and inline status/error feedback. A failed request restores controls; overlapping requests and stale match/account replies cannot update another match.
 
-Record after game continues to save a reviewed diff against official event IDs. After a confirmed save, **Add more goals or cards** explicitly reloads the latest official snapshot and revision before further edits. Another intentional save uses a new receipt; uncertain retries keep their receipt. The selected players and open periods remain useful across continuation.
+Record after game continues to save a reviewed diff against official event IDs. After a confirmed save, **Add more goals or cards** explicitly reloads the latest official snapshot and revision before further edits. A delayed native close event cannot clear a newly reopened dialog. Another intentional save uses a new receipt; uncertain retries keep their receipt. The selected players and open periods remain useful across continuation.
 
 For an already finished game, turn on **This match had overtime** in Record after game. Overtime 1st Half and Overtime 2nd Half have the same goal/assist/card entry controls, and save atomically with regulation events. Overtime goals count toward match goals and player stats. Historical event times are never fabricated.
 

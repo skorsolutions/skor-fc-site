@@ -131,7 +131,7 @@
       else if(e.target.hasAttribute('data-pm-final'))d.markFinal=e.target.checked;
       else return;render({...current,message:''});
     }catch(error){root.querySelector('.pm-status').textContent=error.message;}});
-    dialog.addEventListener('cancel',e=>{e.preventDefault();if(!current?.busy)controller.clear();});dialog.addEventListener('close',()=>{if(controller.state().phase!=='idle')controller.clear();});
+    dialog.addEventListener('cancel',e=>{e.preventDefault();if(!current?.busy)controller.clear();});dialog.addEventListener('close',()=>{if(!dialog.open&&controller.state().phase!=='idle')controller.clear();});
     return {...controller,contextChanged:()=>{controller.contextChanged();if(button)button.disabled=!getContext().canUse||!getContext().matchId;}};
   }
   global.SKORPostMatch={createDraft,setCount,setAssist,changes,totals,submission,createController,mount};
