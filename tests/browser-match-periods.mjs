@@ -8,7 +8,7 @@ const css=[...admin.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(x=>x[1]).j
 const clockHtml=admin.slice(admin.indexOf('<div class="game-clock-card"'),admin.indexOf('<section class="sub-alarm"'))+'</div>';
 const clockCode=admin.slice(admin.indexOf('function officialClockSeconds('),admin.indexOf('\ngameClockActions?.querySelectorAll("[data-clock-action]").forEach(btn=>btn.addEventListener'));
 const bootstrap=()=>{
-  window.events=[];window.saveCalls=0;window.tbStored={match_id:'fixture',revision:0,extra_minutes:5,golden_goal:true,initial_kicks:5,first_team:'skor',shots:[],completed:false,participants:[]};
+  window.events=[];window.saveCalls=0;window.tbStored={match_id:'fixture',revision:0,extra_minutes:5,golden_goal:true,initial_kicks:5,first_team:'skor',shots:[],completed:false,participants:[{player_key:'fixture-player',name:'Fixture Player',number:7},{player_key:'fixture-assist',name:'Fixture Guest',number:66,is_temp:true}]};
   const snapshot=()=>({match:{id:'fixture',home_team:'SKOR FC',away_team:'Fixture FC',kickoff:'2026-01-01T00:00:00Z',status:'final'},revision:'r'+saveCalls+':t'+tbStored.revision,
     participants:[{player_key:'fixture-player',name:'Fixture Player',number:7},{player_key:'fixture-assist',name:'Fixture Guest',number:66,is_temp:true}],events:structuredClone(events)});
   window.client={auth:{getSession:async()=>({data:{session:{user:{id:'fixture-captain'}}}})},rpc:async(name,p)=>{
