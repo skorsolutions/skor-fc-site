@@ -8,7 +8,7 @@ const css=[...admin.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(x=>x[1]).j
 const clockHtml=admin.slice(admin.indexOf('<div class="game-clock-card"'),admin.indexOf('<section class="sub-alarm"'))+'</div>';
 const clockCode=admin.slice(admin.indexOf('function officialClockSeconds('),admin.indexOf('\ngameClockActions?.querySelectorAll("[data-clock-action]").forEach(btn=>btn.addEventListener'));
 const bootstrap=()=>{
-  window.events=[];window.saveCalls=0;
+  window.events=[];window.saveCalls=0;window.tbStored={match_id:'fixture',revision:0,extra_minutes:5,golden_goal:true,initial_kicks:5,first_team:'skor',shots:[],completed:false,participants:[]};
   const snapshot=()=>({match:{id:'fixture',home_team:'SKOR FC',away_team:'Fixture FC',kickoff:'2026-01-01T00:00:00Z',status:'final'},revision:'r'+saveCalls,
     participants:[{player_key:'fixture-player',name:'Fixture Player',number:7}],events:structuredClone(events)});
   window.client={auth:{getSession:async()=>({data:{session:{user:{id:'fixture-captain'}}}})},rpc:async(name,p)=>{
@@ -19,6 +19,8 @@ const bootstrap=()=>{
       for(const row of p.p_upserts){events=events.filter(e=>e.id!==row.id);events.push({...row,roster_player_key:row.player_key,assist_roster_player_key:row.assist_key,entry_source:'post_match'});}
       saveCalls++;return {data:{ok:true}};
     }
+    if(name==='get_match_tiebreak')return {data:structuredClone(tbStored)};
+    if(name==='save_match_tiebreak'){if(p.p_revision!==tbStored.revision)return {error:{code:'40001',message:'Fixture stale shootout'}};tbStored={...tbStored,...structuredClone(p.p_payload),revision:tbStored.revision+1};return {data:{ok:true,revision:tbStored.revision,summary:SKORTiebreaks.summary(tbStored.shots,tbStored.initial_kicks,tbStored.first_team)}};}
     if(name==='control_match_clock'){
       window.clockCalls=(window.clockCalls||0)+1;
       if(window.clockFailure)throw Error('Fixture connection interrupted');
@@ -26,15 +28,16 @@ const bootstrap=()=>{
     }
     return {data:[]};
   }};
+  window.tb=SKORTiebreaks.mount({client,getContext:()=>({userId:'fixture-captain',canUse:true,matchId:'fixture'})});void tb.load();
   window.pm=SKORPostMatch.mount({client,getContext:()=>({userId:'fixture-captain',canUse:true,matchId:'fixture'})});
 };
 const clockSetup=String.raw`
 let gameClockState=null,gameDaySelected={id:'fixture',status:'scheduled'},captainActivityUser='fixture-captain',portalSessionVersion=1;
-const gameClockAlerted=new Set(),PRODUCTION_GAMEPLAN=null,editingEventId=null,gameDayEvents=[],tiebreaks={state:()=>({extra_minutes:5,golden_goal:true}),isDirty:()=>false},substitutionAlarm={updateClock(){}};
+const gameClockAlerted=new Set(),PRODUCTION_GAMEPLAN=null,editingEventId=null,gameDayEvents=[],tiebreaks=tb,substitutionAlarm={updateClock(){}};
 const portalCanWrite=()=>true,viewerBlocked=()=>{},renderGameDay=()=>{},loadCrowdAdmin=async()=>{},officialEsc=v=>v,sb=client;
 const gameClockDisplay=document.getElementById('gameClockDisplay'),gameClockPhase=document.getElementById('gameClockPhase'),gameClockSecondary=document.getElementById('gameClockSecondary'),gameClockAlert=document.getElementById('gameClockAlert'),gameClockHalfLength=document.getElementById('gameClockHalfLength'),gameClockSubInterval=document.getElementById('gameClockSubInterval'),gameClockActions=document.getElementById('gameClockActions'),gameClockSubAlert=document.getElementById('gameClockSubAlert'),eventClockPreview=null,eventHalf=document.getElementById('eventHalf');
 `;
-const html='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+read('post-match-entry.css')+'</style></head><body><main style="padding:12px;max-width:700px"><button id="openPostMatch">Record after game</button><select id="eventHalf"><option value="first">First</option><option value="second">Second</option></select>'+clockHtml+'</main><dialog id="postMatchDialog" class="pm-dialog"><header class="pm-header"><h2>Record after game</h2><button data-pm="close">×</button></header><div id="postMatchBody"></div></dialog><script>'+read('post-match-entry.js')+read('match-tiebreaks.js')+'('+bootstrap.toString()+')();'+clockSetup+clockCode+';gameClockActions.querySelectorAll("[data-clock-action]").forEach(b=>b.addEventListener("click",()=>controlGameClock(b.dataset.clockAction)));renderGameClock();</script></body></html>';
+const html='<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+read('post-match-entry.css')+read('match-tiebreaks.css')+'</style></head><body><main style="padding:12px;max-width:700px"><button id="openPostMatch">Record after game</button><select id="eventHalf"><option value="first">First</option><option value="second">Second</option></select>'+clockHtml+'<div id="matchTiebreaks" class="match-tiebreaks"></div></main><dialog id="postMatchDialog" class="pm-dialog"><header class="pm-header"><h2>Record after game</h2><button data-pm="close">×</button></header><div id="postMatchBody"></div></dialog><script>'+read('post-match-entry.js')+read('match-tiebreaks.js')+'('+bootstrap.toString()+')();'+clockSetup+clockCode+';gameClockActions.querySelectorAll("[data-clock-action]").forEach(b=>b.addEventListener("click",()=>controlGameClock(b.dataset.clockAction)));renderGameClock();</script></body></html>';
 const server=http.createServer((req,res)=>{res.setHeader('content-type','text/html');res.end(html)});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch({headless:true,executablePath:process.env.SKOR_CHROMIUM_EXECUTABLE||undefined});
@@ -64,6 +67,20 @@ try{
     assert.equal(new Set(saved.map(e=>e.id)).size,4);
     await page.locator('[data-pm=continue]').click();await page.waitForFunction(()=>pm.state().phase==='ready');
     await page.locator('[data-pm-extra]').check();assert.equal(await page.locator('[data-pm-half=extra_first]').count(),1);assert.equal(await page.locator('[data-pm-half=extra_second]').count(),1);
+    await page.locator('[data-pm=close]').click();
+    await page.locator('#matchTiebreaks summary').click();
+    assert.equal(await page.locator('[data-tb-setting=extra_minutes]').inputValue(),'5');
+    await page.locator('[data-tb-setting=extra_minutes]').fill('7');await page.locator('[data-tb-setting=extra_minutes]').blur();
+    assert.equal(await page.locator('[data-tb-setting=initial_kicks]').isVisible(),true,'editing settings must not collapse the section');
+    await page.locator('[data-tb-setting=initial_kicks]').fill('1');await page.locator('[data-tb-setting=initial_kicks]').blur();
+    await page.locator('[data-tb-setting=first_team]').selectOption('opponent');
+    await page.locator('[data-tb=save]').first().click();await page.waitForFunction(()=>tbStored.revision===1);
+    assert.equal(await page.evaluate(()=>tbStored.extra_minutes),7);
+    await page.locator('[data-tb=scored]').click();await page.locator('[data-tb=missed]').click();
+    await page.locator('[data-tb-setting=completed]').check();await page.locator('[data-tb=save]').first().click();await page.waitForFunction(()=>tbStored.revision===2);
+    assert.equal(await page.evaluate(()=>tbStored.completed),true);assert.equal(await page.evaluate(()=>events.length),4,'shootout must not add match goals');
+    await page.locator('[data-tb=reload]').click();await page.waitForFunction(()=>tb.state()?.revision===2);
+    assert.equal(await page.locator('#matchTiebreaks li').count(),2);assert.equal(await page.locator('[data-tb-setting=extra_minutes]').inputValue(),'7');
     assert.deepEqual(errors,[]);await page.close();
   }
   console.log('Native phone/desktop UI: kickoff and network recovery; repeated goal taps; save → continue → second save preserves IDs without duplicates; overtime periods pass.');
