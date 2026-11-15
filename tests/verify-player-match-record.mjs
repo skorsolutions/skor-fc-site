@@ -52,10 +52,11 @@ await syncFailure.start('player');await syncFailure.refresh();assert.equal(syncA
 
 // Exercise the actual page renderers, including unavailable/empty states and escaping.
 const nodes=new Map(),node=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',innerHTML:'',classList:{toggle(){}},querySelectorAll:()=>[]});return nodes.get(id);};
-const ctx={matchRecord:R.normalize(fixture()),recent:fixture().matches,historyVisibleCount:6,matchRecordPhase:'ready',document:{getElementById:node},$:node,esc:v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),opponent:m=>m.away_team,dt:v=>v};
+const ctx={window:{SKORMatchResults:{markup:()=>''}},portalMatchResults:{get:()=>null},matchRecord:R.normalize(fixture()),recent:fixture().matches,historyVisibleCount:6,matchRecordPhase:'ready',document:{getElementById:node},$:node,esc:v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),opponent:m=>m.away_team,dt:v=>v};
 function fn(name,next){const plain=html.indexOf('\nfunction '+next+'('),asyncStart=html.indexOf('\nasync function '+next+'(');return html.slice(html.indexOf('function '+name+'('),plain>=0?plain:asyncStart);}
 vm.createContext(ctx);vm.runInContext(fn('renderStats','opponent'),ctx);vm.runInContext(fn('renderRecent','selectFeedbackMatch'),ctx);
 ctx.renderStats();ctx.renderRecent();assert.equal(node('statGamesAttended').textContent,'1');assert.equal(node('statAttendance').textContent,'50%');assert.match(node('statAttendanceDetail').textContent,/1 attended · 1 absent/);assert.match(node('recentMatches').innerHTML,/Attended/);assert.match(node('recentMatches').innerHTML,/Absent/);
 ctx.recent[0].away_team='<img onerror=alert(1)>';ctx.renderRecent();assert.doesNotMatch(node('recentMatches').innerHTML,/<img/);
 ctx.matchRecord=null;ctx.recent=[];ctx.matchRecordPhase='error';ctx.renderStats();ctx.renderRecent();assert.equal(node('statGoals').textContent,'—');assert.match(node('recentMatches').innerHTML,/unavailable/);
 console.log('Player match record verified: real totals, unavailable/stale states, attendance rules, visible-page polling, session isolation, retry/concurrency, actual renderers, privacy and SQL guards.');
+

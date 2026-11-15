@@ -24,7 +24,14 @@
   function playerStats(shots,participants){
     return participants.map(p=>{const taken=shots.filter(s=>s.team==='skor'&&s.player_key===p.player_key);return {...p,taken:taken.length,scored:taken.filter(s=>s.outcome==='scored').length};}).filter(p=>p.taken);
   }
+  function confirmedResult(saved,context){
+    if(!saved||!context||context.status!=='final'||saved.match_id!==context.matchId||!saved.completed||context.skor!==context.opponent)return null;
+    try{const s=summary(saved.shots,Number(saved.initial_kicks),saved.first_team);if(!s.winner)return null;
+      return {match_id:saved.match_id,skor_score:context.skor,opponent_score:context.opponent,penalty_skor:s.skor,penalty_opponent:s.opponent,on_penalties:true,outcome:s.winner==='skor'?'win':'loss'};
+    }catch{return null;}
+  }
   function mount({client,getContext,onSaved=()=>{},doc=root.document}){
+    const resultBox=doc.getElementById('gameDayResult');let resultContext=null;
     const box=doc.getElementById('matchTiebreaks'),settings=doc.getElementById('matchTiebreakSettings'),parking=doc.getElementById('postMatchTiebreakParking')||box?.parentNode;
     let data=null,baseline=null,owner=null,match=null,epoch=0,busy=false,message='',receipt=null,dirty=false,bridge=null;
     const payload=()=>({extra_minutes:Number(data.extra_minutes),initial_kicks:Number(data.initial_kicks),golden_goal:data.golden_goal,first_team:data.first_team,shots:data.shots,completed:data.completed});
@@ -32,9 +39,15 @@
     const valid=e=>{const c=getContext();return e===epoch&&c.canUse&&c.userId===owner&&c.matchId===match;};
     const notify=()=>bridge?.onState?.();
     const penaltyDraft=()=>!!data&&!!baseline&&['initial_kicks','first_team','shots','completed'].some(k=>JSON.stringify(data[k])!==JSON.stringify(baseline[k]));
-    function clear(){epoch++;data=null;baseline=null;owner=null;match=null;receipt=null;busy=false;dirty=false;if(box)box.innerHTML='';if(settings)settings.innerHTML='';}
+    function renderResult(context=resultContext){
+      resultContext=context;if(!resultBox)return;
+      const c=getContext(),r=c.canUse&&c.userId===owner&&c.matchId===context?.matchId?confirmedResult(baseline?{...baseline,match_id:match}:null,context):null;
+      resultBox.hidden=!r;resultBox.className='match-result'+(r?' '+r.outcome:'');
+      resultBox.innerHTML=r?`<strong>${r.outcome==='win'?'Won':'Lost'} on penalties</strong><span>Penalties: SKOR ${r.penalty_skor}–${r.penalty_opponent} Opponent</span>`:'';
+    }
+    function clear(){epoch++;data=null;baseline=null;owner=null;match=null;receipt=null;busy=false;dirty=false;if(box)box.innerHTML='';if(settings)settings.innerHTML='';renderResult();}
     function render(){
-      if(!box)return;
+      renderResult();if(!box)return;
       if(!data){box.innerHTML=`<p role="status">${esc(message||'Loading penalty shootout…')}</p><button type="button" data-tb="reload">Reload penalties</button>`;if(settings)settings.innerHTML=message?`<p role="status">${esc(message)}</p>`:'';return;}
       const open=settings?.querySelector('details')?.open||false,goalBusy=!!bridge?.isBusy?.(),blocked=bridge?.canSave?.()===false;
       if(settings)settings.innerHTML=`<details ${open?'open':''}><summary>Overtime settings</summary><fieldset ${busy||goalBusy?'disabled':''}><label>Minutes per overtime half<input type="number" min="1" max="30" data-tb-setting="extra_minutes" value="${data.extra_minutes}"></label><label><input type="checkbox" data-tb-setting="golden_goal" ${data.golden_goal?'checked':''}> Golden goal in overtime</label><button type="button" data-tb="save-settings" ${blocked?'disabled':''}>Save overtime settings</button><p>Record penalty kicks in <strong>Record after game → This match went to penalties</strong>.</p></fieldset><p role="status">${esc(message)}${penaltyDraft()?' Penalty changes are waiting in Record after game.':''}</p><button type="button" data-tb="reload-settings" ${busy||goalBusy||penaltyDraft()?'disabled':''}>Reload saved settings</button></details>`;
@@ -83,8 +96,8 @@
       }catch(error){data=JSON.parse(prior);message=error.message;}render();
     }
     [box,settings].forEach(n=>{n?.addEventListener('click',click);n?.addEventListener('change',change);});
-    return {load,clear,contextChanged(){const c=getContext();if(owner&&(!c.canUse||c.userId!==owner||c.matchId!==match))clear();},state:()=>data,isDirty:()=>dirty,isBusy:()=>busy,save,
+    return {load,clear,renderResult,contextChanged(){const c=getContext();if(owner&&(!c.canUse||c.userId!==owner||c.matchId!==match))clear();},state:()=>data,isDirty:()=>dirty,isBusy:()=>busy,save,
       configurePostMatch(value){bridge=value;render();},attach(host){if(host&&box){host.appendChild(box);render();}},detach(){if(parking&&box&&box.parentNode!==parking)parking.appendChild(box);}};
   }
-  root.SKORTiebreaks={summary,review,playerStats,playerLabel,periodLabel,mount};
+  root.SKORTiebreaks={summary,review,playerStats,playerLabel,confirmedResult,periodLabel,mount};
 })(typeof window==='object'?window:globalThis);

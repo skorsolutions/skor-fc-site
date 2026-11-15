@@ -46,3 +46,8 @@ Starting kicks is the competition’s initial rounds per side, not the total num
 
 
 Source `aa7621ff4b8b3d8155ee8c4a6fa4c8c85d6f5f6f` is live. Cloudflare build `4c25d552-f4b5-4dd8-a148-503a4b32f675` succeeded at 2026-11-15T22:30:17.088Z; deployment `b107cf32-9ff0-42fb-aa09-f669e67da587` serves version `8a982a55-54cc-4406-8d0b-65fc1ea1ec3f` at 100%. Main CI `43769605001` and `43769605018` and feature CI `43769484529` pass all 33 suites, native phone/desktop 4–2 save/reopen with numbered regular/guest kickers, editable rounds, staged corrections and existing event/shootout isolation, plus PostgreSQL role/replay fixtures. All 13 release hashes match tested local source, zero removed files and all 20 original asset blobs preserved. Native data was fictional; no production match outcomes, participants or attendance were written or inferred. No SQL or migration.
+
+
+## v58.43 prepared result display
+
+A completed shootout is a win/loss while match goals remain tied. Public final results use the new final-only/published totals RPC and never raw kicks or discipline; Captain Game Day uses its existing private acknowledged tiebreak baseline. Draft corrections cannot change a saved winner. Changing match goals away from a tie suppresses obsolete penalty results. Public cards/fouls and discipline aggregates are hidden, while signed-in personal/captain records remain. Exact proposed SQL is `docs/sql/PUBLIC-MATCH-RESULTS.sql`; not applied, pending explicit approval.

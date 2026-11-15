@@ -1,3 +1,13 @@
+# v58.43 — Final scores, penalty results and private discipline (prepared; NOT DEPLOYED)
+
+2026-11-15 UTC. User requested a win after penalties, public final scores, and no public cards. This explicitly supersedes the earlier public no-score presentation for final published matches.
+
+- Match Center selected/past cards show official final score and SKOR win/loss/draw; confirmed penalties show separate totals and winner. Upcoming/live scores remain unexposed. No invented event totals or penalty goals added to player goals.
+- Captain Game Day derives its penalty banner from acknowledged saved, completed kicks and tied current match goals; load/save, accounts/matches and stale goal corrections clear or update it. Regular Player Portal history shares the published result labels.
+- Public match-event requests and discipline/foul renderers are removed. Public Squad/Players team/player/guest card totals are removed, including aggregate API fields. Goals/assists/MOTM preserve existing canonical player keys, optional numbers and scope. Captain/player card records remain.
+- Proposed database file: docs/sql/PUBLIC-MATCH-RESULTS.sql. One final-only published aggregate RPC, one restrictive raw-event read policy, and replacement of the existing public player-stat projection to remove discipline. No application data migration, score rewrite, identity changes or Edge deployment. No SQL applied on production.
+- Functional source: admin, matches, player portal, public players/squad, tiebreak controller, shared result module/styles, tests/fixtures/workflow, package and documentation. Full test and disposable Postgres evidence pending. Repository AGENTS.md requires explicit approval before running/deploying this migration.
+
 # v58.42 — Numbered penalty takers and editable shootout rounds (deployed)
 
 2026-11-15 UTC. User reported missing jersey numbers, a locked five-kick setting and difficulty entering a 4–2 shootout.

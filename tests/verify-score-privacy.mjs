@@ -22,7 +22,7 @@ const context = {
   esc:v=>v,fmtDate:()=> 'October 3',fmtTime:()=> '3 PM',month:()=> 'OCT',day:()=> '03',
   statusClass:()=> 'final',statusText:()=> 'Final',fieldMetaHtml:()=> 'Field',arrivalText:()=> '2:15 PM',
   matchClockHtml:()=> '<span data-official-clock>Clock</span>',isPast:()=>true,
-  renderCards:()=> '<div>Discipline</div>'
+  window:{SKORMatchResults:{markup:()=>''}},matchResults:{get:()=>null}
 };
 vm.createContext(context);
 const homeStart = pages['index.html'].indexOf('function renderNextMatch(');
@@ -44,19 +44,14 @@ for (const status of ['scheduled','first_half','halftime','second_half','final']
   const html=node('selectedMatch').innerHTML;
   assert.match(html,/>VS</);
   assert.doesNotMatch(html,/Goals & Assists|skor_goal|row-result|\d+\s*[–-]\s*\d+/);
-  assert.match(html,/Discipline/);
+  assert.doesNotMatch(html,/Discipline|Cards|Fouls/);
   assert.match(html,/data-official-clock/);
   assert.doesNotMatch(context.row({...fixture,status},true),/row-result|\d+\s*[–-]\s*\d+/);
 }
 
-// Public renderers must remain safe even if a stale client contains goal rows.
-context.events=[{match_id:fixture.id,event_type:'opponent_goal'},{match_id:fixture.id,event_type:'skor_own_goal'},{match_id:fixture.id,event_type:'skor_yellow_card'}];
-vm.runInContext(pages['matches.html'].match(/function evFor\(m\).*\n/)[0],context);
-assert.equal(context.evFor(fixture).length,1);
-assert.equal(context.evFor(fixture)[0].event_type,'skor_yellow_card');
-
+// Match Center reads only the final-results projection, never raw event rows.
 assert.doesNotMatch(pages['index.html'],/from\("match_events"\)|scoreFor\(/);
-assert.match(pages['matches.html'],/not\("event_type","in","\(skor_goal,opponent_goal,opponent_own_goal,skor_own_goal\)"\)/);
+assert.doesNotMatch(pages['matches.html'],/from\("match_events"\)|renderCards|renderFoulGroup/);
 for (const file of ['players.html','squad.html']) {
   assert.doesNotMatch(pages[file],/from\("match_events"\)|recordWins|recordLosses|recordGF|recordGA|recordGD/);
   assert.match(pages[file],/get_public_player_season_stats/);
@@ -79,4 +74,5 @@ assert.match(sql,/revoke all on function public\.get_public_player_season_stats\
 assert.doesNotMatch(sql,/\b(update|delete from|truncate|drop table)\b/i);
 const resultProjection=sql.slice(sql.indexOf("  select jsonb_build_object("));
 assert.doesNotMatch(resultProjection,/'match_id'|'opponent_score'|'wins'|'losses'|'kickoff'|'event_type'/);
-console.log('Score privacy verification passed: public rendering, portal preservation, aggregate-only data contract and restrictive policy draft.');
+console.log('Score privacy verification passed: public final-result boundary, hidden discipline, private portal preservation and existing aggregate contracts.');
+

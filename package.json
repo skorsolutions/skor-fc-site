@@ -34,7 +34,8 @@
     "test:tiebreaks": "node tests/verify-tiebreaks.mjs",
     "test:post-match-penalties": "node tests/verify-post-match-penalties.mjs",
     "test:goal-entry": "node tests/verify-goal-entry.mjs",
-    "test:shootout-editing": "node tests/verify-shootout-editing.mjs"
+    "test:shootout-editing": "node tests/verify-shootout-editing.mjs",
+    "test:match-results": "node tests/verify-match-results.mjs"
   },
   "devDependencies": {
     "wrangler": "4.129.0"

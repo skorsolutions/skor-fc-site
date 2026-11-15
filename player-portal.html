@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
-<meta name="skor-build" content="player-portal-v58.28-optional-squad-numbers" />
+<meta name="skor-build" content="player-portal-v58.43-match-results" />
 <title>SKOR FC | Player Portal</title>
 <meta name="description" content="Private SKOR FC player portal for player profile, stats, availability, reactions and match feedback.">
 <link rel="stylesheet" href="equipment.css?v=58.5">
 <link rel="stylesheet" href="team-dues.css?v=58.25">
 <link rel="stylesheet" href="guest-profiles.css?v=58.25">
+<link rel="stylesheet" href="match-results.css?v=58.43">
 <style>
 :root{--bg:#07080a;--panel:#111318;--panel2:#171a20;--line:#30343b;--text:#f5f5f6;--muted:#969ca5;--maroon:#8f1836;--maroon2:#b51c43;--green:#2f7a5c;--amber:#a37a28;--red:#a33b4e}
 *{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at 80% 0,#241018 0,#08090b 31%,#07080a 58%);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif}button,input,select,textarea{font:inherit}button{touch-action:manipulation}.wrap{width:min(1050px,calc(100% - 28px));margin:auto}.hidden{display:none!important}
@@ -207,10 +208,12 @@
 <script src="team-dues.js?v=58.28"></script>
 <script src="guest-profiles.js?v=58.28"></script>
 <script src="guest-portal.js?v=58.25"></script>
+<script src="match-results.js?v=58.43"></script>
 <script>
 const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const portalMatchResults=window.SKORMatchResults.createFeed({client:db,onChange:()=>{if(portalAuthorized)renderRecent();}});
 const playerActivity=window.SKORPortalActivity.createTracker({client:db,portal:"player",onError:()=>console.warn("Player activity could not be recorded; it will retry while the portal is active.")});
 const $=id=>document.getElementById(id);const esc=v=>String(v??"").replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s]));
 const myDues=window.SKORTeamDues.mount({rootId:'myDues',client:db,mode:'player'});
@@ -326,7 +329,7 @@ db.auth.onAuthStateChange((event,s)=>{
 });
 
 const matchRecordController=window.SKORPlayerMatchRecord.createController({
-  fetchRecord:()=>db.rpc('get_my_match_record'),
+  fetchRecord:async()=>{const [record]=await Promise.all([db.rpc('get_my_match_record'),portalMatchResults.refresh()]);return record;},
   isVisible:()=>portalAuthorized&&!document.hidden,
   onChange:record=>{matchRecord=record;recent=record.matches;renderStats();renderRecent();},
   onState:state=>{
@@ -486,7 +489,7 @@ function renderRecent(){
   const attendanceLabels={present:'Attended',absent:'Absent',excused:'Excused',unmarked:'Attendance unmarked'};
   $('recentMatches').innerHTML=recent.slice(0,historyVisibleCount).map(m=>{
     const personal=[m.my_goals?`${m.my_goals} Goal${m.my_goals===1?'':'s'}`:'',m.my_assists?`${m.my_assists} Assist${m.my_assists===1?'':'s'}`:'',m.my_yellow_cards?`${m.my_yellow_cards} Yellow card${m.my_yellow_cards===1?'':'s'}`:'',m.my_red_cards?`${m.my_red_cards} Red card${m.my_red_cards===1?'':'s'}`:'',m.my_motm?'Player of the Match':''].filter(Boolean).join(' · ')||'No personal match events recorded';
-    return `<div class="match"><div class="match-top"><div><h3>SKOR FC vs ${esc(opponent(m)||'Opponent')}</h3><div class="meta">${esc(dt(m.kickoff))}<br>${esc(m.location||'')}</div></div><div class="score">${m.skor_score}–${m.opponent_score}</div></div><span class="record-attendance ${esc(m.attendance_status)}">${esc(attendanceLabels[m.attendance_status])}</span><div class="personal-line">${esc(personal)}</div><button class="btn ghost" type="button" data-feedback="${esc(m.match_id)}" style="margin-top:10px;min-height:44px">Open Match Feedback</button></div>`;
+    return `<div class="match"><div class="match-top"><div><h3>SKOR FC vs ${esc(opponent(m)||'Opponent')}</h3><div class="meta">${esc(dt(m.kickoff))}<br>${esc(m.location||'')}</div></div><div class="score">${m.skor_score}–${m.opponent_score}</div></div>${window.SKORMatchResults.markup(portalMatchResults.get(m.match_id,m.status))}<span class="record-attendance ${esc(m.attendance_status)}">${esc(attendanceLabels[m.attendance_status])}</span><div class="personal-line">${esc(personal)}</div><button class="btn ghost" type="button" data-feedback="${esc(m.match_id)}" style="margin-top:10px;min-height:44px">Open Match Feedback</button></div>`;
   }).join('');
   $('recentMatches').querySelectorAll('[data-feedback]').forEach(b=>b.addEventListener('click',()=>selectFeedbackMatch(b.dataset.feedback)));
 }
@@ -542,5 +545,6 @@ init();
 </script>
 </body>
 </html>
+
 
 

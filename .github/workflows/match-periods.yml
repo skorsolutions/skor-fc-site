@@ -26,6 +26,9 @@ jobs:
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/fixtures/tiebreaks-bootstrap.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f docs/sql/MATCH-TIEBREAKS.sql
           psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/verify-tiebreaks-db.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/fixtures/public-results-bootstrap.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f docs/sql/PUBLIC-MATCH-RESULTS.sql
+          psql -h localhost -U postgres -v ON_ERROR_STOP=1 -f tests/verify-public-results-db.sql
   browser-and-unit:
     timeout-minutes: 8
     runs-on: ubuntu-24.04
@@ -46,3 +49,5 @@ jobs:
           fi
       - name: Verify phone and desktop event/clock controls
         run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/match-browser/node_modules/playwright" node tests/browser-match-periods.mjs
+      - name: Verify public final scores and private discipline on phones and desktop
+        run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/match-browser/node_modules/playwright" node tests/browser-public-results.mjs
