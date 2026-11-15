@@ -31,3 +31,8 @@ Existing supported events load into the form; counters represent desired totals.
 Before deployment, record the approved exact SQL hash, apply with the migration tool, verify stored definitions/RLS/grants and rollback tests, compare original data fingerprints, then publish dependent source and verify exact GitHub hashes/Cloudflare source and production traffic. Record the server-generated migration filename. Browser visual/signed-in interaction checks remain unavailable in the current environment.
 
 Exact prepared SQL SHA-256: `df33466f470006b0772309b5078ad5fd3b0c1493d3aba690741872ebd5944b16`. All 19 local suites and read-only participant/revision/editor SQL planning pass. The exact migration, its corrected real-role rollback fixture and existing player-record/guest-profile regression fixtures passed. No production SQL correction was needed; a test-only ambiguous variable was qualified. Source hashes, exact release file set and production deployment are verified. Browser interaction remains unverified.
+
+
+## v58.39 prepared fixes
+
+After confirmed saving, Add more goals or cards reloads the latest authoritative events/revision before further edits. The saved form itself cannot be resubmitted. A new intentional save has a fresh receipt. Overtime has independently labeled extra_first / extra_second periods; shootout kicks stay in the separate captain panel and never inflate player goals. See [MATCH-TIEBREAKS.md](MATCH-TIEBREAKS.md). Database support is prepared and requires explicit deployment approval.

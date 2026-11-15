@@ -1,7 +1,7 @@
 (function(root){
   "use strict";
 
-  const CURRENT_PHASES=new Set(["first_half","halftime","second_half"]);
+  const CURRENT_PHASES=new Set(["first_half","halftime","second_half","extra_break","extra_first_half","extra_halftime","extra_second_half","shootout"]);
 
   function safeSeconds(value){
     return Math.max(0,Math.floor(Number(value)||0));
@@ -28,6 +28,7 @@
     if(phase==="first_half")return clock.clock_running?"1st Half":"1st Half · Paused";
     if(phase==="halftime")return "Halftime";
     if(phase==="second_half")return clock.clock_running?"2nd Half":"2nd Half · Paused";
+    if(phase.startsWith("extra_")||phase==="shootout")return ({extra_break:"Before overtime",extra_first_half:"Overtime · 1st Half",extra_halftime:"Overtime halftime",extra_second_half:"Overtime · 2nd Half",shootout:"Penalty shootout"})[phase]+(["extra_first_half","extra_second_half"].includes(phase)&&!clock.clock_running?" · Paused":"");
     if(phase==="full_time")return "Full Time";
     return "Not Started";
   }
@@ -61,3 +62,4 @@
 
   root.SKORPublicMatchClock={format,isCurrent,officialSeconds,phaseLabel,render,toMap};
 })(typeof window!=="undefined"?window:globalThis);
+

@@ -30,7 +30,8 @@
     "test:equipment": "node tests/verify-equipment.mjs",
     "test:portal-activity": "node tests/verify-portal-activity.mjs",
     "test:opponent-scouting": "node tests/verify-opponent-scouting.mjs",
-    "test:scouting-ai": "node tests/verify-scouting-ai.mjs"
+    "test:scouting-ai": "node tests/verify-scouting-ai.mjs",
+    "test:tiebreaks": "node tests/verify-tiebreaks.mjs"
   },
   "devDependencies": {
     "wrangler": "4.129.0"

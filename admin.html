@@ -3,15 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="skor-build" content="captain-portal-v58.37-opponents-and-strategy-lock" />
-  <title>SKOR FC Admin | Captain Portal v58.37</title>
+  <meta name="skor-build" content="captain-portal-v58.39-match-periods" />
+  <title>SKOR FC Admin | Captain Portal v58.39</title>
   <link rel="stylesheet" href="captain-notebook.css" />
   <link rel="stylesheet" href="jerseys.css?v=58.4" />
   <link rel="stylesheet" href="equipment.css?v=58.5" />
   <link rel="stylesheet" href="captain-notifications.css?v=58.20" />
   <link rel="stylesheet" href="team-dues.css?v=58.25" />
   <link rel="stylesheet" href="guest-profiles.css?v=58.33" />
-  <link rel="stylesheet" href="post-match-entry.css?v=58.26" />
+  <link rel="stylesheet" href="post-match-entry.css?v=58.39" />
+  <link rel="stylesheet" href="match-tiebreaks.css?v=58.39" />
   <link rel="stylesheet" href="substitution-alarm.css?v=58.21" />
   <link rel="stylesheet" href="strategy.css?v=58.35" />
   <link rel="stylesheet" href="opponents.css?v=58.37" />
@@ -374,6 +375,8 @@
     @media(max-width:520px){.game-clock-settings{grid-template-columns:1fr 1fr}.game-clock-actions .btn{flex:1 1 calc(50% - 8px)}.game-clock-display{font-size:4rem}}
 
   
+
+    #gameClockActions [data-clock-action="start_first_half"],#gameClockActions [data-clock-action="start_second_half"]{flex:1 0 100%;justify-content:center;min-height:56px;font-size:1.05rem}#gameClockControlStatus{color:#f2d6df;font-size:.85rem;line-height:1.4}#gameClockControlStatus:empty{display:none}
 
     /* Schedule manager v14 */
     .schedule-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
@@ -1903,7 +1906,7 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
       <button data-view="payments">$ <span>Payments</span></button>
       <button data-view="sponsors">◇ <span>Sponsors</span></button>
     </div>
-    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.37</div>
+    <div class="aside-bottom">SKOR FC Captain Portal • Build v58.39</div>
   </aside>
 
   <main>
@@ -2019,30 +2022,36 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
           <div id="gameDayBackend" class="backend-warning">Checking the match stats database…</div>
           <div class="fieldrow" style="margin-top:14px">
             <div><label>Match</label><select id="gameDayMatch"></select></div>
-            <div><label>Event half</label><select id="eventHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
+            <div><label>Event half</label><select id="eventHalf"><option value="first">1st Half</option><option value="second">2nd Half</option><option value="extra_first">Overtime 1st Half</option><option value="extra_second">Overtime 2nd Half</option></select></div>
           </div>
 
           <div class="game-clock-card" id="gameClockCard">
             <div class="game-clock-head">
-              <div><div class="game-clock-kicker">Official Captain Clock</div><h3>Persistent match time</h3></div>
+              <div><div class="game-clock-kicker">Official Captain Clock</div><h3>Match clock</h3></div>
               <span class="game-clock-phase" id="gameClockPhase">Not Started</span>
             </div>
             <div class="game-clock-display" id="gameClockDisplay">00:00</div>
-            <div class="game-clock-secondary" id="gameClockSecondary">Choose 40 or 45-minute halves, then start the first half.</div>
+            <div class="game-clock-secondary" id="gameClockSecondary">Check the half length, then tap Start game at the referee’s whistle.</div>
             <div class="game-clock-alert" id="gameClockAlert"></div>
             <div class="game-clock-settings">
               <div><label for="gameClockHalfLength">Half length</label><select id="gameClockHalfLength"><option value="45">45 minutes</option><option value="40">40 minutes</option></select></div>
               <div><label for="gameClockSubInterval">Planned wave cadence</label><select id="gameClockSubInterval"><option value="15">Every 15 minutes</option><option value="10">Every 10 minutes</option></select></div>
             </div>
             <div class="game-clock-actions" id="gameClockActions">
-              <button class="btn btn-primary" type="button" data-clock-action="start_first_half">Start 1st Half</button>
+              <button class="btn btn-primary" type="button" data-clock-action="start_first_half">▶ Start game — 1st half</button>
               <button class="btn btn-light" type="button" data-clock-action="pause">Pause</button>
               <button class="btn btn-light" type="button" data-clock-action="resume">Resume</button>
               <button class="btn btn-light" type="button" data-clock-action="halftime">Halftime</button>
-              <button class="btn btn-primary" type="button" data-clock-action="start_second_half">Start 2nd Half</button>
+              <button class="btn btn-primary" type="button" data-clock-action="start_second_half">▶ Start 2nd half</button>
               <button class="btn btn-light" type="button" data-clock-action="full_time">Full Time</button>
+              <button class="btn btn-light" type="button" data-clock-action="end_regulation">End regulation — overtime</button>
+              <button class="btn btn-primary" type="button" data-clock-action="start_extra_first_half">▶ Start overtime — 1st half</button>
+              <button class="btn btn-light" type="button" data-clock-action="extra_halftime">Overtime halftime</button>
+              <button class="btn btn-primary" type="button" data-clock-action="start_extra_second_half">▶ Start overtime — 2nd half</button>
+              <button class="btn btn-primary" type="button" data-clock-action="start_shootout">Start penalty shootout</button>
               <button class="btn btn-light clock-danger" type="button" data-clock-action="reset">Reset Clock</button>
             </div>
+            <p id="gameClockControlStatus" role="status" aria-live="polite"></p>
             <div class="sub-clock-card" id="gameClockSubAlert"><strong>Substitution reminders</strong><span>Publish a lineup with planned waves to show the next change here.</span></div>
             <section class="sub-alarm" id="substitutionAlarm" hidden aria-label="Substitution alarm">
               <details>
@@ -2065,6 +2074,7 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
               <button class="sub-alarm-stop" id="subAlarmStop" type="button" hidden>Stop alarm</button>
             </section>
           </div>
+          <div class="match-tiebreaks" id="matchTiebreaks"></div>
         </div>
 
         <div class="scoreboard-admin gameday-score-panel">
@@ -5515,7 +5525,7 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
   loadDraft();
   renderEventOptions();
   renderAll();
-  markStatus("Captain Portal v58.37 ready. Check your captain inbox on Dashboard.");
+  markStatus("Captain Portal v58.39 ready. Check your captain inbox on Dashboard.");
 
   window.SKORLineup={
     setRoster,
@@ -5557,7 +5567,8 @@ body.viewer-mode .nav button[data-view="opponents"]{display:none!important}
 <script src="captain-notifications.js?v=58.20"></script>
 <script src="team-dues.js?v=58.28"></script>
 <script src="guest-profiles.js?v=58.33"></script>
-<script src="post-match-entry.js?v=58.26"></script>
+<script src="post-match-entry.js?v=58.39"></script>
+<script src="match-tiebreaks.js?v=58.39"></script>
 <script src="substitution-alarm.js?v=58.21"></script>
 <script src="opponent-scouting.js?v=58.37"></script>
 <script src="opponents.js?v=58.37"></script>
@@ -5629,7 +5640,7 @@ window.SKORViewerBlocked=viewerBlocked;
 function applyPortalRoleUI(){
   const viewer=PORTAL_ACCESS.role==="viewer";
   const superAdmin=PORTAL_ACCESS.role==="super_admin";
-  postMatchEntry?.contextChanged();
+  postMatchEntry?.contextChanged();tiebreaks?.contextChanged();
   const guestTab=document.querySelector('[data-roster-tab="guests"]');if(guestTab)guestTab.disabled=viewer;
   document.body.classList.toggle("viewer-mode",viewer);
   const badge=document.getElementById("portalRoleBadge");
@@ -5658,7 +5669,7 @@ function showLogin(){
   guestDirectory?.clear();
   opponentWorkspace?.clear();
   window.SKORAIPlan?.clear();
-  postMatchEntry?.clear();
+  postMatchEntry?.clear();tiebreaks?.clear();
   portalSessionVersion++;captainActivityUser=null;
   captainActivity.clear();
   clearPlayerActivity();
@@ -5753,7 +5764,7 @@ logoutBtn.addEventListener("click", async ()=>{
   captainInbox?.clear();
   teamDues?.clear();
   guestDirectory?.clear();
-  postMatchEntry?.clear();
+  postMatchEntry?.clear();tiebreaks?.clear();
   captainActivity.clear();
   clearPlayerActivity();
   await sb.auth.signOut();
@@ -5894,6 +5905,7 @@ window.gameDaySelected=null;
 const gameDayMatch=document.getElementById("gameDayMatch"),eventHalf=document.getElementById("eventHalf"),eventPlayer=document.getElementById("eventPlayer"),eventAssist=document.getElementById("eventAssist"),eventEditor=document.getElementById("eventEditor"),eventEditorTitle=document.getElementById("eventEditorTitle"),eventPlayerWrap=document.getElementById("eventPlayerWrap"),eventAssistWrap=document.getElementById("eventAssistWrap"),eventLog=document.getElementById("gameDayEventLog"),backendBox=document.getElementById("gameDayBackend"),eventPlayerManual=document.getElementById("eventPlayerManual"),eventPlayerManualName=document.getElementById("eventPlayerManualName"),eventPlayerManualNumber=document.getElementById("eventPlayerManualNumber"),eventPlayerMatchNumberWrap=document.getElementById("eventPlayerMatchNumberWrap"),eventPlayerMatchNumber=document.getElementById("eventPlayerMatchNumber"),eventAssistManual=document.getElementById("eventAssistManual"),eventAssistManualName=document.getElementById("eventAssistManualName"),eventAssistManualNumber=document.getElementById("eventAssistManualNumber"),eventAssistMatchNumberWrap=document.getElementById("eventAssistMatchNumberWrap"),eventAssistMatchNumber=document.getElementById("eventAssistMatchNumber"),opponentPlayerWrap=document.getElementById("opponentPlayerWrap"),opponentPlayerName=document.getElementById("opponentPlayerName"),opponentPlayerNumber=document.getElementById("opponentPlayerNumber");
 const gameClockDisplay=document.getElementById("gameClockDisplay"),gameClockPhase=document.getElementById("gameClockPhase"),gameClockSecondary=document.getElementById("gameClockSecondary"),gameClockAlert=document.getElementById("gameClockAlert"),gameClockHalfLength=document.getElementById("gameClockHalfLength"),gameClockSubInterval=document.getElementById("gameClockSubInterval"),gameClockActions=document.getElementById("gameClockActions"),gameClockSubAlert=document.getElementById("gameClockSubAlert"),eventClockPreview=document.getElementById("eventClockPreview");
 const substitutionAlarm=window.SKORSubstitutionAlarm.mount({rootId:'substitutionAlarm',getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id,matchStatus:gameDaySelected?.status})});
+const tiebreaks=window.SKORTiebreaks.mount({client:sb,getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id||null}),onSaved:async()=>{await loadCrowdAdmin();}});
 const postMatchEntry=window.SKORPostMatch.mount({client:sb,
   getContext:()=>({userId:captainActivityUser,canUse:portalCanWrite(),matchId:gameDaySelected?.id||null}),
   onSaved:async matchId=>{await loadGameDayMatches(matchId);await loadDashboardAttendance();void guestDirectory?.refresh();}
@@ -6955,6 +6967,7 @@ function clockFormat(seconds){
 }
 function clockStampLabel(seconds,period=""){
   if(seconds===null||seconds===undefined||!Number.isFinite(Number(seconds)))return "Official time not recorded";
+  if(period.startsWith("extra_"))return `Official ${clockFormat(seconds)} · ${window.SKORTiebreaks.periodLabel(period)}`;
   const half=period==="second_half"?"2nd Half":period==="first_half"?"1st Half":"Official Time";
   return `Official ${clockFormat(seconds)} · ${half}`;
 }
@@ -6963,6 +6976,7 @@ function clockPhaseLabel(clock=gameClockState){
   if(phase==="first_half")return `1st Half · ${clock.clock_running?"Running":"Paused"}`;
   if(phase==="halftime")return "Halftime";
   if(phase==="second_half")return `2nd Half · ${clock.clock_running?"Running":"Paused"}`;
+  if(phase.startsWith("extra_")||phase==="shootout")return window.SKORTiebreaks.periodLabel(phase)+(clock.clock_running?" · Running":["extra_first_half","extra_second_half"].includes(phase)?" · Paused":"");
   if(phase==="full_time")return "Full Time";
   return "Not Started";
 }
@@ -7001,29 +7015,37 @@ function renderGameClock(){
   if(phase==="halftime"){
     const breakSeconds=clock.clock_phase_started_at?Math.max(0,Math.floor((Date.now()-new Date(clock.clock_phase_started_at).getTime())/1000)):0;
     gameClockSecondary.textContent=`Official match time held at ${clockFormat(halfSeconds)} · Break ${clockFormat(breakSeconds)}`;
-  }else if(phase==="not_started")gameClockSecondary.textContent="Choose 40 or 45-minute halves, then start the first half.";
+  }else if(phase==="not_started")gameClockSecondary.textContent="Check the half length, then tap Start game at the referee’s whistle.";
+  else if(phase.startsWith("extra_"))gameClockSecondary.textContent=`Two ${tiebreaks.state()?.extra_minutes||5}-minute overtime halves · ${tiebreaks.state()?.golden_goal!==false?"Golden goal: confirm Full Time at the referee’s whistle after a goal.":"Play both halves."}`;
+  else if(phase==="shootout")gameClockSecondary.textContent="Match clock stopped. Record kicks in Overtime & penalty shootout below.";
   else if(phase==="full_time")gameClockSecondary.textContent=`Final official time · ${halfLength*2}-minute regulation target`;
   else gameClockSecondary.textContent=`${clock.clock_running?"Clock continues from the server anchor even if this app closes.":"Official time is held until Resume."}`;
 
   let alertText="",alertDue=false;
   if(phase==="first_half"&&seconds>=halfSeconds){alertText=`${halfLength}:00 reached — keep an eye on the referee and tap Halftime when the whistle goes.`;alertDue=true;maybeVibrateClock(`half:${gameDaySelected?.id}:${phaseToken}:${halfLength}`,[180,90,180]);}
   if(phase==="second_half"&&seconds>=halfSeconds*2){alertText=`${halfLength*2}:00 reached — keep an eye on the referee and tap Full Time when the whistle goes.`;alertDue=true;maybeVibrateClock(`full:${gameDaySelected?.id}:${phaseToken}:${halfLength}`,[180,90,180]);}
+  if(["extra_first_half","extra_second_half"].includes(phase)){const target=halfSeconds*2+(Number(tiebreaks.state()?.extra_minutes)||5)*60*(phase==="extra_second_half"?2:1);if(seconds>=target){alertText="Overtime period reached. Follow the referee’s whistle; use overtime halftime, Full Time or penalty shootout.";alertDue=true;}}
   gameClockAlert.textContent=alertText;gameClockAlert.className="game-clock-alert"+(alertText?" show":"")+(alertDue?" due":"");
 
   gameClockActions?.querySelectorAll("[data-clock-action]").forEach(btn=>{
     const action=btn.dataset.clockAction;
     const show=(action==="start_first_half"&&phase==="not_started")
-      ||(action==="pause"&&["first_half","second_half"].includes(phase)&&clock.clock_running)
-      ||(action==="resume"&&["first_half","second_half"].includes(phase)&&!clock.clock_running)
+      ||(action==="pause"&&["first_half","second_half","extra_first_half","extra_second_half"].includes(phase)&&clock.clock_running)
+      ||(action==="resume"&&["first_half","second_half","extra_first_half","extra_second_half"].includes(phase)&&!clock.clock_running)
       ||(action==="halftime"&&phase==="first_half")
       ||(action==="start_second_half"&&phase==="halftime")
-      ||(action==="full_time"&&phase==="second_half")
+      ||(action==="full_time"&&["second_half","extra_first_half","extra_halftime","extra_second_half"].includes(phase))
+      ||(action==="end_regulation"&&phase==="second_half")
+      ||(action==="start_extra_first_half"&&["extra_break","full_time"].includes(phase))
+      ||(action==="extra_halftime"&&phase==="extra_first_half")
+      ||(action==="start_extra_second_half"&&phase==="extra_halftime")
+      ||(action==="start_shootout"&&["second_half","extra_break","extra_second_half","full_time"].includes(phase))
       ||(action==="reset"&&phase!=="not_started");
     btn.style.display=show?"inline-flex":"none";
   });
 
-  if(["first_half","second_half"].includes(phase)){
-    eventHalf.value=phase==="second_half"?"second":"first";
+  if(["first_half","second_half","extra_first_half","extra_second_half"].includes(phase)){
+    eventHalf.value=phase==="extra_first_half"?"extra_first":phase==="extra_second_half"?"extra_second":phase==="second_half"?"second":"first";
     eventHalf.disabled=!editingEventId;
   }else eventHalf.disabled=false;
 
@@ -7031,7 +7053,7 @@ function renderGameClock(){
   const next=currentWaves.find(w=>w.target>=seconds-180);
   gameClockSubAlert.className="sub-clock-card";
   if(!PRODUCTION_GAMEPLAN){gameClockSubAlert.innerHTML='<strong>Substitution reminders</strong><span>Publish a Production / Final lineup with planned waves to activate reminders.</span>';}
-  else if(!["first_half","second_half"].includes(phase)){gameClockSubAlert.innerHTML='<strong>Substitution reminders ready</strong><span>Reminders follow each saved wave group when a playable half is active.</span>';}
+  else if(!["first_half","second_half","extra_first_half","extra_second_half"].includes(phase)){gameClockSubAlert.innerHTML='<strong>Substitution reminders ready</strong><span>Reminders follow each saved wave group when a playable half is active.</span>';}
   else if(!next){gameClockSubAlert.innerHTML='<strong>No more planned waves this half</strong><span>All timed substitution windows for this half have passed.</span>';}
   else{
     const delta=next.target-seconds,unit=gameDaySubUnitLabel(next.row.unit),name=String(next.row.label||"").trim();
@@ -7047,15 +7069,24 @@ function renderGameClock(){
     const editingEvent=editingEventId?gameDayEvents.find(event=>event.id===editingEventId):null;
     eventClockPreview.textContent=editingEventId
       ? `Original timestamp: ${clockStampLabel(editingEvent?.clock_elapsed_seconds,editingEvent?.clock_period)}. Editing keeps that recorded time; the half can be corrected manually.`
-      : (["first_half","second_half"].includes(phase)?`The server will stamp this event at official time ${clockFormat(seconds)} (${phase==="second_half"?"2nd Half":"1st Half"}).`:`Start the official 1st or 2nd half clock before recording a live event.`);
+      : (["first_half","second_half","extra_first_half","extra_second_half"].includes(phase)?`The server will stamp this event at official time ${clockFormat(seconds)} (${window.SKORTiebreaks.periodLabel(phase.replace(/_half$/,""))}).`:`Start the official 1st or 2nd half clock before recording a live event.`);
   }
 }
+let gameClockControlBusy=false;
 async function controlGameClock(action){
+  if(gameClockControlBusy)return;
   if(!portalCanWrite()){viewerBlocked("control the official match clock");return;}
   if(!gameDaySelected?.id){alert("Select a match first.");return;}
+  if(["start_extra_first_half","start_extra_second_half","start_shootout"].includes(action)&&(!tiebreaks.state()||tiebreaks.isDirty())){alert("Save overtime settings / kicks before starting the next period.");return;}
+  if(gameClockState?.clock_phase==="full_time"&&["start_extra_first_half","start_shootout"].includes(action)&&!confirm("Reopen this finished match for LIVE play? To record an already-finished game, use Record after game and the penalty kick log instead."))return;
   if(action==="reset"&&!confirm("Reset the official clock to 00:00 and return this match to Scheduled? Existing event timestamps will be kept."))return;
   if(action==="full_time"&&!confirm("Record Full Time at the current official clock time?"))return;
-  const requestedMatchId=gameDaySelected.id;
+  const requestedMatchId=gameDaySelected.id,requestedActor=captainActivityUser,requestedSessionVersion=portalSessionVersion;
+  const controlStatus=document.getElementById("gameClockControlStatus");
+  const stillCurrent=()=>gameDaySelected?.id===requestedMatchId&&captainActivityUser===requestedActor&&portalSessionVersion===requestedSessionVersion&&portalCanWrite();
+  gameClockControlBusy=true;
+  if(controlStatus)controlStatus.textContent="Updating official clock…";
+  try{
   const buttons=[...(gameClockActions?.querySelectorAll("button")||[])];buttons.forEach(btn=>btn.disabled=true);
   const {data,error}=await sb.rpc("control_match_clock",{
     p_match_id:requestedMatchId,
@@ -7063,14 +7094,17 @@ async function controlGameClock(action){
     p_half_length_minutes:Number(gameClockHalfLength.value),
     p_sub_interval_minutes:Number(gameClockSubInterval.value)
   });
-  buttons.forEach(btn=>btn.disabled=false);
-  if(gameDaySelected?.id!==requestedMatchId)return;
-  if(error){alert("Could not update the match clock: "+error.message);return;}
+  if(!stillCurrent())return;
+  if(error)throw error;
   gameClockState=Array.isArray(data)?(data[0]||null):(data||null);
   substitutionAlarm?.updateClock(requestedMatchId,gameClockState);
-  const statusByAction={start_first_half:"first_half",halftime:"halftime",start_second_half:"second_half",full_time:"final",reset:"scheduled"};
+  const statusByAction={end_regulation:"extra_time",start_extra_first_half:"extra_time",extra_halftime:"extra_time",start_extra_second_half:"extra_time",start_shootout:"shootout",start_first_half:"first_half",halftime:"halftime",start_second_half:"second_half",full_time:"final",reset:"scheduled"};
   if(statusByAction[action])gameDaySelected.status=statusByAction[action];
-  renderGameClock();renderGameDay();await loadCrowdAdmin();
+  renderGameClock();renderGameDay();
+  if(controlStatus)controlStatus.textContent=action==="start_first_half"?"Game started. The 1st-half clock is running.":action==="start_second_half"?"The 2nd-half clock is running.":"Official clock updated.";
+  await loadCrowdAdmin();
+  }catch(error){if(stillCurrent()&&controlStatus)controlStatus.textContent="Could not update the clock: "+(error.message||"Check your connection and try again.");}
+  finally{gameClockControlBusy=false;gameClockActions?.querySelectorAll("button").forEach(btn=>btn.disabled=!portalCanWrite());}
 }
 gameClockActions?.querySelectorAll("[data-clock-action]").forEach(btn=>btn.addEventListener("click",()=>controlGameClock(btn.dataset.clockAction)));
 [gameClockHalfLength,gameClockSubInterval].forEach(select=>select?.addEventListener("change",()=>controlGameClock("configure")));
@@ -7105,14 +7139,14 @@ function renderMotm(){
   if(motmName||motmNumber||reason.value){preview.style.display="block";preview.innerHTML=`<strong>${motmNumber?`#${gdEsc(motmNumber)} `:""}${gdEsc(motmName||"Unnamed player")}</strong><small>Man of the Match</small><div style="margin-top:7px">${gdEsc(reason.value)}</div>`;}else{preview.style.display="none";preview.innerHTML="";}
 }
 function renderGameDay(){
-  postMatchEntry?.contextChanged();
+  postMatchEntry?.contextChanged();tiebreaks?.contextChanged();
   if(!gameDaySelected)return;
   document.getElementById("gameDayHome").childNodes[0].nodeValue=gameDaySelected.home_team;
   document.getElementById("gameDayAway").childNodes[0].nodeValue=gameDaySelected.away_team;
   document.getElementById("gameDayHomeRole").textContent=gameDaySelected.home_team==="SKOR FC"?"SKOR FC":"Opponent";
   document.getElementById("gameDayAwayRole").textContent=gameDaySelected.away_team==="SKOR FC"?"SKOR FC":"Opponent";
   const sc=gdScore();document.getElementById("gameDayScore").textContent=`${sc.home} – ${sc.away}`;
-  eventLog.innerHTML=gameDayEvents.length?gameDayEvents.map(e=>`<div class="event-log-item"><div><strong>${gdEventLabel(e)}</strong><br><small>${e.entry_source==="post_match"?`${e.half==="second"?"2nd Half":"1st Half"} · Post-match · Minute not recorded`:clockStampLabel(e.clock_elapsed_seconds,e.clock_period)} · Event ${e.sequence??""}</small></div><div class="event-actions"><button class="mini-btn" type="button" onclick="editGameEvent('${e.id}')">Edit</button><button class="mini-btn" type="button" onclick="deleteGameEvent('${e.id}')">Delete</button></div></div>`).join(""):'<div style="color:var(--muted);font-size:.9rem">No events recorded yet.</div>';
+  eventLog.innerHTML=gameDayEvents.length?gameDayEvents.map(e=>`<div class="event-log-item"><div><strong>${gdEventLabel(e)}</strong><br><small>${e.entry_source==="post_match"?`${window.SKORTiebreaks.periodLabel(e.half)} · Post-match · Minute not recorded`:clockStampLabel(e.clock_elapsed_seconds,e.clock_period)} · Event ${e.sequence??""}</small></div><div class="event-actions"><button class="mini-btn" type="button" onclick="editGameEvent('${e.id}')">Edit</button><button class="mini-btn" type="button" onclick="deleteGameEvent('${e.id}')">Delete</button></div></div>`).join(""):'<div style="color:var(--muted);font-size:.9rem">No events recorded yet.</div>';
   renderGameClock();
   renderMotm();
 }
@@ -7509,11 +7543,11 @@ async function loadGameDayMatches(preferredId=null){
     if(specific.error||!specific.data)throw Error('This match is no longer available.');
     data=[...(data||[]),specific.data];error=null;
   }
-  if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];postMatchEntry?.contextChanged();return;}
+  if(error||!data?.length){gameDayReady=false;backendBox.className="backend-warning";backendBox.textContent="Could not load matches from Supabase: "+(error?.message||"No published matches found.");gameDayMatch.innerHTML='<option value="">No matches available</option>';gameDaySelected=null;gameDayEvents=[];postMatchEntry?.contextChanged();tiebreaks?.contextChanged();return;}
   gameDayReady=true;gameDayMatches=data;backendBox.className="backend-ok";backendBox.textContent="Live Supabase match tracking is connected. · Game Day v57.0";
   gameDayMatch.innerHTML=data.map(m=>`<option value="${m.id}">${gdFormat(m.kickoff)} — ${gdEsc(m.home_team)} vs ${gdEsc(m.away_team)}</option>`).join("");
   const now=Date.now();let pick=(preferredId&&data.find(m=>m.id===preferredId))||data.find(m=>new Date(m.kickoff).getTime()+3*60*60*1000>now)||data[0];
-  gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;substitutionAlarm?.contextChanged();window.SKORLineup?.setEvents(gameDayMatches,false);await loadAiPlayerCommentSelection({force:true});await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();
+  gameDayMatch.value=pick.id;gameDaySelected=pick;window.gameDaySelected=gameDaySelected;substitutionAlarm?.contextChanged();window.SKORLineup?.setEvents(gameDayMatches,false);await loadAiPlayerCommentSelection({force:true});await loadGameDayTempPlayers(gameDaySelected.id);await loadProductionGameplan(gameDaySelected.id);await loadGameDayEvents();await loadCrowdAdmin();await tiebreaks.load();
 }
 async function loadGameDayEvents(){
   if(!gameDayReady||!gameDaySelected?.id){gameDayEvents=[];renderGameDay();return;}
@@ -7522,7 +7556,7 @@ async function loadGameDayEvents(){
   renderGameDay();
   await loadPlayerEngagement();
 }
-gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;postMatchEntry?.contextChanged();window.gameDaySelected=gameDaySelected;substitutionAlarm?.contextChanged();await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadProductionGameplan(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();});
+gameDayMatch.addEventListener("change",async()=>{gameDaySelected=gameDayMatches.find(m=>m.id===gameDayMatch.value)||null;postMatchEntry?.contextChanged();tiebreaks?.contextChanged();window.gameDaySelected=gameDaySelected;substitutionAlarm?.contextChanged();await loadGameDayTempPlayers(gameDaySelected?.id||null);await loadProductionGameplan(gameDaySelected?.id||null);await loadGameDayEvents();await loadCrowdAdmin();await tiebreaks.load();});
 function openEventEditor(type,event=null){
   currentEventType=type;editingEventId=event?.id||null;eventEditor.classList.add("open");
   const titles={skor_goal:"SKOR Goal",opponent_goal:"Opponent Goal",opponent_own_goal:"Opponent Own Goal",skor_own_goal:"SKOR Own Goal",skor_yellow_card:"SKOR Yellow Card",skor_red_card:"SKOR Red Card",opponent_yellow_card:"Opponent Yellow Card",opponent_red_card:"Opponent Red Card",skor_foul:"SKOR Foul",opponent_foul:"Opponent Foul"};
@@ -7539,7 +7573,7 @@ document.getElementById("cancelMatchEvent").addEventListener("click",()=>{eventE
 document.getElementById("saveMatchEvent").addEventListener("click",async()=>{
   if(!portalCanWrite()){viewerBlocked("save Game Day events");return;}
   if(!gameDayReady||!gameDaySelected?.id){alert("No live match is selected.");return;}
-  if(!editingEventId&&!["first_half","second_half"].includes(gameClockState?.clock_phase||"not_started")){alert("Start the official 1st or 2nd half clock before recording a live event. This guarantees the event receives the captain's official match timestamp.");return;}
+  if(!editingEventId&&!["first_half","second_half","extra_first_half","extra_second_half"].includes(gameClockState?.clock_phase||"not_started")){alert("Start the official 1st or 2nd half clock before recording a live event. This guarantees the event receives the captain's official match timestamp.");return;}
   const needsSkorPlayer=["skor_goal","skor_yellow_card","skor_red_card","skor_foul"].includes(currentEventType),needsOpponentPlayer=["opponent_yellow_card","opponent_red_card","opponent_foul"].includes(currentEventType);
   const player=needsSkorPlayer?selectedPlayerData(eventPlayer,eventPlayerManualName,eventPlayerManualNumber,eventPlayerMatchNumber):null;
   const assist=currentEventType==="skor_goal"?selectedPlayerData(eventAssist,eventAssistManualName,eventAssistManualNumber,eventAssistMatchNumber):null;
@@ -7883,6 +7917,7 @@ loadAnnouncements();
 
 </body>
 </html>
+
 
 
 

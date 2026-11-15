@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="skor-build" content="public-home-v58.38-schedule-recovery">
+<meta name="skor-build" content="public-home-v58.39-match-periods">
 <title>SKOR FC | Over 30 Soccer in Roswell, Georgia</title>
 <meta name="description" content="SKOR FC is an Over 30 soccer club based in Roswell, Georgia. View our schedule, squad, player season stats, practices, and club updates.">
 <style>
@@ -571,7 +571,7 @@ img{max-width:100%}
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="public-match-clock.js?v=57.0"></script>
+<script src="public-match-clock.js?v=58.39"></script>
 <script>
 /*
   SKOR FC 2026 schedule
@@ -763,6 +763,7 @@ let MATCH_CLOCKS = new Map();
 
 function gameDate(game){ return new Date(game.kickoff); }
 function isStillUpcoming(game, now){
+  if(isLiveStatus(game.status))return true;
   if(game.status === "final") return now.getTime() < gameDate(game).getTime() + GAME_WINDOW_MS;
   return now.getTime() < gameDate(game).getTime() + GAME_WINDOW_MS;
 }
@@ -775,9 +776,9 @@ function formatTime(date){
 function monthLabel(date){ return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short"}).format(date).toUpperCase(); }
 function dayLabel(date){ return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",day:"2-digit"}).format(date); }
 function statusLabel(status){
-  return ({first_half:"LIVE · 1ST HALF",halftime:"HALFTIME",second_half:"LIVE · 2ND HALF",final:"FINAL",scheduled:"NEXT MATCH"})[status] || "NEXT MATCH";
+  return ({first_half:"LIVE · 1ST HALF",halftime:"HALFTIME",second_half:"LIVE · 2ND HALF",extra_time:"LIVE · OVERTIME",shootout:"PENALTY SHOOTOUT",final:"FINAL",scheduled:"NEXT MATCH"})[status] || "NEXT MATCH";
 }
-function isLiveStatus(status){ return ["first_half","halftime","second_half"].includes(status); }
+function isLiveStatus(status){ return ["first_half","halftime","second_half","extra_time","shootout"].includes(status); }
 function teamLogo(team){
   const t=(team||"").toLowerCase();
   if(t.includes("skor fc")) return "assets/skor fc logo transparent.png";
@@ -913,4 +914,5 @@ document.querySelectorAll('#navLinks a').forEach(a=>{
 </script>
 </body>
 </html>
+
 

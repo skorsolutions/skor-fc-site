@@ -73,7 +73,7 @@
 </main>
 <footer class="footer"><div class="wrap footer-inner"><div class="footer-brand"><img src="assets/skor fc logo transparent.png" alt=""><div><strong>SKOR FC</strong><br><small>Roswell, Georgia · Established 2026</small></div></div><div class="play-skor">#PLAYSKOR</div></div></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="public-match-clock.js?v=57.0"></script>
+<script src="public-match-clock.js?v=58.39"></script>
 <script>
 const SUPABASE_URL="https://qwyhcezlgdkzzckysqxi.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY="sb_publishable__mYuE5SjQoNrhr6Gtur9Kw_8ifXNFU3";
@@ -105,9 +105,9 @@ function fmtTime(d){return new Intl.DateTimeFormat("en-US",{timeZone:"America/Ne
 function month(d){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",month:"short"}).format(d).toUpperCase()}
 function day(d){return new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",day:"2-digit"}).format(d)}
 function evFor(m){return m.id?events.filter(e=>e.match_id===m.id && !["skor_goal","opponent_goal","opponent_own_goal","skor_own_goal"].includes(e.event_type)):[]}
-function eventClockLabel(e){if(e?.clock_elapsed_seconds===null||e?.clock_elapsed_seconds===undefined)return `${e?.half==="second"?"2nd Half":"1st Half"} · Official time not recorded`;const total=Math.max(0,Math.floor(Number(e.clock_elapsed_seconds)||0)),minutes=Math.floor(total/60),seconds=total%60;return `Official ${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")} · ${e.clock_period==="second_half"?"2nd Half":"1st Half"}`;}
-function statusText(s){return({scheduled:"Scheduled",first_half:"Live · 1st Half",halftime:"Halftime",second_half:"Live · 2nd Half",final:"Final"})[s]||"Scheduled"}
-function statusClass(s){return["first_half","halftime","second_half"].includes(s)?"live":s==="final"?"final":""}
+function eventClockLabel(e){if(String(e?.half||e?.clock_period||"").startsWith("extra_")){const period=(e.half||e.clock_period).includes("second")?"Overtime · 2nd Half":"Overtime · 1st Half";return e.clock_elapsed_seconds==null?period+" · Official time not recorded":period+" · Official "+String(Math.floor(e.clock_elapsed_seconds/60)).padStart(2,"0")+":"+String(e.clock_elapsed_seconds%60).padStart(2,"0");}if(e?.clock_elapsed_seconds===null||e?.clock_elapsed_seconds===undefined)return `${e?.half==="second"?"2nd Half":"1st Half"} · Official time not recorded`;const total=Math.max(0,Math.floor(Number(e.clock_elapsed_seconds)||0)),minutes=Math.floor(total/60),seconds=total%60;return `Official ${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")} · ${e.clock_period==="second_half"?"2nd Half":"1st Half"}`;}
+function statusText(s){return({scheduled:"Scheduled",first_half:"Live · 1st Half",halftime:"Halftime",second_half:"Live · 2nd Half",extra_time:"Live · Overtime",shootout:"Penalty shootout",final:"Final"})[s]||"Scheduled"}
+function statusClass(s){return["first_half","halftime","second_half","extra_time","shootout"].includes(s)?"live":s==="final"?"final":""}
 function isPast(m){return m.status==="final" || (m.status==="scheduled" && Date.now()>new Date(m.kickoff).getTime()+2*60*60*1000)}
 function cardPlayer(e,fallback){const publicPlayer=publicName(e.player_name,e.roster_player_number);const name=publicPlayer?esc(publicPlayer):fallback;return `${name}${e.player_number!=null?` <small>#${e.player_number}</small>`:""}`}
 function renderCardGroup(list,fallback,emptyText){if(!list.length)return`<div class="empty">${emptyText}</div>`;return list.map(e=>`<div class="event"><div class="event-icon">${["skor_yellow_card","opponent_yellow_card"].includes(e.event_type)?"🟨":"🟥"}</div><div class="event-main"><strong>${cardPlayer(e,fallback)}</strong><small>${esc(eventClockLabel(e))}</small></div></div>`).join("")}
@@ -257,5 +257,6 @@ function renderManOfMatch(match){
 
 </script>
 </body></html>
+
 
 

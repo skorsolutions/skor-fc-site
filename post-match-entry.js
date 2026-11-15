@@ -1,6 +1,8 @@
 /* Post-match drafts retain official event IDs; only reviewed differences are saved. */
 (function(global){
   'use strict';
+  const halves=['first','second','extra_first','extra_second'];
+  const halfLabel=half=>({first:'1st Half',second:'2nd Half',extra_first:'Overtime · 1st Half',extra_second:'Overtime · 2nd Half'})[half]||half;
   const kinds=['skor_goal','skor_yellow_card','skor_red_card','opponent_goal'];
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const makeId=()=>global.crypto.randomUUID();
@@ -14,15 +16,15 @@
     if(!snapshot?.match?.id||!snapshot.revision||!Array.isArray(snapshot.events)||!Array.isArray(snapshot.participants))throw Error('Post-match response is incomplete.');
     const people=new Map(snapshot.participants.map(p=>[p.player_key,p]));
     if(people.size!==snapshot.participants.length||snapshot.events.length>2000)throw Error('Post-match response is invalid.');
-    const managed=snapshot.events.filter(e=>kinds.includes(e.event_type)&&['first','second'].includes(e.half)&&(e.event_type==='opponent_goal'||people.has(e.roster_player_key)));
+    const managed=snapshot.events.filter(e=>kinds.includes(e.event_type)&&halves.includes(e.half)&&(e.event_type==='opponent_goal'||people.has(e.roster_player_key)));
     const rows=managed.map(e=>{const r=row(e);if(r.assist_key&&!people.has(r.assist_key)){r.assist_key=null;r.assist_status='legacy';}return r;}),ids=new Set(rows.map(e=>e.id));
     if(ids.size!==rows.length)throw Error('Duplicate official event IDs.');
     return {snapshot,people,base:new Map(rows.map(e=>[e.id,{...e}])),rows,kept:snapshot.events.filter(e=>!ids.has(e.id)),
-      selected:{first:new Set(),second:new Set()},markFinal:true,cache:null};
+      selected:Object.fromEntries(halves.map(h=>[h,new Set()])),includeExtra:snapshot.events.some(e=>String(e.half||'').startsWith('extra_')),markFinal:true,cache:null};
   }
   function setCount(draft,half,key,type,count,id=makeId){
     const max=type==='skor_yellow_card'?2:type==='skor_red_card'?1:30,priorCount=draft.rows.filter(e=>e.half===half&&e.player_key===(type==='opponent_goal'?null:key)&&e.event_type===type).length;
-    if(!['first','second'].includes(half)||!kinds.includes(type)||!Number.isInteger(count)||count<0||count>max&&count>=priorCount||type!=='opponent_goal'&&!draft.people.has(key))throw Error('Check player, half and event count.');
+    if(!halves.includes(half)||!kinds.includes(type)||!Number.isInteger(count)||count<0||count>max&&count>=priorCount||type!=='opponent_goal'&&!draft.people.has(key))throw Error('Check player, half and event count.');
     key=type==='opponent_goal'?null:key;
     const list=draft.rows.filter(e=>e.half===half&&e.player_key===key&&e.event_type===type);
     if(count<list.length){
@@ -78,13 +80,20 @@
       const epoch=generation;busy=true;message='';emit();
       try{const body=submission(draft,id);if(!await valid(epoch)){if(epoch===generation)clear();return false;}
         const r=await client.rpc('save_post_match_events',body);if(!await valid(epoch)){if(epoch===generation)clear();return false;}if(r.error)throw r.error;if(r.data?.ok!==true)throw Error('Save could not be verified. Retry unchanged to check this submission.');
-        phase='saved';busy=false;message='Saved. Both halves are in the official event log.';emit();
+        phase='saved';busy=false;message='Saved. The selected periods are in the official event log.';emit();
         try{await onSaved(matchId,r.data);}catch(e){if(epoch===generation){message='Events were saved. Refresh Game Day to reload the results.';emit();}}
         return true;
       }catch(e){if(epoch===generation){phase=['40001','40P01'].includes(e.code)?'conflict':'error';message=phase==='conflict'?'Match changed. Reload and review before saving.':e.message||'Save failed. Retry unchanged to avoid duplicates.';if(e.code==='42501')draft=null;emit();}return false;
       }finally{if(epoch===generation){busy=false;emit();}}
     }
-    return {state,open,save,clear,contextChanged};
+    async function continueEditing(){
+      if(busy||phase!=='saved')return false;
+      const selected=Object.fromEntries(halves.map(h=>[h,[...draft.selected[h]]]));
+      if(!await open())return false;
+      for(const half of halves)for(const key of selected[half])if(draft.people.has(key))draft.selected[half].add(key);
+      message='Saved events loaded. Add more goals or cards, then save again.';emit();return true;
+    }
+    return {state,open,save,continueEditing,clear,contextChanged};
   }
   function mount({client,getContext,onSaved=()=>{},doc=global.document,win=global}){
     const dialog=doc.getElementById('postMatchDialog'),root=doc.getElementById('postMatchBody'),button=doc.getElementById('openPostMatch');
@@ -98,7 +107,7 @@
     }
     function halfSection(d,half){
       const t=totals(d,half),ownSkor=d.kept.filter(e=>e.half===half&&e.event_type==='opponent_own_goal').length,ownOpponent=d.kept.filter(e=>e.half===half&&e.event_type==='skor_own_goal').length,halfScore=d.snapshot.match.home_team==='SKOR FC'?`${t.skor}–${t.opponent}`:`${t.opponent}–${t.skor}`,keys=new Set([...d.selected[half],...d.rows.filter(e=>e.half===half).flatMap(e=>[e.player_key,e.assist_key]).filter(k=>d.people.has(k))]);
-      return `<details class="pm-half" data-pm-half="${half}" ${expanded.has(half)?'open':''}><summary><span>${half==='first'?'1st':'2nd'} Half<small>${t.goals} goals · ${t.assists} assists · ${t.yellow} yellow · ${t.red} red</small></span><b class="pm-score">${halfScore}</b></summary><div class="pm-half-body">${[...keys].map(key=>playerCard(d,half,key)).join('')}<label class="pm-add">Add player<select data-pm-add="${half}"><option value="">Choose roster or guest / TEMP…</option>${[...d.people.values()].filter(p=>!keys.has(p.player_key)).map(p=>`<option value="${esc(p.player_key)}">${esc(label(p))}</option>`).join('')}</select></label>${ownSkor||ownOpponent?`<p>Own goals already kept: SKOR +${ownSkor} · Opponent +${ownOpponent}. Add only other opponent goals below.</p>`:''}<div class="pm-row pm-opponent"><strong>Opponent goals</strong>${stepper(half,null,'opponent_goal',d.rows.filter(e=>e.half===half&&e.event_type==='opponent_goal').length,30)}</div></div></details>`;
+      return `<details class="pm-half" data-pm-half="${half}" ${expanded.has(half)?'open':''}><summary><span>${halfLabel(half)}<small>${t.goals} goals · ${t.assists} assists · ${t.yellow} yellow · ${t.red} red</small></span><b class="pm-score">${halfScore}</b></summary><div class="pm-half-body">${[...keys].map(key=>playerCard(d,half,key)).join('')}<label class="pm-add">Add player<select data-pm-add="${half}"><option value="">Choose roster or guest / TEMP…</option>${[...d.people.values()].filter(p=>!keys.has(p.player_key)).map(p=>`<option value="${esc(p.player_key)}">${esc(label(p))}</option>`).join('')}</select></label>${ownSkor||ownOpponent?`<p>Own goals already kept: SKOR +${ownSkor} · Opponent +${ownOpponent}. Add only other opponent goals below.</p>`:''}<div class="pm-row pm-opponent"><strong>Opponent goals</strong>${stepper(half,null,'opponent_goal',d.rows.filter(e=>e.half===half&&e.event_type==='opponent_goal').length,30)}</div></div></details>`;
     }
     function render(state){
       current=state;if(state.phase==='idle'){if(dialog.open)dialog.close();return;}
@@ -106,18 +115,19 @@
       if(!state.draft){root.innerHTML=`<p role="status">${esc(state.message||'Loading official events…')}</p><button type="button" data-pm="reload">Reload</button>`;return;}
       const d=state.draft,t=totals(d),c=changes(d),m=d.snapshot.match,overLimit=c.upserts.length+c.deleted.length>200,disabled=state.busy||['conflict','saved'].includes(state.phase);
       const home=m.home_team==='SKOR FC'?t.skor:t.opponent,away=m.home_team==='SKOR FC'?t.opponent:t.skor;
-      root.innerHTML=`<p class="pm-match">${esc(m.home_team)} vs ${esc(m.away_team)}</p><p>Enter both halves. No clock needed.</p><div class="pm-notice">Existing events are included below. New entries have no recorded minute.</div>${d.kept.length?`<details class="pm-kept"><summary>${d.kept.length} other existing events kept</summary><p>Manual player entries, own goals, fouls and opponent cards remain in the log and score. Use their individual Edit action to correct them.</p>${d.kept.map(e=>`<p>${esc(e.half==='second'?'2nd Half':'1st Half')} · ${esc(e.event_type.replaceAll('_',' '))} · ${esc(e.player_name||'Opponent')}</p>`).join('')}</details>`:''}<fieldset class="pm-fields" ${disabled?'disabled':''}>${halfSection(d,'first')}${halfSection(d,'second')}<label class="pm-final"><input type="checkbox" data-pm-final ${d.markFinal?'checked':''}> Mark match Final when saving</label><small>Completed-match player stats update when the match is Final. This does not change attendance.</small></fieldset><div class="pm-review"><h3>Ready to save</h3><strong>Final score ${home}–${away}</strong><p>${t.goals} goals · ${t.assists} assists · ${t.yellow} yellow · ${t.red} red${t.unknown?' · '+t.unknown+' unknown assists':''}</p><p class="pm-changes">Add ${c.added} · Correct ${c.updated} · Remove ${c.deleted.length}</p>${overLimit?'<p class="pm-error">Save at most 200 changes at once. Reduce this draft before saving.</p>':''}${[...d.people.keys()].some(key=>d.rows.filter(e=>e.player_key===key&&e.event_type==='skor_yellow_card').length>=2)?'<p>Two yellows recorded for a player. Check whether a red should also be entered.</p>':''}<button class="btn btn-primary" type="button" data-pm="save" ${disabled||overLimit||!c.upserts.length&&!c.deleted.length&&(!d.markFinal||m.status==='final')?'disabled':''}>${state.busy?'Saving…':state.phase==='saved'?'Saved':'Save all events'}</button><small>Saves both halves together.</small></div><p role="status" class="pm-status ${['error','conflict'].includes(state.phase)?'pm-error':''}">${esc(state.message)}</p>${state.phase==='conflict'?'<button type="button" data-pm="reload">Reload latest events</button><p>Reloading replaces this draft. Review the new totals.</p>':''}`;
+      root.innerHTML=`<p class="pm-match">${esc(m.home_team)} vs ${esc(m.away_team)}</p><p>Enter match goals and cards by period. No clock needed.</p><div class="pm-notice">Existing events are included below. New entries have no recorded minute.</div>${d.kept.length?`<details class="pm-kept"><summary>${d.kept.length} other existing events kept</summary><p>Manual player entries, own goals, fouls and opponent cards remain in the log and score. Use their individual Edit action to correct them.</p>${d.kept.map(e=>`<p>${esc(halfLabel(e.half))} · ${esc(e.event_type.replaceAll('_',' '))} · ${esc(e.player_name||'Opponent')}</p>`).join('')}</details>`:''}<fieldset class="pm-fields" ${disabled?'disabled':''}>${halfSection(d,'first')}${halfSection(d,'second')}<label class="pm-final"><input type="checkbox" data-pm-extra ${d.includeExtra?'checked':''}> This match had overtime</label>${d.includeExtra?halfSection(d,'extra_first')+halfSection(d,'extra_second'):''}<label class="pm-final"><input type="checkbox" data-pm-final ${d.markFinal?'checked':''}> Mark match Final when saving</label><small>Completed-match player stats update when the match is Final. This does not change attendance.</small></fieldset><div class="pm-review"><h3>Ready to save</h3><strong>Final score ${home}–${away}</strong><p>${t.goals} goals · ${t.assists} assists · ${t.yellow} yellow · ${t.red} red${t.unknown?' · '+t.unknown+' unknown assists':''}</p><p class="pm-changes">Add ${c.added} · Correct ${c.updated} · Remove ${c.deleted.length}</p>${overLimit?'<p class="pm-error">Save at most 200 changes at once. Reduce this draft before saving.</p>':''}${[...d.people.keys()].some(key=>d.rows.filter(e=>e.player_key===key&&e.event_type==='skor_yellow_card').length>=2)?'<p>Two yellows recorded for a player. Check whether a red should also be entered.</p>':''}<button class="btn btn-primary" type="button" data-pm="save" ${disabled||overLimit||!c.upserts.length&&!c.deleted.length&&(!d.markFinal||m.status==='final')?'disabled':''}>${state.busy?'Saving…':state.phase==='saved'?'Saved':'Save all events'}</button><small>Saves all selected periods together. Penalty shootout kicks have their own panel.</small></div><p role="status" class="pm-status ${['error','conflict'].includes(state.phase)?'pm-error':''}">${esc(state.message)}</p>${state.phase==='saved'?'<button class="pm-continue" type="button" data-pm="continue">Add more goals or cards</button><p>Your saved events will reload before you continue.</p>':''}${state.phase==='conflict'?'<button type="button" data-pm="reload">Reload latest events</button><p>Reloading replaces this draft. Review the new totals.</p>':''}`;
     }
     const controller=createController({client,getContext,onState:render,onSaved});
     function remember(){root.querySelectorAll('[data-pm-half]').forEach(e=>e.open?expanded.add(e.dataset.pmHalf):expanded.delete(e.dataset.pmHalf));root.querySelectorAll('[data-pm-assists]').forEach(e=>e.open?assistExpanded.add(e.dataset.pmAssists):assistExpanded.delete(e.dataset.pmAssists));}
     button?.addEventListener('click',()=>{expanded.clear();expanded.add('first');assistExpanded.clear();void controller.open();});
     dialog.addEventListener('click',e=>{const b=e.target.closest('button[data-pm]');if(!b||b.disabled)return;const action=b.dataset.pm;
-      if(action==='close'){if(!current?.busy)controller.clear();return;}if(action==='reload'){void controller.open();return;}if(action==='save'){void controller.save();return;}
+      if(action==='close'){if(!current?.busy)controller.clear();return;}if(action==='reload'){void controller.open();return;}if(action==='continue'){void controller.continueEditing();return;}if(action==='save'){void controller.save();return;}
       if(action==='count'&&current?.draft&&!current.busy){try{remember();setCount(current.draft,b.dataset.half,b.dataset.player||null,b.dataset.type,Number(b.dataset.value));if(b.dataset.type==='skor_goal')assistExpanded.add(b.dataset.half+':'+b.dataset.player);render({...current,message:''});const next=[...root.querySelectorAll('[data-pm=count]')].find(x=>x.dataset.half===b.dataset.half&&x.dataset.player===b.dataset.player&&x.dataset.type===b.dataset.type&&Number(x.dataset.value)===Number(b.dataset.value)+1);next?.focus();}catch(error){const out=root.querySelector('.pm-status');if(out)out.textContent=error.message;}}
     });
     dialog.addEventListener('change',e=>{if(!current?.draft||current.busy)return;remember();const d=current.draft;try{
       if(e.target.hasAttribute('data-pm-add')){if(d.people.has(e.target.value))d.selected[e.target.dataset.pmAdd].add(e.target.value);}
       else if(e.target.hasAttribute('data-pm-assist'))setAssist(d,e.target.dataset.pmAssist,e.target.value);
+      else if(e.target.hasAttribute('data-pm-extra')){if(!e.target.checked&&d.rows.some(r=>r.half.startsWith('extra_')))throw Error('Keep overtime visible while it has recorded events.');d.includeExtra=e.target.checked;}
       else if(e.target.hasAttribute('data-pm-final'))d.markFinal=e.target.checked;
       else return;render({...current,message:''});
     }catch(error){root.querySelector('.pm-status').textContent=error.message;}});
@@ -126,3 +136,4 @@
   }
   global.SKORPostMatch={createDraft,setCount,setAssist,changes,totals,submission,createController,mount};
 })(typeof window==='object'?window:globalThis);
+

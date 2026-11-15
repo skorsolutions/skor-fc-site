@@ -301,7 +301,7 @@
 
 <div class="modal" id="eventModal"><div class="sheet"><div class="sheethead"><h2 id="eventModalTitle">Report Event</h2><button class="close" data-close="eventModal" type="button">×</button></div><div class="form">
   <div class="clock-modal-time" id="eventClockStamp">The captain's official clock will timestamp this report.</div>
-  <div><label>Half</label><select id="eventHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
+  <div><label>Half</label><select id="eventHalf"><option value="first">1st Half</option><option value="second">2nd Half</option><option value="extra_first">Overtime 1st Half</option><option value="extra_second">Overtime 2nd Half</option></select></div>
   <div id="playerChoiceWrap"><label>SKOR Player</label><select id="eventPlayer"><option value="">Select player…</option></select></div>
   <div id="assistChoiceWrap"><label>Assist</label><select id="eventAssist"><option value="">Unassisted / No assist</option></select></div>
   <div id="opponentWrap" class="hidden"><label>Opponent player (optional)</label><input id="opponentName" placeholder="Name or jersey number if known"></div>
@@ -310,7 +310,7 @@
 
 <div class="modal" id="refModal"><div class="sheet"><div class="sheethead"><h2>Referee Decision Review</h2><button class="close" data-close="refModal" type="button">×</button></div><div class="form">
   <div class="clock-modal-time" id="refClockStamp">The captain's official clock will timestamp this report.</div>
-  <div><label>Half</label><select id="refHalf"><option value="first">1st Half</option><option value="second">2nd Half</option></select></div>
+  <div><label>Half</label><select id="refHalf"><option value="first">1st Half</option><option value="second">2nd Half</option><option value="extra_first">Overtime 1st Half</option><option value="extra_second">Overtime 2nd Half</option></select></div>
   <div><label>Decision</label><select id="refType"><option>Foul / No Foul</option><option>Penalty / No Penalty</option><option>Offside / Onside</option><option>Yellow Card / No Card</option><option>Red Card / No Red Card</option><option>Handball / No Handball</option><option>Goal Allowed / Goal Disallowed</option><option>Throw-in / Corner / Goal Kick</option><option>Other</option></select></div>
   <div><label>What happened? <span style="color:#777;font-weight:500">(optional)</span></label><textarea id="refDescription" placeholder="Example: Possible handball in the box"></textarea></div>
   <div><label>Your view</label><select id="refVote"><option value="disagree">Disagree with referee</option><option value="agree">Agree with referee</option><option value="unsure">Unsure</option></select></div>
@@ -374,6 +374,7 @@ function officialClockSeconds(){
 }
 function clockFormat(seconds){const safe=Math.max(0,Math.floor(Number(seconds)||0));return `${String(Math.floor(safe/60)).padStart(2,'0')}:${String(safe%60).padStart(2,'0')}`;}
 function eventClockLabel(record){
+  if(String(record?.half||record?.clock_period||'').startsWith('extra_'))return ((record.half||record.clock_period).includes('second')?'Overtime 2nd Half':'Overtime 1st Half')+' · '+(record.clock_elapsed_seconds==null?'time not recorded':clockFormat(record.clock_elapsed_seconds));
   if(record?.clock_elapsed_seconds===null||record?.clock_elapsed_seconds===undefined)return record?.half==='second'?'2nd half · time not recorded':'1st half · time not recorded';
   return `${clockFormat(record.clock_elapsed_seconds)} · ${record.clock_period==='second_half'?'2nd':'1st'} half`;
 }
@@ -381,7 +382,7 @@ function renderOfficialClock(){
   if(!$('officialClockTime')||!session)return;
   const phase=session.clock_phase||'not_started',seconds=officialClockSeconds(),halfLength=Number(session.half_length_minutes)||45,halfSeconds=halfLength*60;
   $('officialClockTime').textContent=clockFormat(seconds);
-  const labels={not_started:'Waiting for the captain to start the official clock',first_half:`Official 1st Half · ${session.clock_running?'Running':'Paused'}`,halftime:'Official Halftime',second_half:`Official 2nd Half · ${session.clock_running?'Running':'Paused'}`,full_time:'Official Full Time'};
+  const labels={not_started:'Waiting for the captain to start the official clock',first_half:`Official 1st Half · ${session.clock_running?'Running':'Paused'}`,halftime:'Official Halftime',second_half:`Official 2nd Half · ${session.clock_running?'Running':'Paused'}`,extra_break:'Before overtime',extra_first_half:'Overtime · 1st Half',extra_halftime:'Overtime halftime',extra_second_half:'Overtime · 2nd Half',shootout:'Penalty shootout',full_time:'Official Full Time'};
   $('officialClockStatus').textContent=labels[phase]||'Official Match Clock';
   const isBreak=phase==='halftime';
   $('officialClockBreak').classList.toggle('hidden',!isBreak);
@@ -390,10 +391,10 @@ function renderOfficialClock(){
   if(phase==='first_half'&&seconds>=halfSeconds)warning=`${halfLength}:00 reached. The captain will tap Halftime when the referee ends the half.`;
   if(phase==='second_half'&&seconds>=halfSeconds*2)warning=`${halfLength*2}:00 reached. The captain will tap Full Time when the referee ends the match.`;
   $('officialClockAlert').textContent=warning;$('officialClockAlert').classList.toggle('show',!!warning);
-  const playable=['first_half','second_half'].includes(phase);
-  const half=phase==='second_half'?'second':'first';
+  const playable=['first_half','second_half','extra_first_half','extra_second_half'].includes(phase);
+  const half=phase==='extra_first_half'?'extra_first':phase==='extra_second_half'?'extra_second':phase==='second_half'?'second':'first';
   $('eventHalf').value=half;$('refHalf').value=half;$('eventHalf').disabled=playable;$('refHalf').disabled=playable;
-  const stamp=playable?`Official time now: ${clockFormat(seconds)} · ${phase==='second_half'?'2nd':'1st'} Half`:'The captain must start a playable half before an official timestamp is available.';
+  const stamp=playable?`Official time now: ${clockFormat(seconds)} · ${phase==='extra_first_half'?'Overtime 1st':phase==='extra_second_half'?'Overtime 2nd':phase==='second_half'?'2nd':'1st'} Half`:'The captain must start a playable half before an official timestamp is available.';
   $('eventClockStamp').textContent=stamp;$('refClockStamp').textContent=stamp;
 }
 const ACTIVE_WINDOW_MS=5*60*1000;
@@ -531,7 +532,7 @@ function render(){
   if(rule)rule.textContent=`${currentNeeded} confirmation${currentNeeded===1?'':'s'} needed now`;
   $('matchPhase').textContent=session.active?'Crowd Scoring Open':'Crowd Scoring Closed';
   renderOfficialClock();renderOfficialLineup();renderRosterOptions();renderEventFeed();renderRefFeed();renderMotm();
-  const playable=['first_half','second_half'].includes(session.clock_phase||'not_started');
+  const playable=['first_half','second_half','extra_first_half','extra_second_half'].includes(session.clock_phase||'not_started');
   document.querySelectorAll('[data-report],#refCallBtn').forEach(b=>b.disabled=!session.active||!playable);
 }
 function renderRosterOptions(){const opts='<option value="">Select player…</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">${window.SKORMatchJerseys.label(window.SKORMatchJerseys.resolve(productionLineup?.state,p.player_key,p.jersey_number))} ${esc(p.display_name)}</option>`).join('');const cur=$('eventPlayer').value;$('eventPlayer').innerHTML=opts;if([...$('eventPlayer').options].some(o=>o.value===cur))$('eventPlayer').value=cur;const acur=$('eventAssist').value;$('eventAssist').innerHTML='<option value="">Unassisted / No assist</option>'+roster.map(p=>`<option value="${esc(p.player_key)}">${window.SKORMatchJerseys.label(window.SKORMatchJerseys.resolve(productionLineup?.state,p.player_key,p.jersey_number))} ${esc(p.display_name)}</option>`).join('');if([...$('eventAssist').options].some(o=>o.value===acur))$('eventAssist').value=acur;}
@@ -562,5 +563,6 @@ db.auth.onAuthStateChange((_e,s)=>{if(s?.user&&!user){setTimeout(afterLogin,0)}}
 </script>
 </body>
 </html>
+
 
 

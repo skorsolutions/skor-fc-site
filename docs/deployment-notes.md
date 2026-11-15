@@ -1,3 +1,14 @@
+# v58.39 — Continued post-game recording, clearer kickoff, overtime and shootout (prepared)
+
+2026-11-15 UTC. User reported the saved post-game form cannot continue, unclear kickoff controls and missing two-half golden-goal overtime / penalties; confirmed 5-minute overtime halves with an editable league setting.
+
+- Added explicit reload-and-continue after saved event batches; old event IDs, receipts and concurrency guards remain. No duplicate saved goals are invented.
+- A full-width Start game — 1st half button, plain clock wording, inline progress/errors and exception-safe controls make kickoff clear.
+- Prepared live/post-game overtime periods, configurable two 5-minute halves, golden-goal choice, period labels and clock progression across Captain/Crowd/public surfaces. Separate captain shootout log has optional kicker, scored/missed kicks, configurable initial rounds, early clinch and sudden death. Penalties never count as match/player goals.
+- Proposed database SQL is docs/sql/MATCH-TIEBREAKS.sql. No production migration, real match data change or deployment is performed yet. Exact approval is required by AGENTS.md. Implementation/workflow details: docs/MATCH-TIEBREAKS.md.
+- Verification is running on the feature branch: existing regression suites, native phone/desktop browser controls and disposable Postgres replay/role tests. Local Chromium cannot launch in this executor, so browser checks run in CI. Deployment and live-role checks remain pending approval.
+- Affected: Captain admin/clock, post-match controller/styles, new tiebreak controller/styles, shared public clock, Home/Match Center/Crowd period labels, proposed SQL, controller/browser/database fixtures and tests, build marker assertions, package command and documentation. Player Portal source, public score grants, lineup exports, attendance and Edge Functions are unchanged.
+
 # Homepage v58.38 — Recover newly published games after the built-in schedule ends (deployed)
 
 2026-11-14 UTC. User requested repair and public visibility of the newly scheduled November 15 game. Public homepage only; Captain Portal remains v58.37 and Player Portal remains v58.28.
@@ -1199,6 +1210,7 @@ The connector cannot create a GitHub commit comment. This matching summary is re
 - Occupied field slots retain their tactical label (for example, `LB`, `CAM`, or `ST`) so the position remains visible beside the player.
 - Freeform placement is unchanged because the custom board does not use named formation slots.
 - Affected file: `admin.html`.
+
 
 
 

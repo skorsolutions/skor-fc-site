@@ -190,3 +190,8 @@ Details and verification: [SUBSTITUTION-ALARM.md](SUBSTITUTION-ALARM.md).
 ## v58.26 post-match exception
 
 The reviewed `POST-MATCH-ENTRY.sql` migration adds `entry_source=post_match` for intentional captain retrospective entries. The stamp trigger leaves their selected half and clears official timestamp fields. New live entries retain the existing server clock rule; correcting an old live entry preserves its original time and match-number metadata. The post-match form may mark Final and stop an existing clock at actual elapsed time, but never starts or creates a clock or manufactures full regulation time. Atomic event edits and the new ordinary-event lock guard prevent stale bulk updates; retry receipts and match/event/clock digests are documented in [POST-MATCH-ENTRY.md](POST-MATCH-ENTRY.md). The exact SQL was approved and applied as `20261026194953 add_post_match_event_entry`; real-role trigger and rollback checks pass. Captain Portal v58.26 is deployed with exact source hashes and Cloudflare production version verified at 100% traffic.
+
+
+## v58.39 prepared overtime extension
+
+[Match periods and shootouts](MATCH-TIEBREAKS.md) documents the prepared, approval-gated extension. Live clock phases add extra_break, extra_first_half, extra_halftime, extra_second_half and shootout. Regulation half lengths remain 40/45; overtime defaults to two editable 5-minute halves. Golden goal follows the referee with explicit Full Time confirmation. Shootout time stays stopped and kicks are separate from match goals. No production migration has been applied.

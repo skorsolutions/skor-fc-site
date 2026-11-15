@@ -99,7 +99,7 @@ try {
     let ready=false;
     for(let attempt=0;attempt<4;attempt++){
       await page.goto(process.env.SKOR_HOME_LIVE+"?home-check="+Date.now(),{waitUntil:"networkidle"});
-      ready=await page.locator('meta[name="skor-build"]').getAttribute("content")==="public-home-v58.38-schedule-recovery";
+      ready=await page.locator('meta[name="skor-build"]').getAttribute("content")==="public-home-v58.39-match-periods";
       if(ready)break;
       await page.waitForTimeout(10000);
     }
@@ -124,3 +124,4 @@ try {
   await browser.close();
   await new Promise(r=>server.close(r));
 }
+

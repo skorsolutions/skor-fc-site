@@ -48,7 +48,7 @@ assert.match(matches, /data-official-clock/);
 assert.match(matches, /Official time not recorded/);
 assert.match(home, /get_public_match_clocks/);
 assert.match(home, /data-official-clock/);
-assert.match(home, /public-match-clock\.js\?v=57\.0/);
+assert.match(home, /public-match-clock\.js\?v=58\.39/);
 
 const publicClockContext = { globalThis: {} };
 vm.runInNewContext(publicClockSource, publicClockContext, { filename: "public-match-clock.js" });
@@ -97,3 +97,4 @@ assert.match(clockDoc, /The captain\/admin clock is official/);
 assert.match(clockDoc, /Background push notifications are not part of v55\.0/);
 
 console.log("Persistent match clock verification passed.");
+
