@@ -7018,7 +7018,7 @@ function renderGameClock(){
     gameClockSecondary.textContent=`Official match time held at ${clockFormat(halfSeconds)} · Break ${clockFormat(breakSeconds)}`;
   }else if(phase==="not_started")gameClockSecondary.textContent="Check the half length, then tap Start game at the referee’s whistle.";
   else if(phase.startsWith("extra_"))gameClockSecondary.textContent=`Two ${tiebreaks.state()?.extra_minutes||5}-minute overtime halves · ${tiebreaks.state()?.golden_goal!==false?"Golden goal: confirm Full Time at the referee’s whistle after a goal.":"Play both halves."}`;
-  else if(phase==="shootout")gameClockSecondary.textContent="Match clock stopped. Record kicks in Overtime & penalty shootout below.";
+  else if(phase==="shootout")gameClockSecondary.textContent="Match clock stopped. Open Record after game → This match went to penalties to record kicks.";
   else if(phase==="full_time")gameClockSecondary.textContent=`Final official time · ${halfLength*2}-minute regulation target`;
   else gameClockSecondary.textContent=`${clock.clock_running?"Clock continues from the server anchor even if this app closes.":"Official time is held until Resume."}`;
 
