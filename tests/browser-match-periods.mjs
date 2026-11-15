@@ -12,7 +12,7 @@ const bootstrap=()=>{
   const snapshot=()=>({match:{id:'fixture',home_team:'SKOR FC',away_team:'Fixture FC',kickoff:'2026-01-01T00:00:00Z',status:'final'},revision:'r'+saveCalls+':t'+tbStored.revision,
     participants:[{player_key:'fixture-player',name:'Fixture Player',number:7}],events:structuredClone(events)});
   window.client={auth:{getSession:async()=>({data:{session:{user:{id:'fixture-captain'}}}})},rpc:async(name,p)=>{
-    if(name==='get_post_match_editor')return {data:snapshot()};
+    if(name==='get_post_match_editor')return window.postReadError?{error:{message:'Fixture event refresh unavailable'}}:{data:snapshot()};
     if(name==='save_post_match_events'){
       if(p.p_revision!=='r'+saveCalls+':t'+tbStored.revision)return {error:{code:'40001',message:'Fixture stale revision'}};
       events=events.filter(e=>!p.p_delete_ids.includes(e.id));
@@ -97,6 +97,12 @@ try{
     await page.locator('#openPostMatch').click();await page.waitForFunction(()=>pm.state().phase==='ready');
     assert.equal(await page.locator('[data-pm-shootout]').isChecked(),true,'saved shootouts appear automatically on reopening');
     assert.equal(await page.locator('#postMatchDialog #matchTiebreaks li').count(),2);
+    await page.evaluate(()=>window.postReadError=true);
+    await page.locator('[data-tb=save]').click();await page.waitForFunction(()=>tbStored.revision===3&&!tb.isBusy()&&pm.state().phase==='error');
+    assert.equal(await page.locator('[data-pm=close]').isEnabled(),true,'saved penalties plus a failed event refresh must not trap the modal');
+    await page.locator('[data-pm=close]').click();await page.evaluate(()=>window.postReadError=false);
+    await page.locator('#openPostMatch').click();await page.waitForFunction(()=>pm.state().phase==='ready');
+    assert.deepEqual(await page.evaluate(()=>tb.state().shots.map(s=>s.id)),kickIds);
     assert.deepEqual(errors,[]);await page.close();
   }
   console.log('Native phone/desktop UI: kickoff and network recovery; repeated goal taps; save → continue → second save preserves IDs without duplicates; embedded penalty draft, save order, goal/kick isolation, reload/reopen and event revision refresh pass.');
