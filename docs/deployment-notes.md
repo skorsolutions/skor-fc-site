@@ -1,11 +1,23 @@
-# v58.42 — Numbered penalty takers and editable shootout rounds (prepared)
+# v58.42 — Numbered penalty takers and editable shootout rounds (deployed)
 
 2026-11-15 UTC. User reported missing jersey numbers, a locked five-kick setting and difficulty entering a 4–2 shootout.
 
 - Penalty takers display jersey number, short name and TEMP status (or Jersey TBD) while saving the same scoped player key. The shootout editor shows each assigned player’s scored/taken totals, separate from match goals, with unknown kickers explicitly uncredited. Starting kicks per team remains editable after entry; five starting rounds are not a hard cap and a tied fifth round continues into paired sudden death. Retrospective outcome corrections are retained even when the intermediate sequence is invalid; a clear warning and disabled save protect the strict existing API until corrected. Kick IDs, retries, match-goal separation and embedded post-game persistence remain. No Player Portal aggregate/stat contract or database change is part of this fix.
 - Scope: Captain build/cache markers, tiebreak controller/styles, model/controller/native browser tests, package and existing build-marker assertions, handbook and workflow docs.
 - No SQL/migration, schema, API, permissions, Edge Function or production data writes. Actual kick outcomes/scorers are never inferred or entered by deployment.
-- Verification: unit/controller 4–2 save/reopen, editable rounds after kicks, staged corrections, stable IDs, unknown/scoped guests, and sudden death beyond five pass. Full CI/native phone/desktop verification pending.
+- Source `aa7621ff4b8b3d8155ee8c4a6fa4c8c85d6f5f6f` is live. Cloudflare build `4c25d552-f4b5-4dd8-a148-503a4b32f675` succeeded at 2026-11-15T22:30:17.088Z; deployment `b107cf32-9ff0-42fb-aa09-f669e67da587` serves version `8a982a55-54cc-4406-8d0b-65fc1ea1ec3f` at 100%. Main CI `43769605001` and `43769605018` and feature CI `43769484529` pass all 33 suites, native phone/desktop 4–2 save/reopen with numbered regular/guest kickers, editable rounds, staged corrections and existing event/shootout isolation, plus PostgreSQL role/replay fixtures. All 13 release hashes match tested local source, zero removed files and all 20 original asset blobs preserved. Native data was fictional; no production match outcomes, participants or attendance were written or inferred. No SQL or migration.
+- Native test fixtures now supply the actual scoped participant shape and UTF-8 charset; production page charset was already correct. Separate Player Portal shootout aggregates were asked as an optional preference and remain pending; this release shows the saved per-match shootout record only.
+- GitHub commit-comment creation remains unavailable. Matching final summary is recorded here and in chat:
+
+**v58.42 is live. Refresh the Captain Portal.**
+
+- Penalty takers now show **jersey number + name** and retain their player identity.
+- **Starting kicks per team** stays editable; sudden death can continue beyond five.
+- **4–2 entry, saving and reopening** are verified; corrections preserve the draft.
+
+Each selected player’s **shootout scored / taken** record appears in the penalty section, separately from regular goals. Player Portal shootout totals are pending your preference.
+
+All 33 suites and phone/desktop browser checks passed. No database change. [Release](https://github.com/skorsolutions/skor-fc-site/commit/aa7621ff4b8b3d8155ee8c4a6fa4c8c85d6f5f6f).
 
 # v58.41 — Goal-by-goal post-match recording (deployed)
 
