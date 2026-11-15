@@ -1,10 +1,17 @@
-# v58.41 — Goal-by-goal post-match recording (prepared)
+# v58.41 — Goal-by-goal post-match recording (deployed)
 
 2026-11-15 UTC. User requested team goal controls and a scorer/assister per goal instead of adding players first.
 
 - SKOR and opponent goal counters sit together at the top of each period. Each SKOR goal has visible Scorer and Assister selectors; adding a goal does not guess a scorer, and saving waits until each scorer is selected. Assists may be Unknown / not recorded or No assist. Cards have their own collapsed section. Existing goal IDs, original live timestamps, manual historical entries, exact retry receipts, overtime and embedded penalties remain preserved. Counter undo restores attribution within the draft. Existing APIs and downstream official-event/stat consumers are unchanged; no SQL or production data change.
 - Scope: admin build/cache markers, post-match model/UI/styles, unit/native browser tests, package/workflow, existing build-marker tests and workflow documentation. No SQL, schema, API, Edge Function or production data writes.
-- Verification: goal-first model and existing post-match/tiebreak tests pass locally. Full CI/native browser checks and deployment are pending.
+- Source `68e41c2c3fd9eb2617909f760373d985e8b8427f` is live. Cloudflare build `29260360-5687-40ab-8bfb-55d2e226c03a` succeeded at 2026-11-15T21:43:52.402Z; deployment `2ca24c2d-c59d-48b1-92c4-82b8e37af4fc` serves version `1b032c61-ef78-4961-87b8-e4e633fe741b` at 100%. Main CI `43765270901` and `43765270891` pass: all 32 suites, native phone/desktop goal/scorer/assist/card correction, stable save/continue IDs, embedded penalties and PostgreSQL role/replay fixtures. All 15 release blob hashes match tested local files; no removed files or asset changes. Browser data was fictional; no production records were written and no migration was performed.
+- GitHub commit-comment creation is unavailable through the connected tools. Matching final release summary is recorded here and in chat:
+
+**v58.41 is live. Refresh the Captain Portal once.**
+
+In **Record after game**, use **SKOR goals +/−** just like opponent goals. Each of our goals now has visible **Scorer** and **Assister** dropdowns. Cards are in a separate section. Existing goals, overtime and penalties are preserved.
+
+All 32 test suites and phone/desktop browser checks passed. No database change. [Release](https://github.com/skorsolutions/skor-fc-site/commit/68e41c2c3fd9eb2617909f760373d985e8b8427f).
 
 # v58.40 — Record penalties inside Record after game (deployed)
 
