@@ -10,11 +10,12 @@ const clockCode=admin.slice(admin.indexOf('function officialClockSeconds('),admi
 const bootstrap=()=>{
   window.events=[];window.saveCalls=0;window.tbStored={match_id:'fixture',revision:0,extra_minutes:5,golden_goal:true,initial_kicks:5,first_team:'skor',shots:[],completed:false,participants:[]};
   const snapshot=()=>({match:{id:'fixture',home_team:'SKOR FC',away_team:'Fixture FC',kickoff:'2026-01-01T00:00:00Z',status:'final'},revision:'r'+saveCalls+':t'+tbStored.revision,
-    participants:[{player_key:'fixture-player',name:'Fixture Player',number:7}],events:structuredClone(events)});
+    participants:[{player_key:'fixture-player',name:'Fixture Player',number:7},{player_key:'fixture-assist',name:'Fixture Guest',number:66,is_temp:true}],events:structuredClone(events)});
   window.client={auth:{getSession:async()=>({data:{session:{user:{id:'fixture-captain'}}}})},rpc:async(name,p)=>{
     if(name==='get_post_match_editor')return window.postReadError?{error:{message:'Fixture event refresh unavailable'}}:{data:snapshot()};
     if(name==='save_post_match_events'){
       if(p.p_revision!=='r'+saveCalls+':t'+tbStored.revision)return {error:{code:'40001',message:'Fixture stale revision'}};
+      if(p.p_upserts.some(r=>r.event_type==='skor_goal'&&(!['fixture-player','fixture-assist'].includes(r.player_key)||r.player_key===r.assist_key)))return {error:{message:'Choose valid scorer and assister'}};
       events=events.filter(e=>!p.p_delete_ids.includes(e.id));
       for(const row of p.p_upserts){events=events.filter(e=>e.id!==row.id);events.push({...row,roster_player_key:row.player_key,assist_roster_player_key:row.assist_key,entry_source:'post_match'});}
       saveCalls++;return {data:{ok:true}};
@@ -59,15 +60,28 @@ try{
     await page.locator('[data-tb=save-settings]').click();await page.waitForFunction(()=>tbStored.revision===1&&!tb.isBusy());
     assert.equal(await page.locator('#matchTiebreaks').isVisible(),false,'penalty entry is absent from the live clock area');
     await page.locator('#openPostMatch').click();
-    await page.locator('[data-pm-add=first]').selectOption('fixture-player');
-    const plus=()=>page.locator('[data-pm-half=first] button[aria-label="Add one skor goal"]');
+    const plus=()=>page.locator('[data-pm-half=first] button[aria-label="Add one SKOR goal"]');
     for(let i=0;i<3;i++)await plus().click();
     assert.equal(await page.locator('[data-pm-half=first] .pm-stepper output').first().textContent(),'3');
+    assert.equal(await page.locator('[data-pm=save]').isEnabled(),false,'each new goal requires a selected scorer');
+    assert.equal(await page.locator('[data-pm-assist]').first().isEnabled(),false);
+    for(let i=0;i<3;i++)await page.locator('[data-pm-scorer]').nth(i).selectOption('fixture-player');
+    await page.locator('[data-pm-assist]').first().selectOption('fixture-assist');
+    await page.locator('[data-pm-assist]').nth(1).selectOption('none');
+    assert.equal(await page.locator('[data-pm-assist]').first().isVisible(),true,'assister is visible beside each goal without another disclosure');
+    assert.equal(await page.getByText('Add player',{exact:true}).count(),0);
+    assert.equal(await page.locator('[data-pm-cards=first]').evaluate(e=>e.open),false);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'goal fields fit the phone width');
     await page.locator('[data-pm=save]').click();await page.waitForFunction(()=>window.saveCalls===1);
     const oldIds=await page.evaluate(()=>events.map(e=>e.id));
     await page.locator('[data-pm=continue]').click();await page.waitForFunction(()=>pm.state().phase==='ready');
     assert.equal(await page.locator('[data-pm-half=first] .pm-stepper output').first().textContent(),'3');
-    await plus().click();await page.locator('[data-pm=save]').click();await page.waitForFunction(()=>window.saveCalls===2);
+    assert.equal(await page.locator('[data-pm-assist]').first().inputValue(),'fixture-assist');
+    await plus().click();
+    assert.equal(await page.locator('[data-pm=save]').isEnabled(),false);
+    await page.locator('[data-pm-scorer]').nth(3).selectOption('fixture-assist');
+    await page.locator('[data-pm-assist]').nth(3).selectOption('fixture-player');
+    await page.locator('[data-pm=save]').click();await page.waitForFunction(()=>window.saveCalls===2);
     const saved=await page.evaluate(()=>events);assert.equal(saved.length,4);assert.ok(oldIds.every(id=>saved.some(e=>e.id===id)));
     assert.equal(new Set(saved.map(e=>e.id)).size,4);
     await page.locator('[data-pm=continue]').click();await page.waitForFunction(()=>pm.state().phase==='ready');
@@ -87,9 +101,17 @@ try{
     await page.locator('[data-tb=save]').click();await page.waitForFunction(()=>tbStored.revision===2&&!tb.isBusy()&&pm.state().phase==='ready');
     assert.equal(await page.evaluate(()=>tbStored.completed),true);assert.equal(await page.evaluate(()=>events.length),8,'shootout must not add match goals');
     assert.equal(await page.evaluate(()=>pm.state().draft.snapshot.revision),'r3:t2','shootout save refreshes the event revision');
+    await page.locator('[data-pm-cards=first] > summary').click();
+    await page.locator('[data-pm-card-player=first]').selectOption('fixture-player');
     await page.locator('[data-pm-half=first] button[aria-label="Add one skor yellow card"]').click();
+    // Correct attribution directly while preserving the original goal identity.
+    await page.locator('[data-pm-assist]').first().selectOption('none');
+    await page.locator('[data-pm-scorer]').first().selectOption('fixture-assist');
+    await page.locator('[data-pm-assist]').first().selectOption('fixture-player');
     await page.locator('[data-pm=save]').click();await page.waitForFunction(()=>window.saveCalls===4&&!pm.state().busy);
     assert.equal(await page.evaluate(()=>events.filter(e=>e.event_type.includes('goal')).length),8);
+    assert.equal(await page.evaluate(id=>events.find(e=>e.id===id).player_key,oldIds[0]),'fixture-assist');
+    assert.equal(await page.evaluate(id=>events.find(e=>e.id===id).assist_key,oldIds[0]),'fixture-player');
     await page.locator('#postMatchDialog [data-tb=reload]').click();await page.waitForFunction(()=>tb.state()?.revision===2);
     assert.equal(await page.locator('#postMatchDialog #matchTiebreaks li').count(),2);
     assert.deepEqual(await page.evaluate(()=>tb.state().shots.map(s=>s.id)),kickIds);
@@ -105,5 +127,5 @@ try{
     assert.deepEqual(await page.evaluate(()=>tb.state().shots.map(s=>s.id)),kickIds);
     assert.deepEqual(errors,[]);await page.close();
   }
-  console.log('Native phone/desktop UI: kickoff and network recovery; repeated goal taps; save → continue → second save preserves IDs without duplicates; embedded penalty draft, save order, goal/kick isolation, reload/reopen and event revision refresh pass.');
+  console.log('Native phone/desktop UI: kickoff and network recovery; team goal counters, required scorers and direct assister picks, separate cards, stable attribution corrections; save → continue → second save preserves IDs without duplicates; embedded penalty draft, save order, goal/kick isolation, reload/reopen and event revision refresh pass.');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

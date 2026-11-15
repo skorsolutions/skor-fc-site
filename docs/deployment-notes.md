@@ -1,3 +1,11 @@
+# v58.41 — Goal-by-goal post-match recording (prepared)
+
+2026-11-15 UTC. User requested team goal controls and a scorer/assister per goal instead of adding players first.
+
+- SKOR and opponent goal counters sit together at the top of each period. Each SKOR goal has visible Scorer and Assister selectors; adding a goal does not guess a scorer, and saving waits until each scorer is selected. Assists may be Unknown / not recorded or No assist. Cards have their own collapsed section. Existing goal IDs, original live timestamps, manual historical entries, exact retry receipts, overtime and embedded penalties remain preserved. Counter undo restores attribution within the draft. Existing APIs and downstream official-event/stat consumers are unchanged; no SQL or production data change.
+- Scope: admin build/cache markers, post-match model/UI/styles, unit/native browser tests, package/workflow, existing build-marker tests and workflow documentation. No SQL, schema, API, Edge Function or production data writes.
+- Verification: goal-first model and existing post-match/tiebreak tests pass locally. Full CI/native browser checks and deployment are pending.
+
 # v58.40 — Record penalties inside Record after game (deployed)
 
 2026-11-15 UTC. User requested penalty recording in the post-game form shown in their screenshot.
