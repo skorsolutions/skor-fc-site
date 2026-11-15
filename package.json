@@ -33,7 +33,8 @@
     "test:scouting-ai": "node tests/verify-scouting-ai.mjs",
     "test:tiebreaks": "node tests/verify-tiebreaks.mjs",
     "test:post-match-penalties": "node tests/verify-post-match-penalties.mjs",
-    "test:goal-entry": "node tests/verify-goal-entry.mjs"
+    "test:goal-entry": "node tests/verify-goal-entry.mjs",
+    "test:shootout-editing": "node tests/verify-shootout-editing.mjs"
   },
   "devDependencies": {
     "wrangler": "4.129.0"

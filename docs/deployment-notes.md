@@ -1,3 +1,12 @@
+# v58.42 — Numbered penalty takers and editable shootout rounds (prepared)
+
+2026-11-15 UTC. User reported missing jersey numbers, a locked five-kick setting and difficulty entering a 4–2 shootout.
+
+- Penalty takers display jersey number, short name and TEMP status (or Jersey TBD) while saving the same scoped player key. The shootout editor shows each assigned player’s scored/taken totals, separate from match goals, with unknown kickers explicitly uncredited. Starting kicks per team remains editable after entry; five starting rounds are not a hard cap and a tied fifth round continues into paired sudden death. Retrospective outcome corrections are retained even when the intermediate sequence is invalid; a clear warning and disabled save protect the strict existing API until corrected. Kick IDs, retries, match-goal separation and embedded post-game persistence remain. No Player Portal aggregate/stat contract or database change is part of this fix.
+- Scope: Captain build/cache markers, tiebreak controller/styles, model/controller/native browser tests, package and existing build-marker assertions, handbook and workflow docs.
+- No SQL/migration, schema, API, permissions, Edge Function or production data writes. Actual kick outcomes/scorers are never inferred or entered by deployment.
+- Verification: unit/controller 4–2 save/reopen, editable rounds after kicks, staged corrections, stable IDs, unknown/scoped guests, and sudden death beyond five pass. Full CI/native phone/desktop verification pending.
+
 # v58.41 — Goal-by-goal post-match recording (deployed)
 
 2026-11-15 UTC. User requested team goal controls and a scorer/assister per goal instead of adding players first.

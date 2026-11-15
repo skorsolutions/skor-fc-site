@@ -125,7 +125,40 @@ try{
     await page.locator('[data-pm=close]').click();await page.evaluate(()=>window.postReadError=false);
     await page.locator('#openPostMatch').click();await page.waitForFunction(()=>pm.state().phase==='ready');
     assert.deepEqual(await page.evaluate(()=>tb.state().shots.map(s=>s.id)),kickIds);
+    // Retrospective penalty correction: record the reported 4-2 with numbered kickers.
+    await page.locator('[data-pm=close]').click();
+    await page.evaluate(async()=>{tbStored={...tbStored,revision:4,shots:[],completed:false,initial_kicks:5,first_team:'skor'};await tb.load(true);});
+    await page.locator('#openPostMatch').click();await page.waitForFunction(()=>pm.state().phase==='ready');
+    await page.locator('[data-pm-shootout]').check();
+    const outcomes=['missed','missed','scored','missed','scored','scored','scored','scored','scored'];
+    for(const outcome of outcomes)await page.locator('[data-tb='+outcome+']').click();
+    assert.match(await page.locator('[data-tb-player="0"]').textContent(),/#7 Fixture Player/);
+    assert.match(await page.locator('[data-tb-player="0"]').textContent(),/#66 Fixture Guest/);
+    await page.locator('[data-tb-player="0"]').selectOption('fixture-player');
+    await page.locator('[data-tb-player="2"]').selectOption('fixture-assist');
+    const penaltyIds=await page.evaluate(()=>tb.state().shots.map(s=>s.id));
+    const rounds=()=>page.locator('[data-tb-setting=initial_kicks]');
+    assert.equal(await rounds().isEnabled(),true,'starting rounds remain editable after kicks');
+    await rounds().fill('6');await rounds().blur();
+    assert.equal(await page.locator('[data-tb=scored]').isVisible(),true,'more initial rounds allow the next kick');
+    await rounds().fill('5');await rounds().blur();
+    await page.locator('[data-tb-shot="7"]').selectOption('missed');
+    assert.equal(await page.locator('[data-tb-shot="7"]').inputValue(),'missed','keep intermediate correction');
+    assert.equal(await page.locator('[data-tb=save]').isEnabled(),false,'cannot save kicks after an earlier clinch');
+    assert.match(await page.locator('.tb-error').textContent(),/your edits are kept/);
+    await page.locator('[data-tb-shot="7"]').selectOption('scored');
+    await page.locator('[data-tb-setting=completed]').check();
+    assert.equal(await page.locator('[data-tb=save]').isEnabled(),true);
+    await page.locator('[data-tb=save]').click();await page.waitForFunction(()=>tbStored.revision===5&&!tb.isBusy()&&pm.state().phase==='ready');
+    assert.match(await page.locator('#matchTiebreaks h4').first().textContent(),/SKOR 4 – 2 Opponent/);
+    assert.deepEqual(await page.evaluate(()=>tbStored.shots.map(s=>s.id)),penaltyIds);
+    assert.equal(await page.evaluate(()=>tbStored.shots[2].player_key),'fixture-assist');
+    assert.equal(await page.evaluate(()=>events.filter(e=>e.event_type.includes('goal')).length),8,'penalty attribution does not inflate match goals');
+    await page.locator('[data-pm=close]').click();await page.locator('#openPostMatch').click();
+    await page.waitForFunction(()=>pm.state().phase==='ready');
+    assert.equal(await page.locator('[data-tb-player="2"]').inputValue(),'fixture-assist');
+    assert.match(await page.locator('.tb-player-stats').textContent(),/#66 Fixture Guest.*1 scored \/ 1 taken/);
     assert.deepEqual(errors,[]);await page.close();
   }
-  console.log('Native phone/desktop UI: kickoff and network recovery; team goal counters, required scorers and direct assister picks, separate cards, stable attribution corrections; save → continue → second save preserves IDs without duplicates; embedded penalty draft, save order, goal/kick isolation, reload/reopen and event revision refresh pass.');
+  console.log('Native phone/desktop UI: kickoff and network recovery; team goal counters, required scorers and direct assister picks, separate cards, stable attribution corrections; save → continue → second save preserves IDs without duplicates; embedded penalty draft, save order, goal/kick isolation, reload/reopen and event revision refresh; numbered kickers, editable rounds, staged corrections and persisted 4-2 pass.');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

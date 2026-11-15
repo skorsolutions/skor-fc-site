@@ -36,3 +36,10 @@ Production source [`66ae79eb066169dabd74233835bc09d5e351ff2c`](https://github.co
 ## v58.40 UI release verification
 
 Source `6e6f32dbc6bc1a876cff9559c27d807b18e1d313` is live. Cloudflare build `8a119424-6fa2-4e09-8f37-5dd6d03f5ce0` succeeded at 2026-11-15T21:18:49.153Z; deployment `0a2c2c94-cb64-448e-8bad-9335482b0086` serves version `cf528f6b-3279-43a4-af02-6905ff0f9cc0` at 100%. Main CI `43762951622` and `43762951654` pass all 31 suites, native phone/desktop embedded shootout placement, retained drafts across goal rerenders, ordered saves, subsequent card correction, reopen and failed-refresh recovery. All 17 release blob hashes match checked local files, zero files were removed and all 20 original asset blobs are preserved. Browser APIs used fictional fixtures; the existing v58.39 backend was reused without a production database write or migration.
+
+
+## v58.42 penalty-entry correction
+
+Penalty takers display jersey number, short name and TEMP status (or Jersey TBD) while saving the same scoped player key. The shootout editor shows each assigned player’s scored/taken totals, separate from match goals, with unknown kickers explicitly uncredited. Starting kicks per team remains editable after entry; five starting rounds are not a hard cap and a tied fifth round continues into paired sudden death. Retrospective outcome corrections are retained even when the intermediate sequence is invalid; a clear warning and disabled save protect the strict existing API until corrected. Kick IDs, retries, match-goal separation and embedded post-game persistence remain. No Player Portal aggregate/stat contract or database change is part of this fix.
+
+Starting kicks is the competition’s initial rounds per side, not the total number of kickers. A five-round 4–2 result is valid when the recorded scored/missed order supports it. A changed earlier outcome can temporarily imply that the shootout ended before later entries; keep the draft, correct the other outcomes, and save only a valid complete sequence. Strict server validation remains unchanged.
