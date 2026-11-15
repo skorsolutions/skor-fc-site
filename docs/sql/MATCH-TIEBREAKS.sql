@@ -65,7 +65,7 @@ begin
     raise exception 'Invalid referee vote.';
   end if;
   if p_half not in ('first','second','extra_first','extra_second') then
-    raise exception 'Choose first or second half.';
+    raise exception 'Choose a regulation or overtime half.';
   end if;
 
   select s.match_id, s.clock_phase, s.clock_running,
@@ -156,7 +156,7 @@ begin
   end if;
 
   if p_half not in ('first','second','extra_first','extra_second') then
-    raise exception 'Choose first or second half.';
+    raise exception 'Choose a regulation or overtime half.';
   end if;
 
   update public.game_day_participants
@@ -609,7 +609,7 @@ begin
   for shot in select value from jsonb_array_elements(shots) loop
     if winner is not null then raise exception 'No more kicks can follow a decided shootout. Review the last kick.';end if;
     team:=case when idx%2=0 then first_team when first_team='skor' then 'opponent' else 'skor' end;
-    if shot->>'team' is distinct from team or shot->>'outcome' is null or shot->>'outcome' not in ('scored','missed') or length(coalesce(shot->>'id',''))>80 then raise exception 'Kicks must alternate teams and be marked scored or missed.';end if;
+    if shot->>'team' is distinct from team or shot->>'outcome' is null or shot->>'outcome' not in ('scored','missed') or length(coalesce(shot->>'id','')) not between 1 and 80 then raise exception 'Kicks must alternate teams and be marked scored or missed.';end if;
     if team='skor' then ns:=ns+1;if shot->>'outcome'='scored' then gs:=gs+1;end if;
     else no:=no+1;if shot->>'outcome'='scored' then go:=go+1;end if;end if;
     if ns<=initial_kicks and no<=initial_kicks then

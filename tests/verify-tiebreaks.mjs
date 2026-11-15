@@ -15,7 +15,7 @@ shots.push(shot('opponent','scored'));assert.equal(api.summary(shots,5,'opponent
 shots.push(shot('skor','missed'));assert.equal(api.summary(shots,5,'opponent').winner,'opponent');
 assert.throws(()=>api.summary([shot('opponent','scored')],5,'skor'));
 assert.equal(api.summary([shot('skor','scored'),shot('opponent','missed')],1).winner,'skor');
-assert.equal(api.summary([],3).next_team,'skor');assert.throws(()=>api.summary([],0));
+assert.equal(api.summary([],3).next_team,'skor');assert.throws(()=>api.summary([],0));assert.throws(()=>api.summary([{id:'',team:'skor',outcome:'scored'}]));assert.throws(()=>api.summary([{id:1,team:'skor',outcome:'scored'}]));
 assert.equal(api.periodLabel('extra_second'),'Overtime · 2nd Half');
 vm.runInContext(fs.readFileSync('post-match-entry.js','utf8'),c);
 const draft=c.SKORPostMatch.createDraft({match:{id:'fixture',status:'final'},revision:'fixture',participants:[{player_key:'fixture',name:'Fixture',number:7}],events:[]});

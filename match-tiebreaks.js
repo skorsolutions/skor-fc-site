@@ -6,7 +6,7 @@
     if(!Number.isInteger(initial)||initial<1||initial>20||!['skor','opponent'].includes(first)||!Array.isArray(shots)||shots.length>200)throw Error('Check shootout settings.');
     let skor=0,opponent=0,skor_taken=0,opponent_taken=0,winner=null;const ids=new Set();
     shots.forEach((s,i)=>{const team=i%2?first==='skor'?'opponent':'skor':first;
-      if(winner||s.team!==team||!['scored','missed'].includes(s.outcome)||!s.id||ids.has(s.id))throw Error('Review the kick order. A decided shootout cannot have more kicks.');ids.add(s.id);
+      if(winner||s.team!==team||!['scored','missed'].includes(s.outcome)||typeof s.id!=='string'||!s.id||s.id.length>80||ids.has(s.id))throw Error('Review the kick order. A decided shootout cannot have more kicks.');ids.add(s.id);
       if(team==='skor'){skor_taken++;if(s.outcome==='scored')skor++;}else{opponent_taken++;if(s.outcome==='scored')opponent++;}
       if(skor_taken<=initial&&opponent_taken<=initial){if(skor>opponent+initial-opponent_taken)winner='skor';else if(opponent>skor+initial-skor_taken)winner='opponent';}
       else if(skor_taken===opponent_taken&&skor!==opponent)winner=skor>opponent?'skor':'opponent';
@@ -39,7 +39,7 @@
         const signature=JSON.stringify({revision:data.revision,payload});if(receipt?.signature!==signature)receipt={signature,id:root.crypto.randomUUID()};
         const r=await client.rpc('save_match_tiebreak',{p_match_id:match,p_request_id:receipt.id,p_revision:data.revision,p_payload:payload});
         if(!valid(e))return;if(r.error)throw r.error;if(r.data?.ok!==true)throw Error('Save was not verified. Retry unchanged.');
-        data.revision=r.data.revision;receipt=null;dirty=false;message='Saved. Shootout kicks stay separate from match goals.';await onSaved(match);
+        data.revision=r.data.revision;receipt=null;dirty=false;message='Saved. Shootout kicks stay separate from match goals.';try{await onSaved(match);}catch(error){if(valid(e))message='Saved. Refresh Game Day to reload the match status.';}
       }catch(error){if(valid(e))message=error.message||'Save failed. Retry unchanged.';}
       finally{if(valid(e)){busy=false;render();}}
     }
