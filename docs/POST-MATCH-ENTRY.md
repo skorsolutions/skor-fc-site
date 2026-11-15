@@ -33,6 +33,6 @@ Before deployment, record the approved exact SQL hash, apply with the migration 
 Exact prepared SQL SHA-256: `df33466f470006b0772309b5078ad5fd3b0c1493d3aba690741872ebd5944b16`. All 19 local suites and read-only participant/revision/editor SQL planning pass. The exact migration, its corrected real-role rollback fixture and existing player-record/guest-profile regression fixtures passed. No production SQL correction was needed; a test-only ambiguous variable was qualified. Source hashes, exact release file set and production deployment are verified. Browser interaction remains unverified.
 
 
-## v58.39 prepared fixes
+## v58.39 approved fixes
 
-After confirmed saving, Add more goals or cards reloads the latest authoritative events/revision before further edits. The saved form itself cannot be resubmitted. A new intentional save has a fresh receipt. Overtime has independently labeled extra_first / extra_second periods; shootout kicks stay in the separate captain panel and never inflate player goals. See [MATCH-TIEBREAKS.md](MATCH-TIEBREAKS.md). Database support is prepared and requires explicit deployment approval.
+After confirmed saving, Add more goals or cards reloads the latest authoritative events/revision before further edits. The saved form itself cannot be resubmitted. A new intentional save has a fresh receipt. Overtime has independently labeled extra_first / extra_second periods; shootout kicks stay in the separate captain panel and never inflate player goals. See [MATCH-TIEBREAKS.md](MATCH-TIEBREAKS.md). Approved migration `20261115195600 add_match_overtime_and_shootouts` is applied. Exact bodies/ACLs, real-role rollback checks and original data fingerprints pass; frontend rollout is pending.
