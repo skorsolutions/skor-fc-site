@@ -1,4 +1,4 @@
-# v58.40 — Record penalties inside Record after game (prepared)
+# v58.40 — Record penalties inside Record after game (deployed)
 
 2026-11-15 UTC. User requested penalty recording in the post-game form shown in their screenshot.
 
@@ -7,7 +7,14 @@
 - Outside overtime-settings saves use acknowledged kicks, so they cannot silently publish a hidden penalty draft. Existing version checks, receipt retries, role/account cancellation and goal/stat separation remain.
 - No SQL migration, schema/API/permissions, Edge Function or production data correction. The approved v58.39 backend is reused unchanged.
 - Scope: admin mount/markup/build, post-match and tiebreak controllers, post-match styles, unit/browser/build-marker tests, package/workflow and documentation. Public pages, Player Portal, clock semantics and lineup exports are unchanged.
-- Verification in progress: existing 30 suites plus new save-order/draft/receipt/account test; native phone/desktop modal placement, draft preservation, ordered saves, subsequent card edit and reopen checks. Production publication follows successful CI.
+- Source `6e6f32dbc6bc1a876cff9559c27d807b18e1d313` is live. Cloudflare build `8a119424-6fa2-4e09-8f37-5dd6d03f5ce0` succeeded at 2026-11-15T21:18:49.153Z; deployment `0a2c2c94-cb64-448e-8bad-9335482b0086` serves version `cf528f6b-3279-43a4-af02-6905ff0f9cc0` at 100%. Main CI `43762951622` and `43762951654` pass all 31 suites, native phone/desktop embedded shootout placement, retained drafts across goal rerenders, ordered saves, subsequent card correction, reopen and failed-refresh recovery. All 17 release blob hashes match checked local files, zero files were removed and all 20 original asset blobs are preserved. Browser APIs used fictional fixtures; the existing v58.39 backend was reused without a production database write or migration.
+- Overtime reload cannot discard hidden penalty drafts; the clock points to the new post-game location. GitHub commit-comment creation remains unavailable through the connected tools. Matching release summary is recorded here and in chat:
+
+**Moved and live in v58.40.** Refresh the Captain Portal once.
+
+In **Record after game**, tick **This match went to penalties** below overtime. Save match goals/cards first, then **Save penalty shootout**. Existing saved kicks load there automatically.
+
+All 31 suites and phone/desktop browser checks passed. No database change. [Release](https://github.com/skorsolutions/skor-fc-site/commit/6e6f32dbc6bc1a876cff9559c27d807b18e1d313).
 
 # v58.39 — Continued post-game recording, clearer kickoff, overtime and shootout (deployed)
 

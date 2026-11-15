@@ -1,4 +1,4 @@
-# Match periods and shootouts — v58.40 (UI prepared; v58.39 database deployed)
+# Match periods and shootouts — v58.40 (deployed; v58.39 backend)
 
 ## Captain workflow
 
@@ -29,6 +29,10 @@ No real match result, scorer, kick, attendance, lineup or historical time is see
 - Disposable PostgreSQL 17 replays the proposed migration and tests official overtime timestamps, golden-goal rules, configurable normal overtime, shootout isolation/finalization, exact retries, stale revisions and anonymous/player denials.
 - All checks passed on feature/match-periods source `e71fd8663f32c619f2207316e3bca85863357fa3`, CI `43754284819` (30 unit/controller suites plus native phone/desktop controls, settings/kick persistence and disposable PostgreSQL 17 role/replay tests). Exact SQL SHA-256: `2e1a78f52c503f8b8188bafd2e77348267f2844fc53822eafa06201991503d58`. The user has approved deployment. User approved database deployment on 2026-11-15. Exact reviewed SQL (2e1a78f52c503f8b8188bafd2e77348267f2844fc53822eafa06201991503d58) is applied as migration `20261115195600 add_match_overtime_and_shootouts`; the server-generated migration filename is `20261115195600_add_match_overtime_and_shootouts.sql`. All eight stored bodies match the reviewed text, private-table RLS/direct ACLs and API role boundaries pass, and security/performance advisors remain unchanged (6/4). Real captain and ordinary-player checks verified live/post-game overtime, golden-goal progression, editable normal halves, separate shootout persistence/finalization, exact receipts and conflicts, anonymous/private-match denials. All test writes rolled back: all 65 original table fingerprints match, and both new private tables are empty. Frontend deployment is complete.
 
-## Production release verification
+## Previous v58.39 production release verification
 
 Production source [`66ae79eb066169dabd74233835bc09d5e351ff2c`](https://github.com/skorsolutions/skor-fc-site/commit/66ae79eb066169dabd74233835bc09d5e351ff2c) is live. Cloudflare build `2c14cc67-7c1a-44de-8bd0-583d4838a4ce` succeeded at 2026-11-15T20:39:33.283Z; deployment `f59c5c8f-918f-45e4-85d5-c8834adf0295` serves version `e7ee3dd8-8eb0-4b05-9028-9ba6d0d7b5ec` at 100%. The initial complete release `d95c162fb130aa5e5e0d1a0a0e2d386a1c8dc74d` also passed all three main workflows, including the real signed-out production homepage check (`43755702947`). The final Schedule compatibility follow-up passes main CI `43759287158` and `43759287163`: all 30 unit/controller suites, native phone/desktop controls and complete shootout UI, and disposable PostgreSQL replay/roles. All 29 release files are scoped, zero files removed and all 20 original asset blobs preserved; application/test blobs were independently verified against local source.
+
+## v58.40 UI release verification
+
+Source `6e6f32dbc6bc1a876cff9559c27d807b18e1d313` is live. Cloudflare build `8a119424-6fa2-4e09-8f37-5dd6d03f5ce0` succeeded at 2026-11-15T21:18:49.153Z; deployment `0a2c2c94-cb64-448e-8bad-9335482b0086` serves version `cf528f6b-3279-43a4-af02-6905ff0f9cc0` at 100%. Main CI `43762951622` and `43762951654` pass all 31 suites, native phone/desktop embedded shootout placement, retained drafts across goal rerenders, ordered saves, subsequent card correction, reopen and failed-refresh recovery. All 17 release blob hashes match checked local files, zero files were removed and all 20 original asset blobs are preserved. Browser APIs used fictional fixtures; the existing v58.39 backend was reused without a production database write or migration.
