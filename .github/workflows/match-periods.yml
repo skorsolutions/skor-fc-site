@@ -51,3 +51,7 @@ jobs:
         run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/match-browser/node_modules/playwright" node tests/browser-match-periods.mjs
       - name: Verify public final scores and private discipline on phones and desktop
         run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/match-browser/node_modules/playwright" node tests/browser-public-results.mjs
+
+      - name: Verify signed-out deployed Match Center
+        if: github.ref == 'refs/heads/main'
+        run: SKOR_PLAYWRIGHT_PATH="$RUNNER_TEMP/match-browser/node_modules/playwright" SKOR_RESULTS_LIVE=https://skorfc.net node tests/browser-public-results.mjs
